@@ -1,0 +1,23 @@
+{
+  "name": "apps-client-node",
+  "version": "0.1.0",
+  "description": "VTEX Apps client",
+  "main": "./lib/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel src --out-dir lib --watch"
+  },
+  "keywords": [
+    "vtex"
+  ],
+  "author": "Breno Calazans (breno@vtex.com)",
+  "license": "MIT",
+  "dependencies": {
+    "request-promise": "^3.0.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.9.0",
+    "babel-plugin-transform-object-rest-spread": "^6.8.0",
+    "babel-preset-es2015": "^6.9.0"
+  }
+}
