@@ -12,8 +12,8 @@ class SandboxesClient {
     this.defaultRequestOptions = {
       json: true,
       headers: {
-        Authorization: 'token ' + authToken,
-        'User-Agent': this.userAgent,
+        Authorization: `token ${this.authToken}`,
+        'User-Agent': this.userAgent
       }
     };
   }

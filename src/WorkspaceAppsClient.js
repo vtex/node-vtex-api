@@ -7,11 +7,13 @@ class WorkspaceAppsClient {
     checkRequiredParameters({authToken, userAgent});
     this.authToken = authToken;
     this.endpointUrl = endpointUrl;
+    this.userAgent = userAgent;
 
     this.defaultRequestOptions = {
       json: true,
       headers: {
-        Authorization: 'token ' + authToken,
+        Authorization: `token ${this.authToken}`,
+        'User-Agent': this.userAgent
       }
     };
   }
