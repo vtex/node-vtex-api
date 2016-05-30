@@ -1,21 +1,26 @@
 import request from 'request-promise';
 import getEndpointUrl from './utils/appsEndpoints.js';
+import checkRequiredParameters from './utils/required.js';
 
 class SandboxesClient {
-  constructor({endpointUrl = getEndpointUrl('STABLE'), authToken}) {
+  constructor({authToken, userAgent, endpointUrl = getEndpointUrl('STABLE')}) {
+    checkRequiredParameters({authToken, userAgent});
     this.authToken = authToken;
     this.endpointUrl = endpointUrl;
+    this.userAgent = userAgent;
 
     this.defaultRequestOptions = {
       json: true,
       headers: {
         Authorization: 'token ' + authToken,
+        'User-Agent': this.userAgent,
       }
     };
   }
 
   listSandboxes(vendor) {
-    const url = this.routes.Sandboxes(vendor);
+    checkRequiredParameters({vendor});
+    const url = `${this.endpointUrl}${this.routes.Sandboxes(vendor)}`;
 
     return request.get({
       ...this.defaultRequestOptions,
@@ -24,7 +29,8 @@ class SandboxesClient {
   }
 
   getSandbox(vendor, sandbox) {
-    const url = this.routes.Sandbox(vendor, sandbox);
+    checkRequiredParameters({vendor, sandbox});
+    const url = `${this.endpointUrl}${this.routes.Sandbox(vendor, sandbox)}`;
 
     return request.get({
       ...this.defaultRequestOptions,
@@ -33,7 +39,8 @@ class SandboxesClient {
   }
 
   getManifest(vendor, sandbox, app, version) {
-    const url = this.routes.App(vendor, sandbox, app, version);
+    checkRequiredParameters({vendor, sandbox, app, version});
+    const url = `${this.endpointUrl}${this.routes.App(vendor, sandbox, app, version)}`;
 
     return request.get({
       ...this.defaultRequestOptions,
@@ -42,7 +49,8 @@ class SandboxesClient {
   }
 
   getSettingsSchema(vendor, sandbox, app, version) {
-    const url = this.routes.SettingsSchema(vendor, sandbox, app, version);
+    checkRequiredParameters({vendor, sandbox, app, version});
+    const url = `${this.endpointUrl}${this.routes.SettingsSchema(vendor, sandbox, app, version)}`;
 
     return request.get({
       ...this.defaultRequestOptions,
@@ -51,7 +59,8 @@ class SandboxesClient {
   }
 
   listRootFolders(vendor, sandbox, app, version) {
-    const url = this.routes.RootFolders(vendor, sandbox, app, version);
+    checkRequiredParameters({vendor, sandbox, app, version});
+    const url = `${this.endpointUrl}${this.routes.RootFolders(vendor, sandbox, app, version)}`;
 
     return request.get({
       ...this.defaultRequestOptions,
@@ -60,7 +69,8 @@ class SandboxesClient {
   }
 
   listFiles(vendor, sandbox, app, service, version, options) {
-    const url = this.routes.Files(vendor, sandbox, app, version, service);
+    checkRequiredParameters({vendor, sandbox, app, service, version});
+    const url = `${this.endpointUrl}${this.routes.Files(vendor, sandbox, app, version, service)}`;
 
     return request.get({
       ...this.defaultRequestOptions,
@@ -70,7 +80,8 @@ class SandboxesClient {
   }
 
   getFile(vendor, sandbox, app, service, path, version) {
-    const url = this.routes.File(vendor, sandbox, app, version, service, path);
+    checkRequiredParameters({vendor, sandbox, app, service, path, version});
+    const url = `${this.endpointUrl}${this.routes.File(vendor, sandbox, app, version, service, path)}`;
 
     return request.get({
       ...this.defaultRequestOptions,
@@ -107,6 +118,6 @@ SandboxesClient.prototype.routes = {
   File(vendor, sandbox, app, version, service, path) {
     return `/${vendor}/sandboxes/${sandbox}/${app}/${version}/files/${service}/${path}`;
   }
-}
+};
 
 export default SandboxesClient;

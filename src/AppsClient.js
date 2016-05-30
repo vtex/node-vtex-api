@@ -1,21 +1,25 @@
 import request from 'request-promise';
 import getEndpointUrl from './utils/appsEndpoints.js';
+import checkRequiredParameters from './utils/required.js';
 
 class AppsClient {
-  constructor({endpointUrl = getEndpointUrl('STABLE'), authToken}) {
+  constructor({authToken, userAgent, endpointUrl = getEndpointUrl('STABLE')}) {
+    checkRequiredParameters({authToken, userAgent});
     this.authToken = authToken;
     this.endpointUrl = endpointUrl;
+    this.userAgent = userAgent;
 
     this.defaultRequestOptions = {
       json: true,
       headers: {
-        Authorization: `token ${authToken}`,
+        Authorization: `token ${this.authToken}`,
+        'User-Agent': this.userAgent
       }
     };
   }
 
   listApps(vendor) {
-    debugger;
+    checkRequiredParameters({vendor});
     const url = `${this.endpointUrl}${this.routes.Apps(vendor)}`;
 
     return request.get({
@@ -25,6 +29,7 @@ class AppsClient {
   }
 
   getApp(app) {
+    checkRequiredParameters({app});
     const url = `${this.endpointUrl}${this.routes.App(app)}`;
 
     return request.get({
@@ -34,6 +39,7 @@ class AppsClient {
   }
 
   getAppVersion(app, version) {
+    checkRequiredParameters({app, version});
     const url = `${this.endpointUrl}${this.routes.AppVersion(app, version)}`;
 
     return request.get({
@@ -43,6 +49,7 @@ class AppsClient {
   }
 
   listRootFolders(app, version) {
+    checkRequiredParameters({app, version});
     const url = `${this.endpointUrl}${this.routes.RootFolders(app, version)}`;
 
     return request.get({
@@ -52,6 +59,7 @@ class AppsClient {
   }
 
   listFiles(app, version, service, options) {
+    checkRequiredParameters({app, version, service});
     const url = `${this.endpointUrl}${this.routes.Files(app, version, service)}`;
 
     return request.get({
@@ -62,6 +70,7 @@ class AppsClient {
   }
 
   getFile(app, version, service, path) {
+    checkRequiredParameters({app, version, service, path});
     const url = `${this.endpointUrl}${this.route.File(app, version, service, path)}`;
 
     return request.get({
@@ -71,6 +80,7 @@ class AppsClient {
   }
 
   getSettingsSchema(app, version) {
+    checkRequiredParameters({app, version});
     const url = `${this.endpointUrl}${this.route.SettingsSchema(app, version)}`;
 
     return request.get({
@@ -108,6 +118,6 @@ AppsClient.prototype.routes = {
   SettingsSchema(appId, version) {
     return `/${appId.Vendor}/apps/${appId.Name}/${version}/settings-schema`;
   }
-}
+};
 
 export default AppsClient;

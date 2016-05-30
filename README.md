@@ -1,15 +1,18 @@
-# VTEX Apps SDK for Node
+# VTEX Apps Client for Node
 
-This SDK enables Node developers to quickly integrate with the VTEX Apps API.
+This client enables Node developers to quickly integrate with the VTEX Workspaces API.
 
 ## Getting started
 
-The three clients in this library are: AppsClient, SandboxesClient and WorkspaceAppsClient. The easiest way to create an instance of any of them is by using as follows:
+The three clients in this library are: AppsClient, SandboxesClient and WorkspaceAppsClient. Usage:
 
 ```js
-var AppsClient = require('@vtex/apps-sdk').AppsClient;
+import { AppsClient } from '@vtex/apps';
 
-var client = new AppsClient({ authToken: yourAuthToken });
+const client = new AppsClient({
+  authToken: yourAuthToken,
+  userAgent: myUserAgent
+});
 ```
 
 ## Development
