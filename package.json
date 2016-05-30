@@ -1,5 +1,5 @@
 {
-  "name": "apps-sdk",
+  "name": "@vtex/apps",
   "version": "0.1.0",
   "description": "VTEX Apps client",
   "main": "./lib/index.js",
