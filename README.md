@@ -1,6 +1,6 @@
 # VTEX Apps Client for Node
 
-This client enables Node developers to quickly integrate with the VTEX Workspaces API.
+This client enables Node developers to quickly integrate with the VTEX Apps API.
 
 ## Getting started
 
