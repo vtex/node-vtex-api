@@ -27,7 +27,7 @@ class WorkspaceAppsClient {
       url,
       qs: {
         paging,
-        recursive: recursive ? true : null
+        recursive: !!recursive
       }
     });
   }
@@ -54,7 +54,7 @@ class WorkspaceAppsClient {
       url,
       qs: {
         paging,
-        recursive: recursive ? true : null
+        recursive: !!recursive
       }
     });
   }
