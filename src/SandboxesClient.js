@@ -89,6 +89,19 @@ class SandboxesClient {
       url,
     });
   }
+
+  updateFiles(vendor, sandbox, app, version, changes) {
+    checkRequiredParameters({vendor, sandbox, app, version, changes});
+    const url = `${this.endpointUrl}${this.routes.RootFolders(vendor, sandbox, app, version)}`;
+
+    return request.post({
+      ...this.defaultRequestOptions,
+      url,
+      body: {
+        changes
+      }
+    });
+  }
 }
 
 SandboxesClient.prototype.routes = {
