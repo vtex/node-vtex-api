@@ -58,13 +58,14 @@ class SandboxesClient {
     });
   }
 
-  listRootFolders(vendor, sandbox, app, version) {
+  listRootFolders(vendor, sandbox, app, version, options) {
     checkRequiredParameters({vendor, sandbox, app, version});
     const url = `${this.endpointUrl}${this.routes.RootFolders(vendor, sandbox, app, version)}`;
 
     return request.get({
       ...this.defaultRequestOptions,
       url,
+      qs: options
     });
   }
 
