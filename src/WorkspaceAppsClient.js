@@ -101,16 +101,20 @@ class WorkspaceAppsClient {
 }
 
 WorkspaceAppsClient.prototype.routes = {
-  Apps(account, workspace, service) {
-    return `/${account}/workspaces/${workspace}/apps?service=${service}`;
+  VendorApps(vendor) {
+    return `/${vendor}/apps`;
+  },
+
+  Apps(account, workspace) {
+    return `/${account}/workspaces/${workspace}/apps`;
   },
 
   App(account, workspace, app) {
     return `/${account}/workspaces/${workspace}/apps/${app}`;
   },
 
-  AppDependencies(account, workspace, app, service) {
-    return `/${account}/workspaces/${workspace}/apps/${app}/dependencies?service=${service}`;
+  AppDependencies(account, workspace, app) {
+    return `/${account}/workspaces/${workspace}/apps/${app}/dependencies`;
   },
 
   RootFolders(account, workspace, app) {
