@@ -18,6 +18,53 @@ class WorkspaceAppsClient {
     };
   }
 
+  installApp(account, workspace, app, version, simulation) {
+    checkRequiredParameters({account, workspace, app, version});
+    const url = `${this.endpointUrl}${this.routes.Apps(account, workspace)}`;
+
+    return request.post({
+      ...this.defaultRequestOptions,
+      url,
+      qs: {
+        simulation: !!simulation
+      },
+      body: {
+        install: {
+          [app]: version
+        }
+      }
+    });
+  }
+
+  uninstallApp(account, workspace, app, simulation) {
+    checkRequiredParameters({account, workspace, app});
+    const url = `${this.endpointUrl}${this.routes.Apps(account, workspace)}`;
+
+    return request.post({
+      ...this.defaultRequestOptions,
+      url,
+      qs: {
+        simulation: !!simulation
+      },
+      body: {
+        uninstall: [app]
+      }
+    });
+  }
+
+  publishApp(vendor, zip) {
+    checkRequiredParameters({vendor, zip});
+    const url = `${this.endpointUrl}${this.routes.VendorApps(vendor)}`;
+
+    return request.post({
+      ...this.defaultRequestOptions,
+      url,
+      formData: {
+        attachments: [zip]
+      }
+    });
+  }
+
   listDependencies(account, workspace, service, paging, recursive) {
     checkRequiredParameters({account, workspace, service});
     const url = `${this.endpointUrl}${this.routes.Apps(account, workspace, service)}`;
