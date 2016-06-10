@@ -67,12 +67,13 @@ class WorkspaceAppsClient {
 
   listDependencies(account, workspace, service, paging, recursive) {
     checkRequiredParameters({account, workspace, service});
-    const url = `${this.endpointUrl}${this.routes.Apps(account, workspace, service)}`;
+    const url = `${this.endpointUrl}${this.routes.Apps(account, workspace)}`;
 
     return request.get({
       ...this.defaultRequestOptions,
       url,
       qs: {
+        service,
         paging,
         recursive: !!recursive
       }
@@ -94,12 +95,13 @@ class WorkspaceAppsClient {
 
   listAppDependencies(account, workspace, app, context, service, paging, recursive) {
     checkRequiredParameters({account, workspace, app, service});
-    const url = `${this.endpointUrl}${this.routes.AppDependencies(account, workspace, app, service)}`;
+    const url = `${this.endpointUrl}${this.routes.AppDependencies(account, workspace, app)}`;
 
     return request.get({
       ...this.defaultRequestOptions,
       url,
       qs: {
+        service,
         paging,
         recursive: !!recursive
       }
