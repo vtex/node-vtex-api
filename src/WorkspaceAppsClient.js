@@ -18,14 +18,62 @@ class WorkspaceAppsClient {
     };
   }
 
+  installApp(account, workspace, app, version, simulation) {
+    checkRequiredParameters({account, workspace, app, version});
+    const url = `${this.endpointUrl}${this.routes.Apps(account, workspace)}`;
+
+    return request.post({
+      ...this.defaultRequestOptions,
+      url,
+      qs: {
+        simulation: !!simulation
+      },
+      body: {
+        install: {
+          [app]: version
+        }
+      }
+    });
+  }
+
+  uninstallApp(account, workspace, app, simulation) {
+    checkRequiredParameters({account, workspace, app});
+    const url = `${this.endpointUrl}${this.routes.Apps(account, workspace)}`;
+
+    return request.post({
+      ...this.defaultRequestOptions,
+      url,
+      qs: {
+        simulation: !!simulation
+      },
+      body: {
+        uninstall: [app]
+      }
+    });
+  }
+
+  publishApp(vendor, zip) {
+    checkRequiredParameters({vendor, zip});
+    const url = `${this.endpointUrl}${this.routes.VendorApps(vendor)}`;
+
+    return request.post({
+      ...this.defaultRequestOptions,
+      url,
+      formData: {
+        attachments: [zip]
+      }
+    });
+  }
+
   listDependencies(account, workspace, service, paging, recursive) {
     checkRequiredParameters({account, workspace, service});
-    const url = `${this.endpointUrl}${this.routes.Apps(account, workspace, service)}`;
+    const url = `${this.endpointUrl}${this.routes.Apps(account, workspace)}`;
 
     return request.get({
       ...this.defaultRequestOptions,
       url,
       qs: {
+        service,
         paging,
         recursive: !!recursive
       }
@@ -47,12 +95,13 @@ class WorkspaceAppsClient {
 
   listAppDependencies(account, workspace, app, context, service, paging, recursive) {
     checkRequiredParameters({account, workspace, app, service});
-    const url = `${this.endpointUrl}${this.routes.AppDependencies(account, workspace, app, service)}`;
+    const url = `${this.endpointUrl}${this.routes.AppDependencies(account, workspace, app)}`;
 
     return request.get({
       ...this.defaultRequestOptions,
       url,
       qs: {
+        service,
         paging,
         recursive: !!recursive
       }
@@ -101,16 +150,20 @@ class WorkspaceAppsClient {
 }
 
 WorkspaceAppsClient.prototype.routes = {
-  Apps(account, workspace, service) {
-    return `/${account}/workspaces/${workspace}/apps?service=${service}`;
+  VendorApps(vendor) {
+    return `/${vendor}/apps`;
+  },
+
+  Apps(account, workspace) {
+    return `/${account}/workspaces/${workspace}/apps`;
   },
 
   App(account, workspace, app) {
     return `/${account}/workspaces/${workspace}/apps/${app}`;
   },
 
-  AppDependencies(account, workspace, app, service) {
-    return `/${account}/workspaces/${workspace}/apps/${app}/dependencies?service=${service}`;
+  AppDependencies(account, workspace, app) {
+    return `/${account}/workspaces/${workspace}/apps/${app}/dependencies`;
   },
 
   RootFolders(account, workspace, app) {
