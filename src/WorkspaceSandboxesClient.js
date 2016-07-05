@@ -78,7 +78,7 @@ WorkspaceSandboxesClient.prototype.routes = {
   },
 
   ListSandboxApps(account, workspace, vendor, sandbox) {
-    return `/${account}/workspaces/${workspace}/sandboxes/${vendor}/{sandbox}`;
+    return `/${account}/workspaces/${workspace}/sandboxes/${vendor}/${sandbox}`;
   },
 
   Apps(account, workspace, vendor, sandbox, app, version) {
