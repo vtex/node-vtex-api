@@ -6,7 +6,9 @@ class WorkspaceSandboxesClient {
   constructor({authToken, userAgent, endpointUrl = getEndpointUrl('STABLE')}) {
     checkRequiredParameters({authToken, userAgent});
     this.authToken = authToken;
-    this.endpointUrl = endpointUrl;
+    this.endpointUrl = endpointUrl === 'BETA'
+      ? getEndpointUrl(endpointUrl)
+      : endpointUrl;
     this.userAgent = userAgent;
 
     this.defaultRequestOptions = {
