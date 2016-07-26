@@ -20,105 +20,127 @@ class AppsClient {
     };
   }
 
-  listApps(vendor) {
-    checkRequiredParameters({vendor});
-    const url = `${this.endpointUrl}${this.routes.Apps(vendor)}`;
+  installApp(account, workspace, descriptor, ttl = null) {
+    checkRequiredParameters({account, workspace, descriptor});
+    const url = `${this.endpointUrl}${this.routes.Apps(account, workspace)}`;
+    const queryString = ttl ? {preReleaseTTL: ttl} : {};
 
-    return request.get({
+    return request.post({
       ...this.defaultRequestOptions,
       url,
+      qs: queryString,
+      body: descriptor
     });
   }
 
-  getApp(app) {
-    checkRequiredParameters({app});
-    const url = `${this.endpointUrl}${this.routes.App(app)}`;
+  uninstallApp(account, workspace, vendor, name, version) {
+    checkRequiredParameters({account, workspace, vendor, name, version});
+    const url = `${this.endpointUrl}${this.routes.App(account, workspace, vendor, name, version)}`;
 
-    return request.get({
+    return request.delete({
       ...this.defaultRequestOptions,
-      url,
+      url
     });
   }
 
-  getAppVersion(app, version) {
-    checkRequiredParameters({app, version});
-    const url = `${this.endpointUrl}${this.routes.AppVersion(app, version)}`;
+  updateAppSettings(account, workspace, vendor, name, version, settings) {
+    checkRequiredParameters({account, workspace, vendor, name, version, settings});
+    const url = `${this.endpointUrl}${this.routes.App(account, workspace, vendor, name, version)}`;
 
-    return request.get({
+    return request.put({
       ...this.defaultRequestOptions,
       url,
+      body: {
+        settings
+      }
     });
   }
 
-  listRootFolders(app, version) {
-    checkRequiredParameters({app, version});
-    const url = `${this.endpointUrl}${this.routes.RootFolders(app, version)}`;
+  updateAppTtl(account, workspace, vendor, name, version, ttl = 30) {
+    checkRequiredParameters({account, workspace, vendor, name, version});
+    const url = `${this.endpointUrl}${this.routes.App(account, workspace, vendor, name, version)}`;
 
-    return request.get({
+    return request.patch({
       ...this.defaultRequestOptions,
       url,
+      qs: {
+        preReleaseTTL: ttl
+      }
     });
   }
 
-  listFiles(app, version, service, options) {
-    checkRequiredParameters({app, version, service});
-    const url = `${this.endpointUrl}${this.routes.Files(app, version, service)}`;
+  listApps(account, workspace, options = {oldVersion: '', context: '', since: ''}) {
+    checkRequiredParameters({account, workspace});
+    const url = `${this.endpointUrl}${this.routes.Apps(account, workspace)}`;
+    const {oldVersion, context, since} = options;
 
     return request.get({
       ...this.defaultRequestOptions,
       url,
-      qs: options
+      qs: {
+        oldVersion,
+        context,
+        since
+      }
     });
   }
 
-  getFile(app, version, service, path) {
-    checkRequiredParameters({app, version, service, path});
-    const url = `${this.endpointUrl}${this.route.File(app, version, service, path)}`;
+  listAppFiles(account, workspace, vendor, name, version, {prefix = '', context = ''}) {
+    checkRequiredParameters({account, workspace, vendor, name, version});
+    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, vendor, name, version)}`;
 
     return request.get({
       ...this.defaultRequestOptions,
       url,
+      qs: {
+        prefix,
+        context
+      }
     });
   }
 
-  getSettingsSchema(app, version) {
-    checkRequiredParameters({app, version});
-    const url = `${this.endpointUrl}${this.route.SettingsSchema(app, version)}`;
+  getAppFile(account, workspace, vendor, name, version, path, context = '') {
+    checkRequiredParameters({account, workspace, vendor, name, version, path});
+    const url = `${this.endpointUrl}${this.routes.File(account, workspace, vendor, name, version, path)}`;
 
     return request.get({
       ...this.defaultRequestOptions,
       url,
+      qs: {
+        context
+      }
+    });
+  }
+
+  getApp(account, workspace, vendor, name, version, context = '') {
+    checkRequiredParameters({account, workspace, vendor, name, version});
+    const url = `${this.endpointUrl}${this.routes.App(account, workspace, vendor, name, version)}`;
+
+    return request.get({
+      ...this.defaultRequestOptions,
+      url,
+      qs: {
+        context
+      }
     });
   }
 }
 
 AppsClient.prototype.routes = {
-  Apps(vendor) {
-    return `/${vendor}/apps`;
+  Apps(account, workspace) {
+    return `/${account}/${workspace}/apps`;
   },
 
-  App(appId) {
-    return `/${appId.vendor}/apps/${appId.name}`;
+  App(account, workspace, vendor, name, version) {
+    return `/${account}/${workspace}/apps/${vendor}.${name}@${version}`;
   },
 
-  AppVersion(appId, version) {
-    return `/${appId.vendor}/apps/${appId.name}/${version}`;
+  Files(account, workspace, vendor, name, version) {
+    return `${this.App(account, workspace, vendor, name, version)}/files`;
   },
 
-  RootFolders(appId, version) {
-    return `/${appId.Vendor}/apps/${appId.Name}/${version}/files`;
-  },
-
-  Files(appId, version, service) {
-    return `/${appId.Vendor}/apps/${appId.Name}/${version}/files/${service}`;
-  },
-
-  File(appId, version, service, path) {
-    return `/${appId.Vendor}/apps/${appId.Name}/${version}/files/${service}/${path}`;
-  },
-
-  SettingsSchema(appId, version) {
-    return `/${appId.Vendor}/apps/${appId.Name}/${version}/settings-schema`;
+  File(account, workspace, vendor, name, version, path) {
+    return `${this.Files(account, workspace, vendor, name, version)}/${path}`;
   }
 };
 
