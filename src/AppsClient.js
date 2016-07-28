@@ -20,15 +20,13 @@ class AppsClient {
     };
   }
 
-  installApp(account, workspace, descriptor, ttl = null) {
+  installApp(account, workspace, descriptor) {
     checkRequiredParameters({account, workspace, descriptor});
     const url = `${this.endpointUrl}${this.routes.Apps(account, workspace)}`;
-    const queryString = ttl ? {preReleaseTTL: ttl} : {};
 
     return request.post({
       ...this.defaultRequestOptions,
       url,
-      qs: queryString,
       body: descriptor
     });
   }
@@ -56,16 +54,13 @@ class AppsClient {
     });
   }
 
-  updateAppTtl(account, workspace, vendor, name, version, ttl = 30) {
+  updateAppTtl(account, workspace, vendor, name, version) {
     checkRequiredParameters({account, workspace, vendor, name, version});
     const url = `${this.endpointUrl}${this.routes.App(account, workspace, vendor, name, version)}`;
 
     return request.patch({
       ...this.defaultRequestOptions,
       url,
-      qs: {
-        preReleaseTTL: ttl
-      }
     });
   }
 
