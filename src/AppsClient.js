@@ -64,10 +64,10 @@ class AppsClient {
     });
   }
 
-  listApps(account, workspace, options = {oldVersion: '', context: '', since: ''}) {
+  listApps(account, workspace, options = {oldVersion: '', context: '', since: '', service: ''}) {
     checkRequiredParameters({account, workspace});
     const url = `${this.endpointUrl}${this.routes.Apps(account, workspace)}`;
-    const {oldVersion, context, since} = options;
+    const {oldVersion, context, since, service} = options;
 
     return request.get({
       ...this.defaultRequestOptions,
@@ -75,7 +75,8 @@ class AppsClient {
       qs: {
         oldVersion,
         context,
-        since
+        since,
+        service,
       }
     });
   }
