@@ -1,6 +1,6 @@
 {
   "name": "@vtex/apps",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "VTEX Apps client",
   "main": "./lib/index.js",
   "scripts": {
