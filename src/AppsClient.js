@@ -120,6 +120,19 @@ class AppsClient {
       }
     });
   }
+
+  getDependencyMap(account, workspace, service = '') {
+    checkRequiredParameters({account, workspace});
+    const url = `${this.endpointUrl}${this.routes.DependencyMap(account, workspace)}`;
+
+    return request.get({
+      ...this.defaultRequestOptions,
+      url,
+      qs: {
+        service
+      }
+    });
+  }
 }
 
 AppsClient.prototype.routes = {
@@ -137,6 +150,10 @@ AppsClient.prototype.routes = {
 
   File(account, workspace, vendor, name, version, path) {
     return `${this.Files(account, workspace, vendor, name, version)}/${path}`;
+  },
+
+  DependencyMap(account, workspace) {
+    return `${this.Apps(account, workspace)}/dependencyMap`;
   }
 };
 
