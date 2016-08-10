@@ -81,7 +81,7 @@ class AppsClient {
     });
   }
 
-  listAppFiles(account, workspace, vendor, name, version, {prefix = '', context = ''}) {
+  listAppFiles(account, workspace, vendor, name, version, {prefix = '', context = '', nextMarker = ''}) {
     checkRequiredParameters({account, workspace, vendor, name, version});
     const url = `${this.endpointUrl}${this.routes.Files(account, workspace, vendor, name, version)}`;
 
@@ -90,7 +90,8 @@ class AppsClient {
       url,
       qs: {
         prefix,
-        context
+        context,
+        nextMarker
       }
     });
   }
