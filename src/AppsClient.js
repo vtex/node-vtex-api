@@ -81,7 +81,7 @@ class AppsClient {
     });
   }
 
-  listAppFiles(account, workspace, vendor, name, version, {prefix = '', context = ''}) {
+  listAppFiles(account, workspace, vendor, name, version, {prefix = '', context = '', nextMarker = ''}) {
     checkRequiredParameters({account, workspace, vendor, name, version});
     const url = `${this.endpointUrl}${this.routes.Files(account, workspace, vendor, name, version)}`;
 
@@ -90,7 +90,8 @@ class AppsClient {
       url,
       qs: {
         prefix,
-        context
+        context,
+        nextMarker
       }
     });
   }
@@ -120,6 +121,19 @@ class AppsClient {
       }
     });
   }
+
+  getDependencyMap(account, workspace, service = '') {
+    checkRequiredParameters({account, workspace});
+    const url = `${this.endpointUrl}${this.routes.DependencyMap(account, workspace)}`;
+
+    return request.get({
+      ...this.defaultRequestOptions,
+      url,
+      qs: {
+        service
+      }
+    });
+  }
 }
 
 AppsClient.prototype.routes = {
@@ -128,7 +142,7 @@ AppsClient.prototype.routes = {
   },
 
   App(account, workspace, vendor, name, version) {
-    return `/${account}/${workspace}/apps/${vendor}.${name}@${version}`;
+    return `${this.Apps(account, workspace)}/${vendor}.${name}@${version}`;
   },
 
   Files(account, workspace, vendor, name, version) {
@@ -137,6 +151,10 @@ AppsClient.prototype.routes = {
 
   File(account, workspace, vendor, name, version, path) {
     return `${this.Files(account, workspace, vendor, name, version)}/${path}`;
+  },
+
+  DependencyMap(account, workspace) {
+    return `${this.Apps(account, workspace)}/dependencyMap`;
   }
 };
 
