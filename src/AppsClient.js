@@ -142,7 +142,7 @@ AppsClient.prototype.routes = {
   },
 
   App(account, workspace, vendor, name, version) {
-    return `/${account}/${workspace}/apps/${vendor}.${name}@${version}`;
+    return `${this.Apps(account, workspace)}/${vendor}.${name}@${version}`;
   },
 
   Files(account, workspace, vendor, name, version) {
