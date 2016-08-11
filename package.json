@@ -19,7 +19,9 @@
   "author": "Breno Calazans (breno@vtex.com)",
   "license": "MIT",
   "dependencies": {
-    "request-promise": "^3.0.0"
+    "any-promise": "^1.3.0",
+    "form-data": "^1.0.0-rc4",
+    "requisition": "^1.7.0"
   },
   "devDependencies": {
     "babel-cli": "^6.9.0",
