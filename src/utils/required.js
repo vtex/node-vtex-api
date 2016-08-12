@@ -1,7 +1,7 @@
-export default function checkRequiredParameters(params) {
+export default function checkRequiredParameters (params) {
   for (let key in params) {
     if (params[key] === undefined) {
-      throw new Error(`${key} is a required attribute`);
+      throw new Error(`${key} is a required attribute`)
     }
   }
 }
