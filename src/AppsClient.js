@@ -121,7 +121,7 @@ AppsClient.prototype.routes = {
   },
 
   DependencyMap (account, workspace) {
-    return `${this.Apps(account, workspace)}/dependencyMap`
+    return `/${account}/${workspace}/dependencyMap`
   },
 }
 
