@@ -1,15 +1,21 @@
-# VTEX Apps Client for Node
+# VTEX I/O API Client for Node
 
-This client enables Node developers to quickly integrate with the VTEX Apps API.
+This client enables Node developers to quickly integrate with the VTEX I/O API.
 
-[![Build Status](https://travis-ci.org/vtex/apps-client-node.svg?branch=master)](https://travis-ci.org/vtex/apps-client-node)
+[![Build Status](https://travis-ci.org/vtex/node-vtex-api.svg?branch=master)](https://travis-ci.org/vtex/node-vtex-api)
 
 ## Getting started
 
-The three clients in this library are: AppsClient, SandboxesClient and WorkspaceAppsClient. Usage:
+The three clients in this library are:
+
+- AppsClient
+- RegistryClient
+- VBaseClient
+
+Usage:
 
 ```js
-import { AppsClient } from '@vtex/apps';
+import { AppsClient } from '@vtex/api';
 
 const client = new AppsClient({
   authToken: yourAuthToken,

@@ -1,9 +1,13 @@
 import AppsClient from './AppsClient.js'
 import RegistryClient from './RegistryClient.js'
-import getEndpointUrl from './utils/appsEndpoints.js'
+import VBaseClient from './VBaseClient.js'
+import appsEndpoints from './utils/appsEndpoints.js'
+import vbaseEndpoints from './utils/vbaseEndpoints.js'
 
 module.exports = {
   AppsClient,
   RegistryClient,
-  getEndpointUrl,
+  VBaseClient,
+  appsEndpoints,
+  vbaseEndpoints,
 }

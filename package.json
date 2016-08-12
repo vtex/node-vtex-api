@@ -1,22 +1,22 @@
 {
-  "name": "@vtex/apps",
+  "name": "@vtex/api",
   "version": "0.6.0",
-  "description": "VTEX Apps client",
+  "description": "VTEX I/O API client",
   "main": "./lib/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "babel src --out-dir lib --watch",
-    "prerelease": "rimraf lib && babel src --out-dir lib",
-    "lint": "eslint src"
+    "watch": "babel src --out-dir lib --watch",
+    "build": "babel src --out-dir lib",
+    "lint": "eslint src",
+    "prepublish": "run-s lint build"
   },
   "keywords": [
     "vtex"
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:vtex/apps-client-node.git"
+    "url": "git@github.com:vtex/node-vtex-api.git"
   },
-  "author": "Breno Calazans (breno@vtex.com)",
   "license": "MIT",
   "dependencies": {
     "any-promise": "^1.3.0",
@@ -30,6 +30,7 @@
     "babel-preset-es2015": "^6.9.0",
     "eslint": "^2.10.2",
     "eslint-config-vtex": "^4.0.0",
+    "npm-run-all": "^2.3.0",
     "rimraf": "^2.5.2"
   }
 }
