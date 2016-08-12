@@ -23,14 +23,14 @@ class AppsClient {
     checkRequiredParameters({account, workspace, descriptor})
     const url = `${this.endpointUrl}${this.routes.Apps(account, workspace)}`
 
-    return this.http.post(url).send(descriptor).json()
+    return this.http.post(url).send(descriptor).thenJson()
   }
 
   uninstallApp (account, workspace, vendor, name) {
     checkRequiredParameters({account, workspace, vendor, name})
     const url = `${this.endpointUrl}${this.routes.App(account, workspace, vendor, name)}`
 
-    return this.http.delete(url).json()
+    return this.http.delete(url).thenJson()
   }
 
   updateAppSettings (account, workspace, vendor, name, version, settings) {
@@ -39,14 +39,14 @@ class AppsClient {
 
     return this.http.put(url).send({
       settings,
-    }).json()
+    }).thenJson()
   }
 
   updateAppTtl (account, workspace, vendor, name, version) {
     checkRequiredParameters({account, workspace, vendor, name, version})
     const url = `${this.endpointUrl}${this.routes.App(account, workspace, vendor, name, version)}`
 
-    return this.http.patch(url).json()
+    return this.http.patch(url).thenJson()
   }
 
   listApps (account, workspace, options = {oldVersion: '', context: '', since: '', service: ''}) {
@@ -59,7 +59,7 @@ class AppsClient {
       context,
       since,
       service,
-    }).json()
+    }).thenJson()
   }
 
   listAppFiles (account, workspace, vendor, name, version, {prefix = '', context = '', nextMarker = ''}) {
@@ -70,7 +70,7 @@ class AppsClient {
       prefix,
       context,
       nextMarker,
-    }).json()
+    }).thenJson()
   }
 
   getAppFile (account, workspace, vendor, name, version, path, context = '') {
@@ -79,7 +79,7 @@ class AppsClient {
 
     return this.http.get(url).query({
       context,
-    }).json()
+    }).thenJson()
   }
 
   getApp (account, workspace, vendor, name, version, context = '') {
@@ -88,7 +88,7 @@ class AppsClient {
 
     return this.http.get(url).query({
       context,
-    }).json()
+    }).thenJson()
   }
 
   getDependencyMap (account, workspace, service = '') {
@@ -97,7 +97,7 @@ class AppsClient {
 
     return this.http.get(url).query({
       service,
-    }).json()
+    }).thenJson()
   }
 }
 

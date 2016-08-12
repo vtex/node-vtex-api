@@ -23,35 +23,35 @@ class VBaseClient {
     checkRequiredParameters({account, workspace})
     const url = `${this.endpointUrl}${this.routes.WorkspaceMaster(account, workspace)}`
 
-    return this.http.put(url).send({workspace}).json()
+    return this.http.put(url).send({workspace}).thenJson()
   }
 
   list (account) {
     checkRequiredParameters({account})
     const url = `${this.endpointUrl}${this.routes.Account(account)}`
 
-    return this.http.get(url).json()
+    return this.http.get(url).thenJson()
   }
 
   create (account, workspace) {
     checkRequiredParameters({account, workspace})
     const url = `${this.endpointUrl}${this.routes.Account(account)}`
 
-    return this.http.post(url).send({name: workspace}).json()
+    return this.http.post(url).send({name: workspace}).thenJson()
   }
 
   get (account, workspace) {
     checkRequiredParameters({account, workspace})
     const url = `${this.endpointUrl}${this.routes.Workspace(account, workspace)}`
 
-    return this.http.get(url).json()
+    return this.http.get(url).thenJson()
   }
 
   delete (account, workspace) {
     checkRequiredParameters({account, workspace})
     const url = `${this.endpointUrl}${this.routes.Workspace(account, workspace)}`
 
-    return this.http.delete(url).json()
+    return this.http.delete(url).thenJson()
   }
 }
 

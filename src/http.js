@@ -20,11 +20,11 @@ export function StatusCodeError (statusCode, statusMessage, response) {
 StatusCodeError.prototype = Object.create(Error.prototype)
 StatusCodeError.prototype.constructor = StatusCodeError
 
-Request.prototype._then = Request.prototype.then
+const prototypeThen = Request.prototype.then
 
 Request.prototype.then = function (resolve, reject) {
-  return this._then(res => {
-    if (successful(res.statusCode)) {
+  return prototypeThen.call(this, res => {
+    if (res.statusCode >= 200 && res.statusCode < 300) {
       return resolve(res)
     }
     const error = new StatusCodeError(res.statusCode, res.statusMessage, res)
@@ -38,7 +38,7 @@ Request.prototype.then = function (resolve, reject) {
   }, reject)
 }
 
-Request.prototype.json = function () {
+Request.prototype.thenJson = function () {
   return this.then(res => {
     if (res.is('json')) {
       return res.json()

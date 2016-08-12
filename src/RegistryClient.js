@@ -52,42 +52,42 @@ class RegistryClient {
     checkRequiredParameters({account, workspace, vendor, name, version, changes})
     const url = `${this.endpointUrl}${this.routes.RegistryAppVersion(account, workspace, vendor, name, version)}`
 
-    return this.http.patch(url).send(changes).json()
+    return this.http.patch(url).send(changes).thenJson()
   }
 
   listVendors (account, workspace) {
     checkRequiredParameters({account, workspace})
     const url = `${this.endpointUrl}${this.routes.Registry(account, workspace)}`
 
-    return this.http.get(url).json()
+    return this.http.get(url).thenJson()
   }
 
   listAppsByVendor (account, workspace, vendor) {
     checkRequiredParameters({account, workspace, vendor})
     const url = `${this.endpointUrl}${this.routes.RegistryVendor(account, workspace, vendor)}`
 
-    return this.http.get(url).json()
+    return this.http.get(url).thenJson()
   }
 
   listVersionsByApp (account, workspace, vendor, name, major = '') {
     checkRequiredParameters({account, workspace, vendor, name})
     const url = `${this.endpointUrl}${this.routes.RegistryApp(account, workspace, vendor, name)}`
 
-    return request.get(url).query({major}).json()
+    return request.get(url).query({major}).thenJson()
   }
 
   getAppManifest (account, workspace, vendor, name, version) {
     checkRequiredParameters({account, workspace, vendor, name, version})
     const url = `${this.endpointUrl}${this.routes.RegistryVendor(account, workspace, vendor, name, version)}`
 
-    return this.http.get(url).json()
+    return this.http.get(url).thenJson()
   }
 
   unpublishApp (account, workspace, vendor, name, version) {
     checkRequiredParameters({account, workspace, vendor, name, version})
     const url = `${this.endpointUrl}${this.routes.RegistryVendor(account, workspace, vendor, name, version)}`
 
-    return this.http.delete(url).json()
+    return this.http.delete(url).thenJson()
   }
 }
 
