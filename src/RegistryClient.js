@@ -25,7 +25,10 @@ class RegistryClient {
 
   publishApp (account, workspace, zip, pre = false) {
     checkRequiredParameters({account, workspace, zip})
-    const [protocol, host] = this.endpointUrl.split('//')
+    const [protocol, hostWithPort] = this.endpointUrl.split('//')
+    const hostSplit = hostWithPort.split(':')
+    const host = hostSplit[0]
+    const port = hostSplit.length > 1 ? Number(hostSplit[1]) : 80
     const path = `${this.routes.Registry(account, workspace)}?${qs.stringify({isPreRelease: pre})}`
     const form = new FormData()
     form.append('zip', (typeof zip === 'string' || zip instanceof String) ? createReadStream(zip) : zip)
@@ -33,6 +36,7 @@ class RegistryClient {
       form.submit({
         protocol,
         host,
+        port,
         path,
         headers: this.headers,
       }, (err, res) => {
