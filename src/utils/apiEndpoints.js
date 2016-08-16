@@ -1,6 +1,6 @@
 const endpoints = {
-  STABLE: 'http://apps.vtex.com',
-  BETA: 'http://apps.beta.vtex.com',
+  STABLE: 'http://api.vtex.com',
+  BETA: 'http://api.beta.vtex.com',
 }
 
 export default function getUrl (env) {

@@ -1,5 +1,5 @@
 import request from './http'
-import getEndpointUrl from './utils/appsEndpoints.js'
+import getEndpointUrl from './utils/apiEndpoints.js'
 import checkRequiredParameters from './utils/required.js'
 
 class AppsClient {
