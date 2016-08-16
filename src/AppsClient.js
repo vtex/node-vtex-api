@@ -49,45 +49,45 @@ class AppsClient {
     return this.http.patch(url).thenJson()
   }
 
-  listApps (account, workspace, options = {oldVersion: '', context: '', since: '', service: ''}) {
+  listApps (account, workspace, options = {oldVersion: '', context: [], since: '', service: ''}) {
     checkRequiredParameters({account, workspace})
     const url = `${this.endpointUrl}${this.routes.Apps(account, workspace)}`
     const {oldVersion, context, since, service} = options
 
     return this.http.get(url).query({
       oldVersion,
-      context,
+      context: contextQuery(context),
       since,
       service,
     }).thenJson()
   }
 
-  listAppFiles (account, workspace, app, {prefix = '', context = '', nextMarker = ''}) {
+  listAppFiles (account, workspace, app, {prefix = '', context = [], nextMarker = ''}) {
     checkRequiredParameters({account, workspace, app})
     const url = `${this.endpointUrl}${this.routes.Files(account, workspace, app)}`
 
     return this.http.get(url).query({
       prefix,
-      context,
+      context: contextQuery(context),
       nextMarker,
     }).thenJson()
   }
 
-  getAppFile (account, workspace, app, path, context = '') {
+  getAppFile (account, workspace, app, path, context = []) {
     checkRequiredParameters({account, workspace, app, path})
     const url = `${this.endpointUrl}${this.routes.File(account, workspace, app, path)}`
 
     return this.http.get(url).query({
-      context,
+      context: contextQuery(context),
     }).thenJson()
   }
 
-  getApp (account, workspace, app, context = '') {
+  getApp (account, workspace, app, context = []) {
     checkRequiredParameters({account, workspace, app})
     const url = `${this.endpointUrl}${this.routes.App(account, workspace, app)}`
 
     return this.http.get(url).query({
-      context,
+      context: contextQuery(context),
     }).thenJson()
   }
 
@@ -122,5 +122,7 @@ AppsClient.prototype.routes = {
     return `/${account}/${workspace}/dependencyMap`
   },
 }
+
+const contextQuery = (context) => context ? context.join('/') : context
 
 export default AppsClient
