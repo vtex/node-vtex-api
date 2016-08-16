@@ -26,25 +26,25 @@ class AppsClient {
     return this.http.post(url).send(descriptor).thenJson()
   }
 
-  uninstallApp (account, workspace, vendor, name) {
-    checkRequiredParameters({account, workspace, vendor, name})
-    const url = `${this.endpointUrl}${this.routes.App(account, workspace, vendor, name)}`
+  uninstallApp (account, workspace, app) {
+    checkRequiredParameters({account, workspace, app})
+    const url = `${this.endpointUrl}${this.routes.App(account, workspace, app)}`
 
     return this.http.delete(url).thenJson()
   }
 
-  updateAppSettings (account, workspace, vendor, name, version, settings) {
-    checkRequiredParameters({account, workspace, vendor, name, version, settings})
-    const url = `${this.endpointUrl}${this.routes.App(account, workspace, vendor, name, version)}`
+  updateAppSettings (account, workspace, app, settings) {
+    checkRequiredParameters({account, workspace, app, settings})
+    const url = `${this.endpointUrl}${this.routes.App(account, workspace, app)}`
 
     return this.http.put(url).send({
       settings,
     }).thenJson()
   }
 
-  updateAppTtl (account, workspace, vendor, name, version) {
-    checkRequiredParameters({account, workspace, vendor, name, version})
-    const url = `${this.endpointUrl}${this.routes.App(account, workspace, vendor, name, version)}`
+  updateAppTtl (account, workspace, app) {
+    checkRequiredParameters({account, workspace, app})
+    const url = `${this.endpointUrl}${this.routes.App(account, workspace, app)}`
 
     return this.http.patch(url).thenJson()
   }
@@ -62,9 +62,9 @@ class AppsClient {
     }).thenJson()
   }
 
-  listAppFiles (account, workspace, vendor, name, version, {prefix = '', context = '', nextMarker = ''}) {
-    checkRequiredParameters({account, workspace, vendor, name, version})
-    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, vendor, name, version)}`
+  listAppFiles (account, workspace, app, {prefix = '', context = '', nextMarker = ''}) {
+    checkRequiredParameters({account, workspace, app})
+    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, app)}`
 
     return this.http.get(url).query({
       prefix,
@@ -73,18 +73,18 @@ class AppsClient {
     }).thenJson()
   }
 
-  getAppFile (account, workspace, vendor, name, version, path, context = '') {
-    checkRequiredParameters({account, workspace, vendor, name, version, path})
-    const url = `${this.endpointUrl}${this.routes.File(account, workspace, vendor, name, version, path)}`
+  getAppFile (account, workspace, app, path, context = '') {
+    checkRequiredParameters({account, workspace, app, path})
+    const url = `${this.endpointUrl}${this.routes.File(account, workspace, app, path)}`
 
     return this.http.get(url).query({
       context,
     }).thenJson()
   }
 
-  getApp (account, workspace, vendor, name, version, context = '') {
-    checkRequiredParameters({account, workspace, vendor, name, version})
-    const url = `${this.endpointUrl}${this.routes.App(account, workspace, vendor, name, version)}`
+  getApp (account, workspace, app, context = '') {
+    checkRequiredParameters({account, workspace, app})
+    const url = `${this.endpointUrl}${this.routes.App(account, workspace, app)}`
 
     return this.http.get(url).query({
       context,
@@ -106,18 +106,16 @@ AppsClient.prototype.routes = {
     return `/${account}/${workspace}/apps`
   },
 
-  App (account, workspace, vendor, name, version) {
-    return version
-      ? `${this.Apps(account, workspace)}/${vendor}.${name}@${version}`
-      : `${this.Apps(account, workspace)}/${vendor}.${name}`
+  App (account, workspace, app) {
+    return `${this.Apps(account, workspace)}/${app}`
   },
 
-  Files (account, workspace, vendor, name, version) {
-    return `${this.App(account, workspace, vendor, name, version)}/files`
+  Files (account, workspace, app) {
+    return `${this.App(account, workspace, app)}/files`
   },
 
-  File (account, workspace, vendor, name, version, path) {
-    return `${this.Files(account, workspace, vendor, name, version)}/${path}`
+  File (account, workspace, app, path) {
+    return `${this.Files(account, workspace, app)}/${path}`
   },
 
   DependencyMap (account, workspace) {
