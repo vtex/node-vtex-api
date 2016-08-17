@@ -55,3 +55,15 @@ Request.prototype.thenJson = function () {
 Request.prototype.thenText = function () {
   return this.then(res => res.text())
 }
+
+Request.prototype.baseQuery = Request.prototype.query
+Request.prototype.query = function (options) {
+  let query = {}
+  for (let key of Object.keys(options)) {
+    let value = options[key]
+    if (value !== undefined && value !== '') {
+      query[key] = value
+    }
+  }
+  return this.baseQuery(query)
+}
