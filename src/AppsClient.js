@@ -79,7 +79,7 @@ class AppsClient {
 
     return this.http.get(url).query({
       context: contextQuery(context),
-    }).thenJson()
+    }).thenText()
   }
 
   getApp (account, workspace, app, context = []) {
