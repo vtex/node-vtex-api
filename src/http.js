@@ -33,6 +33,11 @@ Request.prototype.then = function (resolve, reject) {
         error.error = body
         throw error
       })
+    } else if (res.is('text')) {
+      return res.text().then(body => {
+        error.error = body
+        throw error
+      })
     }
     throw error
   }, reject)
@@ -45,4 +50,8 @@ Request.prototype.thenJson = function () {
     }
     return res
   })
+}
+
+Request.prototype.thenText = function () {
+  return this.then(res => res.text())
 }
