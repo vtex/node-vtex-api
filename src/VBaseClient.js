@@ -47,30 +47,37 @@ class VBaseClient {
     return this.http.get(url).thenJson()
   }
 
-  file (account, workspace, bucket, path) {
-    checkRequiredParameters({account, workspace, bucket, path})
-    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket, path)}`
+  delete (account, workspace) {
+    checkRequiredParameters({account, workspace})
+    const url = `${this.endpointUrl}${this.routes.Workspace(account, workspace)}`
 
-    return this.http.get(url).thenText()
+    return this.http.delete(url).thenJson()
   }
 
-  save (account, workspace, bucket, path, filePath, unzip = false) {
-    checkRequiredParameters({account, workspace, bucket, path, filePath})
-    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket, path)}`
-
-    return this.http.put(url).query({unzip}).sendFile(filePath).thenJson()
-  }
-
-  files (account, workspace, bucket, prefix = '') {
+  listFiles (account, workspace, bucket, prefix = '') {
     checkRequiredParameters({account, workspace, bucket})
     const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket)}`
 
     return this.http.get(url).query({prefix}).thenJson()
   }
 
-  delete (account, workspace) {
-    checkRequiredParameters({account, workspace})
-    const url = `${this.endpointUrl}${this.routes.Workspace(account, workspace)}`
+  getFile (account, workspace, bucket, path) {
+    checkRequiredParameters({account, workspace, bucket, path})
+    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket, path)}`
+
+    return this.http.get(url).thenText()
+  }
+
+  saveFile (account, workspace, bucket, path, filePath, unzip = false) {
+    checkRequiredParameters({account, workspace, bucket, path, filePath})
+    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket, path)}`
+
+    return this.http.put(url).query({unzip}).sendFile(filePath).thenJson()
+  }
+
+  deleteFile (account, workspace, bucket, path) {
+    checkRequiredParameters({account, workspace, bucket, path})
+    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket, path)}`
 
     return this.http.delete(url).thenJson()
   }
