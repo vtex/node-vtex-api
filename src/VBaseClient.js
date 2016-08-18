@@ -53,6 +53,34 @@ class VBaseClient {
 
     return this.http.delete(url).thenJson()
   }
+
+  listFiles (account, workspace, bucket, prefix = '') {
+    checkRequiredParameters({account, workspace, bucket})
+    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket)}`
+
+    return this.http.get(url).query({prefix}).thenJson()
+  }
+
+  getFile (account, workspace, bucket, path) {
+    checkRequiredParameters({account, workspace, bucket, path})
+    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket, path)}`
+
+    return this.http.get(url).thenText()
+  }
+
+  saveFile (account, workspace, bucket, path, filePath, unzip = false) {
+    checkRequiredParameters({account, workspace, bucket, path, filePath})
+    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket, path)}`
+
+    return this.http.put(url).query({unzip}).sendFile(filePath).thenJson()
+  }
+
+  deleteFile (account, workspace, bucket, path) {
+    checkRequiredParameters({account, workspace, bucket, path})
+    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket, path)}`
+
+    return this.http.delete(url).thenJson()
+  }
 }
 
 VBaseClient.prototype.routes = {
@@ -66,6 +94,10 @@ VBaseClient.prototype.routes = {
 
   WorkspaceMaster (account, workspace) {
     return `${this.Workspace(account, workspace)}/master`
+  },
+
+  Files (account, workspace, bucket, path) {
+    return `${this.Workspace(account, workspace)}/buckets/${bucket}/files${path ? '/' + path : ''}`
   },
 }
 
