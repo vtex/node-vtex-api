@@ -56,7 +56,7 @@ Request.prototype.thenText = function () {
   return this.then(res => res.text())
 }
 
-Request.prototype.baseQuery = Request.prototype.query
+const baseQuery = Request.prototype.query
 Request.prototype.query = function (options) {
   let query = {}
   for (let key of Object.keys(options)) {
@@ -65,5 +65,5 @@ Request.prototype.query = function (options) {
       query[key] = value
     }
   }
-  return this.baseQuery(query)
+  return baseQuery.apply(this, [query])
 }
