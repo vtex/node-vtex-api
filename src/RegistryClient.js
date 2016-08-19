@@ -3,7 +3,7 @@ import Promise from 'any-promise'
 import qs from 'querystring'
 import {createReadStream} from 'fs'
 import request, {successful} from './http'
-import getEndpointUrl from './utils/appsEndpoints.js'
+import getEndpointUrl from './utils/apiEndpoints.js'
 import checkRequiredParameters from './utils/required.js'
 
 class RegistryClient {

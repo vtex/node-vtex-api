@@ -33,13 +33,31 @@ class AppsClient {
     return this.http.delete(url).thenJson()
   }
 
-  updateAppSettings (account, workspace, app, settings) {
-    checkRequiredParameters({account, workspace, app, settings})
-    const url = `${this.endpointUrl}${this.routes.App(account, workspace, app)}`
+  getAppSettings (account, workspace, app, {context = []} = {}) {
+    checkRequiredParameters({account, workspace, app})
+    const url = `${this.endpointUrl}${this.routes.Settings(account, workspace, app)}`
 
-    return this.http.put(url).send({
-      settings,
+    return this.http.get(url).query({
+      context: contextQuery(context),
     }).thenJson()
+  }
+
+  updateAppSettings (account, workspace, app, settings, {context = []} = {}) {
+    checkRequiredParameters({account, workspace, app, settings})
+    const url = `${this.endpointUrl}${this.routes.Settings(account, workspace, app)}`
+
+    return this.http.put(url).query({
+      context: contextQuery(context),
+    }).send(settings).thenJson()
+  }
+
+  patchAppSettings (account, workspace, app, settings, {context = []} = {}) {
+    checkRequiredParameters({account, workspace, app, settings})
+    const url = `${this.endpointUrl}${this.routes.Settings(account, workspace, app)}`
+
+    return this.http.patch(url).query({
+      context: contextQuery(context),
+    }).send(settings).thenJson()
   }
 
   updateAppTtl (account, workspace, app) {
@@ -108,6 +126,10 @@ AppsClient.prototype.routes = {
 
   App (account, workspace, app) {
     return `${this.Apps(account, workspace)}/${app}`
+  },
+
+  Settings (account, workspace, app) {
+    return `${this.App(account, workspace, app)}/settings`
   },
 
   Files (account, workspace, app) {
