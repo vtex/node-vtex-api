@@ -92,8 +92,8 @@ VBaseClient.prototype.routes = {
     return `${this.Account(account)}/${workspace}`
   },
 
-  WorkspaceMaster (account, workspace) {
-    return `${this.Workspace(account, workspace)}/master`
+  WorkspaceMaster (account) {
+    return `${this.Account(account)}/master`
   },
 
   Files (account, workspace, bucket, path) {
