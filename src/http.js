@@ -53,7 +53,9 @@ Request.prototype.thenJson = function () {
 }
 
 Request.prototype.thenText = function () {
-  return this.then(res => res.text())
+  return this.then(res => {
+    return res.response.readable ? res.text() : ''
+  })
 }
 
 const baseQuery = Request.prototype.query
