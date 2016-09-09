@@ -1,9 +1,9 @@
-import request from './http'
-import Request from 'requisition/lib/request'
+import request, {handleJson} from './http'
 import getEndpointUrl from './utils/vbaseEndpoints.js'
 import checkRequiredParameters from './utils/required.js'
 import {createGzip} from 'zlib'
 import {basename} from 'path'
+import {PassThrough} from 'stream'
 
 class VBaseClient {
   constructor ({authToken, userAgent, endpointUrl = getEndpointUrl('STABLE')}) {
@@ -71,19 +71,17 @@ class VBaseClient {
     return this.http.get(url).thenText()
   }
 
-  saveFile (account, workspace, bucket, path, streamOrPath, {unzip, gzip} = {}) {
+  saveFile (account, workspace, bucket, path, streamOrPath, {unzip, gzip, gzipOptions} = {}) {
     checkRequiredParameters({account, workspace, bucket, path, streamOrPath})
     const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket, path)}`
-    let put = this.http.put(url)
+    const put = this.http.put(url).type(basename(path))
     if (streamOrPath.pipe && streamOrPath.on) {
-      put = put.type(basename(path))
       if (gzip) {
-        const gz = createGzip()
-        return Request.prototype.thenJson.apply(
-          put.set('Content-Encoding', 'gzip').sendStream(streamOrPath.pipe(gz))
-        )
+        const gz = createGzip(gzipOptions)
+        const gzPut = put.set('Content-Encoding', 'gzip')
+        return gzPut.sendStream(streamOrPath.pipe(gz)).then(handleJson)
       }
-      return Request.prototype.thenJson.apply(put.sendStream(streamOrPath))
+      return put.sendStream(streamOrPath.pipe(PassThrough())).then(handleJson)
     }
     if (typeof streamOrPath === 'string' || streamOrPath instanceof String) {
       return put.query({unzip}).sendFile(streamOrPath).thenJson()

@@ -43,15 +43,13 @@ const client = new VBaseClient({
   endpointUrl: 'BETA',
 })
 
-const read = createReadStream('./test-send.txt')
-
 client.saveFile(
   'account',
   'workspace',
   'bucket',
   'test-send-stream-gzip.txt',
-  read,
-  {gzip: true}
+  createReadStream('./test-send.txt'),
+  {gzip: true, gzipOptions: {level: 9}}
 ).then((res) => {
   console.log('gz:', res)
 })
@@ -61,7 +59,7 @@ client.saveFile(
   'workspace',
   'bucket',
   'test-send-stream.txt',
-  read,
+  createReadStream('./test-send.txt'),
   {gzip: false}
 ).then((res) => {
   console.log('stream:', res)

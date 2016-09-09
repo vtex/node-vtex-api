@@ -46,13 +46,15 @@ Request.prototype.then = function (resolve, reject) {
   }, reject)
 }
 
+export const handleJson = res => {
+  if (res.is('json')) {
+    return res.json()
+  }
+  return res
+}
+
 Request.prototype.thenJson = function () {
-  return this.then(res => {
-    if (res.is('json')) {
-      return res.json()
-    }
-    return res
-  })
+  return this.then(handleJson)
 }
 
 Request.prototype.thenText = function () {
