@@ -20,8 +20,10 @@
   "license": "MIT",
   "dependencies": {
     "any-promise": "^1.3.0",
+    "destroy": "^1.0.4",
     "form-data": "^1.0.0-rc4",
-    "requisition": "^1.7.0"
+    "requisition": "^1.7.0",
+    "statuses": "^1.3.0"
   },
   "devDependencies": {
     "babel-cli": "^6.9.0",

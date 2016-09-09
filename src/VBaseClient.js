@@ -1,6 +1,9 @@
-import request from './http'
+import request, {handleJson} from './http'
 import getEndpointUrl from './utils/vbaseEndpoints.js'
 import checkRequiredParameters from './utils/required.js'
+import {createGzip} from 'zlib'
+import {basename} from 'path'
+import {PassThrough} from 'stream'
 
 class VBaseClient {
   constructor ({authToken, userAgent, endpointUrl = getEndpointUrl('STABLE')}) {
@@ -68,11 +71,22 @@ class VBaseClient {
     return this.http.get(url).thenText()
   }
 
-  saveFile (account, workspace, bucket, path, filePath, unzip = false) {
-    checkRequiredParameters({account, workspace, bucket, path, filePath})
+  saveFile (account, workspace, bucket, path, streamOrPath, {unzip, gzip, gzipOptions} = {}) {
+    checkRequiredParameters({account, workspace, bucket, path, streamOrPath})
     const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket, path)}`
-
-    return this.http.put(url).query({unzip}).sendFile(filePath).thenJson()
+    const put = this.http.put(url).type(basename(path))
+    if (streamOrPath.pipe && streamOrPath.on) {
+      if (gzip) {
+        const gz = createGzip(gzipOptions)
+        const gzPut = put.set('Content-Encoding', 'gzip')
+        return gzPut.sendStream(streamOrPath.pipe(gz)).then(handleJson)
+      }
+      return put.sendStream(streamOrPath.pipe(PassThrough())).then(handleJson)
+    }
+    if (typeof streamOrPath === 'string' || streamOrPath instanceof String) {
+      return put.query({unzip}).sendFile(streamOrPath).thenJson()
+    }
+    throw new Error('Argument streamOrPath must be a readable stream or the path to a file.')
   }
 
   deleteFile (account, workspace, bucket, path) {
