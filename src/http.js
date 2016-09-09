@@ -1,5 +1,8 @@
 import request from 'requisition'
 import Request from 'requisition/lib/request'
+import Response from 'requisition/lib/response'
+import destroy from 'destroy'
+import status from 'statuses'
 
 export default request
 
@@ -68,4 +71,31 @@ Request.prototype.query = function (options) {
     }
   }
   return baseQuery.apply(this, [query])
+}
+
+// TODO fork requisition and implement properly there.
+Request.prototype.sendStream = function (stream) {
+  var self = this
+  return new Promise(function (resolve, reject) {
+    var req = self._create()
+    stream.on('error', function (err) {
+      req.abort()
+      reject(err)
+    })
+    req.on('error', function (err) {
+      destroy(stream)
+      reject(err)
+    })
+    req.on('response', function (res) {
+      self.clearTimeout()
+      if (status.redirect[res.statusCode]) {
+        return resolve(self.redirect(res))
+      }
+      resolve(new Response(req, res, self.options))
+    })
+    req.on('close', function () {
+      destroy(stream)
+    })
+    stream.pipe(req)
+  })
 }
