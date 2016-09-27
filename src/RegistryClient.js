@@ -2,7 +2,7 @@ import FormData from 'form-data'
 import Promise from 'any-promise'
 import qs from 'querystring'
 import {createReadStream} from 'fs'
-import request, {successful} from './http'
+import request, {successful, StatusCodeError} from './http'
 import getEndpointUrl from './utils/apiEndpoints.js'
 import checkRequiredParameters from './utils/required.js'
 
@@ -41,12 +41,19 @@ class RegistryClient {
         headers: this.headers,
       }, (err, res) => {
         if (err) {
-          return reject(err)
-        }
-        // Publish response has an empty payload, no need to read stream.
-        if (!successful(res.statusCode)) {
           return reject(res)
         }
+        if (!successful(res.statusCode)) {
+          let data = ''
+          res.on('data', c => data += c) // eslint-disable-line
+          res.on('end', () => {
+            const error = new StatusCodeError(res.statusCode, res.statusMessage, res)
+            error.error = data
+            reject(error)
+          })
+          return
+        }
+        // Publish response has an empty payload, no need to read stream.
         resolve(res)
       })
     })
