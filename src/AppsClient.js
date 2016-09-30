@@ -83,11 +83,12 @@ class AppsClient {
   listAppFiles (account, workspace, app, {prefix = '', context = [], nextMarker = ''}) {
     checkRequiredParameters({account, workspace, app})
     const url = `${this.endpointUrl}${this.routes.Files(account, workspace, app)}`
+    const marker = encodeURIComponent(nextMarker)
 
     return this.http.get(url).query({
       prefix,
       context: contextQuery(context),
-      nextMarker,
+      marker,
     }).thenJson()
   }
 
