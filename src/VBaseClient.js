@@ -1,118 +1,71 @@
-import request, {handleJson} from './http'
-import getEndpointUrl from './utils/vbaseEndpoints.js'
-import checkRequiredParameters from './utils/required.js'
 import {createGzip} from 'zlib'
 import {basename} from 'path'
-import {PassThrough} from 'stream'
+import mime from 'mime-types'
+import Client from './Client'
+import {vbase} from './endpoints'
 
-class VBaseClient {
-  constructor ({authToken, userAgent, endpointUrl = getEndpointUrl('STABLE')}) {
-    checkRequiredParameters({authToken, userAgent})
-    this.authToken = authToken
-    this.endpointUrl = endpointUrl === 'BETA'
-      ? getEndpointUrl(endpointUrl)
-      : endpointUrl
-    this.userAgent = userAgent
-    this.headers = {
-      authorization: `token ${this.authToken}`,
-      'user-agent': this.userAgent,
-    }
-    this.http = request.defaults({
-      headers: this.headers,
-    })
-  }
+const DEFAULT_WORKSPACE = 'master'
 
-  promote (account, workspace) {
-    checkRequiredParameters({account, workspace})
-    const url = `${this.endpointUrl}${this.routes.WorkspaceMaster(account, workspace)}`
+const routes = {
+  Account: (account: string) =>
+    `/${account}`,
 
-    return this.http.put(url).send({workspace}).thenJson()
-  }
+  Workspace: (account: string, workspace: string) =>
+    `${this.Account(account)}/${workspace}`,
 
-  list (account) {
-    checkRequiredParameters({account})
-    const url = `${this.endpointUrl}${this.routes.Account(account)}`
+  DefaultWorkspace: (account: string) =>
+    `${this.Workspace(account, DEFAULT_WORKSPACE)}`,
 
-    return this.http.get(url).thenJson()
-  }
-
-  create (account, workspace) {
-    checkRequiredParameters({account, workspace})
-    const url = `${this.endpointUrl}${this.routes.Account(account)}`
-
-    return this.http.post(url).send({name: workspace}).thenJson()
-  }
-
-  get (account, workspace) {
-    checkRequiredParameters({account, workspace})
-    const url = `${this.endpointUrl}${this.routes.Workspace(account, workspace)}`
-
-    return this.http.get(url).thenJson()
-  }
-
-  delete (account, workspace) {
-    checkRequiredParameters({account, workspace})
-    const url = `${this.endpointUrl}${this.routes.Workspace(account, workspace)}`
-
-    return this.http.delete(url).thenJson()
-  }
-
-  listFiles (account, workspace, bucket, prefix = '') {
-    checkRequiredParameters({account, workspace, bucket})
-    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket)}`
-
-    return this.http.get(url).query({prefix}).thenJson()
-  }
-
-  getFile (account, workspace, bucket, path) {
-    checkRequiredParameters({account, workspace, bucket, path})
-    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket, path)}`
-
-    return this.http.get(url).thenText()
-  }
-
-  saveFile (account, workspace, bucket, path, streamOrPath, {unzip, gzip, gzipOptions} = {}) {
-    checkRequiredParameters({account, workspace, bucket, path, streamOrPath})
-    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket, path)}`
-    const put = this.http.put(url).type(basename(path))
-    if (streamOrPath.pipe && streamOrPath.on) {
-      if (gzip) {
-        const gz = createGzip(gzipOptions)
-        const gzPut = put.set('Content-Encoding', 'gzip')
-        return gzPut.sendStream(streamOrPath.pipe(gz)).then(handleJson)
-      }
-      return put.sendStream(streamOrPath.pipe(PassThrough())).then(handleJson)
-    }
-    if (typeof streamOrPath === 'string' || streamOrPath instanceof String) {
-      return put.query({unzip}).sendFile(streamOrPath).thenJson()
-    }
-    throw new Error('Argument streamOrPath must be a readable stream or the path to a file.')
-  }
-
-  deleteFile (account, workspace, bucket, path) {
-    checkRequiredParameters({account, workspace, bucket, path})
-    const url = `${this.endpointUrl}${this.routes.Files(account, workspace, bucket, path)}`
-
-    return this.http.delete(url).thenJson()
-  }
+  Files: (account: string, workspace: string, bucket: string, path?: string) =>
+    `${this.Workspace(account, workspace)}/buckets/${bucket}/files${path ? '/' + path : ''}`,
 }
 
-VBaseClient.prototype.routes = {
-  Account (account) {
-    return `/${account}`
-  },
+export default class VBaseClient extends Client {
+  constructor (authToken: string, userAgent: string, endpointUrl: string = 'STABLE') {
+    super(authToken, userAgent, vbase(endpointUrl))
+    this.routes = routes
+  }
 
-  Workspace (account, workspace) {
-    return `${this.Account(account)}/${workspace}`
-  },
+  promote (account: string, workspace) {
+    return this.http.put(this.routes.DefaultWorkspace(account, workspace), {workspace})
+  }
 
-  WorkspaceMaster (account) {
-    return `${this.Account(account)}/master`
-  },
+  list (account: string) {
+    return this.http(this.routes.Account(account))
+  }
 
-  Files (account, workspace, bucket, path) {
-    return `${this.Workspace(account, workspace)}/buckets/${bucket}/files${path ? '/' + path : ''}`
-  },
+  create (account: string, workspace: string) {
+    return this.http.post(this.routes.Account(account), {name: workspace})
+  }
+
+  get (account: string, workspace: string) {
+    return this.http(this.routes.Workspace(account, workspace))
+  }
+
+  delete (account: string, workspace: string) {
+    return this.http.delete(this.routes.Workspace(account, workspace))
+  }
+
+  listFiles (account: string, workspace: string, bucket: string, prefix?: string) {
+    const params = {prefix}
+    return this.http(this.routes.Files(account, workspace, bucket), {params})
+  }
+
+  getFile (account: string, workspace: string, bucket: string, path: string) {
+    return this.http(this.routes.Files(account, workspace, bucket, path))
+  }
+
+  saveFile (account: string, workspace: string, bucket: string, path: string, stream: ReadStream, gzip?: boolean = true) {
+    if (!(stream.pipe && stream.on)) {
+      throw new Error('Argument stream must be a readable stream')
+    }
+    const finalStream = gzip ? stream.pipe(createGzip()) : stream
+    const headers = gzip ? {'Content-Encoding': 'gzip'} : {}
+    headers['Content-Type'] = mime.contentType(basename(path))
+    return this.http.put(this.routes.Files(account, workspace, bucket, path), finalStream, {headers})
+  }
+
+  deleteFile (account: string, workspace: string, bucket: string, path: string) {
+    return this.http.delete(this.routes.Files(account, workspace, bucket, path))
+  }
 }
-
-export default VBaseClient
