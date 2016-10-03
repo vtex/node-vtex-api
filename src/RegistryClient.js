@@ -1,13 +1,13 @@
 /* @flow */
 import vmps from 'vinyl-multipart-stream'
-import {randomString} from 'vinyl-multipart-stream/common.js'
+import {randomString} from 'vinyl-multipart-stream/common'
 import {createGzip} from 'zlib'
 import Client from './Client'
-import getUrl from './utils/apiEndpoints.js'
+import {api} from './endpoints'
 
 export default class RegistryClient extends Client {
   constructor (authToken: string, userAgent: string, endpointUrl: string = 'STABLE') {
-    super(authToken, userAgent, getUrl(endpointUrl))
+    super(authToken, userAgent, api(endpointUrl))
     this.routes = {
       Registry: (account: string, workspace: string) =>
         `/${account}/${workspace}/registry`,
