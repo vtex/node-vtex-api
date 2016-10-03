@@ -31,7 +31,7 @@ export default class RegistryClient extends Client {
    * @param vinylStream A stream of Vinyl files.
    * @return Promise
    */
-  publishApp (account: string, workspace: string, vinylStream: ReadStream, isDevelopment: boolean = false) {
+  publishApp (account: string, workspace: string, vinylStream: ReadStream, isDevelopment?: boolean = false) {
     const boundary = randomString()
     const stream = vinylStream.pipe(vmps({boundary}))
     const gz = createGzip()
