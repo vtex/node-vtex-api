@@ -1,123 +1,74 @@
-import FormData from 'form-data'
-import Promise from 'any-promise'
-import qs from 'querystring'
-import {createReadStream} from 'fs'
-import request, {successful, StatusCodeError} from './http'
-import getEndpointUrl from './utils/apiEndpoints.js'
-import checkRequiredParameters from './utils/required.js'
+/* @flow */
+import vmps from 'vinyl-multipart-stream'
+import {randomString} from 'vinyl-multipart-stream/common.js'
+import {createGzip} from 'zlib'
+import Client from './Client'
+import getUrl from './utils/apiEndpoints.js'
 
-class RegistryClient {
-  constructor ({authToken, userAgent, endpointUrl = getEndpointUrl('STABLE')}) {
-    checkRequiredParameters({authToken, userAgent})
-    this.authToken = authToken
-    this.endpointUrl = endpointUrl === 'BETA'
-      ? getEndpointUrl(endpointUrl)
-      : endpointUrl
-    this.userAgent = userAgent
-    this.headers = {
-      authorization: `token ${this.authToken}`,
-      'user-agent': this.userAgent,
+export default class RegistryClient extends Client {
+  constructor (authToken: string, userAgent: string, endpointUrl: string = 'STABLE') {
+    super(authToken, userAgent, getUrl(endpointUrl))
+    this.routes = {
+      Registry: (account: string, workspace: string) =>
+        `/${account}/${workspace}/registry`,
+
+      Vendor: (account: string, workspace: string, vendor: string) =>
+        `${this.Registry(account, workspace)}/${vendor}/apps`,
+
+      App: (account: string, workspace: string, vendor: string, name: string, version?: string) =>
+        version
+        ? `${this.Vendor(account, workspace, vendor)}/${name}/${version}`
+        : `${this.Vendor(account, workspace, vendor)}/${name}`,
     }
-    this.http = request.defaults({
-      headers: this.headers,
+  }
+
+  /**
+   * Sends an app as a streaming, gzipped multipart/mixed HTTP POST request.
+   * @param account
+   * @param workspace
+   * @param vinylStream A stream of Vinyl files.
+   * @return Promise
+   */
+  publishApp (account: string, workspace: string, vinylStream: ReadStream, isDevelopment: boolean = false) {
+    const boundary = randomString()
+    const stream = vinylStream.pipe(vmps({boundary}))
+    const gz = createGzip()
+    return this.http({
+      method: 'POST',
+      url: this.routes.Registry(account, workspace),
+      data: stream.pipe(gz),
+      params: {isDevelopment},
+      headers: {
+        'Content-Type': `multipart/mixed; boundary=${boundary}`,
+      },
     })
   }
 
-  publishApp (account, workspace, zip, pre = false) {
-    checkRequiredParameters({account, workspace, zip})
-    const [protocol, hostWithPort] = this.endpointUrl.split('//')
-    const hostSplit = hostWithPort.split(':')
-    const host = hostSplit[0]
-    const port = hostSplit.length > 1 ? Number(hostSplit[1]) : 80
-    const path = `${this.routes.Registry(account, workspace)}?${qs.stringify({isPreRelease: pre})}`
-    const form = new FormData()
-    form.append('zip', (typeof zip === 'string' || zip instanceof String) ? createReadStream(zip) : zip)
-    return new Promise((resolve, reject) => {
-      form.submit({
-        protocol,
-        host,
-        port,
-        path,
-        headers: this.headers,
-      }, (err, res) => {
-        if (err) {
-          return reject(res)
-        }
-        if (!successful(res.statusCode)) {
-          let data = ''
-          res.on('data', c => data += c) // eslint-disable-line
-          res.on('end', () => {
-            const error = new StatusCodeError(res.statusCode, res.statusMessage, res)
-            error.error = data
-            reject(error)
-          })
-          return
-        }
-        // Publish response has an empty payload, no need to read stream.
-        resolve(res)
-      })
+  publishAppPatch (account: string, workspace: string, vendor: string, name: string, version: string, changes: any) {
+    return this.http({
+      method: 'PATCH',
+      data: changes,
+      url: this.routes.App(account, workspace, vendor, name, version),
     })
   }
 
-  publishAppPatch (account, workspace, vendor, name, version, changes) {
-    checkRequiredParameters({account, workspace, vendor, name, version, changes})
-    const url = `${this.endpointUrl}${this.routes.RegistryAppVersion(account, workspace, vendor, name, version)}`
-
-    return this.http.patch(url).send(changes).thenJson()
+  listVendors (account: string, workspace: string) {
+    return this.http(this.routes.Registry(account, workspace))
   }
 
-  listVendors (account, workspace) {
-    checkRequiredParameters({account, workspace})
-    const url = `${this.endpointUrl}${this.routes.Registry(account, workspace)}`
-
-    return this.http.get(url).thenJson()
+  listAppsByVendor (account: string, workspace: string, vendor: string) {
+    return this.http(this.routes.Vendor(account, workspace, vendor))
   }
 
-  listAppsByVendor (account, workspace, vendor) {
-    checkRequiredParameters({account, workspace, vendor})
-    const url = `${this.endpointUrl}${this.routes.RegistryVendor(account, workspace, vendor)}`
-
-    return this.http.get(url).thenJson()
-  }
-
-  listVersionsByApp (account, workspace, vendor, name, major = '') {
-    checkRequiredParameters({account, workspace, vendor, name})
-    const url = `${this.endpointUrl}${this.routes.RegistryApp(account, workspace, vendor, name)}`
-
-    return request.get(url).query({major}).thenJson()
+  listVersionsByApp (account: string, workspace: string, vendor: string, name: string) {
+    return this.http(this.routes.App(account, workspace, vendor, name))
   }
 
   getAppManifest (account, workspace, vendor, name, version) {
-    checkRequiredParameters({account, workspace, vendor, name, version})
-    const url = `${this.endpointUrl}${this.routes.RegistryVendor(account, workspace, vendor, name, version)}`
-
-    return this.http.get(url).thenJson()
+    return this.http(this.routes.App(account, workspace, vendor, name, version))
   }
 
   unpublishApp (account, workspace, vendor, name, version) {
-    checkRequiredParameters({account, workspace, vendor, name, version})
-    const url = `${this.endpointUrl}${this.routes.RegistryVendor(account, workspace, vendor, name, version)}`
-
-    return this.http.delete(url).thenJson()
+    return this.http.delete(this.routes.App(account, workspace, vendor, name, version))
   }
 }
-
-RegistryClient.prototype.routes = {
-  Registry (account, workspace) {
-    return `/${account}/${workspace}/registry`
-  },
-
-  RegistryVendor (account, workspace, vendor) {
-    return `${this.Registry(account, workspace)}/${vendor}/apps`
-  },
-
-  RegistryApp (account, workspace, vendor, name) {
-    return `${this.RegistryVendor(account, workspace, vendor)}/${name}`
-  },
-
-  RegistryAppVersion (account, workspace, vendor, name, version) {
-    return `${this.RegistryApp(account, workspace, vendor, name)}/${version}`
-  },
-}
-
-export default RegistryClient
