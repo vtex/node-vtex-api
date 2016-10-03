@@ -12,16 +12,15 @@ const routes = {
 export default class VTEXIDClient extends Client {
   constructor (authToken: string, userAgent: string, endpointUrl: string = 'STABLE') {
     super(authToken, userAgent, vtexid(endpointUrl))
-    this.routes = routes
   }
 
   getTemporaryToken () {
-    return this.http(this.routes.Start()).then(r => r.authenticationToken)
+    return this.http(routes.Start()).then(r => r.authenticationToken)
   }
 
   sendCodeToEmail (token: string, email: string) {
     const params = {authenticationToken: token, email}
-    return this.http(this.routes.Send(), {params})
+    return this.http(routes.Send(), {params})
   }
 
   getEmailCodeAuthenticationToken (token: string, email: string, code: string) {
@@ -30,7 +29,7 @@ export default class VTEXIDClient extends Client {
       accesskey: code,
       authenticationToken: token,
     }
-    return this.http(this.routes.Validate(), {params})
+    return this.http(routes.Validate(), {params})
   }
 
   getPasswordAuthenticationToken (token: string, email: string, password: string) {
@@ -39,6 +38,6 @@ export default class VTEXIDClient extends Client {
       login: encodeURIComponent(email),
       password: encodeURIComponent(password),
     }
-    return this.http(this.routes.ValidateClassic(), {params})
+    return this.http(routes.ValidateClassic(), {params})
   }
 }

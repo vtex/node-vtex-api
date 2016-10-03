@@ -10,18 +10,17 @@ const routes = {
     `/${account}/${workspace}/registry`,
 
   Vendor: (account: string, workspace: string, vendor: string) =>
-    `${this.Registry(account, workspace)}/${vendor}/apps`,
+    `${routes.Registry(account, workspace)}/${vendor}/apps`,
 
   App: (account: string, workspace: string, vendor: string, name: string, version?: string) =>
     version
-    ? `${this.Vendor(account, workspace, vendor)}/${name}/${version}`
-    : `${this.Vendor(account, workspace, vendor)}/${name}`,
+    ? `${routes.Vendor(account, workspace, vendor)}/${name}/${version}`
+    : `${routes.Vendor(account, workspace, vendor)}/${name}`,
 }
 
 export default class RegistryClient extends Client {
   constructor (authToken: string, userAgent: string, endpointUrl: string = 'STABLE') {
     super(authToken, userAgent, api(endpointUrl))
-    this.routes = routes
   }
 
   /**
@@ -37,7 +36,7 @@ export default class RegistryClient extends Client {
     const gz = createGzip()
     return this.http({
       method: 'POST',
-      url: this.routes.Registry(account, workspace),
+      url: routes.Registry(account, workspace),
       data: stream.pipe(gz),
       params: {isDevelopment},
       headers: {
@@ -50,27 +49,27 @@ export default class RegistryClient extends Client {
     return this.http({
       method: 'PATCH',
       data: changes,
-      url: this.routes.App(account, workspace, vendor, name, version),
+      url: routes.App(account, workspace, vendor, name, version),
     })
   }
 
   listVendors (account: string, workspace: string) {
-    return this.http(this.routes.Registry(account, workspace))
+    return this.http(routes.Registry(account, workspace))
   }
 
   listAppsByVendor (account: string, workspace: string, vendor: string) {
-    return this.http(this.routes.Vendor(account, workspace, vendor))
+    return this.http(routes.Vendor(account, workspace, vendor))
   }
 
   listVersionsByApp (account: string, workspace: string, vendor: string, name: string) {
-    return this.http(this.routes.App(account, workspace, vendor, name))
+    return this.http(routes.App(account, workspace, vendor, name))
   }
 
   getAppManifest (account, workspace, vendor, name, version) {
-    return this.http(this.routes.App(account, workspace, vendor, name, version))
+    return this.http(routes.App(account, workspace, vendor, name, version))
   }
 
   unpublishApp (account, workspace, vendor, name, version) {
-    return this.http.delete(this.routes.App(account, workspace, vendor, name, version))
+    return this.http.delete(routes.App(account, workspace, vendor, name, version))
   }
 }
