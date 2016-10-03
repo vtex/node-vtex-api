@@ -1,4 +1,4 @@
 {
   "presets": ["latest-minimal"],
-  "plugins": ["transform-object-rest-spread"]
+  "plugins": ["transform-object-rest-spread", "transform-flow-strip-types"]
 }
