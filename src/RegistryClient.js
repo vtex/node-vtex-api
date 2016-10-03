@@ -5,21 +5,23 @@ import {createGzip} from 'zlib'
 import Client from './Client'
 import {api} from './endpoints'
 
+const routes = {
+  Registry: (account: string, workspace: string) =>
+    `/${account}/${workspace}/registry`,
+
+  Vendor: (account: string, workspace: string, vendor: string) =>
+    `${this.Registry(account, workspace)}/${vendor}/apps`,
+
+  App: (account: string, workspace: string, vendor: string, name: string, version?: string) =>
+    version
+    ? `${this.Vendor(account, workspace, vendor)}/${name}/${version}`
+    : `${this.Vendor(account, workspace, vendor)}/${name}`,
+}
+
 export default class RegistryClient extends Client {
   constructor (authToken: string, userAgent: string, endpointUrl: string = 'STABLE') {
     super(authToken, userAgent, api(endpointUrl))
-    this.routes = {
-      Registry: (account: string, workspace: string) =>
-        `/${account}/${workspace}/registry`,
-
-      Vendor: (account: string, workspace: string, vendor: string) =>
-        `${this.Registry(account, workspace)}/${vendor}/apps`,
-
-      App: (account: string, workspace: string, vendor: string, name: string, version?: string) =>
-        version
-        ? `${this.Vendor(account, workspace, vendor)}/${name}/${version}`
-        : `${this.Vendor(account, workspace, vendor)}/${name}`,
-    }
+    this.routes = routes
   }
 
   /**
