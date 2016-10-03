@@ -2,6 +2,23 @@
 import Client from './Client'
 import {api} from './endpoints'
 
+type Context = {
+  context: Array<string>
+}
+
+type ListSettings = {
+  oldVersion: string,
+  context: Array<string>,
+  since: string,
+  service: string,
+}
+
+type ListFilesSettings = {
+  prefix: string,
+  context: Array<string>,
+  nextMarker: string,
+}
+
 const routes = {
   Apps: (account: string, workspace: string) =>
     `/${account}/${workspace}/apps`,
@@ -22,7 +39,7 @@ const routes = {
     `/${account}/${workspace}/dependencyMap`,
 }
 
-const contextQuery = (context?: array) => context ? context.join('/') : context
+const contextQuery = (context?: Array<string>) => context ? context.join('/') : context
 
 export default class AppsClient extends Client {
   constructor (authToken: string, userAgent: string, endpointUrl: string = 'STABLE') {
@@ -37,7 +54,7 @@ export default class AppsClient extends Client {
     return this.http.delete(routes.App(account, workspace, app))
   }
 
-  getAppSettings (account: string, workspace: string, app: string, {context} = {}) {
+  getAppSettings (account: string, workspace: string, app: string, {context}: Context = {}) {
     const params = {context: contextQuery(context)}
     return this.http(
       routes.Settings(account, workspace, app),
@@ -45,7 +62,7 @@ export default class AppsClient extends Client {
     )
   }
 
-  updateAppSettings (account: string, workspace: string, app: string, settings: any, {context} = {}) {
+  updateAppSettings (account: string, workspace: string, app: string, settings: any, {context}: Context = {}) {
     const params = {context: contextQuery(context)}
     return this.http.put(
       routes.Settings(account, workspace, app),
@@ -54,7 +71,7 @@ export default class AppsClient extends Client {
     )
   }
 
-  patchAppSettings (account: string, workspace: string, app: string, settings: any, {context} = {}) {
+  patchAppSettings (account: string, workspace: string, app: string, settings: any, {context}: Context = {}) {
     const params = {context: contextQuery(context)}
     return this.http.patch(
       routes.Settings(account, workspace, app),
@@ -67,7 +84,7 @@ export default class AppsClient extends Client {
     return this.http.patch(routes.App(account, workspace, app))
   }
 
-  listApps (account: string, workspace: string, {oldVersion, context, since, service}) {
+  listApps (account: string, workspace: string, {oldVersion, context, since, service}: ListSettings) {
     const params = {
       oldVersion,
       context: contextQuery(context),
@@ -77,7 +94,7 @@ export default class AppsClient extends Client {
     return this.http(routes.Apps(account, workspace), {params})
   }
 
-  listAppFiles (account: string, workspace: string, app: string, {prefix, context, nextMarker}) {
+  listAppFiles (account: string, workspace: string, app: string, {prefix, context, nextMarker}: ListFilesSettings) {
     const params = {
       prefix,
       context: contextQuery(context),
@@ -86,12 +103,12 @@ export default class AppsClient extends Client {
     return this.http(routes.Files(account, workspace, app), {params})
   }
 
-  getAppFile (account: string, workspace: string, app: string, path: string, context: array = []) {
+  getAppFile (account: string, workspace: string, app: string, path: string, context: Array<string> = []) {
     const params = {context: contextQuery(context)}
     return this.http(routes.File(account, workspace, app, path), {params})
   }
 
-  getApp (account: string, workspace: string, app: string, context: array = []) {
+  getApp (account: string, workspace: string, app: string, context: Array<string> = []) {
     const params = {context: contextQuery(context)}
     return this.http(routes.App(account, workspace, app), {params})
   }
