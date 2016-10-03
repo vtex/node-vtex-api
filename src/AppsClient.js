@@ -3,22 +3,22 @@ import Client from './Client'
 import {api} from './endpoints'
 
 const routes = {
-  Apps: (account, workspace) =>
+  Apps: (account: string, workspace: string) =>
     `/${account}/${workspace}/apps`,
 
-  App: (account, workspace, app) =>
+  App: (account: string, workspace: string, app: string) =>
     `${this.Apps(account, workspace)}/${app}`,
 
-  Settings: (account, workspace, app) =>
+  Settings: (account: string, workspace: string, app: string) =>
     `${this.App(account, workspace, app)}/settings`,
 
-  Files: (account, workspace, app) =>
+  Files: (account: string, workspace: string, app: string) =>
     `${this.App(account, workspace, app)}/files`,
 
-  File: (account, workspace, app, path) =>
+  File: (account: string, workspace: string, app: string, path: string) =>
     `${this.Files(account, workspace, app)}/${path}`,
 
-  DependencyMap: (account, workspace) =>
+  DependencyMap: (account: string, workspace: string) =>
     `/${account}/${workspace}/dependencyMap`,
 }
 
