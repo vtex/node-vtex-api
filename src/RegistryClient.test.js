@@ -21,13 +21,11 @@ const x = 123
 test('publishApp streams a multipart/mixed request', async t => {
   t.plan(2)
   const jsFile = new Vinyl({
-    cwd: '/',
     base: '/',
     path: '/render/index.js',
     contents: new Buffer('const x = 123', 'utf8'),
   })
   const manifest = new Vinyl({
-    cwd: '/',
     base: '/',
     path: '/manifest.json',
     contents: new Buffer('{"name": "test"}', 'utf8'),
