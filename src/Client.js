@@ -1,6 +1,8 @@
+/* @flow */
 import axios from 'axios'
 
 export default class Client {
+  http: any
   constructor (authToken: string, userAgent: string, baseURL: string) {
     const headers = {
       'Authorization': `token ${authToken}`,

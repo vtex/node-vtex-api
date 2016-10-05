@@ -1,8 +1,12 @@
+/* @flow */
 import {createGzip} from 'zlib'
 import {basename} from 'path'
 import mime from 'mime-types'
 import Client from './Client'
 import {vbase} from './endpoints'
+import type {Readable} from 'stream'
+
+type Headers = { [key: string]: string }
 
 const DEFAULT_WORKSPACE = 'master'
 
@@ -25,7 +29,7 @@ export default class VBaseClient extends Client {
     super(authToken, userAgent, vbase(endpointUrl))
   }
 
-  promote (account: string, workspace) {
+  promote (account: string, workspace: string) {
     return this.http.put(routes.DefaultWorkspace(account, workspace), {workspace})
   }
 
@@ -54,12 +58,12 @@ export default class VBaseClient extends Client {
     return this.http(routes.Files(account, workspace, bucket, path))
   }
 
-  saveFile (account: string, workspace: string, bucket: string, path: string, stream: ReadStream, gzip?: boolean = true) {
+  saveFile (account: string, workspace: string, bucket: string, path: string, stream: Readable, gzip?: boolean = true) {
     if (!(stream.pipe && stream.on)) {
       throw new Error('Argument stream must be a readable stream')
     }
     const finalStream = gzip ? stream.pipe(createGzip()) : stream
-    const headers = gzip ? {'Content-Encoding': 'gzip'} : {}
+    const headers: Headers = gzip ? {'Content-Encoding': 'gzip'} : {}
     headers['Content-Type'] = mime.contentType(basename(path))
     return this.http.put(routes.Files(account, workspace, bucket, path), finalStream, {headers})
   }
