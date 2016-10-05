@@ -4,7 +4,8 @@ import {randomString} from 'vinyl-multipart-stream/common'
 import {createGzip} from 'zlib'
 import Client from './Client'
 import {api} from './endpoints'
-import type {Readable} from 'stream'
+import Stream from 'stream'
+import type {Readable} from 'stream' // eslint-disable-line
 
 const routes = {
   Registry: (account: string, workspace: string) =>
@@ -51,10 +52,18 @@ export default class RegistryClient extends Client {
   }
 
   publishAppPatch (account: string, workspace: string, vendor: string, name: string, version: string, changes: any) {
+    const gz = createGzip()
+    const stream = new Stream.Readable()
+    stream.push(JSON.stringify(changes))
+    stream.push(null)
     return this.http({
       method: 'PATCH',
-      data: changes,
+      data: stream.pipe(gz),
       url: routes.App(account, workspace, vendor, name, version),
+      headers: {
+        'Content-Encoding': 'gzip',
+        'Content-Type': 'application/json',
+      },
     })
   }
 

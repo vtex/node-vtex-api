@@ -57,3 +57,33 @@ test('publishApp streams a multipart/mixed request', async t => {
   await reply
   server.close()
 })
+
+test('publishAppPatch sends changes array', async t => {
+  t.plan(4)
+  const changes = [
+    {
+      path: 'manifest.json',
+      action: 'save',
+      content: new Buffer('{"name": "app"}').toString('base64'),
+      encoding: 'base64',
+    },
+  ]
+  const requestHandler = (req, res) => {
+    t.is(req.headers['content-type'], 'application/json')
+    t.is(req.headers['content-encoding'], 'gzip')
+    t.is(req.url, '/account/workspace/registry/vtex/apps/app/version')
+    let data = ''
+    const gz = createGunzip()
+    req.pipe(gz)
+    gz.on('data', c => { data += c })
+    gz.on('end', () => {
+      t.is(data, JSON.stringify(changes))
+      res.end()
+    })
+  }
+  const client = new RegistryClient('auth', 'agent', 'http://localhost:13378')
+  const server = createServer(requestHandler)
+  server.listen(13378)
+  await client.publishAppPatch('account', 'workspace', 'vtex', 'app', 'version', changes)
+  server.close()
+})
