@@ -27,6 +27,7 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^0.14.0",
+    "mime-types": "^2.1.12",
     "vinyl-multipart-stream": "^1.2.6"
   },
   "devDependencies": {
