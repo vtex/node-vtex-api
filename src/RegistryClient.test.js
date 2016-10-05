@@ -5,42 +5,52 @@ import {createServer} from 'http'
 import {createGunzip} from 'zlib'
 import RegistryClient from './RegistryClient'
 
+const expectedMultipartBody = (boundary) =>
+`--${boundary}
+Content-Disposition: file; filename="manifest.json"
+Content-Type: application/octet-stream
+
+{"name": "test"}
+--${boundary}
+Content-Disposition: file; filename="render/index.js"
+Content-Type: application/octet-stream
+
+const x = 123
+--${boundary}--`.replace(/\n/g, '\r\n')
+
 test('publishApp streams a multipart/mixed request', async t => {
-  const jsContents = 'const x = 123'
+  t.plan(2)
   const jsFile = new Vinyl({
     cwd: '/',
     base: '/',
     path: '/render/index.js',
-    contents: new Buffer(jsContents, 'utf8'),
+    contents: new Buffer('const x = 123', 'utf8'),
   })
-  const manifestContents = '{"name": "test"}'
   const manifest = new Vinyl({
     cwd: '/',
     base: '/',
     path: '/manifest.json',
-    contents: new Buffer(manifestContents, 'utf8'),
+    contents: new Buffer('{"name": "test"}', 'utf8'),
   })
   const client = new RegistryClient('auth', 'agent', 'http://localhost:13377')
   const pass = new PassThrough({objectMode: true})
   const server = createServer((req, res) => {
-    t.true(req.headers['content-type'].startsWith('multipart/mixed; boundary='))
-    const boundary = req.headers['content-type'].split('multipart/mixed; boundary=')[1]
+    t.true(req.headers['content-type'].startsWith('multipart/mixed'))
     let data = ''
+    const boundary = req.headers['content-type'].split('multipart/mixed; boundary=')[1]
     const gz = createGunzip()
     req.pipe(gz)
     gz.on('data', c => { data += c })
     gz.on('end', () => {
-      const [manifestData, jsData] = data.split(`--${boundary}`).slice(1)
-      t.true(manifestData.includes(manifestContents))
-      t.true(jsData.includes(jsContents))
-      res.end('ok')
+      t.is(data, expectedMultipartBody(boundary))
+      res.end()
     })
   })
   server.listen(13377)
+  const reply = client.publishApp('account', 'workspace', pass, false)
   pass.write(manifest)
   pass.write(jsFile)
   pass.end()
-  const reply = await client.publishApp('account', 'workspace', pass, false)
-  t.is(reply.data, 'ok')
+  await reply
   server.close()
 })
