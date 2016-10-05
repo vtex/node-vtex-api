@@ -5,6 +5,18 @@ import {createServer} from 'http'
 import {createGunzip} from 'zlib'
 import RegistryClient from './RegistryClient'
 
+const jsFile = new Vinyl({
+  base: '/',
+  path: '/render/index.js',
+  contents: new Buffer('const x = 123', 'utf8'),
+})
+
+const manifest = new Vinyl({
+  base: '/',
+  path: '/manifest.json',
+  contents: new Buffer('{"name": "test"}', 'utf8'),
+})
+
 const expectedMultipartBody = (boundary) =>
 `--${boundary}
 Content-Disposition: file; filename="manifest.json"
@@ -32,16 +44,6 @@ test('publishApp streams a multipart/mixed request', async t => {
       res.end()
     })
   }
-  const jsFile = new Vinyl({
-    base: '/',
-    path: '/render/index.js',
-    contents: new Buffer('const x = 123', 'utf8'),
-  })
-  const manifest = new Vinyl({
-    base: '/',
-    path: '/manifest.json',
-    contents: new Buffer('{"name": "test"}', 'utf8'),
-  })
   const client = new RegistryClient('auth', 'agent', 'http://localhost:13377')
   const pass = new PassThrough({objectMode: true})
   const server = createServer(requestHandler)
