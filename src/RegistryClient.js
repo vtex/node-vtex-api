@@ -44,6 +44,7 @@ export default class RegistryClient extends Client {
       data: multipart.pipe(gz),
       params: {isDevelopment},
       headers: {
+        'Content-Encoding': 'gzip',
         'Content-Type': `multipart/mixed; boundary=${boundary}`,
       },
     })

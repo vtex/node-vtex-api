@@ -31,10 +31,11 @@ const x = 123
 --${boundary}--`.replace(/\n/g, '\r\n')
 
 test('publishApp streams a multipart/mixed request', async t => {
-  t.plan(3)
+  t.plan(4)
   const requestHandler = (req, res) => {
     t.true(req.headers['content-type'].startsWith('multipart/mixed'))
     t.is(req.url, '/account/workspace/registry?isDevelopment=false')
+    t.is(req.headers['content-encoding'], 'gzip')
     let data = ''
     const boundary = req.headers['content-type'].split('multipart/mixed; boundary=')[1]
     const gz = createGunzip()
