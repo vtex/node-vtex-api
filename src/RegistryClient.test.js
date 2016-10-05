@@ -20,6 +20,18 @@ const x = 123
 
 test('publishApp streams a multipart/mixed request', async t => {
   t.plan(2)
+  const requestHandler = (req, res) => {
+    t.true(req.headers['content-type'].startsWith('multipart/mixed'))
+    let data = ''
+    const boundary = req.headers['content-type'].split('multipart/mixed; boundary=')[1]
+    const gz = createGunzip()
+    req.pipe(gz)
+    gz.on('data', c => { data += c })
+    gz.on('end', () => {
+      t.is(data, expectedMultipartBody(boundary))
+      res.end()
+    })
+  }
   const jsFile = new Vinyl({
     base: '/',
     path: '/render/index.js',
@@ -32,18 +44,7 @@ test('publishApp streams a multipart/mixed request', async t => {
   })
   const client = new RegistryClient('auth', 'agent', 'http://localhost:13377')
   const pass = new PassThrough({objectMode: true})
-  const server = createServer((req, res) => {
-    t.true(req.headers['content-type'].startsWith('multipart/mixed'))
-    let data = ''
-    const boundary = req.headers['content-type'].split('multipart/mixed; boundary=')[1]
-    const gz = createGunzip()
-    req.pipe(gz)
-    gz.on('data', c => { data += c })
-    gz.on('end', () => {
-      t.is(data, expectedMultipartBody(boundary))
-      res.end()
-    })
-  })
+  const server = createServer(requestHandler)
   server.listen(13377)
   const reply = client.publishApp('account', 'workspace', pass, false)
   pass.write(manifest)
