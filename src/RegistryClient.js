@@ -1,11 +1,16 @@
 /* @flow */
-import vmps from 'vinyl-multipart-stream'
-import {randomString} from 'vinyl-multipart-stream/common'
+import Multipart from 'multipart-stream'
 import {createGzip} from 'zlib'
+import {basename} from 'path'
+import mime from 'mime-types'
+import Stream from 'stream'
 import Client from './Client'
 import {api} from './endpoints'
-import Stream from 'stream'
-import type {Readable} from 'stream' // eslint-disable-line
+
+type File = {
+  path: string,
+  contents: any,
+}
 
 const routes = {
   Registry: (account: string, workspace: string) =>
@@ -32,12 +37,24 @@ export default class RegistryClient extends Client {
    * @param stream A stream of Vinyl files.
    * @return Promise
    */
-  publishApp (account: string, workspace: string, stream: Readable, isDevelopment?: boolean = false) {
-    if (!(stream.pipe && stream.on)) {
-      throw new Error('Argument stream must be a readable stream of Vinyl files')
+  publishApp (account: string, workspace: string, files: Array<File>, isDevelopment?: boolean = false) {
+    if (!(files[0] && files[0].path && files[0].contents)) {
+      throw new Error('Argument files must be an array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.')
     }
-    const boundary = randomString()
-    const multipart = stream.pipe(vmps({boundary}))
+    const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
+    if (indexOfManifest === -1) {
+      throw new Error('No manifest.json file found in files.')
+    }
+    const sortedFiles = files.splice(indexOfManifest, 1).concat(files)
+    const multipart = new Multipart()
+    const boundary = multipart.boundary
+    sortedFiles.forEach(({path, contents}) => multipart.addPart({
+      headers: {
+        'Content-Disposition': `inline; filename="${path}"`,
+        'Content-Type': mime.contentType(basename(path)),
+      },
+      body: contents,
+    }))
     const gz = createGzip()
     return this.http({
       method: 'POST',

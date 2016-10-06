@@ -1,31 +1,27 @@
 import test from 'ava'
-import Vinyl from 'vinyl'
-import {PassThrough} from 'stream'
 import {createServer} from 'http'
 import {createGunzip} from 'zlib'
 import RegistryClient from './RegistryClient'
 
-const jsFile = new Vinyl({
-  base: '/',
-  path: '/render/index.js',
+const jsFile = {
+  path: 'render/index.js',
   contents: new Buffer('const x = 123', 'utf8'),
-})
+}
 
-const manifest = new Vinyl({
-  base: '/',
-  path: '/manifest.json',
+const manifest = {
+  path: 'manifest.json',
   contents: new Buffer('{"name": "test"}', 'utf8'),
-})
+}
 
 const expectedMultipartBody = (boundary) =>
 `--${boundary}
-Content-Disposition: file; filename="manifest.json"
-Content-Type: application/octet-stream
+Content-Disposition: inline; filename="manifest.json"
+Content-Type: application/json; charset=utf-8
 
 {"name": "test"}
 --${boundary}
-Content-Disposition: file; filename="render/index.js"
-Content-Type: application/octet-stream
+Content-Disposition: inline; filename="render/index.js"
+Content-Type: application/javascript; charset=utf-8
 
 const x = 123
 --${boundary}--`.replace(/\n/g, '\r\n')
@@ -48,14 +44,9 @@ test('publishApp streams a multipart/mixed request', async t => {
     })
   }
   const client = new RegistryClient('auth', 'agent', 'http://localhost:13377')
-  const pass = new PassThrough({objectMode: true})
   const server = createServer(requestHandler)
   server.listen(13377)
-  const reply = client.publishApp('account', 'workspace', pass, false)
-  pass.write(manifest)
-  pass.write(jsFile)
-  pass.end()
-  await reply
+  await client.publishApp('account', 'workspace', [jsFile, manifest], false)
   server.close()
 })
 
