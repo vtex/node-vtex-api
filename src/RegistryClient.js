@@ -34,7 +34,7 @@ export default class RegistryClient extends Client {
    * Sends an app as a streaming, gzipped multipart/mixed HTTP POST request.
    * @param account
    * @param workspace
-   * @param stream A stream of Vinyl files.
+   * @param files An array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.
    * @return Promise
    */
   publishApp (account: string, workspace: string, files: Array<File>, isDevelopment?: boolean = false) {

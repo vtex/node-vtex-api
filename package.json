@@ -12,7 +12,7 @@
     "flow": "flow check",
     "copy": "flow-copy-source -v src lib --ignore=*.test.js",
     "lint": "eslint src",
-    "prepublish": "run-s test build copy"
+    "prepublish": "run-s build copy test"
   },
   "engines": {
     "node": ">=4"
