@@ -5,11 +5,12 @@ import {createGunzip} from 'zlib'
 import VBaseClient from './VBaseClient'
 
 test('saveFile streams a file', async t => {
-  t.plan(4)
+  t.plan(5)
   const requestHandler = (req, res) => {
     t.is(req.headers['content-type'], 'text/plain; charset=utf-8')
     t.is(req.url, '/account/workspace/buckets/render/files/test.txt')
     t.is(req.headers['content-encoding'], 'gzip')
+    t.is(req.headers['transfer-encoding'], 'chunked')
     let data = ''
     const gz = createGunzip()
     req.pipe(gz)
@@ -31,11 +32,12 @@ test('saveFile streams a file', async t => {
 })
 
 test('saveFile streams a file without gzip', async t => {
-  t.plan(4)
+  t.plan(5)
   const requestHandler = (req, res) => {
     t.is(req.headers['content-type'], 'text/plain; charset=utf-8')
     t.is(req.url, '/account/workspace/buckets/render/files/test.txt')
     t.is(req.headers['content-encoding'], undefined)
+    t.is(req.headers['transfer-encoding'], 'chunked')
     let data = ''
     req.on('data', c => { data += c })
     req.on('end', () => {
