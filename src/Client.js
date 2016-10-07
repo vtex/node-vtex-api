@@ -1,6 +1,8 @@
 /* @flow */
 import axios from 'axios'
 
+const data = ({data}) => data
+
 export default class Client {
   http: any
   constructor (authToken: string, userAgent: string, baseURL: string) {
@@ -12,5 +14,6 @@ export default class Client {
       baseURL,
       headers,
     })
+    this.http.interceptors.response.use(data, Promise.reject)
   }
 }
