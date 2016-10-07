@@ -84,7 +84,7 @@ export default class AppsClient extends Client {
     return this.http.patch(routes.App(account, workspace, app))
   }
 
-  listApps (account: string, workspace: string, {oldVersion, context, since, service}: ListSettings) {
+  listApps (account: string, workspace: string, {oldVersion, context, since, service}: ListSettings = {}) {
     const params = {
       oldVersion,
       context: contextQuery(context),
@@ -94,7 +94,7 @@ export default class AppsClient extends Client {
     return this.http(routes.Apps(account, workspace), {params})
   }
 
-  listAppFiles (account: string, workspace: string, app: string, {prefix, context, nextMarker}: ListFilesSettings) {
+  listAppFiles (account: string, workspace: string, app: string, {prefix, context, nextMarker}: ListFilesSettings = {}) {
     const params = {
       prefix,
       context: contextQuery(context),
