@@ -4,6 +4,7 @@
   "description": "VTEX I/O API client",
   "main": "./lib/index.js",
   "scripts": {
+    "clean": "rimraf lib/",
     "ava": "ava",
     "test": "run-s lint flow ava",
     "test-watch": "ava --watch",
@@ -12,7 +13,7 @@
     "flow": "flow check",
     "copy": "flow-copy-source -v src lib --ignore=*.test.js",
     "lint": "eslint src",
-    "prepublish": "run-s build copy test"
+    "prepublish": "run-s clean build copy test"
   },
   "engines": {
     "node": ">=4"
@@ -32,9 +33,8 @@
   },
   "devDependencies": {
     "ava": "^0.16.0",
-    "babel-cli": "^6.9.0",
-    "babel-eslint": "^6.0.4",
-    "babel-plugin-syntax-async-functions": "^6.13.0",
+    "babel-cli": "^6.16.0",
+    "babel-eslint": "^6.1.2",
     "babel-plugin-transform-flow-strip-types": "^6.14.0",
     "babel-preset-es2015-node4": "^2.1.0",
     "babel-register": "^6.16.3",
@@ -48,11 +48,9 @@
     "rimraf": "^2.5.2"
   },
   "ava": {
-    "verbose": true,
     "failFast": true,
     "require": [
       "babel-register"
-    ],
-    "babel": "inherit"
+    ]
   }
 }
