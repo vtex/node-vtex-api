@@ -29,6 +29,9 @@ const routes = {
   App: (account: string, workspace: string, app: string) =>
     `${routes.Apps(account, workspace)}/${app}`,
 
+  Acknowledge: (account: string, workspace: string, app: string, service: string) =>
+    `${routes.App(account, workspace, app)}/acknowledge/${service}`,
+
   Settings: (account: string, workspace: string, app: string) =>
     `${routes.App(account, workspace, app)}/settings`,
 
@@ -55,6 +58,10 @@ export default class AppsClient extends Client {
 
   uninstallApp (account: string, workspace: string, app: string) {
     return this.http.delete(routes.App(account, workspace, app))
+  }
+
+  acknowledgeApp (account: string, workspace: string, app: string, service: string) {
+    return this.http.put(routes.Acknowledge(account, workspace, app, service))
   }
 
   getAppSettings (account: string, workspace: string, app: string, {context}: Context = {}) {
