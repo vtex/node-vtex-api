@@ -1,123 +1,106 @@
-import FormData from 'form-data'
-import Promise from 'any-promise'
-import qs from 'querystring'
-import {createReadStream} from 'fs'
-import request, {successful, StatusCodeError} from './http'
-import getEndpointUrl from './utils/apiEndpoints.js'
-import checkRequiredParameters from './utils/required.js'
+/* @flow */
+import Multipart from 'multipart-stream'
+import {createGzip} from 'zlib'
+import {basename} from 'path'
+import mime from 'mime-types'
+import Stream from 'stream'
+import Client from './Client'
+import {api} from './endpoints'
 
-class RegistryClient {
-  constructor ({authToken, userAgent, endpointUrl = getEndpointUrl('STABLE')}) {
-    checkRequiredParameters({authToken, userAgent})
-    this.authToken = authToken
-    this.endpointUrl = endpointUrl === 'BETA'
-      ? getEndpointUrl(endpointUrl)
-      : endpointUrl
-    this.userAgent = userAgent
-    this.headers = {
-      authorization: `token ${this.authToken}`,
-      'user-agent': this.userAgent,
+type File = {
+  path: string,
+  contents: any,
+}
+
+const routes = {
+  Registry: (account: string, workspace: string) =>
+    `/${account}/${workspace}/registry`,
+
+  Vendor: (account: string, workspace: string, vendor: string) =>
+    `${routes.Registry(account, workspace)}/${vendor}/apps`,
+
+  App: (account: string, workspace: string, vendor: string, name: string, version?: string) =>
+    version
+    ? `${routes.Vendor(account, workspace, vendor)}/${name}/${version}`
+    : `${routes.Vendor(account, workspace, vendor)}/${name}`,
+}
+
+export default class RegistryClient extends Client {
+  constructor (authToken: string, userAgent: string, endpointUrl: string = 'STABLE') {
+    super(authToken, userAgent, api(endpointUrl))
+  }
+
+  /**
+   * Sends an app as a streaming, gzipped multipart/mixed HTTP POST request.
+   * @param account
+   * @param workspace
+   * @param files An array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.
+   * @return Promise
+   */
+  publishApp (account: string, workspace: string, files: Array<File>, isDevelopment?: boolean = false) {
+    if (!(files[0] && files[0].path && files[0].contents)) {
+      throw new Error('Argument files must be an array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.')
     }
-    this.http = request.defaults({
-      headers: this.headers,
+    const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
+    if (indexOfManifest === -1) {
+      throw new Error('No manifest.json file found in files.')
+    }
+    const sortedFiles = files.splice(indexOfManifest, 1).concat(files)
+    const multipart = new Multipart()
+    const boundary = multipart.boundary
+    sortedFiles.forEach(({path, contents}) => multipart.addPart({
+      headers: {
+        'Content-Disposition': `inline; filename="${path}"`,
+        'Content-Type': mime.contentType(basename(path)),
+      },
+      body: contents,
+    }))
+    const gz = createGzip()
+    return this.http({
+      method: 'POST',
+      url: routes.Registry(account, workspace),
+      data: multipart.pipe(gz),
+      params: {isDevelopment},
+      headers: {
+        'Content-Encoding': 'gzip',
+        'Content-Type': `multipart/mixed; boundary=${boundary}`,
+      },
     })
   }
 
-  publishApp (account, workspace, zip, pre = false) {
-    checkRequiredParameters({account, workspace, zip})
-    const [protocol, hostWithPort] = this.endpointUrl.split('//')
-    const hostSplit = hostWithPort.split(':')
-    const host = hostSplit[0]
-    const port = hostSplit.length > 1 ? Number(hostSplit[1]) : 80
-    const path = `${this.routes.Registry(account, workspace)}?${qs.stringify({isPreRelease: pre})}`
-    const form = new FormData()
-    form.append('zip', (typeof zip === 'string' || zip instanceof String) ? createReadStream(zip) : zip)
-    return new Promise((resolve, reject) => {
-      form.submit({
-        protocol,
-        host,
-        port,
-        path,
-        headers: this.headers,
-      }, (err, res) => {
-        if (err) {
-          return reject(res)
-        }
-        if (!successful(res.statusCode)) {
-          let data = ''
-          res.on('data', c => data += c) // eslint-disable-line
-          res.on('end', () => {
-            const error = new StatusCodeError(res.statusCode, res.statusMessage, res)
-            error.error = data
-            reject(error)
-          })
-          return
-        }
-        // Publish response has an empty payload, no need to read stream.
-        resolve(res)
-      })
+  publishAppPatch (account: string, workspace: string, vendor: string, name: string, version: string, changes: any) {
+    const gz = createGzip()
+    const stream = new Stream.Readable()
+    stream.push(JSON.stringify(changes))
+    stream.push(null)
+    return this.http({
+      method: 'PATCH',
+      data: stream.pipe(gz),
+      url: routes.App(account, workspace, vendor, name, version),
+      headers: {
+        'Content-Encoding': 'gzip',
+        'Content-Type': 'application/json',
+      },
     })
   }
 
-  publishAppPatch (account, workspace, vendor, name, version, changes) {
-    checkRequiredParameters({account, workspace, vendor, name, version, changes})
-    const url = `${this.endpointUrl}${this.routes.RegistryAppVersion(account, workspace, vendor, name, version)}`
-
-    return this.http.patch(url).send(changes).thenJson()
+  listVendors (account: string, workspace: string) {
+    return this.http(routes.Registry(account, workspace))
   }
 
-  listVendors (account, workspace) {
-    checkRequiredParameters({account, workspace})
-    const url = `${this.endpointUrl}${this.routes.Registry(account, workspace)}`
-
-    return this.http.get(url).thenJson()
+  listAppsByVendor (account: string, workspace: string, vendor: string) {
+    return this.http(routes.Vendor(account, workspace, vendor))
   }
 
-  listAppsByVendor (account, workspace, vendor) {
-    checkRequiredParameters({account, workspace, vendor})
-    const url = `${this.endpointUrl}${this.routes.RegistryVendor(account, workspace, vendor)}`
-
-    return this.http.get(url).thenJson()
+  listVersionsByApp (account: string, workspace: string, vendor: string, name: string) {
+    return this.http(routes.App(account, workspace, vendor, name))
   }
 
-  listVersionsByApp (account, workspace, vendor, name, major = '') {
-    checkRequiredParameters({account, workspace, vendor, name})
-    const url = `${this.endpointUrl}${this.routes.RegistryApp(account, workspace, vendor, name)}`
-
-    return request.get(url).query({major}).thenJson()
+  getAppManifest (account: string, workspace: string, vendor: string, name: string, version: string) {
+    return this.http(routes.App(account, workspace, vendor, name, version))
   }
 
-  getAppManifest (account, workspace, vendor, name, version) {
-    checkRequiredParameters({account, workspace, vendor, name, version})
-    const url = `${this.endpointUrl}${this.routes.RegistryVendor(account, workspace, vendor, name, version)}`
-
-    return this.http.get(url).thenJson()
-  }
-
-  unpublishApp (account, workspace, vendor, name, version) {
-    checkRequiredParameters({account, workspace, vendor, name, version})
-    const url = `${this.endpointUrl}${this.routes.RegistryVendor(account, workspace, vendor, name, version)}`
-
-    return this.http.delete(url).thenJson()
+  unpublishApp (account: string, workspace: string, vendor: string, name: string, version: string) {
+    return this.http.delete(routes.App(account, workspace, vendor, name, version))
   }
 }
-
-RegistryClient.prototype.routes = {
-  Registry (account, workspace) {
-    return `/${account}/${workspace}/registry`
-  },
-
-  RegistryVendor (account, workspace, vendor) {
-    return `${this.Registry(account, workspace)}/${vendor}/apps`
-  },
-
-  RegistryApp (account, workspace, vendor, name) {
-    return `${this.RegistryVendor(account, workspace, vendor)}/${name}`
-  },
-
-  RegistryAppVersion (account, workspace, vendor, name, version) {
-    return `${this.RegistryApp(account, workspace, vendor, name)}/${version}`
-  },
-}
-
-export default RegistryClient

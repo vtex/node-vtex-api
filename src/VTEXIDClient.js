@@ -1,45 +1,43 @@
-import request from './http'
-import getEndpointUrl from './utils/vtexidEndpoints.js'
-import checkRequiredParameters from './utils/required.js'
+/* @flow */
+import Client from './Client'
+import {vtexid} from './endpoints'
 
-class VTEXIDClient {
-  constructor ({userAgent, endpointUrl = getEndpointUrl('STABLE')}) {
-    checkRequiredParameters({userAgent})
-    this.endpointUrl = endpointUrl === 'BETA'
-      ? getEndpointUrl(endpointUrl)
-      : endpointUrl
-    this.userAgent = userAgent
-    this.headers = {
-      'user-agent': this.userAgent,
-    }
-    this.http = request.defaults({
-      headers: this.headers,
-    })
+const routes = {
+  Start: () => '/start',
+  Send: () => '/accesskey/send',
+  Validate: () => '/accesskey/validate',
+  ValidateClassic: () => '/classic/validate',
+}
+
+export default class VTEXIDClient extends Client {
+  constructor (authToken: string, userAgent: string, endpointUrl: string = 'STABLE') {
+    super(authToken, userAgent, vtexid(endpointUrl))
   }
 
   getTemporaryToken () {
-    return this.http(`${this.endpointUrl}/start`)
-      .thenJson()
-      .then(r => r.authenticationToken)
+    return this.http(routes.Start()).then(r => r.authenticationToken)
   }
 
-  sendCodeToEmail (token, email) {
-    return this.http(`${this.endpointUrl}/accesskey/send`)
-      .query({authenticationToken: token, email})
-      .thenJson()
+  sendCodeToEmail (token: string, email: string) {
+    const params = {authenticationToken: token, email}
+    return this.http(routes.Send(), {params})
   }
 
-  getEmailCodeAuthenticationToken (token, email, code) {
-    return this.http(`${this.endpointUrl}/accesskey/validate`)
-      .query({login: email, accesskey: code, authenticationToken: token})
-      .thenJson()
+  getEmailCodeAuthenticationToken (token: string, email: string, code: string) {
+    const params = {
+      login: email,
+      accesskey: code,
+      authenticationToken: token,
+    }
+    return this.http(routes.Validate(), {params})
   }
 
-  getPasswordAuthenticationToken (token, email, password) {
-    return this.http(`${this.endpointUrl}/classic/validate`)
-      .query({authenticationToken: encodeURIComponent(token), login: encodeURIComponent(email), password: encodeURIComponent(password)})
-      .thenJson()
+  getPasswordAuthenticationToken (token: string, email: string, password: string) {
+    const params = {
+      authenticationToken: encodeURIComponent(token),
+      login: encodeURIComponent(email),
+      password: encodeURIComponent(password),
+    }
+    return this.http(routes.ValidateClassic(), {params})
   }
 }
-
-export default VTEXIDClient

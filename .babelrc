@@ -1,4 +1,8 @@
 {
-  "presets": ["es2015"],
-  "plugins": ["transform-object-rest-spread"]
+  "presets": ["es2015-node4"],
+  "plugins": [
+    "fast-async",
+    "syntax-async-functions",
+    "transform-flow-strip-types"
+  ]
 }
