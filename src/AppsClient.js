@@ -108,7 +108,7 @@ export default class AppsClient extends Client {
     const params = {
       prefix,
       context: contextQuery(context),
-      marker: encodeURIComponent(nextMarker),
+      marker: nextMarker,
     }
     return this.http(routes.Files(account, workspace, app), {params})
   }
