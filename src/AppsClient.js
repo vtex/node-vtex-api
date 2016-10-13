@@ -19,6 +19,9 @@ type ListFilesSettings = {
   nextMarker: string,
 }
 
+const data = data => data
+const noTransforms = [data]
+
 const routes = {
   Apps: (account: string, workspace: string) =>
     `/${account}/${workspace}/apps`,
@@ -105,7 +108,7 @@ export default class AppsClient extends Client {
 
   getAppFile (account: string, workspace: string, app: string, path: string, context: Array<string> = []) {
     const params = {context: contextQuery(context)}
-    return this.http(routes.File(account, workspace, app, path), {params})
+    return this.http(routes.File(account, workspace, app, path), {params, transformResponse: noTransforms})
   }
 
   getApp (account: string, workspace: string, app: string, context: Array<string> = []) {
