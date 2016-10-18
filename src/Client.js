@@ -14,6 +14,11 @@ export default class Client {
       baseURL,
       headers,
     })
-    this.http.interceptors.response.use(data, (err) => Promise.reject(err))
+    this.http.interceptors.response.use(data, (err) => {
+      delete err.response.request
+      delete err.response.config
+      delete err.config
+      return Promise.reject(err)
+    })
   }
 }
