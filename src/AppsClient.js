@@ -1,5 +1,6 @@
 /* @flow */
 import Client from './Client'
+import type {ClientOptions} from './Client'
 import {api} from './endpoints'
 
 type Context = {
@@ -48,8 +49,8 @@ const routes = {
 const contextQuery = (context?: Array<string>) => context ? context.join('/') : context
 
 export default class AppsClient extends Client {
-  constructor (authToken: string, userAgent: string, endpointUrl: string = 'STABLE') {
-    super(authToken, userAgent, api(endpointUrl))
+  constructor (endpointUrl: string = 'STABLE', options: ClientOptions) {
+    super(api(endpointUrl), options)
   }
 
   installApp (account: string, workspace: string, descriptor: string) {

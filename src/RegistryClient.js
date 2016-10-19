@@ -5,6 +5,7 @@ import {basename} from 'path'
 import mime from 'mime-types'
 import Stream from 'stream'
 import Client from './Client'
+import type {ClientOptions} from './Client'
 import {api} from './endpoints'
 
 type File = {
@@ -26,8 +27,8 @@ const routes = {
 }
 
 export default class RegistryClient extends Client {
-  constructor (authToken: string, userAgent: string, endpointUrl: string = 'STABLE') {
-    super(authToken, userAgent, api(endpointUrl))
+  constructor (endpointUrl: string = 'STABLE', options: ClientOptions) {
+    super(api(endpointUrl), options)
   }
 
   /**

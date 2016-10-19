@@ -1,10 +1,15 @@
 {
   "extends": [
     "vtex",
-    "plugin:flowtype/recommended"
+    "plugin:flowtype/recommended",
+    "plugin:import/recommended"
   ],
   "parser": "babel-eslint",
   "plugins": [
-    "flowtype"
-  ]
+    "flowtype",
+    "import"
+  ],
+  "rules": {
+    "no-duplicate-imports": 0
+  }
 }

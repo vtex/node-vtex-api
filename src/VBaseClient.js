@@ -3,6 +3,7 @@ import {createGzip} from 'zlib'
 import {basename} from 'path'
 import mime from 'mime-types'
 import Client from './Client'
+import type {ClientOptions} from './Client'
 import {vbase} from './endpoints'
 import type {Readable} from 'stream'
 
@@ -25,8 +26,8 @@ const routes = {
 }
 
 export default class VBaseClient extends Client {
-  constructor (authToken: string, userAgent: string, endpointUrl: string = 'STABLE') {
-    super(authToken, userAgent, vbase(endpointUrl))
+  constructor (endpointUrl: string = 'STABLE', options: ClientOptions) {
+    super(vbase(endpointUrl), options)
   }
 
   promote (account: string, workspace: string) {

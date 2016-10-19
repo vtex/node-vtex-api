@@ -1,5 +1,6 @@
 /* @flow */
 import Client from './Client'
+import type {ClientOptions} from './Client'
 import {vtexid} from './endpoints'
 
 const routes = {
@@ -10,8 +11,8 @@ const routes = {
 }
 
 export default class VTEXIDClient extends Client {
-  constructor (authToken: string, userAgent: string, endpointUrl: string = 'STABLE') {
-    super(authToken, userAgent, vtexid(endpointUrl))
+  constructor (endpointUrl: string = 'STABLE', options: ClientOptions) {
+    super(vtexid(endpointUrl), options)
   }
 
   getTemporaryToken () {

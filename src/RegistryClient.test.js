@@ -43,7 +43,12 @@ test('publishApp streams a multipart/mixed request', async t => {
       res.end()
     })
   }
-  const client = new RegistryClient('auth', 'agent', 'http://localhost:13377')
+  const options = {
+    authToken: 'token',
+    userAgent: 'agent',
+    accept: 'application/vnd.vtex.sppa.v4+json',
+  }
+  const client = new RegistryClient('http://localhost:13377', options)
   const server = createServer(requestHandler)
   server.listen(13377)
   await client.publishApp('account', 'workspace', [jsFile, manifest], false)
@@ -74,7 +79,12 @@ test('publishAppPatch sends changes array', async t => {
       res.end()
     })
   }
-  const client = new RegistryClient('auth', 'agent', 'http://localhost:13378')
+  const options = {
+    authToken: 'token',
+    userAgent: 'agent',
+    accept: 'application/vnd.vtex.sppa.v4+json',
+  }
+  const client = new RegistryClient('http://localhost:13378', options)
   const server = createServer(requestHandler)
   server.listen(13378)
   await client.publishAppPatch('account', 'workspace', 'vtex', 'app', 'version', changes)
