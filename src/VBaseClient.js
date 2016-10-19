@@ -9,6 +9,7 @@ import type {Readable} from 'stream'
 
 type Headers = { [key: string]: string }
 
+const CURRENT_MAJOR_VND = 'application/vnd.vtex.vbase.v1+json'
 const DEFAULT_WORKSPACE = 'master'
 
 const routes = {
@@ -26,8 +27,8 @@ const routes = {
 }
 
 export default class VBaseClient extends Client {
-  constructor (endpointUrl: string = 'STABLE', options: ClientOptions) {
-    super(vbase(endpointUrl), options)
+  constructor (endpointUrl: string = 'STABLE', {authToken, userAgent, accept = CURRENT_MAJOR_VND}: ClientOptions = {}) {
+    super(vbase(endpointUrl), {authToken, userAgent, accept})
   }
 
   promote (account: string, workspace: string) {

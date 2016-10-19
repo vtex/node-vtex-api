@@ -4,6 +4,15 @@ import {createServer} from 'http'
 import {createGunzip} from 'zlib'
 import VBaseClient from './VBaseClient'
 
+test('client gets default accept header', t => {
+  const options = {
+    authToken: 'token',
+    userAgent: 'agent',
+  }
+  const client = new VBaseClient('http://localhost:13377', options)
+  t.is(client.http.defaults.headers['Accept'], 'application/vnd.vtex.vbase.v1+json')
+})
+
 test('saveFile streams a file', async t => {
   t.plan(5)
   const requestHandler = (req, res) => {
