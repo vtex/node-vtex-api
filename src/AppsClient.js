@@ -20,6 +20,7 @@ type ListFilesSettings = {
   nextMarker: string,
 }
 
+const CURRENT_MAJOR_VND = 'application/vnd.vtex.sppa.v4+json'
 const data = data => data
 const noTransforms = [data]
 
@@ -49,8 +50,8 @@ const routes = {
 const contextQuery = (context?: Array<string>) => context ? context.join('/') : context
 
 export default class AppsClient extends Client {
-  constructor (endpointUrl: string = 'STABLE', options: ClientOptions) {
-    super(api(endpointUrl), options)
+  constructor (endpointUrl: string = 'STABLE', {authToken, userAgent, accept = CURRENT_MAJOR_VND}: ClientOptions = {}) {
+    super(api(endpointUrl), {authToken, userAgent, accept})
   }
 
   installApp (account: string, workspace: string, descriptor: string) {

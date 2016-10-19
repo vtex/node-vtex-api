@@ -13,6 +13,8 @@ type File = {
   contents: any,
 }
 
+const CURRENT_MAJOR_VND = 'application/vnd.vtex.sppa.v4+json'
+
 const routes = {
   Registry: (account: string, workspace: string) =>
     `/${account}/${workspace}/registry`,
@@ -27,8 +29,8 @@ const routes = {
 }
 
 export default class RegistryClient extends Client {
-  constructor (endpointUrl: string = 'STABLE', options: ClientOptions) {
-    super(api(endpointUrl), options)
+  constructor (endpointUrl: string = 'STABLE', {authToken, userAgent, accept = CURRENT_MAJOR_VND}: ClientOptions = {}) {
+    super(api(endpointUrl), {authToken, userAgent, accept})
   }
 
   /**

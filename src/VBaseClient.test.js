@@ -23,7 +23,6 @@ test('saveFile streams a file', async t => {
   const options = {
     authToken: 'token',
     userAgent: 'agent',
-    accept: 'application/vnd.vtex.sppa.v4+json',
   }
   const client = new VBaseClient('http://localhost:13379', options)
   const pass = new PassThrough()
@@ -53,7 +52,6 @@ test('saveFile streams a file without gzip', async t => {
   const options = {
     authToken: 'token',
     userAgent: 'agent',
-    accept: 'application/vnd.vtex.sppa.v4+json',
   }
   const client = new VBaseClient('http://localhost:13380', options)
   const pass = new PassThrough()

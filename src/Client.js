@@ -6,19 +6,21 @@ const data = ({data}) => data
 export type ClientOptions = {
   authToken: string,
   userAgent: string,
-  accept: string,
+  accept?: string,
 }
 
 export default class Client {
   http: any
-  constructor (baseURL: string, {authToken, userAgent, accept}: ClientOptions) {
-    if (!authToken || !userAgent || !accept) {
-      throw new Error('All options are required: {authToken, userAgent, accept}.')
+  constructor (baseURL: string, {authToken, userAgent, accept}: ClientOptions = {}) {
+    if (!baseURL || !authToken || !userAgent) {
+      throw new Error('A required argument is missing: (baseURL, {authToken, userAgent}).')
     }
-    const headers = {
+    const headers: Object = {
       'Authorization': `token ${authToken}`,
       'User-Agent': userAgent,
-      'Accept': accept,
+    }
+    if (accept) {
+      headers['Accept'] = accept
     }
     this.http = axios.create({
       baseURL,

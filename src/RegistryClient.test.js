@@ -26,6 +26,15 @@ Content-Type: application/javascript; charset=utf-8
 const x = 123
 --${boundary}--`.replace(/\n/g, '\r\n')
 
+test('client gets default accept header', t => {
+  const options = {
+    authToken: 'token',
+    userAgent: 'agent',
+  }
+  const client = new RegistryClient('http://localhost:13377', options)
+  t.is(client.http.defaults.headers['Accept'], 'application/vnd.vtex.sppa.v4+json')
+})
+
 test('publishApp streams a multipart/mixed request', async t => {
   t.plan(5)
   const requestHandler = (req, res) => {
