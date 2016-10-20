@@ -11,6 +11,8 @@ type Headers = { [key: string]: string }
 
 const CURRENT_MAJOR_VND = 'application/vnd.vtex.vbase.v1+json'
 const DEFAULT_WORKSPACE = 'master'
+const data = data => data
+const noTransforms = [data]
 
 const routes = {
   Account: (account: string) =>
@@ -57,7 +59,7 @@ export default class VBaseClient extends Client {
   }
 
   getFile (account: string, workspace: string, bucket: string, path: string) {
-    return this.http(routes.Files(account, workspace, bucket, path))
+    return this.http(routes.Files(account, workspace, bucket, path), {transformResponse: noTransforms})
   }
 
   saveFile (account: string, workspace: string, bucket: string, path: string, stream: Readable, gzip?: boolean = true) {
