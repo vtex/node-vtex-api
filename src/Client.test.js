@@ -30,3 +30,19 @@ test('HTTP client is created with no baseURL', t => {
     t.fail()
   }, 'A required argument is missing: (baseURL, {authToken, userAgent}).')
 })
+
+test('Error handler doesn\'t bork when rejection isn\'t from http response', async t => {
+  const options = {
+    authToken: 'token',
+    userAgent: 'agent',
+  }
+  const client = new Client('http://undefined', options)
+  try {
+    await client.http('/wat')
+  } catch (e) {
+    if (e.name === 'TypeError') {
+      t.fail()
+    }
+    t.pass()
+  }
+})
