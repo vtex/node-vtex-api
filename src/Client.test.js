@@ -1,4 +1,5 @@
 import test from 'ava'
+import {createServer} from 'http'
 import Client from './Client'
 
 test('HTTP client is created with all options', t => {
@@ -44,5 +45,29 @@ test('Error handler doesn\'t bork when rejection isn\'t from http response', asy
       t.fail()
     }
     t.pass()
+  }
+})
+
+test('Client timeout fails requests', async t => {
+  const hang = () => {}
+  const server = createServer(hang)
+  server.listen(13373)
+  const timeout = 500
+  const options = {
+    authToken: 'token',
+    userAgent: 'agent',
+    timeout,
+  }
+  const client = new Client('http://localhost:13373', options)
+  const timeoutHandle = setTimeout(() => { throw new Error() }, timeout + 100)
+  try {
+    await client.http('/tictoc')
+  } catch (e) {
+    if (e.message === `timeout of ${timeout}ms exceeded`) {
+      clearTimeout(timeoutHandle)
+      t.pass()
+    } else {
+      t.fail()
+    }
   }
 })

@@ -29,8 +29,8 @@ const routes = {
 }
 
 export default class VBaseClient extends Client {
-  constructor (endpointUrl: string = 'STABLE', {authToken, userAgent, accept = CURRENT_MAJOR_VND}: ClientOptions = {}) {
-    super(vbase(endpointUrl), {authToken, userAgent, accept})
+  constructor (endpointUrl: string = 'STABLE', {authToken, userAgent, accept = CURRENT_MAJOR_VND, timeout}: ClientOptions = {}) {
+    super(vbase(endpointUrl), {authToken, userAgent, accept, timeout})
   }
 
   promote (account: string, workspace: string) {

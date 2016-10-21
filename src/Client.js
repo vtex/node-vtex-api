@@ -1,17 +1,19 @@
 /* @flow */
 import axios from 'axios'
 
+export const DEFAULT_TIMEOUT_MS = 5000
 const data = ({data}) => data
 
 export type ClientOptions = {
   authToken: string,
   userAgent: string,
   accept?: string,
+  timeout?: number,
 }
 
 export default class Client {
   http: any
-  constructor (baseURL: string, {authToken, userAgent, accept}: ClientOptions = {}) {
+  constructor (baseURL: string, {authToken, userAgent, accept, timeout = DEFAULT_TIMEOUT_MS}: ClientOptions = {}) {
     if (!baseURL || !authToken || !userAgent) {
       throw new Error('A required argument is missing: (baseURL, {authToken, userAgent}).')
     }
@@ -25,6 +27,7 @@ export default class Client {
     this.http = axios.create({
       baseURL,
       headers,
+      timeout,
     })
     this.http.interceptors.response.use(data, (err) => {
       try {

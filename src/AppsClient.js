@@ -50,8 +50,8 @@ const routes = {
 const contextQuery = (context?: Array<string>) => context ? context.join('/') : context
 
 export default class AppsClient extends Client {
-  constructor (endpointUrl: string = 'STABLE', {authToken, userAgent, accept = CURRENT_MAJOR_VND}: ClientOptions = {}) {
-    super(api(endpointUrl), {authToken, userAgent, accept})
+  constructor (endpointUrl: string = 'STABLE', {authToken, userAgent, accept = CURRENT_MAJOR_VND, timeout}: ClientOptions = {}) {
+    super(api(endpointUrl), {authToken, userAgent, accept, timeout})
   }
 
   installApp (account: string, workspace: string, descriptor: string) {
