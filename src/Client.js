@@ -33,7 +33,8 @@ export default class Client {
       try {
         delete err.response.request
         delete err.response.config
-        delete err.config
+        delete err.config.res
+        delete err.config.data
       } catch (e) {}
       return Promise.reject(err)
     })
