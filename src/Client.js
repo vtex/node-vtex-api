@@ -1,7 +1,7 @@
 /* @flow */
 import axios from 'axios'
 
-export const DEFAULT_TIMEOUT_MS = 5000
+export const DEFAULT_TIMEOUT_MS = 10000
 const data = ({data}) => data
 
 export type ClientOptions = {
