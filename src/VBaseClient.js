@@ -24,8 +24,11 @@ const routes = {
   DefaultWorkspace: (account: string) =>
     `${routes.Workspace(account, DEFAULT_WORKSPACE)}`,
 
+  Bucket: (account: string, workspace: string, bucket: string) =>
+    `${routes.Workspace(account, workspace)}/buckets/${bucket}`,
+
   Files: (account: string, workspace: string, bucket: string, path?: string) =>
-    `${routes.Workspace(account, workspace)}/buckets/${bucket}/files${path ? '/' + path : ''}`,
+    `${routes.Bucket(account, workspace, bucket)}/files${path ? '/' + path : ''}`,
 }
 
 export default class VBaseClient extends Client {
@@ -51,6 +54,10 @@ export default class VBaseClient extends Client {
 
   delete (account: string, workspace: string) {
     return this.http.delete(routes.Workspace(account, workspace))
+  }
+
+  getBucket (account: string, workspace: string, bucket: string) {
+    return this.http(routes.Bucket(account, workspace, bucket))
   }
 
   listFiles (account: string, workspace: string, bucket: string, prefix?: string) {
