@@ -39,7 +39,7 @@ test('publishApp streams a multipart/mixed request', async t => {
   t.plan(5)
   const requestHandler = (req, res) => {
     t.true(req.headers['content-type'].startsWith('multipart/mixed'))
-    t.is(req.url, '/account/workspace/registry')
+    t.is(req.url, '/account/master/registry')
     t.is(req.headers['content-encoding'], 'gzip')
     t.is(req.headers['transfer-encoding'], 'chunked')
     let data = ''
@@ -60,7 +60,7 @@ test('publishApp streams a multipart/mixed request', async t => {
   const client = new RegistryClient('http://localhost:13377', options)
   const server = createServer(requestHandler)
   server.listen(13377)
-  await client.publishApp('account', 'workspace', [jsFile, manifest], false)
+  await client.publishApp('account', [jsFile, manifest], false)
   server.close()
 })
 
@@ -78,7 +78,7 @@ test('publishAppPatch sends changes array', async t => {
     t.is(req.headers['content-type'], 'application/json')
     t.is(req.headers['content-encoding'], 'gzip')
     t.is(req.headers['transfer-encoding'], 'chunked')
-    t.is(req.url, '/account/workspace/registry/vtex/apps/app/version')
+    t.is(req.url, '/account/master/registry/vtex/apps/app/version')
     let data = ''
     const gz = createGunzip()
     req.pipe(gz)
@@ -96,6 +96,6 @@ test('publishAppPatch sends changes array', async t => {
   const client = new RegistryClient('http://localhost:13378', options)
   const server = createServer(requestHandler)
   server.listen(13378)
-  await client.publishAppPatch('account', 'workspace', 'vtex', 'app', 'version', changes)
+  await client.publishAppPatch('account', 'vtex', 'app', 'version', changes)
   server.close()
 })
