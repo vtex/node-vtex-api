@@ -39,7 +39,7 @@ test('publishApp streams a multipart/mixed request', async t => {
   t.plan(5)
   const requestHandler = (req, res) => {
     t.true(req.headers['content-type'].startsWith('multipart/mixed'))
-    t.is(req.url, '/account/workspace/registry?isDevelopment=false')
+    t.is(req.url, '/account/workspace/registry')
     t.is(req.headers['content-encoding'], 'gzip')
     t.is(req.headers['transfer-encoding'], 'chunked')
     let data = ''

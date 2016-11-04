@@ -40,7 +40,7 @@ export default class RegistryClient extends Client {
    * @param files An array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.
    * @return Promise
    */
-  publishApp (account: string, workspace: string, files: Array<File>, isDevelopment?: boolean = false) {
+  publishApp (account: string, workspace: string, files: Array<File>, tag?: string) {
     if (!(files[0] && files[0].path && files[0].contents)) {
       throw new Error('Argument files must be an array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.')
     }
@@ -63,7 +63,7 @@ export default class RegistryClient extends Client {
       method: 'POST',
       url: routes.Registry(account, workspace),
       data: multipart.pipe(gz),
-      params: {isDevelopment},
+      params: tag ? {tag} : {},
       headers: {
         'Content-Encoding': 'gzip',
         'Content-Type': `multipart/mixed; boundary=${boundary}`,
