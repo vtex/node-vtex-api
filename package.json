@@ -43,7 +43,7 @@
     "eslint-plugin-flowtype": "^2.19.0",
     "eslint-plugin-import": "^2.0.1",
     "fast-async": "^6.0.34",
-    "flow-bin": "^0.33.0",
+    "flow-bin": "^0.37.4",
     "flow-copy-source": "^1.1.0",
     "npm-run-all": "^2.3.0",
     "rimraf": "^2.5.2"
