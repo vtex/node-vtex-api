@@ -10,7 +10,7 @@
     "test-watch": "ava --watch",
     "watch": "babel src --out-dir lib --watch --ignore=*.test.js",
     "build": "babel src --out-dir lib --ignore=*.test.js",
-    "flow": "flow check",
+    "flow": "flow check --ignore '.*/lib/.*'",
     "copy": "flow-copy-source -v src lib --ignore=*.test.js",
     "lint": "eslint src",
     "prepublish": "run-s clean build copy test"
@@ -28,6 +28,7 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^0.14.0",
+    "archiver": "^1.3.0",
     "mime-types": "^2.1.12",
     "multipart-stream": "^2.0.1"
   },
