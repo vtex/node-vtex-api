@@ -7,6 +7,11 @@ type Context = {
   context: Array<string>
 }
 
+type Change = {
+  path: string,
+  content: string
+}
+
 type ListSettings = {
   oldVersion: string,
   context: Array<string>,
@@ -29,6 +34,9 @@ const routes = {
 
   App: (account: string, workspace: string, app: string) =>
     `${routes.Apps(account, workspace)}/${app}`,
+
+  Link: (account: string, workspace: string, app: string) =>
+    `/${account}/${workspace}/links/${app}`,
 
   Acknowledge: (account: string, workspace: string, app: string, service: string) =>
     `${routes.App(account, workspace, app)}/acknowledge/${service}`,
@@ -63,6 +71,17 @@ export default class AppEngineClient extends Client {
 
   acknowledgeApp (account: string, workspace: string, app: string, service: string) {
     return this.http.put(routes.Acknowledge(account, workspace, app, service))
+  }
+
+  link (account: string, workspace: string, app: string, changes: Array<Change>) {
+    const headers = {
+      'Content-Type': 'application/json',
+    }
+    return this.http.put(routes.Link(account, workspace, app), changes, {headers})
+  }
+
+  unlink (account: string, workspace: string, app: string) {
+    return this.http.delete(routes.Link(account, workspace, app))
   }
 
   getAppSettings (account: string, workspace: string, app: string, {context}: Context = {}) {
