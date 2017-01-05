@@ -50,8 +50,8 @@ const routes = {
   File: (account: string, workspace: string, app: string, path: string) =>
     `${routes.Files(account, workspace, app)}/${path}`,
 
-  DependencyMap: (account: string, workspace: string) =>
-    `/${account}/${workspace}/dependencyMap`,
+  Dependencies: (account: string, workspace: string) =>
+    `/${account}/${workspace}/dependencies`,
 }
 
 const contextQuery = (context?: Array<string>) => context ? context.join('/') : context
@@ -139,8 +139,8 @@ export default class AppEngineClient extends Client {
     return this.http(routes.App(account, workspace, app), {params})
   }
 
-  getDependencyMap (account: string, workspace: string, service: string) {
+  getDependencies (account: string, workspace: string, service: string) {
     const params = {service}
-    return this.http(routes.DependencyMap(account, workspace), {params})
+    return this.http(routes.Dependencies(account, workspace), {params})
   }
 }
