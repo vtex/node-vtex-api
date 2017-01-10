@@ -1,12 +1,12 @@
-# VTEX I/O API Client for Node
+# VTEX IO API Client for Node
 
-This client enables Node developers to quickly integrate with the VTEX I/O API.
+This client enables Node developers to quickly integrate with the VTEX IO APIs.
 
 [![Build Status](https://travis-ci.org/vtex/node-vtex-api.svg?branch=master)](https://travis-ci.org/vtex/node-vtex-api)
 
 ## Getting started
 
-The three clients in this library are:
+The clients currently available  in this library are:
 
 - AppsClient
 - RegistryClient
