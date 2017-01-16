@@ -16,16 +16,16 @@ type File = {
 const CURRENT_MAJOR_VND = 'application/vnd.vtex.sppa.v4+json'
 
 const routes = {
-  Registry: (account: string) =>
-    `/${account}/master/registry`,
+  Registry: (account: string, workspace: string) =>
+    `/${account}/${workspace}/registry`,
 
-  Vendor: (account: string, vendor: string) =>
-    `${routes.Registry(account)}/${vendor}/apps`,
+  Vendor: (account: string, workspace: string, vendor: string) =>
+    `${routes.Registry(account, workspace)}/${vendor}/apps`,
 
-  App: (account: string, vendor: string, name: string, version?: string) =>
+  App: (account: string, workspace: string, vendor: string, name: string, version?: string) =>
     version
-    ? `${routes.Vendor(account, vendor)}/${name}/${version}`
-    : `${routes.Vendor(account, vendor)}/${name}`,
+    ? `${routes.Vendor(account, workspace, vendor)}/${name}/${version}`
+    : `${routes.Vendor(account, workspace, vendor)}/${name}`,
 }
 
 export default class RegistryClient extends Client {
@@ -36,10 +36,11 @@ export default class RegistryClient extends Client {
   /**
    * Sends an app as a streaming, gzipped multipart/mixed HTTP POST request.
    * @param account
+   * @param workspace
    * @param files An array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.
    * @return Promise
    */
-  publishApp (account: string, files: Array<File>, tag?: string) {
+  publishApp (account: string, workspace: string, files: Array<File>, isDevelopment?: boolean = false) {
     if (!(files[0] && files[0].path && files[0].contents)) {
       throw new Error('Argument files must be an array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.')
     }
@@ -60,9 +61,9 @@ export default class RegistryClient extends Client {
     const gz = createGzip()
     return this.http({
       method: 'POST',
-      url: routes.Registry(account),
+      url: routes.Registry(account, workspace),
       data: multipart.pipe(gz),
-      params: tag ? {tag} : {},
+      params: {isDevelopment},
       headers: {
         'Content-Encoding': 'gzip',
         'Content-Type': `multipart/mixed; boundary=${boundary}`,
@@ -70,7 +71,7 @@ export default class RegistryClient extends Client {
     })
   }
 
-  publishAppPatch (account: string, vendor: string, name: string, version: string, changes: any) {
+  publishAppPatch (account: string, workspace: string, vendor: string, name: string, version: string, changes: any) {
     const gz = createGzip()
     const stream = new Stream.Readable()
     stream.push(JSON.stringify(changes))
@@ -78,7 +79,7 @@ export default class RegistryClient extends Client {
     return this.http({
       method: 'PATCH',
       data: stream.pipe(gz),
-      url: routes.App(account, vendor, name, version),
+      url: routes.App(account, workspace, vendor, name, version),
       headers: {
         'Content-Encoding': 'gzip',
         'Content-Type': 'application/json',
@@ -86,23 +87,23 @@ export default class RegistryClient extends Client {
     })
   }
 
-  listVendors (account: string) {
-    return this.http(routes.Registry(account))
+  listVendors (account: string, workspace: string) {
+    return this.http(routes.Registry(account, workspace))
   }
 
-  listAppsByVendor (account: string, vendor: string) {
-    return this.http(routes.Vendor(account, vendor))
+  listAppsByVendor (account: string, workspace: string, vendor: string) {
+    return this.http(routes.Vendor(account, workspace, vendor))
   }
 
-  listVersionsByApp (account: string, vendor: string, name: string) {
-    return this.http(routes.App(account, vendor, name))
+  listVersionsByApp (account: string, workspace: string, vendor: string, name: string) {
+    return this.http(routes.App(account, workspace, vendor, name))
   }
 
-  getAppManifest (account: string, vendor: string, name: string, version: string) {
-    return this.http(routes.App(account, vendor, name, version))
+  getAppManifest (account: string, workspace: string, vendor: string, name: string, version: string) {
+    return this.http(routes.App(account, workspace, vendor, name, version))
   }
 
-  unpublishApp (account: string, vendor: string, name: string, version: string) {
-    return this.http.delete(routes.App(account, vendor, name, version))
+  unpublishApp (account: string, workspace: string, vendor: string, name: string, version: string) {
+    return this.http.delete(routes.App(account, workspace, vendor, name, version))
   }
 }
