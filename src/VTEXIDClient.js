@@ -35,9 +35,9 @@ export default class VTEXIDClient extends Client {
 
   getPasswordAuthenticationToken (token: string, email: string, password: string) {
     const params = {
-      authenticationToken: encodeURIComponent(token),
-      login: encodeURIComponent(email),
-      password: encodeURIComponent(password),
+      login: email,
+      password: password,
+      authenticationToken: token,
     }
     return this.http(routes.ValidateClassic(), {params})
   }
