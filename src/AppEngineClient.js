@@ -35,8 +35,11 @@ const routes = {
   App: (account: string, workspace: string, app: string) =>
     `${routes.Apps(account, workspace)}/${app}`,
 
+  Links: (account: string, workspace: string) =>
+    `/${account}/${workspace}/links`,
+
   Link: (account: string, workspace: string, app: string) =>
-    `/${account}/${workspace}/links/${app}`,
+    `/${routes.Links(accept, workspace)}/${app}`,
 
   Acknowledge: (account: string, workspace: string, app: string, service: string) =>
     `${routes.App(account, workspace, app)}/acknowledge/${service}`,
@@ -127,6 +130,10 @@ export default class AppEngineClient extends Client {
       marker: nextMarker,
     }
     return this.http(routes.Files(account, workspace, app), {params})
+  }
+
+  listLinks (account: string, workspace: string) {
+    return this.http(routes.Links(account, workspace))
   }
 
   getAppFile (account: string, workspace: string, app: string, path: string, context: Array<string> = []) {
