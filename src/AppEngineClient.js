@@ -39,7 +39,7 @@ const routes = {
     `/${account}/${workspace}/links`,
 
   Link: (account: string, workspace: string, app: string) =>
-    `/${routes.Links(accept, workspace)}/${app}`,
+    `/${routes.Links(account, workspace)}/${app}`,
 
   Acknowledge: (account: string, workspace: string, app: string, service: string) =>
     `${routes.App(account, workspace, app)}/acknowledge/${service}`,
