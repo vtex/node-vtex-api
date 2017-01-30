@@ -7,17 +7,17 @@ export function api (env) {
 
 export function apps (env) {
   return {
-    STABLE: 'http://apps-engine.aws-us-east-1.vtex.io',
-    BETA: 'http://apps-engine.aws-us-east-1.vtex.io',
-    NEXT: 'http://apps-engine.aws-us-east-1.vtex.io',
+    STABLE: 'http://apps.aws-us-east-1.vtex.io',
+    BETA: 'http://apps.aws-us-east-1.vtex.io',
+    NEXT: 'http://apps.aws-us-east-1.vtex.io',
   }[env] || env
 }
 
 export function registry (env) {
   return {
-    STABLE: 'http://apps-registry.aws-us-east-1.vtex.io',
-    BETA: 'http://apps-registry.aws-us-east-1.vtex.io',
-    NEXT: 'http://apps-registry.aws-us-east-1.vtex.io',
+    STABLE: 'http://apps.aws-us-east-1.vtex.io',
+    BETA: 'http://apps.aws-us-east-1.vtex.io',
+    NEXT: 'http://apps.aws-us-east-1.vtex.io',
   }[env] || env
 }
 
