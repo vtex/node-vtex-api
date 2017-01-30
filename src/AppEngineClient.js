@@ -146,8 +146,8 @@ export default class AppEngineClient extends Client {
     return this.http(routes.App(account, workspace, app), {params})
   }
 
-  getDependencies (account: string, workspace: string, service: string) {
-    const params = {service}
+  getDependencies (account: string, workspace: string, filter: string = '') {
+    const params = {filter}
     return this.http(routes.Dependencies(account, workspace), {params})
   }
 }
