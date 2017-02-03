@@ -2,9 +2,9 @@
 import Stream from 'stream'
 import archiver from 'archiver'
 import {createGzip} from 'zlib'
-import Client from './Client'
-import {registry} from './endpoints'
-import type {ClientOptions} from './Client'
+import {createClient, createWorkspaceURL} from './client'
+import type {InstanceOptions} from './client'
+import {DefaultWorkspace} from './Workspaces'
 
 type File = {
   path: string,
@@ -12,84 +12,86 @@ type File = {
 }
 
 const routes = {
-  Registry: (account: string) =>
-    `/${account}/master/registry`,
+  Registry: '/registry',
 
-  Vendor: (account: string, vendor: string) =>
-    `${routes.Registry(account)}/${vendor}/apps`,
+  Vendor: (vendor: string) =>
+    `${routes.Registry}/${vendor}/apps`,
 
-  App: (account: string, vendor: string, name: string, version?: string) =>
-    version
-    ? `${routes.Vendor(account, vendor)}/${name}/${version}`
-    : `${routes.Vendor(account, vendor)}/${name}`,
+  App: (vendor: string, name: string) =>
+    `${routes.Vendor(vendor)}/${name}`,
+
+  AppVersion: (vendor: string, name: string, version: string) =>
+    `${routes.App(vendor, name)}/${version}`,
 }
 
-export default class AppRegistryClient extends Client {
-  constructor (endpointUrl: string = 'STABLE', {authToken, userAgent, accept = '', timeout}: ClientOptions = {}) {
-    super(registry(endpointUrl), {authToken, userAgent, accept, timeout})
-  }
+export default function Registry (opts: InstanceOptions) {
+  const client = createClient({
+    ...opts,
+    baseURL: createWorkspaceURL('apps', {...opts, workspace: DefaultWorkspace}),
+  })
 
-  /**
-   * Sends an app as a zip file.
-   * @param account
-   * @param files An array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.
-   * @return Promise
-   */
-  publishApp (account: string, files: Array<File>, tag?: string) {
-    if (!(files[0] && files[0].path && files[0].contents)) {
-      throw new Error('Argument files must be an array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.')
-    }
-    const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
-    if (indexOfManifest === -1) {
-      throw new Error('No manifest.json file found in files.')
-    }
-    const archive = archiver('zip')
-    files.forEach(({contents, path}) => archive.append(contents, {name: path}))
-    archive.finalize()
-    return this.http({
-      method: 'POST',
-      url: routes.Registry(account),
-      data: archive,
-      params: tag ? {tag} : {},
-      headers: {
-        'Content-Type': 'application/octet-stream',
-      },
-    })
-  }
+  return {
+    /**
+     * Sends an app as a zip file.
+     * @param files An array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.
+     * @return Promise
+     */
+    publishApp: (files: Array<File>, tag?: string) => {
+      if (!(files[0] && files[0].path && files[0].contents)) {
+        throw new Error('Argument files must be an array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.')
+      }
+      const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
+      if (indexOfManifest === -1) {
+        throw new Error('No manifest.json file found in files.')
+      }
+      const archive = archiver('zip')
+      files.forEach(({contents, path}) => archive.append(contents, {name: path}))
+      archive.finalize()
+      return client({
+        method: 'POST',
+        url: routes.Registry,
+        data: archive,
+        params: tag ? {tag} : {},
+        headers: {
+          'Content-Type': 'application/octet-stream',
+        },
+      })
+    },
 
-  publishAppPatch (account: string, vendor: string, name: string, version: string, changes: any) {
-    const gz = createGzip()
-    const stream = new Stream.Readable()
-    stream.push(JSON.stringify(changes))
-    stream.push(null)
-    return this.http({
-      method: 'PATCH',
-      data: stream.pipe(gz),
-      url: routes.App(account, vendor, name, version),
-      headers: {
-        'Content-Encoding': 'gzip',
-        'Content-Type': 'application/json',
-      },
-    })
-  }
+    publishAppPatch: (vendor: string, name: string, version: string, changes: any) => {
+      const gz = createGzip()
+      const stream = new Stream.Readable()
+      stream.push(JSON.stringify(changes))
+      stream.push(null)
+      return client({
+        method: 'PATCH',
+        data: stream.pipe(gz),
+        url: routes.AppVersion(vendor, name, version),
+        headers: {
+          'Content-Encoding': 'gzip',
+          'Content-Type': 'application/json',
+        },
+      })
+    },
 
-  listVendors (account: string) {
-    return this.http(routes.Registry(account))
-  }
+    listVendors: () => {
+      return client(routes.Registry)
+    },
 
-  listAppsByVendor (account: string, vendor: string) {
-    return this.http(routes.Vendor(account, vendor))
-  }
+    listAppsByVendor: (vendor: string) => {
+      return client(routes.Vendor(vendor))
+    },
 
-  listVersionsByApp (account: string, vendor: string, name: string) {
-    return this.http(routes.App(account, vendor, name))
-  }
+    listVersionsByApp: (vendor: string, name: string) => {
+      return client(routes.App(vendor, name))
+    },
 
-  getAppManifest (account: string, vendor: string, name: string, version: string) {
-    return this.http(routes.App(account, vendor, name, version))
-  }
+    getAppManifest: (vendor: string, name: string, version: string) => {
+      return client(routes.AppVersion(vendor, name, version))
+    },
 
-  unpublishApp (account: string, vendor: string, name: string, version: string) {
-    return this.http.delete(routes.App(account, vendor, name, version))
+    unpublishApp: (vendor: string, name: string, version: string) => {
+      return client.delete(routes.AppVersion(vendor, name, version))
+    },
   }
 }

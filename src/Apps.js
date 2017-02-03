@@ -1,7 +1,6 @@
 /* @flow */
-import Client from './Client'
-import {apps} from './endpoints'
-import type {ClientOptions} from './Client'
+import {createClient, createWorkspaceURL, noTransforms} from './client'
+import type {InstanceOptions} from './client'
 
 type Context = {
   context: Array<string>
@@ -25,129 +24,123 @@ type ListFilesSettings = {
   nextMarker: string,
 }
 
-const data = data => data
-const noTransforms = [data]
-
 const routes = {
-  Apps: (account: string, workspace: string) =>
-    `/${account}/${workspace}/apps`,
+  Apps: '/apps',
 
-  App: (account: string, workspace: string, app: string) =>
-    `${routes.Apps(account, workspace)}/${app}`,
+  App: (app: string) =>
+    `${routes.Apps}/${app}`,
 
-  Links: (account: string, workspace: string) =>
-    `/${account}/${workspace}/links`,
+  Links: '/links',
 
-  Link: (account: string, workspace: string, app: string) =>
-    `${routes.Links(account, workspace)}/${app}`,
+  Link: (app: string) =>
+    `${routes.Links}/${app}`,
 
-  Acknowledge: (account: string, workspace: string, app: string, service: string) =>
-    `${routes.App(account, workspace, app)}/acknowledge/${service}`,
+  Acknowledge: (app: string, service: string) =>
+    `${routes.App(app)}/acknowledge/${service}`,
 
-  Settings: (account: string, workspace: string, app: string) =>
-    `${routes.App(account, workspace, app)}/settings`,
+  Settings: (app: string) =>
+    `${routes.App(app)}/settings`,
 
-  Files: (account: string, workspace: string, app: string) =>
-    `${routes.App(account, workspace, app)}/files`,
+  Files: (app: string) =>
+    `${routes.App(app)}/files`,
 
-  File: (account: string, workspace: string, app: string, path: string) =>
-    `${routes.Files(account, workspace, app)}/${path}`,
+  File: (app: string, path: string) =>
+    `${routes.Files(app)}/${path}`,
 
-  Dependencies: (account: string, workspace: string) =>
-    `/${account}/${workspace}/dependencies`,
+  Dependencies: '/dependencies',
 }
 
 const contextQuery = (context?: Array<string>) => context ? context.join('/') : context
 
-export default class AppEngineClient extends Client {
-  constructor (endpointUrl: string = 'STABLE', {authToken, userAgent, accept = '', timeout}: ClientOptions = {}) {
-    super(apps(endpointUrl), {authToken, userAgent, accept, timeout})
-  }
+export default function Apps (opts: InstanceOptions) {
+  const client = createClient({...opts, baseURL: createWorkspaceURL('apps', opts)})
 
-  installApp (account: string, workspace: string, descriptor: string) {
-    return this.http.post(routes.Apps(account, workspace), descriptor)
-  }
+  return {
+    installApp: (descriptor: string) => {
+      return client.post(routes.Apps, descriptor)
+    },
 
-  uninstallApp (account: string, workspace: string, app: string) {
-    return this.http.delete(routes.App(account, workspace, app))
-  }
+    uninstallApp: (app: string) => {
+      return client.delete(routes.App(app))
+    },
 
-  acknowledgeApp (account: string, workspace: string, app: string, service: string) {
-    return this.http.put(routes.Acknowledge(account, workspace, app, service))
-  }
+    acknowledgeApp: (app: string, service: string) => {
+      return client.put(routes.Acknowledge(app, service))
+    },
 
-  link (account: string, workspace: string, app: string, changes: Array<Change>) {
-    const headers = {
-      'Content-Type': 'application/json',
-    }
-    return this.http.put(routes.Link(account, workspace, app), changes, {headers})
-  }
+    link: (app: string, changes: Array<Change>) => {
+      const headers = {
+        'Content-Type': 'application/json',
+      }
+      return client.put(routes.Link(app), changes, {headers})
+    },
 
-  unlink (account: string, workspace: string, app: string) {
-    return this.http.delete(routes.Link(account, workspace, app))
-  }
+    unlink: (app: string) => {
+      return client.delete(routes.Link(app))
+    },
 
-  getAppSettings (account: string, workspace: string, app: string, {context}: Context = {}) {
-    const params = {context: contextQuery(context)}
-    return this.http(
-      routes.Settings(account, workspace, app),
-      {params},
-    )
-  }
+    getAppSettings: (app: string, {context}: Context = {}) => {
+      const params = {context: contextQuery(context)}
+      return client(
+        routes.Settings(app),
+        {params},
+      )
+    },
 
-  updateAppSettings (account: string, workspace: string, app: string, settings: any, {context}: Context = {}) {
-    const params = {context: contextQuery(context)}
-    return this.http.put(
-      routes.Settings(account, workspace, app),
-      settings,
-      {params},
-    )
-  }
+    updateAppSettings: (app: string, settings: any, {context}: Context = {}) => {
+      const params = {context: contextQuery(context)}
+      return client.put(
+        routes.Settings(app),
+        settings,
+        {params},
+      )
+    },
 
-  patchAppSettings (account: string, workspace: string, app: string, settings: any, {context}: Context = {}) {
-    const params = {context: contextQuery(context)}
-    return this.http.patch(
-      routes.Settings(account, workspace, app),
-      settings,
-      {params},
-    )
-  }
+    patchAppSettings: (app: string, settings: any, {context}: Context = {}) => {
+      const params = {context: contextQuery(context)}
+      return client.patch(
+        routes.Settings(app),
+        settings,
+        {params},
+      )
+    },
 
-  listApps (account: string, workspace: string, {oldVersion, context, since, service}: ListSettings = {}) {
-    const params = {
-      oldVersion,
-      context: contextQuery(context),
-      since,
-      service,
-    }
-    return this.http(routes.Apps(account, workspace), {params})
-  }
+    listApps: ({oldVersion, context, since, service}: ListSettings = {}) => {
+      const params = {
+        oldVersion,
+        context: contextQuery(context),
+        since,
+        service,
+      }
+      return client(routes.Apps, {params})
+    },
 
-  listAppFiles (account: string, workspace: string, app: string, {prefix, context, nextMarker}: ListFilesSettings = {}) {
-    const params = {
-      prefix,
-      context: contextQuery(context),
-      marker: nextMarker,
-    }
-    return this.http(routes.Files(account, workspace, app), {params})
-  }
+    listAppFiles: (app: string, {prefix, context, nextMarker}: ListFilesSettings = {}) => {
+      const params = {
+        prefix,
+        context: contextQuery(context),
+        marker: nextMarker,
+      }
+      return client(routes.Files(app), {params})
+    },
 
-  listLinks (account: string, workspace: string) {
-    return this.http(routes.Links(account, workspace))
-  }
+    listLinks: () => {
+      return client(routes.Links)
+    },
 
-  getAppFile (account: string, workspace: string, app: string, path: string, context: Array<string> = []) {
-    const params = {context: contextQuery(context)}
-    return this.http(routes.File(account, workspace, app, path), {params, transformResponse: noTransforms})
-  }
+    getAppFile: (app: string, path: string, context: Array<string> = []) => {
+      const params = {context: contextQuery(context)}
+      return client(routes.File(app, path), {params, transformResponse: noTransforms})
+    },
 
-  getApp (account: string, workspace: string, app: string, context: Array<string> = []) {
-    const params = {context: contextQuery(context)}
-    return this.http(routes.App(account, workspace, app), {params})
-  }
+    getApp: (app: string, context: Array<string> = []) => {
+      const params = {context: contextQuery(context)}
+      return client(routes.App(app), {params})
+    },
 
-  getDependencies (account: string, workspace: string, filter: string = '') {
-    const params = {filter}
-    return this.http(routes.Dependencies(account, workspace), {params})
+    getDependencies: (filter: string = '') => {
+      const params = {filter}
+      return client(routes.Dependencies, {params})
+    },
   }
 }

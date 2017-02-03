@@ -1,10 +1,8 @@
 /* @flow */
-import Client from './Client'
-import {workspaces} from './endpoints'
-import type {ClientOptions} from './Client'
+import {createClient, createRootURL} from './client'
+import type {InstanceOptions} from './client'
 
-const CURRENT_MAJOR_VND = 'application/vnd.vtex.vbase.v1+json'
-const DEFAULT_WORKSPACE = 'master'
+export const DefaultWorkspace = 'master'
 
 const routes = {
   Account: (account: string) =>
@@ -14,31 +12,31 @@ const routes = {
     `${routes.Account(account)}/${workspace}`,
 
   DefaultWorkspace: (account: string) =>
-    `${routes.Workspace(account, DEFAULT_WORKSPACE)}`,
+    `${routes.Workspace(account, DefaultWorkspace)}`,
 }
 
-export default class WorkspacesClient extends Client {
-  constructor (endpointUrl: string = 'STABLE', {authToken, userAgent, accept = CURRENT_MAJOR_VND, timeout}: ClientOptions = {}) {
-    super(workspaces(endpointUrl), {authToken, userAgent, accept, timeout})
-  }
+export default function Workspaces (opts: InstanceOptions) {
+  const client = createClient({...opts, baseURL: createRootURL('apps', opts)})
 
-  list (account: string) {
-    return this.http(routes.Account(account))
-  }
+  return {
+    list: (account: string) => {
+      return client(routes.Account(account))
+    },
 
-  get (account: string, workspace: string) {
-    return this.http(routes.Workspace(account, workspace))
-  }
+    get: (account: string, workspace: string) => {
+      return client(routes.Workspace(account, workspace))
+    },
 
-  create (account: string, workspace: string) {
-    return this.http.post(routes.Account(account), {name: workspace})
-  }
+    create: (account: string, workspace: string) => {
+      return client.post(routes.Account(account), {name: workspace})
+    },
 
-  delete (account: string, workspace: string) {
-    return this.http.delete(routes.Workspace(account, workspace))
-  }
+    delete: (account: string, workspace: string) => {
+      return client.delete(routes.Workspace(account, workspace))
+    },
 
-  promote (account: string, workspace: string) {
-    return this.http.put(routes.DefaultWorkspace(account, workspace), {workspace})
+    promote: (account: string, workspace: string) => {
+      return client.put(routes.DefaultWorkspace(account, workspace), {workspace})
+    },
   }
 }

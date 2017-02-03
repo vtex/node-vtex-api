@@ -2,84 +2,52 @@
 import {createGzip} from 'zlib'
 import {basename} from 'path'
 import mime from 'mime-types'
-import Client from './Client'
-import type {ClientOptions} from './Client'
-import {vbase} from './endpoints'
 import type {Readable} from 'stream'
+import {createClient, createWorkspaceURL, noTransforms} from './client'
+import type {InstanceOptions} from './client'
 
 type Headers = { [key: string]: string }
 
-const CURRENT_MAJOR_VND = 'application/vnd.vtex.vbase.v1+json'
-const DEFAULT_WORKSPACE = 'master'
-const data = data => data
-const noTransforms = [data]
-
 const routes = {
-  Account: (account: string) =>
-    `/${account}`,
+  Bucket: (bucket: string) =>
+    `/buckets/${bucket}`,
 
-  Workspace: (account: string, workspace: string) =>
-    `${routes.Account(account)}/${workspace}`,
+  Files: (bucket: string) =>
+    `/${routes.Bucket(bucket)}/files`,
 
-  DefaultWorkspace: (account: string) =>
-    `${routes.Workspace(account, DEFAULT_WORKSPACE)}`,
-
-  Bucket: (account: string, workspace: string, bucket: string) =>
-    `${routes.Workspace(account, workspace)}/buckets/${bucket}`,
-
-  Files: (account: string, workspace: string, bucket: string, path?: string) =>
-    `${routes.Bucket(account, workspace, bucket)}/files${path ? '/' + path : ''}`,
+  File: (bucket: string, path: string) =>
+    `/${routes.Bucket(bucket)}/files$/${path}`,
 }
 
-export default class VBaseClient extends Client {
-  constructor (endpointUrl: string = 'STABLE', {authToken, userAgent, accept = CURRENT_MAJOR_VND, timeout}: ClientOptions = {}) {
-    super(vbase(endpointUrl), {authToken, userAgent, accept, timeout})
-  }
+export default function VBase (opts: InstanceOptions) {
+  const client = createClient({...opts, baseURL: createWorkspaceURL('apps', opts)})
 
-  promote (account: string, workspace: string) {
-    return this.http.put(routes.DefaultWorkspace(account, workspace), {workspace})
-  }
+  return {
+    getBucket: (bucket: string) => {
+      return client(routes.Bucket(bucket))
+    },
 
-  list (account: string) {
-    return this.http(routes.Account(account))
-  }
+    listFiles: (bucket: string, prefix?: string) => {
+      const params = {prefix}
+      return client(routes.Files(bucket), {params})
+    },
 
-  create (account: string, workspace: string) {
-    return this.http.post(routes.Account(account), {name: workspace})
-  }
+    getFile: (bucket: string, path: string) => {
+      return client(routes.Files(bucket, path), {transformResponse: noTransforms})
+    },
 
-  get (account: string, workspace: string) {
-    return this.http(routes.Workspace(account, workspace))
-  }
+    saveFile: (bucket: string, path: string, stream: Readable, gzip?: boolean = true) => {
+      if (!(stream.pipe && stream.on)) {
+        throw new Error('Argument stream must be a readable stream')
+      }
+      const finalStream = gzip ? stream.pipe(createGzip()) : stream
+      const headers: Headers = gzip ? {'Content-Encoding': 'gzip'} : {}
+      headers['Content-Type'] = mime.contentType(basename(path))
+      return client.put(routes.Files(bucket, path), finalStream, {headers})
+    },
 
-  delete (account: string, workspace: string) {
-    return this.http.delete(routes.Workspace(account, workspace))
-  }
-
-  getBucket (account: string, workspace: string, bucket: string) {
-    return this.http(routes.Bucket(account, workspace, bucket))
-  }
-
-  listFiles (account: string, workspace: string, bucket: string, prefix?: string) {
-    const params = {prefix}
-    return this.http(routes.Files(account, workspace, bucket), {params})
-  }
-
-  getFile (account: string, workspace: string, bucket: string, path: string) {
-    return this.http(routes.Files(account, workspace, bucket, path), {transformResponse: noTransforms})
-  }
-
-  saveFile (account: string, workspace: string, bucket: string, path: string, stream: Readable, gzip?: boolean = true) {
-    if (!(stream.pipe && stream.on)) {
-      throw new Error('Argument stream must be a readable stream')
-    }
-    const finalStream = gzip ? stream.pipe(createGzip()) : stream
-    const headers: Headers = gzip ? {'Content-Encoding': 'gzip'} : {}
-    headers['Content-Type'] = mime.contentType(basename(path))
-    return this.http.put(routes.Files(account, workspace, bucket, path), finalStream, {headers})
-  }
-
-  deleteFile (account: string, workspace: string, bucket: string, path: string) {
-    return this.http.delete(routes.Files(account, workspace, bucket, path))
+    deleteFile: (bucket: string, path: string) => {
+      return client.delete(routes.Files(bucket, path))
+    },
   }
 }

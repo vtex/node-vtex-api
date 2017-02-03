@@ -31,5 +31,6 @@ docs/_book/
 .tmp/
 .idea/
 npm-debug.log
+yarn-error.log
 .build/
 lib/

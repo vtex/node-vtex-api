@@ -1,5 +1,5 @@
 import Apps from './Apps.js'
-import Client from './Client.js'
+import client from './client.js'
 import Registry from './Registry.js'
 import Router from './Router.js'
 import VBase from './VBase.js'
@@ -8,7 +8,7 @@ import Workspaces from './Workspaces.js'
 
 module.exports = {
   Apps,
-  Client,
+  client,
   Registry,
   Router,
   VBase,
