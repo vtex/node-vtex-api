@@ -24,7 +24,7 @@ export type WorkspacesInstance = {
 }
 
 export default function Workspaces (opts: InstanceOptions): WorkspacesInstance {
-  const client = createClient({...opts, baseURL: createRootURL('apps', opts)})
+  const client = createClient({...opts, baseURL: createRootURL('kube-router', opts)})
 
   return {
     list: (account: string) => {

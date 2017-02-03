@@ -28,7 +28,7 @@ export type VBaseInstance = {
 }
 
 export default function VBase (opts: InstanceOptions): VBaseInstance {
-  const client = createClient({...opts, baseURL: createWorkspaceURL('apps', opts)})
+  const client = createClient({...opts, baseURL: createWorkspaceURL('vbase', opts)})
 
   return {
     getBucket: (bucket: string) => {

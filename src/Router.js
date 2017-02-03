@@ -27,7 +27,7 @@ export default function Router (opts: InstanceOptions): RouterInstance {
   const {account, workspace} = opts
   const client = createClient({
     ...opts,
-    baseURL: createRootURL('apps', {...opts, workspace: DefaultWorkspace}),
+    baseURL: createRootURL('kube-router', {...opts, workspace: DefaultWorkspace}),
   })
 
   return {
