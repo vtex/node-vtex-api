@@ -19,7 +19,15 @@ const routes = {
     `/${routes.Bucket(bucket)}/files$/${path}`,
 }
 
-export default function VBase (opts: InstanceOptions) {
+export type VBaseInstance = {
+  getBucket: (bucket: string) => any,
+  listFiles: (bucket: string, prefix?: string) => any,
+  getFile: (bucket: string, path: string) => any,
+  saveFile: (bucket: string, path: string, stream: Readable, gzip?: boolean) => any,
+  deleteFile: (bucket: string, path: string) => any,
+}
+
+export default function VBase (opts: InstanceOptions): VBaseInstance {
   const client = createClient({...opts, baseURL: createWorkspaceURL('apps', opts)})
 
   return {

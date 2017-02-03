@@ -16,7 +16,14 @@ const routes = {
     `/${routes.InstalledServices(account, workspace)}/services/${name}`,
 }
 
-export default function Router (opts: InstanceOptions) {
+export type RouterInstance = {
+  listAvailableServices: () => any,
+  getAvailableVersions: (name: string) => any,
+  listInstalledServices: () => any,
+  installService: (name: string, version: string) => any,
+}
+
+export default function Router (opts: InstanceOptions): RouterInstance {
   const {account, workspace} = opts
   const client = createClient({
     ...opts,

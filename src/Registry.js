@@ -24,7 +24,17 @@ const routes = {
     `${routes.App(vendor, name)}/${version}`,
 }
 
-export default function Registry (opts: InstanceOptions) {
+export type RegistryInstance = {
+  publishApp: (files: Array<File>, tag?: string) => any,
+  publishAppPatch: (vendor: string, name: string, version: string, changes: any) => any,
+  listVendors: () => any,
+  listAppsByVendor: (vendor: string) => any,
+  listVersionsByApp: (vendor: string, name: string) => any,
+  getAppManifest: (vendor: string, name: string, version: string) => any,
+  unpublishApp: (vendor: string, name: string, version: string) => any,
+}
+
+export default function Registry (opts: InstanceOptions): RegistryInstance {
   const client = createClient({
     ...opts,
     baseURL: createWorkspaceURL('apps', {...opts, workspace: DefaultWorkspace}),

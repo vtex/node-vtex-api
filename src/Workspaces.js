@@ -15,7 +15,15 @@ const routes = {
     `${routes.Workspace(account, DefaultWorkspace)}`,
 }
 
-export default function Workspaces (opts: InstanceOptions) {
+export type WorkspacesInstance = {
+  list: (account: string) => any,
+  get: (account: string, workspace: string) => any,
+  create: (account: string, workspace: string) => any,
+  delete: (account: string, workspace: string) => any,
+  promote: (account: string, workspace: string) => any,
+}
+
+export default function Workspaces (opts: InstanceOptions): WorkspacesInstance {
   const client = createClient({...opts, baseURL: createRootURL('apps', opts)})
 
   return {

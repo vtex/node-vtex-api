@@ -2,10 +2,6 @@
 import {createClient, createWorkspaceURL, noTransforms} from './client'
 import type {InstanceOptions} from './client'
 
-type Context = {
-  context: Array<string>
-}
-
 type Change = {
   path: string,
   content: string
@@ -52,7 +48,21 @@ const routes = {
 
 const contextQuery = (context?: Array<string>) => context ? context.join('/') : context
 
-export default function Apps (opts: InstanceOptions) {
+export type AppsInstance = {
+  installApp: (descriptor: string) => any,
+  uninstallApp: (app: string) => any,
+  acknowledgeApp: (app: string, service: string) => any,
+  link: (app: string, changes: Array<Change>) => any,
+  unlink: (app: string) => any,
+  listApps: (settings: ListSettings) => any,
+  listAppFiles: (app: string, settings: ListFilesSettings) => any,
+  listLinks: () => any,
+  getAppFile: (app: string, path: string, context?: Array<string>) => any,
+  getApp: (app: string, context?: Array<string>) => any,
+  getDependencies: (filter?: string) => any,
+}
+
+export default function Apps (opts: InstanceOptions): AppsInstance {
   const client = createClient({...opts, baseURL: createWorkspaceURL('apps', opts)})
 
   return {
@@ -77,32 +87,6 @@ export default function Apps (opts: InstanceOptions) {
 
     unlink: (app: string) => {
       return client.delete(routes.Link(app))
-    },
-
-    getAppSettings: (app: string, {context}: Context = {}) => {
-      const params = {context: contextQuery(context)}
-      return client(
-        routes.Settings(app),
-        {params},
-      )
-    },
-
-    updateAppSettings: (app: string, settings: any, {context}: Context = {}) => {
-      const params = {context: contextQuery(context)}
-      return client.put(
-        routes.Settings(app),
-        settings,
-        {params},
-      )
-    },
-
-    patchAppSettings: (app: string, settings: any, {context}: Context = {}) => {
-      const params = {context: contextQuery(context)}
-      return client.patch(
-        routes.Settings(app),
-        settings,
-        {params},
-      )
     },
 
     listApps: ({oldVersion, context, since, service}: ListSettings = {}) => {
