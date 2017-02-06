@@ -8,10 +8,12 @@ This client enables Node developers to quickly integrate with the VTEX IO APIs.
 
 The clients currently available  in this library are:
 
-- AppsClient
-- RegistryClient
-- VBaseClient
-- VTEXIDClient
+- [VBase](https://github.com/vtex/node-vtex-api/blob/feature/context-bound/src/VBase.js#L22)
+- [Apps](https://github.com/vtex/node-vtex-api/blob/feature/context-bound/src/Apps.js#L51)
+- [Registry](https://github.com/vtex/node-vtex-api/blob/feature/context-bound/src/Registry.js#L27)
+- [Router](https://github.com/vtex/node-vtex-api/blob/feature/context-bound/src/Router.js#L19)
+- [Workspaces](https://github.com/vtex/node-vtex-api/blob/feature/context-bound/src/Workspaces.js#18)
+- [ID](https://github.com/vtex/node-vtex-api/blob/feature/context-bound/src/ID.js#L13)
 
 Usage:
 
@@ -31,21 +33,21 @@ Install the dependencies (`npm install`) and run `npm run build`.
 
 ### Using VBaseClient.sendFile
 
-An example usage of the three supported method of sending a file to VBase:
+An example usage of the three supported methods of sending a file to VBase:
 
-```
-import {VBaseClient} from '@vtex/api'
+```js
+import {VBase} from '@vtex/api'
 import {createReadStream} from 'fs'
 
-const client = new VBaseClient({
+const client = new VBase({
+  account: 'account',
+  workspace: 'workspace',
   authToken: 'test',
   userAgent: 'test send',
-  endpointUrl: 'BETA',
+  region: 'aws-us-east-1',
 })
 
 client.saveFile(
-  'account',
-  'workspace',
   'bucket',
   'test-send-stream-gzip.txt',
   createReadStream('./test-send.txt'),
@@ -55,8 +57,6 @@ client.saveFile(
 })
 
 client.saveFile(
-  'account',
-  'workspace',
   'bucket',
   'test-send-stream.txt',
   createReadStream('./test-send.txt'),
@@ -66,8 +66,6 @@ client.saveFile(
 })
 
 client.saveFile(
-  'account',
-  'workspace',
   'bucket',
   'test-send-file.txt',
   './test-send.txt'
