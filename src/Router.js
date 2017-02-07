@@ -1,6 +1,6 @@
 /* @flow */
-import {createClient, createRootURL} from './client'
-import type {InstanceOptions} from './client'
+import {createClient, createRootURL} from './baseClient'
+import type {InstanceOptions} from './baseClient'
 import {DefaultWorkspace} from './Workspaces'
 
 const routes = {

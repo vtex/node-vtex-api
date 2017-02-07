@@ -3,8 +3,8 @@ import {createGzip} from 'zlib'
 import {basename} from 'path'
 import mime from 'mime-types'
 import type {Readable} from 'stream'
-import {createClient, createWorkspaceURL, noTransforms} from './client'
-import type {InstanceOptions} from './client'
+import {createClient, createWorkspaceURL, noTransforms} from './baseClient'
+import type {InstanceOptions} from './baseClient'
 
 type Headers = { [key: string]: string }
 

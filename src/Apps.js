@@ -1,6 +1,6 @@
 /* @flow */
-import {createClient, createWorkspaceURL, noTransforms} from './client'
-import type {InstanceOptions} from './client'
+import {createClient, createWorkspaceURL, noTransforms} from './baseClient'
+import type {InstanceOptions} from './baseClient'
 
 type Change = {
   path: string,

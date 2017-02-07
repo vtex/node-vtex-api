@@ -1,5 +1,5 @@
 import Apps from './Apps.js'
-import client from './client.js'
+import client from './baseClient.js'
 import Registry from './Registry.js'
 import Router from './Router.js'
 import VBase from './VBase.js'

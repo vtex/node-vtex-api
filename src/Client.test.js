@@ -1,6 +1,6 @@
 import test from 'ava'
 import {createServer} from 'http'
-import Client from './Client'
+import Client from './baseClient'
 
 test('HTTP client is created with all options', t => {
   const authToken = 'authToken'

@@ -2,8 +2,8 @@
 import Stream from 'stream'
 import archiver from 'archiver'
 import {createGzip} from 'zlib'
-import {createClient, createWorkspaceURL} from './client'
-import type {InstanceOptions} from './client'
+import {createClient, createWorkspaceURL} from './baseClient'
+import type {InstanceOptions} from './baseClient'
 import {DefaultWorkspace} from './Workspaces'
 
 type File = {

@@ -1,6 +1,6 @@
 /* @flow */
-import Client from './Client'
-import type {ClientOptions} from './Client'
+import Client from './baseClient'
+import type {ClientOptions} from './baseClient'
 import {vtexid} from './endpoints'
 
 const routes = {
