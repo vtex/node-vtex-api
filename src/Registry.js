@@ -1,7 +1,5 @@
 /* @flow */
-import Stream from 'stream'
 import archiver from 'archiver'
-import {createGzip} from 'zlib'
 import {createClient, createWorkspaceURL} from './baseClient'
 import type {InstanceOptions} from './baseClient'
 import {DefaultWorkspace} from './Workspaces'
@@ -14,24 +12,18 @@ type File = {
 const routes = {
   Registry: '/registry',
 
-  Vendor: (vendor: string) =>
-    `${routes.Registry}/${vendor}/apps`,
+  App: (app: string) =>
+    `${routes.Registry}/${app}`,
 
-  App: (vendor: string, name: string) =>
-    `${routes.Vendor(vendor)}/${name}`,
-
-  AppVersion: (vendor: string, name: string, version: string) =>
-    `${routes.App(vendor, name)}/${version}`,
+  AppVersion: (app: string, version: string) =>
+    `${routes.App(app)}/${version}`,
 }
 
 export type RegistryInstance = {
   publishApp: (files: Array<File>, tag?: string) => any,
-  publishAppPatch: (vendor: string, name: string, version: string, changes: any) => any,
-  listVendors: () => any,
-  listAppsByVendor: (vendor: string) => any,
-  listVersionsByApp: (vendor: string, name: string) => any,
-  getAppManifest: (vendor: string, name: string, version: string) => any,
-  unpublishApp: (vendor: string, name: string, version: string) => any,
+  listApps: (app: string) => any,
+  listVersionsByApp: (app: string) => any,
+  getAppManifest: (app: string, version: string) => any,
 }
 
 export default function Registry (opts: InstanceOptions): RegistryInstance {
@@ -68,40 +60,16 @@ export default function Registry (opts: InstanceOptions): RegistryInstance {
       })
     },
 
-    publishAppPatch: (vendor: string, name: string, version: string, changes: any) => {
-      const gz = createGzip()
-      const stream = new Stream.Readable()
-      stream.push(JSON.stringify(changes))
-      stream.push(null)
-      return client({
-        method: 'PATCH',
-        data: stream.pipe(gz),
-        url: routes.AppVersion(vendor, name, version),
-        headers: {
-          'Content-Encoding': 'gzip',
-          'Content-Type': 'application/json',
-        },
-      })
-    },
-
-    listVendors: () => {
+    listApps: () => {
       return client(routes.Registry)
     },
 
-    listAppsByVendor: (vendor: string) => {
-      return client(routes.Vendor(vendor))
+    listVersionsByApp: (app: string) => {
+      return client(routes.App(app))
     },
 
-    listVersionsByApp: (vendor: string, name: string) => {
-      return client(routes.App(vendor, name))
-    },
-
-    getAppManifest: (vendor: string, name: string, version: string) => {
-      return client(routes.AppVersion(vendor, name, version))
-    },
-
-    unpublishApp: (vendor: string, name: string, version: string) => {
-      return client.delete(routes.AppVersion(vendor, name, version))
+    getAppManifest: (app: string, version: string) => {
+      return client(routes.AppVersion(app, version))
     },
   }
 }
