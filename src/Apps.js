@@ -67,7 +67,7 @@ export default function Apps (opts: InstanceOptions): AppsInstance {
 
   return {
     installApp: (descriptor: string) => {
-      return client.post(routes.Apps, descriptor)
+      return client.post(routes.Apps, {id: descriptor})
     },
 
     uninstallApp: (app: string) => {
