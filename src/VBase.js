@@ -13,10 +13,10 @@ const routes = {
     `/buckets/${bucket}`,
 
   Files: (bucket: string) =>
-    `/${routes.Bucket(bucket)}/files`,
+    `${routes.Bucket(bucket)}/files`,
 
   File: (bucket: string, path: string) =>
-    `/${routes.Bucket(bucket)}/files$/${path}`,
+    `${routes.Bucket(bucket)}/files$/${path}`,
 }
 
 export type VBaseInstance = {
