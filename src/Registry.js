@@ -18,8 +18,11 @@ const routes = {
   AppVersion: (app: string, version: string) =>
     `${routes.App(app)}/${version}`,
 
+  AppFiles: (app: string, version: string) =>
+    `${routes.AppVersion(app, version)}/files`,
+
   AppFile: (app: string, version: string, path: string) =>
-    `${routes.AppVersion(app, version)}/files/${path}`,
+    `${routes.AppFiles(app, version)}/${path}`,
 }
 
 export type RegistryInstance = {
@@ -27,6 +30,7 @@ export type RegistryInstance = {
   listApps: (app: string) => any,
   listVersionsByApp: (app: string) => any,
   getAppManifest: (app: string, version: string) => any,
+  listAppFiles: (app: string, version: string) => any,
   getAppFile: (app: string, version: string, path: string) => any,
 }
 
@@ -74,6 +78,10 @@ export default function Registry (opts: InstanceOptions): RegistryInstance {
 
     getAppManifest: (app: string, version: string) => {
       return client(routes.AppVersion(app, version))
+    },
+
+    listAppFiles: (app: string, version: string) => {
+      return client(routes.AppFiles(app, version))
     },
 
     getAppFile: (app: string, version: string, path: string) => {
