@@ -1,6 +1,6 @@
 /* @flow */
 import archiver from 'archiver'
-import {createClient, createWorkspaceURL} from './baseClient'
+import {createClient, createWorkspaceURL, noTransforms} from './baseClient'
 import type {InstanceOptions} from './baseClient'
 import {DefaultWorkspace} from './Workspaces'
 
@@ -85,7 +85,7 @@ export default function Registry (opts: InstanceOptions): RegistryInstance {
     },
 
     getAppFile: (app: string, version: string, path: string) => {
-      return client(routes.AppFile(app, version, path))
+      return client(routes.AppFile(app, version, path), {responseType: 'arraybuffer', transformResponse: noTransforms})
     },
   }
 }

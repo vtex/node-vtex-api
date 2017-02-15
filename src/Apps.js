@@ -114,7 +114,7 @@ export default function Apps (opts: InstanceOptions): AppsInstance {
 
     getAppFile: (app: string, path: string, context: Array<string> = []) => {
       const params = {context: contextQuery(context)}
-      return client(routes.File(app, path), {params, transformResponse: noTransforms})
+      return client(routes.File(app, path), {params, responseType: 'arraybuffer', transformResponse: noTransforms})
     },
 
     getApp: (app: string, context: Array<string> = []) => {

@@ -41,7 +41,7 @@ export default function VBase (opts: InstanceOptions): VBaseInstance {
     },
 
     getFile: (bucket: string, path: string) => {
-      return client(routes.File(bucket, path), {transformResponse: noTransforms})
+      return client(routes.File(bucket, path), {responseType: 'arraybuffer', transformResponse: noTransforms})
     },
 
     saveFile: (bucket: string, path: string, stream: Readable, gzip?: boolean = true) => {

@@ -3,7 +3,9 @@ import type {AxiosInstance} from 'axios'
 import axios from 'axios'
 
 export const DEFAULT_TIMEOUT_MS = 10000
-const data = ({data}) => data
+
+const handleResponse = ({data, headers, config: {responseType}}) =>
+  (responseType !== 'arraybuffer') ? data : { data, headers }
 
 export type InstanceOptions = {
   authToken: string,
@@ -36,7 +38,7 @@ export function createClient (opts: ClientOptions): AxiosInstance {
     timeout,
   })
 
-  http.interceptors.response.use(data, (err) => {
+  http.interceptors.response.use(handleResponse, (err) => {
     try {
       delete err.response.request
       delete err.response.config
