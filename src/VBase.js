@@ -51,11 +51,11 @@ export default function VBase (opts: InstanceOptions): VBaseInstance {
       const finalStream = gzip ? stream.pipe(createGzip()) : stream
       const headers: Headers = gzip ? {'Content-Encoding': 'gzip'} : {}
       headers['Content-Type'] = mime.contentType(basename(path))
-      return client.put(routes.Files(bucket, path), finalStream, {headers})
+      return client.put(routes.File(bucket, path), finalStream, {headers})
     },
 
     deleteFile: (bucket: string, path: string) => {
-      return client.delete(routes.Files(bucket, path))
+      return client.delete(routes.File(bucket, path))
     },
   }
 }
