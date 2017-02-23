@@ -54,6 +54,7 @@ export type AppsInstance = {
   acknowledgeApp: (app: string, service: string) => any,
   link: (app: string, changes: Array<Change>) => any,
   unlink: (app: string) => any,
+  saveAppSettings: (app: string, settings: any) => any,
   listApps: (settings: ListSettings) => any,
   listAppFiles: (app: string, settings: ListFilesSettings) => any,
   listLinks: () => any,
@@ -88,6 +89,13 @@ export default function Apps (opts: InstanceOptions): AppsInstance {
     unlink: (app: string) => {
       return client.delete(routes.Link(app))
     },
+
+    saveAppSettings(app: string, settings: any) => {
+      const headers = {
+        'Content-Type': 'application/json',
+      }
+      return client.put(routes.Settings(app), settings, {headers})
+    }
 
     listApps: ({oldVersion, context, since, service}: ListSettings = {}) => {
       const params = {
