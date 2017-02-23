@@ -90,12 +90,12 @@ export default function Apps (opts: InstanceOptions): AppsInstance {
       return client.delete(routes.Link(app))
     },
 
-    saveAppSettings(app: string, settings: any) => {
+    saveAppSettings: (app: string, settings: any) => {
       const headers = {
         'Content-Type': 'application/json',
       }
       return client.put(routes.Settings(app), settings, {headers})
-    }
+    },
 
     listApps: ({oldVersion, context, since, service}: ListSettings = {}) => {
       const params = {
