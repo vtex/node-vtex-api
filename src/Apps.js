@@ -130,6 +130,10 @@ export default function Apps (opts: InstanceOptions): AppsInstance {
       return client(routes.App(app), {params})
     },
 
+    getAppSettings: (app: string) => {
+      return client(routes.Settings(app))
+    },
+
     getDependencies: (filter: string = '') => {
       const params = {filter}
       return client(routes.Dependencies, {params})
