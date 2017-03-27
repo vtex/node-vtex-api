@@ -49,7 +49,7 @@ const routes = {
 const contextQuery = (context?: Array<string>) => context ? context.join('/') : context
 
 export type AppsInstance = {
-  installApp: (descriptor: string) => any,
+  installApp: (descriptor: string, registry: string) => any,
   uninstallApp: (app: string) => any,
   acknowledgeApp: (app: string, service: string) => any,
   link: (app: string, changes: Array<Change>) => any,
@@ -67,8 +67,8 @@ export default function Apps (opts: InstanceOptions): AppsInstance {
   const client = createClient({...opts, baseURL: createWorkspaceURL('apps', opts)})
 
   return {
-    installApp: (descriptor: string) => {
-      return client.post(routes.Apps, {id: descriptor})
+    installApp: (descriptor: string, registry: string) => {
+      return client.post(routes.Apps, {id: descriptor, registry: registry})
     },
 
     uninstallApp: (app: string) => {
