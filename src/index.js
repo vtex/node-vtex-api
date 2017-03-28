@@ -5,6 +5,7 @@ import Router from './Router.js'
 import VBase from './VBase.js'
 import ID from './ID.js'
 import Workspaces from './Workspaces.js'
+import Colossus from './Colossus.js'
 
 module.exports = {
   Apps,
@@ -14,4 +15,5 @@ module.exports = {
   VBase,
   ID,
   Workspaces,
+  Colossus,
 }
