@@ -28,7 +28,7 @@ export function createClient (opts: ClientOptions): AxiosInstance {
   const {baseURL, authToken, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
 
   const headers = {
-    'Authorization': `token ${authToken}`,
+    'Authorization': `bearer ${authToken}`,
     'User-Agent': userAgent,
   }
 
