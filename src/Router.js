@@ -5,6 +5,9 @@ import {DefaultWorkspace} from './Workspaces'
 
 const routes = {
   AvailableServices: '/_services',
+  AvailableIoVersions: '/_io',
+  InstalledIoVersion: (account: string, workspace: string) =>
+    `/${account}/${workspace}/io`,
 
   AvailableVersions: (name: string) =>
     `${routes.AvailableServices}/${name}`,
@@ -17,6 +20,9 @@ const routes = {
 }
 
 export type RouterInstance = {
+  listAvailableIoVersions: () => any,
+  getInstalledIoVersion: () => any,
+  installIo: (version: string) => any,
   listAvailableServices: () => any,
   getAvailableVersions: (name: string) => any,
   listInstalledServices: () => any,
@@ -31,6 +37,25 @@ export default function Router (opts: InstanceOptions): RouterInstance {
   })
 
   return {
+    listAvailableIoVersions: () => {
+      return client.get(routes.AvailableIoVersions)
+    },
+
+    getInstalledIoVersion: () => {
+      if (!account || !workspace) {
+        throw new Error('Missing client parameters: {account, workspace}')
+      }
+      return client.get(routes.InstalledIoVersion(account, workspace))
+    },
+
+    installIo: (version: string) => {
+      if (!account || !workspace) {
+        throw new Error('Missing client parameters: {account, workspace}')
+      }
+
+      return client.put(routes.InstalledIoVersion(account, workspace), {version})
+    },
+
     listAvailableServices: () => {
       return client.get(routes.AvailableServices)
     },
