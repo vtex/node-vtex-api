@@ -4,6 +4,11 @@ import type {InstanceOptions} from './baseClient'
 
 export const DefaultWorkspace = 'master'
 
+type WorkspaceMetadata = {
+  production: boolean,
+  weight: ?number,
+}
+
 const routes = {
   Account: (account: string) =>
     `/${account}`,
@@ -11,8 +16,8 @@ const routes = {
   Workspace: (account: string, workspace: string) =>
     `${routes.Account(account)}/${workspace}`,
 
-  DefaultWorkspace: (account: string) =>
-    `${routes.Workspace(account, DefaultWorkspace)}`,
+  Promote: (account: string) =>
+    `${routes.Workspace(account, DefaultWorkspace)}/_promote`,
 }
 
 export type WorkspacesInstance = {
@@ -35,6 +40,10 @@ export default function Workspaces (opts: InstanceOptions): WorkspacesInstance {
       return client(routes.Workspace(account, workspace))
     },
 
+    set: (account: string, workspace: string, metadata: WorkspaceMetadata) => {
+      return client.put(routes.Workspace(account, workspace), metadata)
+    },
+
     create: (account: string, workspace: string) => {
       return client.post(routes.Account(account), {name: workspace})
     },
@@ -44,7 +53,7 @@ export default function Workspaces (opts: InstanceOptions): WorkspacesInstance {
     },
 
     promote: (account: string, workspace: string) => {
-      return client.put(routes.DefaultWorkspace(account, workspace), {workspace})
+      return client.put(routes.Promote(account), {workspace})
     },
   }
 }
