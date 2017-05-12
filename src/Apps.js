@@ -61,6 +61,7 @@ export type AppsInstance = {
   getAppFile: (app: string, path: string, context?: Array<string>) => any,
   getApp: (app: string, context?: Array<string>) => any,
   getDependencies: (filter?: string) => any,
+  updateDependencies: () => any,
 }
 
 export default function Apps (opts: InstanceOptions): AppsInstance {
@@ -137,6 +138,13 @@ export default function Apps (opts: InstanceOptions): AppsInstance {
     getDependencies: (filter: string = '') => {
       const params = {filter}
       return client(routes.Dependencies, {params})
+    },
+
+    updateDependencies: () => {
+      return client({
+        method: 'PUT',
+        url: routes.Dependencies,
+      })
     },
   }
 }
