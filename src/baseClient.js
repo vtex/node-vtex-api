@@ -1,6 +1,7 @@
 /* @flow */
 import type {AxiosInstance} from 'axios'
 import axios from 'axios'
+import retry from 'axios-retry'
 
 export const DEFAULT_TIMEOUT_MS = 10000
 
@@ -37,6 +38,8 @@ export function createClient (opts: ClientOptions): AxiosInstance {
     headers,
     timeout,
   })
+
+  retry(http)
 
   http.interceptors.response.use(handleResponse, (err) => {
     try {
