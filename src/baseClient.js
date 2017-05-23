@@ -5,8 +5,12 @@ import retry from 'axios-retry'
 
 export const DEFAULT_TIMEOUT_MS = 10000
 
-const handleResponse = ({data, headers, config: {responseType}}) =>
-  (responseType !== 'arraybuffer') ? data : { data, headers }
+const handleResponse = (response) => {
+  const {data, headers, config} = response
+  return config
+    ? (config.responseType !== 'arraybuffer') ? data : { data, headers }
+    : response
+}
 
 export type InstanceOptions = {
   authToken: string,
