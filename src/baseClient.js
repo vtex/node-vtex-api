@@ -47,8 +47,8 @@ export function createClient (opts: ClientOptions): AxiosInstance {
 
   http.interceptors.response.use(handleResponse, (err) => {
     if (err.response && err.response.config) {
-      const {url, method, data} = err.response.config
-      console.log(`Error calling ${method.toUpperCase()} ${url} ${data ? `with data ${JSON.stringify(data)}` : ''}`)
+      const {url, method} = err.response.config
+      console.log(`Error calling ${method.toUpperCase()} ${url}`)
     }
     try {
       delete err.response.request
