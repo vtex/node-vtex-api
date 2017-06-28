@@ -1,5 +1,7 @@
 /* @flow */
 import archiver from 'archiver'
+import {extract} from 'tar-fs'
+import {createGunzip} from 'zlib'
 import {createClient, createWorkspaceURL, noTransforms} from './baseClient'
 import type {InstanceOptions} from './baseClient'
 import {DefaultWorkspace} from './Workspaces'
@@ -23,6 +25,9 @@ const routes = {
 
   AppFile: (app: string, version: string, path: string) =>
     `${routes.AppFiles(app, version)}/${path}`,
+
+  AppBundle: (app: string, version: string, path: string) =>
+    `${routes.AppVersion(app, version)}/bundle/${path}`,
 }
 
 export type RegistryInstance = {
@@ -32,6 +37,8 @@ export type RegistryInstance = {
   getAppManifest: (app: string, version: string) => any,
   listAppFiles: (app: string, version: string) => any,
   getAppFile: (app: string, version: string, path: string) => any,
+  getAppBundle: (app: string, version: string, bundlePath: string) => any,
+  unpackAppBundle: (app: string, version: string, bundlePath: string, unpackPath: string) => any,
 }
 
 export default function Registry (opts: InstanceOptions): RegistryInstance {
@@ -40,7 +47,7 @@ export default function Registry (opts: InstanceOptions): RegistryInstance {
     baseURL: createWorkspaceURL('apps', {...opts, workspace: DefaultWorkspace}),
   })
 
-  return {
+  const registry = {
     /**
      * Sends an app as a zip file.
      * @param files An array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.
@@ -87,5 +94,24 @@ export default function Registry (opts: InstanceOptions): RegistryInstance {
     getAppFile: (app: string, version: string, path: string) => {
       return client(routes.AppFile(app, version, path), {responseType: 'arraybuffer', transformResponse: noTransforms})
     },
+
+    getAppBundle: (app: string, version: string, bundlePath: string) => {
+      return client(routes.AppBundle(app, version, bundlePath), {
+        responseType: 'stream',
+        transformResponse: noTransforms,
+        headers: {
+          'Accept': 'application/x-gzip',
+          'Accept-Encoding': 'gzip',
+        },
+      })
+    },
+
+    unpackAppBundle: async (app: string, version: string, bundlePath: string, unpackPath: string) => {
+      (await registry.getAppBundle(app, version, bundlePath))
+        .pipe(createGunzip())
+        .pipe(extract(unpackPath))
+    },
   }
+
+  return registry
 }
