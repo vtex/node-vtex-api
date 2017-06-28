@@ -1,4 +1,6 @@
 /* @flow */
+import {extract} from 'tar-fs'
+import {createGunzip} from 'zlib'
 import {createClient, createWorkspaceURL, noTransforms} from './baseClient'
 import type {InstanceOptions} from './baseClient'
 
@@ -43,6 +45,9 @@ const routes = {
   File: (app: string, path: string) =>
     `${routes.Files(app)}/${path}`,
 
+  AppBundle: (app: string,  path: string) =>
+    `${routes.App(app)}/bundle?rootFolder=${path}`,
+
   Dependencies: '/dependencies',
 }
 
@@ -60,6 +65,8 @@ export type AppsInstance = {
   listLinks: () => any,
   getAppFile: (app: string, path: string, context?: Array<string>) => any,
   getApp: (app: string, context?: Array<string>) => any,
+  getAppBundle: (app: string, bundlePath: string) => any,
+  unpackAppBundle: (app: string, bundlePath: string, unpackPath: string) => any,
   getDependencies: (filter?: string) => any,
   updateDependencies: () => any,
 }
@@ -67,7 +74,7 @@ export type AppsInstance = {
 export default function Apps (opts: InstanceOptions): AppsInstance {
   const client = createClient({...opts, baseURL: createWorkspaceURL('apps', opts)})
 
-  return {
+  const apps = {
     installApp: (descriptor: string, registry: string) => {
       return client.post(routes.Apps, {id: descriptor, registry: registry})
     },
@@ -135,6 +142,23 @@ export default function Apps (opts: InstanceOptions): AppsInstance {
       return client(routes.Settings(app))
     },
 
+    getAppBundle: (app: string, bundlePath: string) => {
+      return client(routes.AppBundle(app, bundlePath), {
+        responseType: 'stream',
+        transformResponse: noTransforms,
+        headers: {
+          'Accept': 'application/x-gzip',
+          'Accept-Encoding': 'gzip',
+        },
+      })
+    },
+
+    unpackAppBundle: async (app: string, bundlePath: string, unpackPath: string) => {
+      (await apps.getAppBundle(app, bundlePath))
+        .pipe(createGunzip())
+        .pipe(extract(unpackPath))
+    },
+
     getDependencies: (filter: string = '') => {
       const params = {filter}
       return client(routes.Dependencies, {params})
@@ -147,4 +171,6 @@ export default function Apps (opts: InstanceOptions): AppsInstance {
       })
     },
   }
+
+  return apps
 }
