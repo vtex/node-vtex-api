@@ -23,6 +23,9 @@ const routes = {
 
   AppFile: (app: string, version: string, path: string) =>
     `${routes.AppFiles(app, version)}/${path}`,
+
+  AppBundle: (app: string, version: string, path: string) =>
+    `${routes.AppVersion(app, version)}/bundle/${path}`,
 }
 
 export type RegistryInstance = {
@@ -32,6 +35,7 @@ export type RegistryInstance = {
   getAppManifest: (app: string, version: string) => any,
   listAppFiles: (app: string, version: string) => any,
   getAppFile: (app: string, version: string, path: string) => any,
+  getAppBundle: (app: string, version: string, path: string) => any,
 }
 
 export default function Registry (opts: InstanceOptions): RegistryInstance {
@@ -86,6 +90,17 @@ export default function Registry (opts: InstanceOptions): RegistryInstance {
 
     getAppFile: (app: string, version: string, path: string) => {
       return client(routes.AppFile(app, version, path), {responseType: 'arraybuffer', transformResponse: noTransforms})
+    },
+
+    getAppBundle: (app: string, version: string, path: string) => {
+      return client(routes.AppBundle(app, version, path), {
+        responseType: 'stream',
+        transformResponse: noTransforms,
+        headers: {
+          'Accept': 'application/x-gzip',
+          'Accept-Encoding': 'gzip',
+        },
+      })
     },
   }
 }
