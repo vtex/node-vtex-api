@@ -37,8 +37,8 @@ export type RegistryInstance = {
   getAppManifest: (app: string, version: string) => any,
   listAppFiles: (app: string, version: string) => any,
   getAppFile: (app: string, version: string, path: string) => any,
-  getAppBundle: (app: string, version: string, bundlePath: string) => any,
-  unpackAppBundle: (app: string, version: string, bundlePath: string, unpackPath: string) => any,
+  getAppBundle: (app: string, version: string, bundlePath: string, generatePackageJson: boolean) => any,
+  unpackAppBundle: (app: string, version: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean) => any,
 }
 
 export default function Registry (opts: InstanceOptions): RegistryInstance {
@@ -95,10 +95,12 @@ export default function Registry (opts: InstanceOptions): RegistryInstance {
       return client(routes.AppFile(app, version, path), {responseType: 'arraybuffer', transformResponse: noTransforms})
     },
 
-    getAppBundle: (app: string, version: string, bundlePath: string) => {
+    getAppBundle: (app: string, version: string, bundlePath: string, generatePackageJson: boolean) => {
+      const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
       return client(routes.AppBundle(app, version, bundlePath), {
         responseType: 'stream',
         transformResponse: noTransforms,
+        params,
         headers: {
           'Accept': 'application/x-gzip',
           'Accept-Encoding': 'gzip',
@@ -106,8 +108,8 @@ export default function Registry (opts: InstanceOptions): RegistryInstance {
       })
     },
 
-    unpackAppBundle: async (app: string, version: string, bundlePath: string, unpackPath: string) => {
-      (await registry.getAppBundle(app, version, bundlePath))
+    unpackAppBundle: async (app: string, version: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean) => {
+      (await registry.getAppBundle(app, version, bundlePath, generatePackageJson))
         .pipe(createGunzip())
         .pipe(extract(unpackPath))
     },

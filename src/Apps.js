@@ -65,8 +65,8 @@ export type AppsInstance = {
   listLinks: () => any,
   getAppFile: (app: string, path: string, context?: Array<string>) => any,
   getApp: (app: string, context?: Array<string>) => any,
-  getAppBundle: (app: string, bundlePath: string) => any,
-  unpackAppBundle: (app: string, bundlePath: string, unpackPath: string) => any,
+  getAppBundle: (app: string, bundlePath: string, generatePackageJson: boolean) => any,
+  unpackAppBundle: (app: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean) => any,
   getDependencies: (filter?: string) => any,
   updateDependencies: () => any,
 }
@@ -142,10 +142,12 @@ export default function Apps (opts: InstanceOptions): AppsInstance {
       return client(routes.Settings(app))
     },
 
-    getAppBundle: (app: string, bundlePath: string) => {
+    getAppBundle: (app: string, bundlePath: string, generatePackageJson: boolean) => {
+      const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
       return client(routes.AppBundle(app, bundlePath), {
         responseType: 'stream',
         transformResponse: noTransforms,
+        params,
         headers: {
           'Accept': 'application/x-gzip',
           'Accept-Encoding': 'gzip',
@@ -153,8 +155,8 @@ export default function Apps (opts: InstanceOptions): AppsInstance {
       })
     },
 
-    unpackAppBundle: async (app: string, bundlePath: string, unpackPath: string) => {
-      (await apps.getAppBundle(app, bundlePath))
+    unpackAppBundle: async (app: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean) => {
+      (await apps.getAppBundle(app, bundlePath, generatePackageJson))
         .pipe(createGunzip())
         .pipe(extract(unpackPath))
     },
