@@ -46,7 +46,7 @@ const routes = {
     `${routes.Files(app)}/${path}`,
 
   AppBundle: (app: string, path: string) =>
-    `${routes.App(app)}/bundle?rootFolder=${path}`,
+    `${routes.App(app)}/bundle/${path}`,
 
   Dependencies: '/dependencies',
 }
