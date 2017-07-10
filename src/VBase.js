@@ -21,6 +21,7 @@ const routes = {
 
 export type VBaseInstance = {
   getBucket: (bucket: string) => any,
+  resetBucket: (bucket: string) => any,
   listFiles: (bucket: string, prefix?: string) => any,
   getFile: (bucket: string, path: string) => any,
   saveFile: (bucket: string, path: string, stream: Readable, gzip?: boolean) => any,
@@ -33,6 +34,10 @@ export default function VBase (opts: InstanceOptions): VBaseInstance {
   return {
     getBucket: (bucket: string) => {
       return client(routes.Bucket(bucket))
+    },
+
+    resetBucket: (bucket: string) => {
+      return client.delete(routes.Files(bucket))
     },
 
     listFiles: (bucket: string, prefix?: string) => {
