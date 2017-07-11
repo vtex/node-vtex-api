@@ -2,6 +2,8 @@
 import archiver from 'archiver'
 import {extract} from 'tar-fs'
 import {createGunzip} from 'zlib'
+import streamToPromise from 'stream-to-promise'
+
 import {createClient, createWorkspaceURL, noTransforms} from './baseClient'
 import type {InstanceOptions} from './baseClient'
 import {DefaultWorkspace} from './Workspaces'
@@ -109,9 +111,10 @@ export default function Registry (opts: InstanceOptions): RegistryInstance {
     },
 
     unpackAppBundle: async (app: string, version: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean) => {
-      (await registry.getAppBundle(app, version, bundlePath, generatePackageJson))
+      const stream = await registry.getAppBundle(app, version, bundlePath, generatePackageJson)
+      return streamToPromise(stream
         .pipe(createGunzip())
-        .pipe(extract(unpackPath))
+        .pipe(extract(unpackPath)))
     },
   }
 

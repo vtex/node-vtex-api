@@ -1,6 +1,8 @@
 /* @flow */
 import {extract} from 'tar-fs'
 import {createGunzip} from 'zlib'
+import streamToPromise from 'stream-to-promise'
+
 import {createClient, createWorkspaceURL, noTransforms} from './baseClient'
 import type {InstanceOptions} from './baseClient'
 
@@ -156,9 +158,10 @@ export default function Apps (opts: InstanceOptions): AppsInstance {
     },
 
     unpackAppBundle: async (app: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean) => {
-      (await apps.getAppBundle(app, bundlePath, generatePackageJson))
+      const stream = await apps.getAppBundle(app, bundlePath, generatePackageJson)
+      return streamToPromise(stream
         .pipe(createGunzip())
-        .pipe(extract(unpackPath))
+        .pipe(extract(unpackPath)))
     },
 
     getDependencies: (filter: string = '') => {
