@@ -6,7 +6,7 @@ import type {Readable} from 'stream'
 import {createClient, createWorkspaceURL, noTransforms} from './baseClient'
 import type {InstanceOptions} from './baseClient'
 
-type Headers = { [key: string]: string }
+type Headers = { [key: string]: string | number }
 
 const routes = {
   Bucket: (bucket: string) =>
@@ -49,13 +49,16 @@ export default function VBase (opts: InstanceOptions): VBaseInstance {
       return client(routes.File(bucket, path), {responseType: 'arraybuffer', transformResponse: noTransforms})
     },
 
-    saveFile: (bucket: string, path: string, stream: Readable, gzip?: boolean = true) => {
+    saveFile: (bucket: string, path: string, stream: Readable, gzip?: boolean = true, ttl?: number) => {
       if (!(stream.pipe && stream.on)) {
         throw new Error('Argument stream must be a readable stream')
       }
       const finalStream = gzip ? stream.pipe(createGzip()) : stream
       const headers: Headers = gzip ? {'Content-Encoding': 'gzip'} : {}
       headers['Content-Type'] = mime.contentType(basename(path))
+      if (ttl && Number.isInteger(ttl)) {
+        headers['X-VTEX-TTL'] = ttl
+      }
       return client.put(routes.File(bucket, path), finalStream, {headers})
     },
 
