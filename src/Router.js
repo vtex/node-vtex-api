@@ -12,6 +12,9 @@ const routes = {
   AvailableVersions: (name: string) =>
     `${routes.AvailableServices}/${name}`,
 
+  Workspace: (account: string, workspace: string) =>
+    `/${account}/${workspace}`,
+
   InstalledServices: (account: string, workspace: string) =>
     `/${account}/${workspace}/services`,
 
@@ -20,6 +23,7 @@ const routes = {
 }
 
 export type RouterInstance = {
+  getWorkspace: () => any,
   listAvailableIoVersions: () => any,
   getInstalledIoVersion: () => any,
   installIo: (version: string) => any,
@@ -33,10 +37,14 @@ export default function Router (opts: InstanceOptions): RouterInstance {
   const {account, workspace} = opts
   const client = createClient({
     ...opts,
-    baseURL: createRootURL('kube-router', {...opts, workspace: DefaultWorkspace}),
+    baseURL: createRootURL('router', {...opts, workspace: DefaultWorkspace}),
   })
 
   return {
+    getWorkspace: () => {
+      return client.get(routes.Workspace(account, workspace))
+    },
+
     listAvailableIoVersions: () => {
       return client.get(routes.AvailableIoVersions)
     },

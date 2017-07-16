@@ -15,8 +15,8 @@ const handleResponse = (response) => {
 export type InstanceOptions = {
   authToken: string,
   userAgent: string,
-  account?: string,
-  workspace?: string,
+  account: string,
+  workspace: string,
   region?: string,
   endpoint?: string,
   timeout?: number,
