@@ -1,0 +1,104 @@
+import * as archiver from 'archiver'
+import {extract} from 'tar-fs'
+import {createGunzip} from 'zlib'
+import {Readable, Writable} from 'stream'
+
+import {HttpClient, InstanceOptions} from './HttpClient'
+import {DEFAULT_WORKSPACE} from './constants'
+import {AppManifest, AppFilesList} from './responses'
+
+const routes = {
+  Registry: '/registry',
+  App: (app: string) => `${routes.Registry}/${app}`,
+  AppVersion: (app: string, version: string) => `${routes.App(app)}/${version}`,
+  AppFiles: (app: string, version: string) => `${routes.AppVersion(app, version)}/files`,
+  AppFile: (app: string, version: string, path: string) => `${routes.AppFiles(app, version)}/${path}`,
+  AppBundle: (app: string, version: string, path: string) => `${routes.AppVersion(app, version)}/bundle/${path}`,
+}
+
+export class Registry {
+  private http: HttpClient
+
+  constructor (opts: InstanceOptions) {
+    this.http = HttpClient.forWorkspace('apps', {...opts, workspace: DEFAULT_WORKSPACE})
+  }
+
+  publishApp = (files: File[], tag?: string) => {
+    if (!(files[0] && files[0].path && files[0].contents)) {
+      throw new Error('Argument files must be an array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.')
+    }
+    const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
+    if (indexOfManifest === -1) {
+      throw new Error('No manifest.json file found in files.')
+    }
+    const archive = archiver('zip')
+    files.forEach(({contents, path}) => archive.append(contents, {name: path}))
+    archive.finalize()
+    return this.http.post(routes.Registry, archive, {
+      params: tag ? {tag} : {},
+      headers: {'Content-Type': 'application/octet-stream'},
+    })
+  }
+
+  listApps = () => {
+    return this.http.get<RegistryAppsList>(routes.Registry)
+  }
+
+  listVersionsByApp = (app: string) => {
+    return this.http.get<RegistryAppVersionsList>(routes.App(app))
+  }
+
+  getAppManifest = (app: string, version: string) => {
+    return this.http.get<AppManifest>(routes.AppVersion(app, version))
+  }
+
+  listAppFiles = (app: string, version: string) => {
+    return this.http.get<AppFilesList>(routes.AppFiles(app, version))
+  }
+
+  getAppFile = (app: string, version: string, path: string) => {
+    return this.http.getBuffer(routes.AppFile(app, version, path))
+  }
+
+  getAppBundle = (app: string, version: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
+    const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
+    return this.http.getStream(routes.AppBundle(app, version, bundlePath), {
+      params,
+      headers: {
+        Accept: 'application/x-gzip',
+        'Accept-Encoding': 'gzip',
+      },
+    })
+  }
+
+  unpackAppBundle = (app: string, version: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean): Promise<Writable> => {
+    return this.getAppBundle(app, version, bundlePath, generatePackageJson)
+      .then(stream => stream
+        .pipe(createGunzip())
+        .pipe(extract(unpackPath)),
+      )
+  }
+}
+
+export type RegistryAppsListItem = {
+  partialIdentifier: string,
+  location: string,
+}
+
+export type RegistryAppsList = {
+  data: RegistryAppsListItem[],
+}
+
+export type RegistryAppVersionsListItem = {
+  versionIdentifier: string,
+  location: string,
+}
+
+export type RegistryAppVersionsList = {
+  data: RegistryAppVersionsListItem[],
+}
+
+export type File = {
+  path: string,
+  contents: any,
+}

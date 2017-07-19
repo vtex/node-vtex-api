@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "types": [
+      "node"
+    ],
+    "target": "es2015",
+    "module": "commonjs",
+    "strict": true,
+    "declaration": true,
+    "outDir": "lib"
+  },
+  "include": [
+    "src/**/*"
+  ]
+}
