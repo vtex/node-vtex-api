@@ -27,7 +27,6 @@ export type MetadataInstance = {
 
 export default function Metadata (opts: InstanceOptions): MetadataInstance {
   const {account, workspace} = opts
-  console.log(opts)
   const client = createClient({
     ...opts,
     baseURL: createRootURL('router', {...opts, workspace: DefaultWorkspace}),
