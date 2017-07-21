@@ -2,8 +2,8 @@ import { HttpClient, InstanceOptions } from './HttpClient'
 
 const routes = {
   Bucket: (bucket: string) => `/buckets/${bucket}`,
-  Metadata: (bucket: string) => `${routes.Bucket(bucket)}/metadata`,
-  MetadataKey: (bucket: string, key: string) => `${routes.Metadata}/${key}`,
+  Metadata: (bucket: string) => `/buckets/${bucket}/metadata`,
+  MetadataKey: (bucket: string, key: string) => `/buckets/${bucket}/metadata/${key}`,
 }
 
 export class Metadata {
