@@ -1,32 +1,12 @@
-import axios, {AxiosInstance, AxiosRequestConfig} from 'axios'
-import * as retry from 'axios-retry'
+import {AxiosInstance, AxiosRequestConfig} from 'axios'
+import {createInstance} from './axios'
+import {addCacheInterceptors, CacheableRequestConfig, CacheStorage} from './cache'
 import {Readable} from 'stream'
 
 const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
 
-const createAxiosInstance = (baseURL: string, headers: Record<string, string>, timeout: number) => {
-  const http = axios.create({baseURL, headers, timeout})
-  retry(http)
-  http.interceptors.response.use(response => response, (err: any) => {
-    if (err.response && err.response.config) {
-      const {url, method} = err.response.config
-      console.log(`Error calling ${method.toUpperCase()} ${url}`)
-    }
-    try {
-      delete err.response.request
-      delete err.response.config
-      delete err.config.res
-      delete err.config.data
-    } catch (e) {}
-    return Promise.reject(err)
-  })
-
-  return http
-}
-
-const rootURL = (service: string, opts: InstanceOptions): string => {
-  const {region, endpoint} = opts
+const rootURL = (service: string, {region, endpoint}: InstanceOptions): string => {
   if (endpoint) {
     return 'http://' + endpoint
   }
@@ -51,50 +31,38 @@ export class HttpClient {
   private http: AxiosInstance
 
   private constructor (opts: ClientOptions) {
-    const {baseURL, authToken, authType, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
+    const {baseURL, authToken, authType, cacheStorage, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
     const headers = {
       Authorization: `${authType} ${authToken}`,
       'User-Agent': userAgent,
     }
 
-    this.http = createAxiosInstance(baseURL, headers, timeout)
+    this.http = createInstance(baseURL, headers, timeout)
+    if (cacheStorage) {
+      addCacheInterceptors(this.http, cacheStorage)
+    }
   }
 
   static forWorkspace (service: string, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent, timeout} = opts
-    return new HttpClient({
-      baseURL: workspaceURL(service, opts),
-      authType: AuthType.bearer,
-      authToken,
-      userAgent,
-      timeout,
-    })
+    const {authToken, userAgent, timeout, cacheStorage} = opts
+    const baseURL = workspaceURL(service, opts)
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, cacheStorage})
   }
 
   static forRoot (service: string, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent, timeout} = opts
-    return new HttpClient({
-      baseURL: rootURL(service, opts),
-      authType: AuthType.bearer,
-      authToken,
-      userAgent,
-      timeout,
-    })
+    const {authToken, userAgent, timeout, cacheStorage} = opts
+    const baseURL = rootURL(service, opts)
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, cacheStorage})
   }
 
   static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
-    const {authToken, userAgent, timeout} = opts
-    return new HttpClient({
-      baseURL: endpoint,
-      authType: AuthType.token,
-      authToken,
-      userAgent,
-      timeout,
-    })
+    const {authToken, userAgent, timeout, cacheStorage} = opts
+    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage})
   }
 
-  get = <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => {
-    return this.http.get(url, config).then(response => response.data as T)
+  get = <T = any>(url: string, config: AxiosRequestConfig = {}): Promise<T> => {
+    const cacheableConfig = {...config, cacheable: true} as CacheableRequestConfig
+    return this.http.get(url, cacheableConfig).then(response => response.data as T)
   }
 
   getBuffer = (url: string, config: AxiosRequestConfig = {}): Promise<{data: Buffer, headers: any}> => {
@@ -120,6 +88,8 @@ export class HttpClient {
   }
 }
 
+export type CacheStorage = CacheStorage
+
 export type InstanceOptions = {
   authToken: string,
   userAgent: string,
@@ -128,6 +98,7 @@ export type InstanceOptions = {
   region?: string,
   endpoint?: string,
   timeout?: number,
+  cacheStorage?: CacheStorage,
 }
 
 export type LegacyInstanceOptions = {
@@ -135,6 +106,7 @@ export type LegacyInstanceOptions = {
   userAgent: string,
   timeout?: number,
   accept?: string,
+  cacheStorage?: CacheStorage,
 }
 
 enum AuthType {
@@ -148,4 +120,5 @@ type ClientOptions = {
   userAgent: string
   baseURL: string,
   timeout?: number,
+  cacheStorage?: CacheStorage,
 }
