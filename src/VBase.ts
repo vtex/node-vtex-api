@@ -1,10 +1,10 @@
-import {createGzip} from 'zlib'
-import {basename} from 'path'
+import { createGzip } from 'zlib'
+import { basename } from 'path'
 import * as mime from 'mime-types'
-import {Readable} from 'stream'
+import { Readable } from 'stream'
 
-import {HttpClient, InstanceOptions} from './HttpClient'
-import {FileListItem} from './responses'
+import { HttpClient, InstanceOptions } from './HttpClient'
+import { BucketMetadata, FileListItem } from './responses'
 
 const routes = {
   Bucket: (bucket: string) => `/buckets/${bucket}`,
@@ -55,12 +55,6 @@ export class VBase {
 }
 
 type Headers = { [key: string]: string | number }
-
-export type BucketMetadata = {
-  state: string,
-  lastModified: string,
-  hash: string,
-}
 
 export type BucketFileList = {
   data: FileListItem[],
