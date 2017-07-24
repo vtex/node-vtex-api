@@ -1,9 +1,21 @@
 import { HttpClient, InstanceOptions } from './HttpClient'
+import { BucketMetadata } from './responses'
 
 const routes = {
   Bucket: (bucket: string) => `/buckets/${bucket}`,
   Metadata: (bucket: string) => `/buckets/${bucket}/metadata`,
   MetadataKey: (bucket: string, key: string) => `/buckets/${bucket}/metadata/${key}`,
+}
+
+export type MetadataEntry = {
+  Key: string,
+  Hash: string,
+  Value: any,
+}
+
+export type MetadataEntryList = {
+  Data: MetadataEntry[],
+  Next: string,
 }
 
 export class Metadata {
@@ -14,7 +26,7 @@ export class Metadata {
   }
 
   getBuckets = (bucket: string) => {
-    return this.http.get(routes.Bucket(bucket))
+    return this.http.get<BucketMetadata>(routes.Bucket(bucket))
   }
 
   list = (bucket: string, includeValue: boolean, limit?: number, nextMarker?: string) => {
@@ -26,16 +38,16 @@ export class Metadata {
       query._marker = nextMarker
     }
 
-    return this.http.get(routes.Metadata(bucket), {params: query})
+    return this.http.get<MetadataEntryList>(routes.Metadata(bucket), {params: query})
   }
 
   listAll = (bucket: string, includeValue: boolean) => {
     const query = {value: includeValue, _limit: 1000}
-    return this.http.get(routes.Metadata(bucket), {params: query})
+    return this.http.get<MetadataEntryList>(routes.Metadata(bucket), {params: query})
   }
 
   get = (bucket: string, key: string) => {
-    return this.http.get(routes.MetadataKey(bucket, key))
+    return this.http.get<any>(routes.MetadataKey(bucket, key))
   }
 
   save = (bucket: string, key: string, data: any) => {

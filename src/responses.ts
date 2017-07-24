@@ -30,3 +30,9 @@ export type FileListItem = {
 export type AppFilesList = {
   data: FileListItem[],
 }
+
+export type BucketMetadata = {
+  state: string,
+  lastModified: string,
+  hash: string,
+}
