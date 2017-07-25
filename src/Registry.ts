@@ -2,6 +2,7 @@ import * as archiver from 'archiver'
 import {extract} from 'tar-fs'
 import {createGunzip} from 'zlib'
 import {Readable, Writable} from 'stream'
+import {IncomingMessage} from 'http'
 
 import {HttpClient, InstanceOptions} from './HttpClient'
 import {DEFAULT_WORKSPACE} from './constants'
@@ -58,6 +59,10 @@ export class Registry {
 
   getAppFile = (app: string, version: string, path: string) => {
     return this.http.getBuffer(routes.AppFile(app, version, path))
+  }
+
+  getAppFileStream = (app: string, version: string, path: string): Promise<IncomingMessage> => {
+    return this.http.getStream(routes.AppFile(app, version, path))
   }
 
   getAppBundle = (app: string, version: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {

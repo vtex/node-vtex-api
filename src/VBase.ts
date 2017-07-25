@@ -2,6 +2,7 @@ import { createGzip } from 'zlib'
 import { basename } from 'path'
 import * as mime from 'mime-types'
 import { Readable } from 'stream'
+import { IncomingMessage } from 'http'
 
 import { HttpClient, InstanceOptions } from './HttpClient'
 import { BucketMetadata, FileListItem } from './responses'
@@ -34,6 +35,10 @@ export class VBase {
 
   getFile = (bucket: string, path: string) => {
     return this.http.getBuffer(routes.File(bucket, path))
+  }
+
+  getFileStream = (bucket: string, path: string): Promise<IncomingMessage> => {
+    return this.http.getStream(routes.File(bucket, path))
   }
 
   saveFile = (bucket: string, path: string, stream: Readable, gzip: boolean = true, ttl?: number) => {
