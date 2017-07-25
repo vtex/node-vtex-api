@@ -13,6 +13,10 @@ const routes = {
   File: (bucket: string, path: string) => `${routes.Bucket(bucket)}/files/${path}`,
 }
 
+const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
+  return typeof opts !== 'string' && !(opts instanceof String)
+}
+
 export class VBase {
   private http: HttpClient
 
@@ -28,8 +32,13 @@ export class VBase {
     return this.http.delete(routes.Files(bucket))
   }
 
-  listFiles = (bucket: string, prefix?: string) => {
-    const params = {prefix}
+  listFiles = (bucket: string, opts?: string | VBaseOptions) => {
+    let params: VBaseOptions = {}
+    if (isVBaseOptions(opts)) {
+      params = opts
+    } else if (opts) {
+      params = {prefix: opts}
+    }
     return this.http.get<BucketFileList>(routes.Files(bucket), {params})
   }
 
@@ -65,4 +74,10 @@ export type BucketFileList = {
   data: FileListItem[],
   next: string,
   smartCacheHeaders: any,
+}
+
+export type VBaseOptions = {
+  prefix?: string,
+  _next?: string,
+  _limit?: string,
 }
