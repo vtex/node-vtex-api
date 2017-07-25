@@ -1,7 +1,7 @@
 import {AxiosInstance, AxiosRequestConfig} from 'axios'
 import {createInstance} from './axios'
 import {addCacheInterceptors, CacheableRequestConfig, CacheStorage} from './cache'
-import {Readable} from 'stream'
+import {IncomingMessage} from 'http'
 
 const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
@@ -70,9 +70,9 @@ export class HttpClient {
     return this.http.get(url, bufferConfig)
   }
 
-  getStream = (url: string, config: AxiosRequestConfig = {}): Promise<Readable> => {
+  getStream = (url: string, config: AxiosRequestConfig = {}): Promise<IncomingMessage> => {
     const streamConfig = {...config, responseType: 'stream', transformResponse: noTransforms}
-    return this.http.get(url, streamConfig).then(response => response.data as Readable)
+    return this.http.get(url, streamConfig).then(response => response.data as IncomingMessage)
   }
 
   put = <T = void>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {

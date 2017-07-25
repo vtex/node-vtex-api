@@ -1,7 +1,8 @@
 import {extract} from 'tar-fs'
 import {createGunzip} from 'zlib'
-
+import {IncomingMessage} from 'http'
 import {Readable, Writable} from 'stream'
+
 import {HttpClient, InstanceOptions} from './HttpClient'
 import {AppManifest, AppFilesList} from './responses'
 
@@ -79,6 +80,11 @@ export class Apps {
   getAppFile = (app: string, path: string, context: Array<string> = []) => {
     const params = {context: contextQuery(context)}
     return this.http.getBuffer(routes.File(app, path), {params})
+  }
+
+  getAppFileStream = (app: string, path: string, context: Array<string> = []): Promise<IncomingMessage> => {
+    const params = {context: contextQuery(context)}
+    return this.http.getStream(routes.File(app, path), {params})
   }
 
   getApp = (app: string, context: Array<string> = []) => {
