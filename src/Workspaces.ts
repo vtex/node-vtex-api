@@ -22,7 +22,7 @@ export class Workspaces {
     return this.http.get<WorkspaceMetadata>(routes.Workspace(account, workspace))
   }
 
-  set = (account: string, workspace: string, metadata: WorkspaceMetadata) => {
+  set = (account: string, workspace: string, metadata: Partial<WorkspaceMetadata>) => {
     return this.http.put(routes.Workspace(account, workspace), metadata)
   }
 
