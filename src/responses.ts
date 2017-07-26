@@ -3,7 +3,7 @@ export type Policy = {
 }
 
 export type AppManifest = {
-  [_extra: string]: any // internal fields like _id, _link, _registry, _resolvedDependencies
+  [_extra: string]: any // internal fields like _id, _link, _registry
   vendor: string,
   name: string,
   version: string,
@@ -20,6 +20,9 @@ export type AppManifest = {
   registries: string[],
   credentialType: string,
   policies: Policy[],
+  _resolvedDependencies?: {
+    [name: string]: string[],
+  },
 }
 
 export type FileListItem = {
