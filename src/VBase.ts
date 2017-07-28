@@ -51,20 +51,34 @@ export class VBase {
   }
 
   saveFile = (bucket: string, path: string, stream: Readable, gzip: boolean = true, ttl?: number) => {
-    if (!(stream.pipe && stream.on)) {
-      throw new Error('Argument stream must be a readable stream')
-    }
-    const finalStream = gzip ? stream.pipe(createGzip()) : stream
-    const headers: Headers = gzip ? {'Content-Encoding': 'gzip'} : {}
-    headers['Content-Type'] = mime.contentType(basename(path)) || 'application/octet-stream'
-    if (ttl && Number.isInteger(ttl)) {
-      headers['X-VTEX-TTL'] = ttl
-    }
-    return this.http.put(routes.File(bucket, path), finalStream, {headers})
+    return this.saveContent(bucket, path, stream, {gzip, ttl})
+  }
+
+  saveZippedContent = (bucket: string, path: string, stream: Readable) => {
+    return this.saveContent(bucket, path, stream, {unzip: true})
   }
 
   deleteFile = (bucket: string, path: string) => {
     return this.http.delete(routes.File(bucket, path))
+  }
+
+  private saveContent = (bucket: string, path: string, stream: Readable, opts: VBaseSaveOptions = {}) => {
+    if (!stream.pipe || !stream.on) {
+      throw new Error(`Argument stream must be a readable stream`)
+    }
+    const params = opts.unzip ? {unzip: opts.unzip} : {}
+    const headers: Headers = {}
+
+    let finalStream = stream
+    headers['Content-Type'] = mime.contentType(basename(path)) || 'application/octet-stream'
+    if (opts.gzip) {
+      headers['Content-Encoding'] = 'gzip'
+      finalStream = stream.pipe(createGzip())
+    }
+    if (opts.ttl && Number.isInteger(opts.ttl)) {
+      headers['X-VTEX-TTL'] = opts.ttl
+    }
+    return this.http.put(routes.File(bucket, path), finalStream, {headers, params})
   }
 }
 
@@ -80,4 +94,10 @@ export type VBaseOptions = {
   prefix?: string,
   _next?: string,
   _limit?: string,
+}
+
+export type VBaseSaveOptions = {
+  gzip?: boolean,
+  unzip?: boolean,
+  ttl?: number,
 }
