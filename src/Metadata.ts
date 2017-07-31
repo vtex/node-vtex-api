@@ -51,11 +51,11 @@ export class Metadata {
   }
 
   save = (bucket: string, key: string, data: any) => {
-    return this.http.put(routes.MetadataKey(bucket, key), {data})
+    return this.http.put(routes.MetadataKey(bucket, key), data)
   }
 
   saveAll = (bucket: string, data: {[key: string]: any}) => {
-    return this.http.put(routes.Metadata(bucket), {data})
+    return this.http.put(routes.Metadata(bucket), data)
   }
 
   delete = (bucket: string, key: string) => {
