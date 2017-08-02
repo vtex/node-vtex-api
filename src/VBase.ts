@@ -93,7 +93,7 @@ export type BucketFileList = {
 export type VBaseOptions = {
   prefix?: string,
   _next?: string,
-  _limit?: string,
+  _limit?: number,
 }
 
 export type VBaseSaveOptions = {
