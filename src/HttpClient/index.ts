@@ -83,6 +83,10 @@ export class HttpClient {
     return this.http.post(url, data, config).then(response => response.data as T)
   }
 
+  patch = <T = void>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
+    return this.http.patch(url, data, config).then(response => response.data as T)
+  }
+
   delete = (url: string, config?: AxiosRequestConfig): Promise<void> => {
     return this.http.delete(url, config).then(() => {})
   }

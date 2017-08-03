@@ -123,6 +123,10 @@ export class Apps {
   updateDependencies = () => {
     return this.http.put<Record<string, string[]>>(routes.Dependencies)
   }
+
+  updateDependency = (name: string, version: string, registry: string) => {
+    return this.http.patch(routes.Apps, [{name, version, registry}])
+  }
 }
 
 export type AppsListItem = {
