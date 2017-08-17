@@ -17,6 +17,7 @@ const routes = {
   File: (app: string, path: string) => `${routes.Files(app)}/${path}`,
   AppBundle: (app: string, path: string) => `${routes.App(app)}/bundle/${path}`,
   Dependencies: '/dependencies',
+  ResolveDependencies: 'dependencies/_resolve',
 }
 
 const contextQuery = (context?: string[]) => context ? context.join('/') : context
@@ -126,6 +127,11 @@ export class Apps {
 
   updateDependency = (name: string, version: string, registry: string) => {
     return this.http.patch(routes.Apps, [{name, version, registry}])
+  }
+
+  resolveDependencies = (apps: string[], registries: string[]) => {
+    const params = {apps: `apps=${apps.join(',')}`, registries: `registries=${registries.join(',')}`}
+    return this.http.get(routes.ResolveDependencies, {params})
   }
 }
 
