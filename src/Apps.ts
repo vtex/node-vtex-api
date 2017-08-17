@@ -130,7 +130,7 @@ export class Apps {
   }
 
   resolveDependencies = (apps: string[], registries: string[]) => {
-    const params = {apps: `apps=${apps.join(',')}`, registries: `registries=${registries.join(',')}`}
+    const params = {apps, registries}
     return this.http.get(routes.ResolveDependencies, {params})
   }
 }
