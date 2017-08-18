@@ -129,8 +129,8 @@ export class Apps {
     return this.http.patch(routes.Apps, [{name, version, registry}])
   }
 
-  resolveDependencies = (apps: string[], registries: string[]) => {
-    const params = {apps, registries}
+  resolveDependencies = (apps: string[], registries: string[], filter: string = '') => {
+    const params = {apps, registries, filter}
     return this.http.get(routes.ResolveDependencies, {params})
   }
 }
