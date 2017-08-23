@@ -10,7 +10,8 @@ const routes = {
   Apps: '/apps',
   App: (app: string) => `${routes.Apps}/${app}`,
   Links: '/links',
-  Link: (app: string) => `${routes.Links}/${app}`,
+  Link: (app: string) => `/v2/links/${app}`,
+  Unlink: (app: string) => `${routes.Links}/${app}`,
   Acknowledge: (app: string, service: string) => `${routes.App(app)}/acknowledge/${service}`,
   Settings: (app: string) => `${routes.App(app)}/settings`,
   Files: (app: string) => `${routes.App(app)}/files`,
@@ -47,7 +48,7 @@ export class Apps {
   }
 
   unlink = (app: string) => {
-    return this.http.delete(routes.Link(app))
+    return this.http.delete(routes.Unlink(app))
   }
 
   saveAppSettings = (app: string, settings: any) => {

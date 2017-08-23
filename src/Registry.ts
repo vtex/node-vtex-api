@@ -10,6 +10,7 @@ import {AppManifest, AppFilesList} from './responses'
 
 const routes = {
   Registry: '/registry',
+  Publish: '/v2/registry',
   App: (app: string) => `${routes.Registry}/${app}`,
   AppVersion: (app: string, version: string) => `${routes.App(app)}/${version}`,
   AppFiles: (app: string, version: string) => `${routes.AppVersion(app, version)}/files`,
@@ -35,7 +36,7 @@ export class Registry {
     const archive = archiver('zip')
     files.forEach(({contents, path}) => archive.append(contents, {name: path}))
     archive.finalize()
-    return this.http.post(routes.Registry, archive, {
+    return this.http.post(routes.Publish, archive, {
       params: tag ? {tag} : {},
       headers: {'Content-Type': 'application/octet-stream'},
     })
