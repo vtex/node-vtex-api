@@ -103,6 +103,7 @@ export type InstanceOptions = {
   endpoint?: string,
   timeout?: number,
   cacheStorage?: CacheStorage,
+  requestId?: string,
 }
 
 export type LegacyInstanceOptions = {
