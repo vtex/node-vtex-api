@@ -12,7 +12,6 @@ export const createInstance = (baseURL: string, headers: Record<string, string>,
   http.interceptors.response.use(response => response, (err: any) => {
     if (err.response && err.response.config) {
       const {url, method} = err.response.config
-      console.log(`Error calling ${method.toUpperCase()} ${url}`)
     }
     try {
       delete err.response.request
