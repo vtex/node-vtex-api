@@ -50,6 +50,10 @@ export class Registry {
     return this.http.get<RegistryAppVersionsList>(routes.App(app))
   }
 
+  deprecateApp = (app: string, version: string) => {
+    return this.http.patch(routes.AppVersion(app, version), {deprecated: true})
+  }
+
   getAppManifest = (app: string, version: string, opts?: AppsManifestOptions) => {
     return this.http.get<AppManifest>(routes.AppVersion(app, version), {params: opts})
   }
