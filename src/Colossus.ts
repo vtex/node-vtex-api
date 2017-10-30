@@ -1,8 +1,8 @@
 import {HttpClient, InstanceOptions} from './HttpClient'
 
 const routes = {
-  Event: (sender: string, subject: string, route: string) => `/events/${sender}/${subject}/${route}`,
-  Log: (sender: string, subject: string, level: string) => `/logs/${sender}/${subject}/${level}`,
+  Event: (route: string) => `/events/${route}`,
+  Log: (level: string) => `/logs/${level}`,
 }
 
 export class Colossus {
@@ -12,11 +12,11 @@ export class Colossus {
     this.http = HttpClient.forWorkspace('colossus', opts)
   }
 
-  sendLog = (sender: string, subject: string, message: any, level: string) => {
-    return this.http.post(routes.Log(sender, subject, level), message)
+  sendLog = (subject: string, message: any, level: string) => {
+    return this.http.put(routes.Log(level), message, {params: {subject}})
   }
 
-  sendEvent = (sender: string, subject: string, route: string, message?: any) => {
-    return this.http.post(routes.Event(sender, subject, route), message)
+  sendEvent = (subject: string, route: string, message?: any) => {
+    return this.http.put(routes.Event(route), message, {params: {subject}})
   }
 }
