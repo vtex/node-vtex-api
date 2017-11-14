@@ -66,12 +66,12 @@ export class HttpClient {
   }
 
   getBuffer = (url: string, config: AxiosRequestConfig = {}): Promise<{data: Buffer, headers: any}> => {
-    const bufferConfig = {...config, responseType: 'arraybuffer', transformResponse: noTransforms}
+    const bufferConfig = {...config, cacheable: true, cacheFromDisk: true, responseType: 'arraybuffer', transformResponse: noTransforms}
     return this.http.get(url, bufferConfig)
   }
 
   getStream = (url: string, config: AxiosRequestConfig = {}): Promise<IncomingMessage> => {
-    const streamConfig = {...config, responseType: 'stream', transformResponse: noTransforms}
+    const streamConfig = {...config, responseType: 'stream', cacheable: true, cacheFromDisk: true, transformResponse: noTransforms}
     return this.http.get(url, streamConfig).then(response => response.data as IncomingMessage)
   }
 
