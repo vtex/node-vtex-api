@@ -1,4 +1,5 @@
 export * from './Apps'
+export * from './Builder'
 export * from './HttpClient'
 export * from './Registry'
 export * from './Router'
