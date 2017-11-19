@@ -26,7 +26,7 @@ export class Registry {
   }
 
   publishApp = (files: File[], tag?: string) => {
-    if (!(files[0] && files[0].path && files[0].contents)) {
+    if (!(files[0] && files[0].path && files[0].content)) {
       throw new Error('Argument files must be an array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.')
     }
     const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
@@ -34,7 +34,7 @@ export class Registry {
       throw new Error('No manifest.json file found in files.')
     }
     const archive = archiver('zip')
-    files.forEach(({contents, path}) => archive.append(contents, {name: path}))
+    files.forEach(({content, path}) => archive.append(content, {name: path}))
     return archive.finalize().then(() => {
       return this.http.post(routes.Publish, archive, {
         params: tag ? {tag} : {},
@@ -115,5 +115,5 @@ export type RegistryAppVersionsList = {
 
 export type File = {
   path: string,
-  contents: any,
+  content: any,
 }
