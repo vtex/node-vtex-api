@@ -25,7 +25,7 @@ export class Registry {
     this.http = HttpClient.forWorkspace('apps', {...opts, workspace: DEFAULT_WORKSPACE})
   }
 
-  publishApp = async (files: File[], tag?: string) => {
+  publishApp = (files: File[], tag?: string) => {
     if (!(files[0] && files[0].path && files[0].contents)) {
       throw new Error('Argument files must be an array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.')
     }
@@ -35,10 +35,11 @@ export class Registry {
     }
     const archive = archiver('zip')
     files.forEach(({contents, path}) => archive.append(contents, {name: path}))
-    await archive.finalize()
-    return this.http.post(routes.Publish, archive, {
-      params: tag ? {tag} : {},
-      headers: {'Content-Type': 'application/octet-stream'},
+    return archive.finalize().then(() => {
+      return this.http.post(routes.Publish, archive, {
+        params: tag ? {tag} : {},
+        headers: {'Content-Type': 'application/octet-stream'},
+      })
     })
   }
 
