@@ -30,7 +30,7 @@ export class Builder {
 
   public relinkApp = (app: string, changes: Change[]) => {
     const headers = {'Content-Type': 'application/json'}
-    return this.http.put(routes.Relink(app), changes, {headers})
+    return this.http.put<BuildResult>(routes.Relink(app), changes, {headers})
   }
 
   private zipAndSend = (route: string, app: string, files: File[], tag?: string) => {
@@ -44,9 +44,15 @@ export class Builder {
     const archive = archiver('zip')
     files.forEach(({content, path}) => archive.append(content, {name: path}))
     archive.finalize()
-    return this.http.post(route, archive, {
+    return this.http.post<BuildResult>(route, archive, {
       params: tag ? {tag} : EMPTY_OBJECT,
       headers: {'Content-Type': 'application/octet-stream'},
     })
   }
+}
+
+export type BuildResult = {
+  error?: any,
+  success: boolean,
+  timeNano?: number,
 }
