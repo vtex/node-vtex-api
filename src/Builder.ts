@@ -8,6 +8,7 @@ const EMPTY_OBJECT = {}
 
 const routes = {
   Builder: '/_v/builder/0',
+  Clean: (app: string) => `${routes.Builder}/clean/${app}`,
   Publish: (app: string) => `${routes.Builder}/publish/${app}`,
   Link: (app: string) => `${routes.Builder}/link/${app}`,
   Relink: (app: string) => `${routes.Builder}/relink/${app}`,
@@ -31,6 +32,11 @@ export class Builder {
   public relinkApp = (app: string, changes: Change[]) => {
     const headers = {'Content-Type': 'application/json'}
     return this.http.put<BuildResult>(routes.Relink(app), changes, {headers})
+  }
+
+  public clean = (app: string) => {
+    const headers = {'Content-Type': 'application/json'}
+    return this.http.post<BuildResult>(routes.Clean(app), {headers})
   }
 
   private zipAndSend = (route: string, app: string, files: File[], tag?: string) => {
