@@ -41,7 +41,7 @@ export class Builder {
 
   private zipAndSend = (route: string, app: string, files: File[], tag?: string) => {
     if (!(files[0] && files[0].path && files[0].content)) {
-      throw new Error('Argument files must be an array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.')
+      throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
     const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
     if (indexOfManifest === -1) {
@@ -49,10 +49,11 @@ export class Builder {
     }
     const archive = archiver('zip')
     files.forEach(({content, path}) => archive.append(content, {name: path}))
-    archive.finalize()
-    return this.http.post<BuildResult>(route, archive, {
-      params: tag ? {tag} : EMPTY_OBJECT,
-      headers: {'Content-Type': 'application/octet-stream'},
+    return archive.finalize().then(() => {
+      return this.http.post<BuildResult>(route, archive, {
+        params: tag ? {tag} : EMPTY_OBJECT,
+        headers: {'Content-Type': 'application/octet-stream'},
+      })
     })
   }
 }
