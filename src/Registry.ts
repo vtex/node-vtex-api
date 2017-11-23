@@ -8,6 +8,8 @@ import {HttpClient, InstanceOptions} from './HttpClient'
 import {DEFAULT_WORKSPACE} from './constants'
 import {AppManifest, AppFilesList} from './responses'
 
+const EMPTY_OBJECT = {}
+
 const routes = {
   Registry: '/registry',
   Publish: '/v2/registry',
@@ -26,18 +28,18 @@ export class Registry {
   }
 
   publishApp = (files: File[], tag?: string) => {
-    if (!(files[0] && files[0].path && files[0].contents)) {
-      throw new Error('Argument files must be an array of {path, contents}, where contents can be a String, a Buffer or a ReadableStream.')
+    if (!(files[0] && files[0].path && files[0].content)) {
+      throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
     const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
     if (indexOfManifest === -1) {
       throw new Error('No manifest.json file found in files.')
     }
     const archive = archiver('zip')
-    files.forEach(({contents, path}) => archive.append(contents, {name: path}))
+    files.forEach(({content, path}) => archive.append(content, {name: path}))
     return archive.finalize().then(() => {
       return this.http.post(routes.Publish, archive, {
-        params: tag ? {tag} : {},
+        params: tag ? {tag} : EMPTY_OBJECT,
         headers: {'Content-Type': 'application/octet-stream'},
       })
     })
@@ -115,5 +117,5 @@ export type RegistryAppVersionsList = {
 
 export type File = {
   path: string,
-  contents: any,
+  content: any,
 }
