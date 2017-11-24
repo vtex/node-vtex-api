@@ -59,7 +59,7 @@ export class Builder {
 }
 
 export type BuildResult = {
-  error?: any,
-  success: boolean,
+  code?: string,
+  message?: any,
   timeNano?: number,
 }
