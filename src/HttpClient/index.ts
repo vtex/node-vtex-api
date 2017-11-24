@@ -1,4 +1,4 @@
-import {AxiosInstance, AxiosRequestConfig} from 'axios'
+import {AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios'
 import {createInstance} from './axios'
 import {addCacheInterceptors, CacheableRequestConfig, CacheStorage} from './cache'
 import {IncomingMessage} from 'http'
@@ -65,6 +65,11 @@ export class HttpClient {
     return this.http.get(url, cacheableConfig).then(response => response.data as T)
   }
 
+  getRaw = <T = any>(url: string, config: AxiosRequestConfig = {}): Promise<IOResponse<T>> => {
+    const cacheableConfig = {...config, cacheable: true} as CacheableRequestConfig
+    return this.http.get(url, cacheableConfig) as Promise<IOResponse<T>>
+  }
+
   getBuffer = (url: string, config: AxiosRequestConfig = {}): Promise<{data: Buffer, headers: any}> => {
     const bufferConfig = {...config, responseType: 'arraybuffer', transformResponse: noTransforms}
     return this.http.get(url, bufferConfig)
@@ -111,6 +116,12 @@ export type LegacyInstanceOptions = {
   timeout?: number,
   accept?: string,
   cacheStorage?: CacheStorage,
+}
+
+export interface IOResponse<T> {
+  data: T
+  headers: any
+  status: number
 }
 
 enum AuthType {

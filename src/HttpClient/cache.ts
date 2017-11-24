@@ -5,9 +5,13 @@ const EMPTY = {}
 const successOrNotModified = (status: number): boolean =>
   status >= 200 && status < 300 || status === 304
 
+function isCacheable (arg: any): arg is CacheableRequestConfig {
+  return arg.cacheable !== undefined
+}
+
 export const addCacheInterceptors = (http: AxiosInstance, cacheStorage: CacheStorage) => {
-  http.interceptors.request.use((config: CacheableRequestConfig) => {
-    if (config.cacheable) {
+  http.interceptors.request.use((config: AxiosRequestConfig) => {
+    if (isCacheable(config)) {
       const {etag, response} = cacheStorage.get(config.url) || EMPTY
       if (etag) {
         config.headers['if-none-match'] = etag
@@ -19,17 +23,19 @@ export const addCacheInterceptors = (http: AxiosInstance, cacheStorage: CacheSto
     return config
   })
 
-  http.interceptors.response.use((response: CacheableResponse) => {
+  http.interceptors.response.use((response: AxiosResponse) => {
     const {status, data, headers, config} = response
-    if (status === 304) {
-      return config.cached
-    }
+    if (isCacheable(config)) {
+      if (status === 304) {
+        return config.cached
+      }
 
-    if (headers.etag) {
-      cacheStorage.set(config.url, {
-        etag: headers.etag,
-        response: {data, headers},
-      })
+      if (headers.etag) {
+        cacheStorage.set(config.url, {
+          etag: headers.etag,
+          response: {data, headers, status: 304},
+        })
+      }
     }
 
     return response
@@ -45,8 +51,4 @@ export type CacheableRequestConfig = AxiosRequestConfig & {
   url: string,
   cacheable: boolean,
   cached?: any,
-}
-
-type CacheableResponse = AxiosResponse & {
-  config: CacheableRequestConfig,
 }
