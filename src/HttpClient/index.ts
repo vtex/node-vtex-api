@@ -118,8 +118,10 @@ export type LegacyInstanceOptions = {
   cacheStorage?: CacheStorage,
 }
 
-export interface IOResponse<T> extends AxiosResponse {
+export interface IOResponse<T> {
   data: T
+  headers: any
+  status: number
 }
 
 enum AuthType {
