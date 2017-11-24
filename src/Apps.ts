@@ -22,6 +22,23 @@ const routes = {
 }
 
 const contextQuery = (context?: string[]) => context ? context.join('/') : context
+const getVendorAndName = ({id}: {id: string}) => id.split('@')[0]
+const notFound = (e: any) => {
+  if (e.response && e.response.status === 404) {
+    return {}
+  }
+  throw e
+}
+const zipObj = (keys: string[], values: any[]) => {
+  let idx = 0
+  const len = Math.min(keys.length, values.length)
+  const out: {[key: string]: any} = {}
+  while (idx < len) {
+    out[keys[idx]] = values[idx]
+    idx += 1
+  }
+  return out
+}
 
 export class Apps {
   private http: HttpClient
@@ -98,6 +115,16 @@ export class Apps {
     return this.http.get<any>(routes.Settings(app))
   }
 
+  getAllAppsSettings = (listAppsOptions: ListAppsOptions = {}): Promise<AppsSettings> => {
+    return this.listApps(listAppsOptions).then(({data: installedApps}: AppsList) => {
+      const names = installedApps.map(getVendorAndName)
+      const settingsPromises = names.map(vendorAndName => this.getAppSettings(vendorAndName).catch(notFound))
+      return Promise.all(settingsPromises).then((settings: any[]) => {
+        return zipObj(names, settings)
+      })
+    })
+  }
+
   getAppBundle = (app: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
     const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
     return this.http.getStream(routes.AppBundle(app, bundlePath), {
@@ -162,4 +189,8 @@ export type ListFilesOptions = {
   prefix?: string,
   context?: string[],
   nextMarker?: string,
+}
+
+export type AppsSettings = {
+  [app: string]: any,
 }
