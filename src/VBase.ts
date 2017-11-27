@@ -8,9 +8,9 @@ import { HttpClient, InstanceOptions } from './HttpClient'
 import { BucketMetadata, FileListItem } from './responses'
 
 const routes = {
-  Bucket: (appName: string, bucket: string) => `/buckets/${appName}/${bucket}`,
-  Files: (appName: string, bucket: string) => `${routes.Bucket(appName, bucket)}/files`,
-  File: (appName: string, bucket: string, path: string) => `${routes.Bucket(appName, bucket)}/files/${path}`,
+  Bucket: (bucket: string) => `/buckets/${process.env.VTEX_APP_NAME}/${bucket}`,
+  Files: (bucket: string) => `${routes.Bucket(bucket)}/files`,
+  File: (bucket: string, path: string) => `${routes.Bucket(bucket)}/files/${path}`,
 }
 
 const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
@@ -19,19 +19,17 @@ const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
 
 export class VBase {
   private http: HttpClient
-  private appName: string
 
   constructor (opts: InstanceOptions) {
-    this.appName = opts.userAgent.split('/')[0]
     this.http = HttpClient.forWorkspace('vbase', opts)
   }
 
   getBucket = (bucket: string) => {
-    return this.http.get<BucketMetadata>(routes.Bucket(this.appName, bucket))
+    return this.http.get<BucketMetadata>(routes.Bucket(bucket))
   }
 
   resetBucket = (bucket: string) => {
-    return this.http.delete(routes.Files(this.appName, bucket))
+    return this.http.delete(routes.Files(bucket))
   }
 
   listFiles = (bucket: string, opts?: string | VBaseOptions) => {
@@ -41,15 +39,15 @@ export class VBase {
     } else if (opts) {
       params = {prefix: opts}
     }
-    return this.http.get<BucketFileList>(routes.Files(this.appName, bucket), {params})
+    return this.http.get<BucketFileList>(routes.Files(bucket), {params})
   }
 
   getFile = (bucket: string, path: string) => {
-    return this.http.getBuffer(routes.File(this.appName, bucket, path))
+    return this.http.getBuffer(routes.File(bucket, path))
   }
 
   getFileStream = (bucket: string, path: string): Promise<IncomingMessage> => {
-    return this.http.getStream(routes.File(this.appName, bucket, path))
+    return this.http.getStream(routes.File(bucket, path))
   }
 
   saveFile = (bucket: string, path: string, stream: Readable, gzip: boolean = true, ttl?: number) => {
@@ -61,7 +59,7 @@ export class VBase {
   }
 
   deleteFile = (bucket: string, path: string) => {
-    return this.http.delete(routes.File(this.appName, bucket, path))
+    return this.http.delete(routes.File(bucket, path))
   }
 
   private saveContent = (bucket: string, path: string, stream: Readable, opts: VBaseSaveOptions = {}) => {
@@ -80,7 +78,7 @@ export class VBase {
     if (opts.ttl && Number.isInteger(opts.ttl)) {
       headers['X-VTEX-TTL'] = opts.ttl
     }
-    return this.http.put(routes.File(this.appName, bucket, path), finalStream, {headers, params})
+    return this.http.put(routes.File(bucket, path), finalStream, {headers, params})
   }
 }
 

@@ -2,9 +2,9 @@ import { HttpClient, InstanceOptions } from './HttpClient'
 import { BucketMetadata } from './responses'
 
 const routes = {
-  Bucket: (appName: string, bucket: string) => `/buckets/${appName}/${bucket}`,
-  Metadata: (appName: string, bucket: string) => `/buckets/${appName}/${bucket}/metadata`,
-  MetadataKey: (appName: string, bucket: string, key: string) => `/buckets/${appName}/${bucket}/metadata/${key}`,
+  Bucket: (bucket: string) => `/buckets/${process.env.VTEX_APP_NAME}/${bucket}`,
+  Metadata: (bucket: string) => `${routes.Bucket(bucket)}/metadata`,
+  MetadataKey: (bucket: string, key: string) => `${routes.Metadata(bucket)}/${key}`,
 }
 
 export type MetadataEntry = {
@@ -20,15 +20,13 @@ export type MetadataEntryList = {
 
 export class Metadata {
   private http: HttpClient
-  private appName: string
 
   constructor (opts: InstanceOptions) {
-    this.appName = opts.userAgent.split('/')[0]
     this.http = HttpClient.forWorkspace('router', opts)
   }
 
   getBuckets = (bucket: string) => {
-    return this.http.get<BucketMetadata>(routes.Bucket(this.appName, bucket))
+    return this.http.get<BucketMetadata>(routes.Bucket(bucket))
   }
 
   list = (bucket: string, includeValue: boolean, limit?: number, nextMarker?: string) => {
@@ -40,31 +38,31 @@ export class Metadata {
       query._marker = nextMarker
     }
 
-    return this.http.get<MetadataEntryList>(routes.Metadata(this.appName, bucket), {params: query})
+    return this.http.get<MetadataEntryList>(routes.Metadata(bucket), {params: query})
   }
 
   listAll = (bucket: string, includeValue: boolean) => {
     const query = {value: includeValue, _limit: 1000}
-    return this.http.get<MetadataEntryList>(routes.Metadata(this.appName, bucket), {params: query})
+    return this.http.get<MetadataEntryList>(routes.Metadata(bucket), {params: query})
   }
 
   get = (bucket: string, key: string) => {
-    return this.http.get<any>(routes.MetadataKey(this.appName, bucket, key))
+    return this.http.get<any>(routes.MetadataKey(bucket, key))
   }
 
   save = (bucket: string, key: string, data: any) => {
-    return this.http.put(routes.MetadataKey(this.appName, bucket, key), data)
+    return this.http.put(routes.MetadataKey(bucket, key), data)
   }
 
   saveAll = (bucket: string, data: {[key: string]: any}) => {
-    return this.http.put(routes.Metadata(this.appName, bucket), data)
+    return this.http.put(routes.Metadata(bucket), data)
   }
 
   delete = (bucket: string, key: string) => {
-    return this.http.delete(routes.MetadataKey(this.appName, bucket, key))
+    return this.http.delete(routes.MetadataKey(bucket, key))
   }
 
   deleteAll = (bucket: string) => {
-    return this.http.delete(routes.Metadata(this.appName, bucket))
+    return this.http.delete(routes.Metadata(bucket))
   }
 }
