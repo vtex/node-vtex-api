@@ -7,13 +7,11 @@ import { IncomingMessage } from 'http'
 import { HttpClient, InstanceOptions } from './HttpClient'
 import { BucketMetadata, FileListItem } from './responses'
 
+const appId = process.env.VTEX_APP_ID
+const [runningAppName] = appId ? appId.split('@') : ['']
+
 const routes = {
-  Bucket: (bucket: string) => {
-    if (!process.env.VTEX_APP_ID) {
-      throw new Error(`Invalid path to access Vbase. Variable VTEX_APP_ID is not available.`)
-    }
-    return `/buckets/${process.env.VTEX_APP_ID}/${bucket}`
-  },
+  Bucket: (bucket: string) => `/buckets/${runningAppName}/${bucket}`,
   Files: (bucket: string) => `${routes.Bucket(bucket)}/files`,
   File: (bucket: string, path: string) => `${routes.Bucket(bucket)}/files/${path}`,
 }
@@ -26,6 +24,9 @@ export class VBase {
   private http: HttpClient
 
   constructor (opts: InstanceOptions) {
+    if (runningAppName === '') {
+      throw new Error(`Invalid path to access Vbase. Variable VTEX_APP_ID is not available.`)
+    }
     this.http = HttpClient.forWorkspace('vbase', opts)
   }
 
