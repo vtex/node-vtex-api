@@ -1,10 +1,13 @@
 import { HttpClient, InstanceOptions } from './HttpClient'
 import { BucketMetadata } from './responses'
 
+const appId = process.env.VTEX_APP_ID
+const [runningAppName] = appId ? appId.split('@') : ['']
+
 const routes = {
-  Bucket: (bucket: string) => `/buckets/${bucket}`,
-  Metadata: (bucket: string) => `/buckets/${bucket}/metadata`,
-  MetadataKey: (bucket: string, key: string) => `/buckets/${bucket}/metadata/${key}`,
+  Bucket: (bucket: string) => `/buckets/${runningAppName}/${bucket}`,
+  Metadata: (bucket: string) => `${routes.Bucket(bucket)}/metadata`,
+  MetadataKey: (bucket: string, key: string) => `${routes.Metadata(bucket)}/${key}`,
 }
 
 export type MetadataEntry = {
@@ -22,6 +25,9 @@ export class Metadata {
   private http: HttpClient
 
   constructor (opts: InstanceOptions) {
+    if (runningAppName === '') {
+      throw new Error(`Invalid path to access Metadata. Variable VTEX_APP_ID is not available.`)
+    }
     this.http = HttpClient.forWorkspace('router', opts)
   }
 
