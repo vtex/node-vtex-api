@@ -8,7 +8,12 @@ import { HttpClient, InstanceOptions } from './HttpClient'
 import { BucketMetadata, FileListItem } from './responses'
 
 const routes = {
-  Bucket: (bucket: string) => `/buckets/${process.env.VTEX_APP_NAME}/${bucket}`,
+  Bucket: (bucket: string) => {
+    if (!process.env.VTEX_APP_ID) {
+      throw new Error(`Invalid path to access Vbase. Variable VTEX_APP_ID is not available.`)
+    }
+    return `/buckets/${process.env.VTEX_APP_ID}/${bucket}`
+  },
   Files: (bucket: string) => `${routes.Bucket(bucket)}/files`,
   File: (bucket: string, path: string) => `${routes.Bucket(bucket)}/files/${path}`,
 }

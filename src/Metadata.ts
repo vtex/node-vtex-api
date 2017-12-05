@@ -2,7 +2,12 @@ import { HttpClient, InstanceOptions } from './HttpClient'
 import { BucketMetadata } from './responses'
 
 const routes = {
-  Bucket: (bucket: string) => `/buckets/${process.env.VTEX_APP_NAME}/${bucket}`,
+  Bucket: (bucket: string) => {
+    if (!process.env.VTEX_APP_ID) {
+      throw new Error(`Invalid path to access Metadata. Variable VTEX_APP_ID is not available.`)
+    }
+    return `/buckets/${process.env.VTEX_APP_ID}/${bucket}`
+  },
   Metadata: (bucket: string) => `${routes.Bucket(bucket)}/metadata`,
   MetadataKey: (bucket: string, key: string) => `${routes.Metadata(bucket)}/${key}`,
 }
