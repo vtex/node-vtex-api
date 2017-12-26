@@ -39,7 +39,7 @@ export class Builder {
     return this.http.post<BuildResult>(routes.Clean(app), {headers})
   }
 
-  private zipAndSend = (route: string, app: string, files: File[], tag?: string) => {
+  private zipAndSend = async (route: string, app: string, files: File[], tag?: string) => {
     if (!(files[0] && files[0].path && files[0].content)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -47,14 +47,17 @@ export class Builder {
     if (indexOfManifest === -1) {
       throw new Error('No manifest.json file found in files.')
     }
-    const archive = archiver('zip')
-    files.forEach(({content, path}) => archive.append(content, {name: path}))
-    return archive.finalize().then(() => {
-      return this.http.post<BuildResult>(route, archive, {
-        params: tag ? {tag} : EMPTY_OBJECT,
-        headers: {'Content-Type': 'application/octet-stream'},
-      })
+    const zip = archiver('zip')
+    const request = this.http.post<BuildResult>(route, zip, {
+      params: tag ? {tag} : EMPTY_OBJECT,
+      headers: {'Content-Type': 'application/octet-stream'},
     })
+
+    files.forEach(({content, path}) => zip.append(content, {name: path}))
+    const finalize = zip.finalize()
+
+    const [response] = await Promise.all([request, finalize])
+    return response
   }
 }
 
