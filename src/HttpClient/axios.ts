@@ -5,6 +5,7 @@ export const createInstance = (baseURL: string, headers: Record<string, string>,
   const http = axios.create({
     baseURL,
     headers,
+    maxRedirects: 0, // Do not follow redirects
     timeout,
     validateStatus: status => (status >= 200 && status < 300) || status === 304,
   })
