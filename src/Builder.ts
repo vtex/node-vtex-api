@@ -14,6 +14,8 @@ const routes = {
   Relink: (app: string) => `${routes.Builder}/relink/${app}`,
 }
 
+const stickyHostHeader = 'x-vtex-sticky-host'
+
 export class Builder {
   private http: HttpClient
   private stickyHost: string
@@ -33,7 +35,7 @@ export class Builder {
   public relinkApp = (app: string, changes: Change[]) => {
     const headers = {
       'Content-Type': 'application/json',
-      ...this.stickyHost && {'X-Vtex-Sticky-Host': this.stickyHost},
+      ...this.stickyHost && {stickyHostHeader: this.stickyHost},
     }
     return this.http.put<BuildResult>(routes.Relink(app), changes, {headers})
   }
@@ -41,7 +43,7 @@ export class Builder {
   public clean = (app: string) => {
     const headers = {
       'Content-Type': 'application/json',
-      ...this.stickyHost && {'X-Vtex-Sticky-Host': this.stickyHost},
+      ...this.stickyHost && {stickyHostHeader: this.stickyHost},
     }
     return this.http.post<BuildResult>(routes.Clean(app), {headers})
   }
@@ -59,7 +61,7 @@ export class Builder {
       params: tag ? {tag} : EMPTY_OBJECT,
       headers: {
         'Content-Type': 'application/octet-stream',
-        ...sticky && {'X-Vtex-Sticky-Host': this.stickyHost || 'Request'},
+        ...sticky && {stickyHostHeader: this.stickyHost || 'Request'},
       },
     })
 
@@ -67,7 +69,7 @@ export class Builder {
     const finalize = zip.finalize()
 
     const [response] = await Promise.all([request, finalize])
-    const {data, headers: {'X-Vtex-Sticky-Host': host}} = response
+    const {data, headers: {stickyHostHeader: host}} = response
     this.stickyHost = host
     return data
   }
