@@ -1,4 +1,4 @@
-import {AxiosInstance, AxiosRequestConfig, AxiosResponse} from 'axios'
+import {AxiosInstance, AxiosRequestConfig} from 'axios'
 import {createInstance} from './axios'
 import {addCacheInterceptors, CacheableRequestConfig, CacheStorage} from './cache'
 import {IncomingMessage} from 'http'
@@ -86,6 +86,10 @@ export class HttpClient {
 
   post = <T = void>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
     return this.http.post(url, data, config).then(response => response.data as T)
+  }
+
+  postRaw = <T = void>(url: string, data?: any, config?: AxiosRequestConfig): Promise<IOResponse<T>> => {
+    return this.http.post(url, data, config) as Promise<IOResponse<T>>
   }
 
   patch = <T = void>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
