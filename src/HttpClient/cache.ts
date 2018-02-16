@@ -1,6 +1,7 @@
 import {AxiosInstance, AxiosResponse, AxiosRequestConfig} from 'axios'
+import {URL, URLSearchParams} from 'url'
 
-const EMPTY = {}
+const EMPTY = {etag: null, response: null}
 
 const successOrNotModified = (status: number): boolean =>
   status >= 200 && status < 300 || status === 304
@@ -9,10 +10,18 @@ function isCacheable (arg: any): arg is CacheableRequestConfig {
   return arg.cacheable !== undefined
 }
 
+const cacheKey = (config: AxiosRequestConfig) => {
+  const url = new URL(config.url!)
+  const params = new URLSearchParams(config.params)
+  url.search = params.toString()
+  return url.toString()
+}
+
 export const addCacheInterceptors = (http: AxiosInstance, cacheStorage: CacheStorage) => {
   http.interceptors.request.use((config: AxiosRequestConfig) => {
     if (isCacheable(config)) {
-      const {etag, response} = cacheStorage.get(config.url) || EMPTY
+      const key = cacheKey(config)
+      const {etag, response} = cacheStorage.get(key) || EMPTY
       if (etag) {
         config.headers['if-none-match'] = etag
         config.cached = response
@@ -31,7 +40,8 @@ export const addCacheInterceptors = (http: AxiosInstance, cacheStorage: CacheSto
       }
 
       if (headers.etag) {
-        cacheStorage.set(config.url, {
+        const key = cacheKey(config)
+        cacheStorage.set(key, {
           etag: headers.etag,
           response: {data, headers, status: 304},
         })
@@ -43,7 +53,7 @@ export const addCacheInterceptors = (http: AxiosInstance, cacheStorage: CacheSto
 }
 
 export interface CacheStorage {
-  get<T> (key: string): T
+  get<T> (key: string): T | undefined
   set (key: string, value: any): void
 }
 

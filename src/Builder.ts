@@ -16,7 +16,7 @@ const routes = {
 
 export class Builder {
   private http: HttpClient
-  private stickyHost: string
+  private stickyHost!: string
 
   constructor (opts: InstanceOptions) {
     this.http = HttpClient.forWorkspace('builder-hub.vtex', opts)
