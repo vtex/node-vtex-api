@@ -34,6 +34,11 @@ export class Workspaces {
     return this.http.delete(routes.Workspace(account, workspace))
   }
 
+  reset = (account: string, workspace: string, metadata: Partial<WorkspaceMetadata> = {}) => {
+    const params = {reset: true}
+    return this.http.put(routes.Workspace(account, workspace), metadata, {params})
+  }
+
   promote = (account: string, workspace: string) => {
     return this.http.put(routes.Promote(account), {workspace})
   }
