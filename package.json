@@ -28,12 +28,14 @@
     "axios-retry": "^1.2.0",
     "mime-types": "^2.1.12",
     "multipart-stream": "^2.0.1",
+    "qs": "^6.5.1",
     "tar-fs": "^1.15.3"
   },
   "devDependencies": {
     "@types/archiver": "^2.0.1",
     "@types/mime-types": "^2.1.0",
     "@types/node": "^8.0.14",
+    "@types/qs": "^6.5.1",
     "npm-run-all": "^2.3.0",
     "rimraf": "^2.5.2",
     "tslint": "^4.0.0",

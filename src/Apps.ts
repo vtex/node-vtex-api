@@ -2,6 +2,7 @@ import {extract} from 'tar-fs'
 import {createGunzip} from 'zlib'
 import {IncomingMessage} from 'http'
 import {Readable, Writable} from 'stream'
+import {stringify} from 'qs'
 
 import {HttpClient, InstanceOptions} from './HttpClient'
 import {AppManifest, AppFilesList} from './responses'
@@ -38,6 +39,10 @@ const zipObj = (keys: string[], values: any[]) => {
     idx += 1
   }
   return out
+}
+
+const paramsSerializer = (params: any) => {
+  return stringify(params, {arrayFormat: 'repeat'})
 }
 
 export class Apps {
@@ -159,7 +164,7 @@ export class Apps {
 
   resolveDependencies = (apps: string[], registries: string[], filter: string = '') => {
     const params = {apps, registries, filter}
-    return this.http.get(routes.ResolveDependencies, {params})
+    return this.http.get(routes.ResolveDependencies, {params, paramsSerializer})
   }
 }
 
