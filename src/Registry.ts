@@ -4,7 +4,7 @@ import {createGunzip} from 'zlib'
 import {Readable, Writable} from 'stream'
 import {IncomingMessage} from 'http'
 
-import {HttpClient, InstanceOptions} from './HttpClient'
+import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
 import {DEFAULT_WORKSPACE} from './constants'
 import {AppManifest, AppFilesList} from './responses'
 
@@ -23,8 +23,8 @@ const routes = {
 export class Registry {
   private http: HttpClient
 
-  constructor (opts: InstanceOptions) {
-    this.http = HttpClient.forWorkspace('apps', {...opts, workspace: DEFAULT_WORKSPACE})
+  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
+    this.http = HttpClient.forWorkspace('apps', {...ioContext, workspace: DEFAULT_WORKSPACE}, opts)
   }
 
   publishApp = async (files: File[], tag?: string) => {

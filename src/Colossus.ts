@@ -1,4 +1,4 @@
-import {HttpClient, InstanceOptions} from './HttpClient'
+import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
 
 const routes = {
   Event: (route: string) => `/events/${route}`,
@@ -8,8 +8,8 @@ const routes = {
 export class Colossus {
   private http: HttpClient
 
-  constructor (opts: InstanceOptions) {
-    this.http = HttpClient.forWorkspace('colossus', opts)
+  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
+    this.http = HttpClient.forWorkspace('colossus', ioContext, opts)
   }
 
   sendLog = (subject: string, message: any, level: string) => {

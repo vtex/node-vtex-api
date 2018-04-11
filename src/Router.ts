@@ -1,4 +1,4 @@
-import {HttpClient, InstanceOptions} from './HttpClient'
+import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
 
 const routes = {
   AvailableServices: '/_services',
@@ -14,10 +14,10 @@ export class Router {
   private account: string
   private workspace: string
 
-  constructor (opts: InstanceOptions) {
-    this.account = opts.account
-    this.workspace = opts.workspace
-    this.http = HttpClient.forRoot('router', opts)
+  constructor (ioContext: IOContext, opts: InstanceOptions) {
+    this.account = ioContext.account
+    this.workspace = ioContext.workspace
+    this.http = HttpClient.forRoot('router', ioContext, opts)
   }
 
   listAvailableIoVersions = () => {
