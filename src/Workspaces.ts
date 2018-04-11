@@ -10,7 +10,7 @@ const routes = {
 export class Workspaces {
   private http: HttpClient
 
-  constructor (ioContext: IOContext, opts: InstanceOptions) {
+  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
     this.http = HttpClient.forRoot('router', ioContext, opts)
   }
 

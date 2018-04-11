@@ -14,7 +14,7 @@ export class Router {
   private account: string
   private workspace: string
 
-  constructor (ioContext: IOContext, opts: InstanceOptions) {
+  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
     this.account = ioContext.account
     this.workspace = ioContext.workspace
     this.http = HttpClient.forRoot('router', ioContext, opts)

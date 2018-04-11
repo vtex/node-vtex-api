@@ -23,7 +23,7 @@ const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
 export class VBase {
   private http: HttpClient
 
-  constructor (ioContext: IOContext, opts: InstanceOptions) {
+  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
     if (runningAppName === '') {
       throw new Error(`Invalid path to access Vbase. Variable VTEX_APP_ID is not available.`)
     }
