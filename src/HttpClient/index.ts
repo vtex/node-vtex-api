@@ -45,17 +45,17 @@ export class HttpClient {
   }
 
   static forWorkspace (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent} = context
+    const {authToken, userAgent, recorder} = context
     const {timeout, cacheStorage} = opts
     const baseURL = workspaceURL(service, context)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, cacheStorage})
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
   }
 
   static forRoot (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent} = context
+    const {authToken, userAgent, recorder} = context
     const {timeout, cacheStorage} = opts
     const baseURL = rootURL(service, context)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, cacheStorage})
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
   }
 
   static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
