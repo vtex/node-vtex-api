@@ -35,12 +35,12 @@ export class HttpClient {
     }
 
     this.http = createInstance(baseURL, headers, timeout)
-    if (cacheStorage) {
-      addCacheInterceptors(this.http, cacheStorage)
-    }
-
     if (recorder) {
       addRecorderInterceptors(this.http, recorder)
+    }
+
+    if (cacheStorage) {
+      addCacheInterceptors(this.http, cacheStorage)
     }
   }
 
