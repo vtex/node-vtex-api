@@ -1,58 +1,61 @@
 import {AxiosInstance, AxiosRequestConfig} from 'axios'
 import {createInstance} from './axios'
 import {addCacheInterceptors, CacheableRequestConfig, CacheStorage} from './cache'
+import {Recorder, addRecorderInterceptors} from './recorder'
 import {IncomingMessage} from 'http'
 
 const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
 
-const rootURL = (service: string, {region, endpoint}: InstanceOptions): string => {
-  if (endpoint) {
-    return 'http://' + endpoint
-  }
-
+const rootURL = (service: string, {region}: IOContext): string => {
   if (region) {
     return `http://${service}.${region}.vtex.io`
   }
 
-  throw new Error('Missing required: should specify either {region} or {endpoint}')
+  throw new Error('Region required')
 }
 
-const workspaceURL = (service: string, opts: InstanceOptions): string => {
-  const {account, workspace} = opts
+const workspaceURL = (service: string, context: IOContext): string => {
+  const {account, workspace} = context
   if (!account || !workspace) {
     throw new Error('Missing required arguments: {account, workspace}')
   }
 
-  return rootURL(service, opts) + `/${account}/${workspace}`
+  return rootURL(service, context) + `/${account}/${workspace}`
 }
 
 export class HttpClient {
   private http: AxiosInstance
 
   private constructor (opts: ClientOptions) {
-    const {baseURL, authToken, authType, cacheStorage, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
+    const {baseURL, authToken, authType, cacheStorage, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
     const headers = {
       Authorization: `${authType} ${authToken}`,
       'User-Agent': userAgent,
     }
 
     this.http = createInstance(baseURL, headers, timeout)
+    if (recorder) {
+      addRecorderInterceptors(this.http, recorder)
+    }
+
     if (cacheStorage) {
       addCacheInterceptors(this.http, cacheStorage)
     }
   }
 
-  static forWorkspace (service: string, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent, timeout, cacheStorage} = opts
-    const baseURL = workspaceURL(service, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, cacheStorage})
+  static forWorkspace (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
+    const {authToken, userAgent, recorder} = context
+    const {timeout, cacheStorage} = opts
+    const baseURL = workspaceURL(service, context)
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
   }
 
-  static forRoot (service: string, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent, timeout, cacheStorage} = opts
-    const baseURL = rootURL(service, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, cacheStorage})
+  static forRoot (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
+    const {authToken, userAgent, recorder} = context
+    const {timeout, cacheStorage} = opts
+    const baseURL = rootURL(service, context)
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
   }
 
   static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
@@ -103,13 +106,18 @@ export class HttpClient {
 
 export type CacheStorage = CacheStorage
 
-export type InstanceOptions = {
+export type Recorder = Recorder
+
+export type IOContext = {
   authToken: string,
   userAgent: string,
   account: string,
   workspace: string,
-  region?: string,
-  endpoint?: string,
+  recorder?: Recorder,
+  region: string,
+}
+
+export type InstanceOptions = {
   timeout?: number,
   cacheStorage?: CacheStorage,
 }
@@ -139,5 +147,6 @@ type ClientOptions = {
   userAgent: string
   baseURL: string,
   timeout?: number,
+  recorder?: Recorder,
   cacheStorage?: CacheStorage,
 }

@@ -1,4 +1,4 @@
-import { HttpClient, InstanceOptions } from './HttpClient'
+import { HttpClient, InstanceOptions, IOContext } from './HttpClient'
 import { BucketMetadata } from './responses'
 
 const appId = process.env.VTEX_APP_ID
@@ -24,11 +24,11 @@ export type MetadataEntryList = {
 export class Metadata {
   private http: HttpClient
 
-  constructor (opts: InstanceOptions) {
+  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
     if (runningAppName === '') {
       throw new Error(`Invalid path to access Metadata. Variable VTEX_APP_ID is not available.`)
     }
-    this.http = HttpClient.forWorkspace('router', opts)
+    this.http = HttpClient.forWorkspace('router', ioContext, opts)
   }
 
   getBuckets = (bucket: string) => {

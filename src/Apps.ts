@@ -4,7 +4,7 @@ import {IncomingMessage} from 'http'
 import {Readable, Writable} from 'stream'
 import {stringify} from 'qs'
 
-import {HttpClient, InstanceOptions} from './HttpClient'
+import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
 import {AppManifest, AppFilesList} from './responses'
 
 const routes = {
@@ -48,8 +48,8 @@ const paramsSerializer = (params: any) => {
 export class Apps {
   private http: HttpClient
 
-  constructor (opts: InstanceOptions) {
-    this.http = HttpClient.forWorkspace('apps', opts)
+  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
+    this.http = HttpClient.forWorkspace('apps', ioContext, opts)
   }
 
   installApp = (descriptor: string, registry: string) => {

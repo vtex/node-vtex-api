@@ -4,7 +4,7 @@ import * as mime from 'mime-types'
 import { Readable } from 'stream'
 import { IncomingMessage } from 'http'
 
-import { HttpClient, InstanceOptions } from './HttpClient'
+import { HttpClient, InstanceOptions, IOContext } from './HttpClient'
 import { BucketMetadata, FileListItem } from './responses'
 
 const appId = process.env.VTEX_APP_ID
@@ -23,11 +23,11 @@ const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
 export class VBase {
   private http: HttpClient
 
-  constructor (opts: InstanceOptions) {
+  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
     if (runningAppName === '') {
       throw new Error(`Invalid path to access Vbase. Variable VTEX_APP_ID is not available.`)
     }
-    this.http = HttpClient.forWorkspace('vbase', opts)
+    this.http = HttpClient.forWorkspace('vbase', ioContext, opts)
   }
 
   getBucket = (bucket: string) => {

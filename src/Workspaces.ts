@@ -1,4 +1,4 @@
-import {HttpClient, InstanceOptions} from './HttpClient'
+import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
 import {DEFAULT_WORKSPACE} from './constants'
 
 const routes = {
@@ -10,8 +10,8 @@ const routes = {
 export class Workspaces {
   private http: HttpClient
 
-  constructor (opts: InstanceOptions) {
-    this.http = HttpClient.forRoot('router', opts)
+  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
+    this.http = HttpClient.forRoot('router', ioContext, opts)
   }
 
   list = (account: string) => {
