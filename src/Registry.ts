@@ -64,7 +64,7 @@ export class Registry {
     return this.http.get<AppManifest>(routes.AppVersion(app, version), {params: opts})
   }
 
-  listAppFiles = (app: string, version: string, opts?: ListFilesOptions) => {
+  listAppFiles = (app: string, version: string, opts?: ListAppFilesOptions) => {
     return this.http.get<AppFilesList>(routes.AppFiles(app, version), {params: opts})
   }
 
@@ -100,7 +100,7 @@ export type AppsManifestOptions = {
   resolveDeps: boolean,
 }
 
-export type ListFilesOptions = {
+export type ListAppFilesOptions = {
   prefix: string,
 }
 
