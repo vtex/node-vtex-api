@@ -8,12 +8,12 @@ This client enables Node developers to quickly integrate with the VTEX IO APIs.
 
 The clients currently available  in this library are:
 
-- [VBase](https://github.com/vtex/node-vtex-api/blob/feature/context-bound/src/VBase.js#L22)
-- [Apps](https://github.com/vtex/node-vtex-api/blob/feature/context-bound/src/Apps.js#L51)
-- [Registry](https://github.com/vtex/node-vtex-api/blob/feature/context-bound/src/Registry.js#L27)
-- [Router](https://github.com/vtex/node-vtex-api/blob/feature/context-bound/src/Router.js#L19)
-- [Workspaces](https://github.com/vtex/node-vtex-api/blob/feature/context-bound/src/Workspaces.js#18)
-- [ID](https://github.com/vtex/node-vtex-api/blob/feature/context-bound/src/ID.js#L13)
+- [VBase](https://github.com/vtex/node-vtex-api/blob/master/src/VBase.ts)
+- [Apps](https://github.com/vtex/node-vtex-api/blob/master/src/Apps.ts)
+- [Registry](https://github.com/vtex/node-vtex-api/blob/master/src/Registry.ts)
+- [Router](https://github.com/vtex/node-vtex-api/blob/master/src/Router.ts)
+- [Workspaces](https://github.com/vtex/node-vtex-api/blob/master/src/Workspaces.ts)
+- [ID](https://github.com/vtex/node-vtex-api/blob/master/src/ID.ts)
 
 Usage:
 

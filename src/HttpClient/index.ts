@@ -115,6 +115,8 @@ export type IOContext = {
   workspace: string,
   recorder?: Recorder,
   region: string,
+  sender: string,
+  production: boolean
 }
 
 export type InstanceOptions = {
