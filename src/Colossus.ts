@@ -23,24 +23,15 @@ export class Colossus {
     return this.http.put(routes.Event(route), message, {params: {subject}})
   }
 
-  sendMetrics = (subject: string, message?: any) => {
-    const {
-      account: accountName,
-      workspace,
-      sender: appId,
-      production
-    } = this.ctx
-
-    const metricMessage = JSON.stringify({
-      ...message,
-      accountName,
-      data: {
-        workspace,
-        appId,
-        production
-      },
-      timestamp: +(new Date())
-    })
-    return this.http.put(routes.Metric(), message, {params: {subject}})
+  sendMetric = (metric: BillingMetric) => {
+    metric.production = this.ctx.production
+    return this.http.post(routes.Metric(), metric)
   }
+}
+
+export type BillingMetric = {
+  value: number,
+  unit: string,
+  production: boolean,
+  timestamp: Date,
 }
