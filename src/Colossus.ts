@@ -8,11 +8,9 @@ const routes = {
 
 export class Colossus {
   private http: HttpClient
-  private ctx: IOContext
 
   constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
     this.http = HttpClient.forWorkspace('colossus', ioContext, opts)
-    this.ctx = ioContext
   }
 
   sendLog = (subject: string, message: any, level: string) => {
@@ -24,7 +22,6 @@ export class Colossus {
   }
 
   sendMetric = (metric: BillingMetric) => {
-    metric.production = this.ctx.production
     return this.http.post(routes.Metric(), metric)
   }
 }
@@ -32,6 +29,6 @@ export class Colossus {
 export type BillingMetric = {
   value: number,
   unit: string,
-  production: boolean,
+  metricId: string,
   timestamp: Date,
 }
