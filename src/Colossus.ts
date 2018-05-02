@@ -30,5 +30,5 @@ export type BillingMetric = {
   value: number,
   unit: string,
   metricId: string,
-  timestamp: Date,
+  timestamp?: number,
 }
