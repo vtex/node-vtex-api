@@ -3,6 +3,7 @@ import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
 const routes = {
   Event: (route: string) => `/events/${route}`,
   Log: (level: string) => `/logs/${level}`,
+  Metric: () => `/metrics`,
 }
 
 export class Colossus {
@@ -19,4 +20,15 @@ export class Colossus {
   sendEvent = (subject: string, route: string, message?: any) => {
     return this.http.put(routes.Event(route), message, {params: {subject}})
   }
+
+  sendMetric = (metric: BillingMetric) => {
+    return this.http.post(routes.Metric(), metric)
+  }
+}
+
+export type BillingMetric = {
+  value: number,
+  unit: string,
+  metricId: string,
+  timestamp?: number,
 }
