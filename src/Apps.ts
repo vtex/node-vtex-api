@@ -72,7 +72,7 @@ export class Apps {
 
     const emptyChanges = files.filter(file => !file.content)
     if (emptyChanges.length > 0) {
-      throw new Error(`Missing content for paths: ${emptyChanges.map(e => e.path).join()}`)
+      throw new Error(`Missing content for paths: ${emptyChanges.map(e => e.path).join('; ')}`)
     }
 
     const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
@@ -93,7 +93,7 @@ export class Apps {
 
   patch = async (app: string, changes: Change[]) => {
     if (!(changes[0] && changes[0].path)) {
-      throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
+      throw new Error('Argument changes must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
 
     const files = changes.filter(change => !!change.content)
@@ -226,7 +226,7 @@ export type AppsList = {
 
 export type Change = {
   path: string,
-  content: string,
+  content: string | Readable | Buffer,
 }
 
 export type ListAppsOptions = {
