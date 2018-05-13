@@ -1,3 +1,4 @@
+import * as archiver from 'archiver'
 import {extract} from 'tar-fs'
 import {createGunzip} from 'zlib'
 import {IncomingMessage} from 'http'
@@ -64,9 +65,54 @@ export class Apps {
     return this.http.put(routes.Acknowledge(app, service))
   }
 
-  link = (app: string, changes: Change[]) => {
-    const headers = {'Content-Type': 'application/json'}
-    return this.http.put(routes.Link(app), changes, {headers})
+  link = async (app: string, files: Change[]) => {
+    if (!(files[0] && files[0].path)) {
+      throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
+    }
+
+    const emptyChanges = files.filter(file => !file.content)
+    if (emptyChanges.length > 0) {
+      throw new Error(`Missing content for paths: ${emptyChanges.map(e => e.path).join()}`)
+    }
+
+    const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
+    if (indexOfManifest === -1) {
+      throw new Error('No manifest.json file found in files.')
+    }
+    const zip = archiver('zip')
+    const request = this.http.put(routes.Link(app), zip, {
+      headers: {'Content-Type': 'application/zip'},
+    })
+
+    files.forEach(({content, path}) => zip.append(content, {name: path}))
+    const finalize = zip.finalize()
+
+    const [response] = await Promise.all([request, finalize])
+    return response
+  }
+
+  patch = async (app: string, changes: Change[]) => {
+    if (!(changes[0] && changes[0].path)) {
+      throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
+    }
+
+    const files = changes.filter(change => !!change.content)
+    const deletedFiles = changes
+      .filter(change => !change.content)
+      .map(change => change.path)
+      .join(':')
+
+    const zip = archiver('zip')
+    const request = this.http.patch(routes.Link(app), zip, {
+      headers: {'Content-Type': 'application/zip'},
+      params: {deletedFiles},
+    })
+
+    files.forEach(({content, path}) => zip.append(content, {name: path}))
+    const finalize = zip.finalize()
+
+    const [response] = await Promise.all([request, finalize])
+    return response
   }
 
   unlink = (app: string) => {
