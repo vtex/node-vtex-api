@@ -15,11 +15,15 @@ const routes = {
 }
 
 export class Builder {
+  private account: string
+  private workspace: string
   private http: HttpClient
   private stickyHost!: string
 
   constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
     this.http = HttpClient.forWorkspace('builder-hub.vtex', ioContext, opts)
+    this.account = ioContext.account
+    this.workspace = ioContext.workspace
   }
 
   public publishApp = (app: string, files: File[], tag?: string) => {
@@ -55,11 +59,12 @@ export class Builder {
       throw new Error('No manifest.json file found in files.')
     }
     const zip = archiver('zip')
+    const stickyHint = `request:${this.account}:${this.workspace}:${app}`
     const request = this.http.postRaw<BuildResult>(route, zip, {
       params: tag ? {tag} : EMPTY_OBJECT,
       headers: {
         'Content-Type': 'application/octet-stream',
-        ...sticky && {'x-vtex-sticky-host': this.stickyHost || 'Request'},
+        ...sticky && {'x-vtex-sticky-host': this.stickyHost || stickyHint},
       },
     })
 
