@@ -38,7 +38,7 @@ export class Registry {
     const zip = archiver('zip')
     const request = this.http.post(routes.Publish, zip, {
       params: tag ? {tag} : EMPTY_OBJECT,
-      headers: {'Content-Type': 'application/octet-stream'},
+      headers: {'Content-Type': 'application/zip'},
     })
 
     files.forEach(({content, path}) => zip.append(content, {name: path}))

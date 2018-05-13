@@ -7,21 +7,25 @@ import {IncomingMessage} from 'http'
 const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
 
-const rootURL = (service: string, {region}: IOContext): string => {
+const rootURL = (service: string, {region}: IOContext, {endpoint}: InstanceOptions): string => {
+  if (endpoint) {
+    return 'http://' + endpoint
+  }
+
   if (region) {
     return `http://${service}.${region}.vtex.io`
   }
 
-  throw new Error('Region required')
+  throw new Error('Missing required: should specify either {region} or {endpoint}')
 }
 
-const workspaceURL = (service: string, context: IOContext): string => {
+const workspaceURL = (service: string, context: IOContext, opts: InstanceOptions): string => {
   const {account, workspace} = context
   if (!account || !workspace) {
     throw new Error('Missing required arguments: {account, workspace}')
   }
 
-  return rootURL(service, context) + `/${account}/${workspace}`
+  return rootURL(service, context, opts) + `/${account}/${workspace}`
 }
 
 export class HttpClient {
@@ -47,14 +51,14 @@ export class HttpClient {
   static forWorkspace (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
     const {authToken, userAgent, recorder} = context
     const {timeout, cacheStorage} = opts
-    const baseURL = workspaceURL(service, context)
+    const baseURL = workspaceURL(service, context, opts)
     return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
   }
 
   static forRoot (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
     const {authToken, userAgent, recorder} = context
     const {timeout, cacheStorage} = opts
-    const baseURL = rootURL(service, context)
+    const baseURL = rootURL(service, context, opts)
     return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
   }
 
@@ -121,6 +125,7 @@ export type IOContext = {
 export type InstanceOptions = {
   timeout?: number,
   cacheStorage?: CacheStorage,
+  endpoint?: string,
 }
 
 export type LegacyInstanceOptions = {
