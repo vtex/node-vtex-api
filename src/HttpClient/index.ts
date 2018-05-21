@@ -108,6 +108,10 @@ export class HttpClient {
   }
 }
 
+export const withoutRecorder = (ioContext: IOContext): IOContext => {
+  return {...ioContext, recorder: undefined}
+}
+
 export type CacheStorage = CacheStorage
 
 export type Recorder = Recorder
