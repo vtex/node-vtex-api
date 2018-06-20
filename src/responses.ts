@@ -20,6 +20,7 @@ export type AppManifest = {
   registries: string[],
   credentialType: string,
   policies: Policy[],
+  billingOptions: BillingOptions,
   _resolvedDependencies?: {
     [name: string]: string[],
   },
@@ -38,4 +39,41 @@ export type BucketMetadata = {
   state: string,
   lastModified: string,
   hash: string,
+}
+
+export type BillingOptions = {
+  version?: string,
+  free?: boolean,
+  policies?: BillingPolicy[],
+  deactivationRoute?: string,
+  termsURL: string,
+}
+
+export type BillingPolicy = {
+  currency: string,
+  billing: BillingChargeElements,
+}
+
+export type BillingChargeElements = {
+  taxClassification: string,
+  items: CalculationItem[],
+}
+
+export type CalculationItem = {
+  itemCurrency: string,
+  fixed: number,
+  calculatedByMetricUnit: CalculatedByMetricUnit,
+}
+
+export type CalculatedByMetricUnit = {
+  metricId: string,
+  metricName: string,
+  ranges: Range[],
+  route: string,
+}
+
+export type Range = {
+  exclusiveFrom: number,
+  inclusiveTo?: number,
+  multiplier: number,
 }
