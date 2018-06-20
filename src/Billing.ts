@@ -1,7 +1,7 @@
 import { HttpClient, InstanceOptions, IOContext } from './HttpClient'
 
 const routes = {
-  contractStatus: '/_v/contract-status',
+  contractStatus: '/_v/contractStatus',
 }
 
 export class Billing {
