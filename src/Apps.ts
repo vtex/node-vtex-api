@@ -53,8 +53,8 @@ export class Apps {
     this.http = HttpClient.forWorkspace('apps', ioContext, opts)
   }
 
-  installApp = (descriptor: string, registry: string) => {
-    return this.http.post(routes.Apps, {id: descriptor, registry})
+  installApp = (descriptor: string) => {
+    return this.http.post(routes.Apps, {id: descriptor})
   }
 
   uninstallApp = (app: string) => {
