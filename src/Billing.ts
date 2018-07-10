@@ -1,4 +1,5 @@
 import { HttpClient, InstanceOptions, IOContext } from './HttpClient'
+import { BillingOptions } from './responses'
 
 const routes = {
   contractStatus: '/_v/contractStatus',
@@ -32,48 +33,4 @@ export type ValidationError = {
     message: string
     name: string,
   },
-}
-
-export interface BillingOptions {
-  free?: boolean
-  policies?: Policy[]
-  termsURL: string
-  support: Support
-}
-
-export interface Support {
-  email?: string
-  url?: string
-}
-
-export interface Policy {
-  plan: string
-  currency: string
-  billing: Billing
-}
-
-export interface Billing {
-  taxClassification: string
-  invoiceProvider: string
-  items: CalculationItem[]
-}
-
-export interface CalculationItem {
-  itemCurrency: string
-  fixed: number
-  calculatedByMetricUnit: CalculatedByMetricUnit
-}
-
-export interface CalculatedByMetricUnit {
-  metricId: string
-  metricName: string
-  minChargeValue: number
-  ranges: Range[]
-  route: string
-}
-
-export interface Range {
-  exclusiveFrom: number
-  inclusiveTo: number
-  multiplier: number
 }

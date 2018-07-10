@@ -42,11 +42,10 @@ export type BucketMetadata = {
 }
 
 export type BillingOptions = {
-  version?: string,
-  free?: boolean,
-  policies?: BillingPolicy[],
-  deactivationRoute?: string,
-  termsURL: string,
+  free?: boolean
+  policies?: BillingPolicy[]
+  termsURL: string
+  support: Support
 }
 
 export type BillingPolicy = {
@@ -61,19 +60,25 @@ export type BillingChargeElements = {
 
 export type CalculationItem = {
   itemCurrency: string,
-  fixed: number,
-  calculatedByMetricUnit: CalculatedByMetricUnit,
+  fixed?: number,
+  calculatedByMetricUnit?: CalculatedByMetricUnit,
 }
 
 export type CalculatedByMetricUnit = {
-  metricId: string,
-  metricName: string,
-  ranges: Range[],
-  route: string,
+  metricId: string
+  metricName: string
+  minChargeValue?: number
+  ranges: Range[]
+  route: string
 }
 
 export type Range = {
   exclusiveFrom: number,
   inclusiveTo?: number,
   multiplier: number,
+}
+
+export type Support {
+  email?: string
+  url?: string
 }
