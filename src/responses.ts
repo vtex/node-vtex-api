@@ -78,7 +78,7 @@ export type Range = {
   multiplier: number,
 }
 
-export type Support {
+export type Support = {
   email?: string
   url?: string
 }
