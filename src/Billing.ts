@@ -17,7 +17,7 @@ export class Billing {
     return this.http.get<ContractStatus>(routes.contractStatus)
   }
 
-  validateBillingOptions = async (billingOptions: BillingOptions) => {
+  validate = async (billingOptions: BillingOptions) => {
     return this.http.post<void | ValidationError>(routes.validate, billingOptions)
   }
 }
