@@ -6,7 +6,7 @@ import {IncomingMessage} from 'http'
 
 import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
 import {DEFAULT_WORKSPACE} from './constants'
-import {AppManifest, AppFilesList} from './responses'
+import {AppBundlePublished, AppManifest, AppFilesList} from './responses'
 
 const EMPTY_OBJECT = {}
 
@@ -36,7 +36,7 @@ export class Registry {
       throw new Error('No manifest.json file found in files.')
     }
     const zip = archiver('zip')
-    const request = this.http.post(routes.Publish, zip, {
+    const request = this.http.post<AppBundlePublished>(routes.Publish, zip, {
       params: tag ? {tag} : EMPTY_OBJECT,
       headers: {'Content-Type': 'application/zip'},
     })
@@ -45,6 +45,8 @@ export class Registry {
     const finalize = zip.finalize()
 
     const [response] = await Promise.all([request, finalize])
+    response.bundleSize = zip.pointer()
+
     return response
   }
 

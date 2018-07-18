@@ -77,3 +77,9 @@ export type Range = {
   inclusiveTo?: number,
   multiplier: number,
 }
+
+export type AppBundlePublished = {
+  message: string,
+  id: string,
+  bundleSize?: number,
+}
