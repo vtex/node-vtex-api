@@ -6,7 +6,7 @@ import {Readable, Writable} from 'stream'
 import {stringify} from 'qs'
 
 import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
-import {AppBundlePublished, AppManifest, AppFilesList} from './responses'
+import {AppBundleLinked, AppManifest, AppFilesList} from './responses'
 
 const routes = {
   Apps: '/apps',
@@ -80,7 +80,7 @@ export class Apps {
       throw new Error('No manifest.json file found in files.')
     }
     const zip = archiver('zip')
-    const request = this.http.put<AppBundlePublished>(routes.Link(app), zip, {
+    const request = this.http.put<AppBundleLinked>(routes.Link(app), zip, {
       headers: {'Content-Type': 'application/zip'},
     })
 

@@ -78,8 +78,16 @@ export type Range = {
   multiplier: number,
 }
 
-export type AppBundlePublished = {
+export type AppBundleResponse = {
   message: string,
   id: string,
+}
+
+export type AppBundlePublished = AppBundleResponse & {
   bundleSize?: number,
 }
+
+export type AppBundleLinked = AppBundleResponse & {
+  bundleSize?: number,
+}
+
