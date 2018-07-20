@@ -86,10 +86,16 @@ export class Apps {
 
     files.forEach(({content, path}) => zip.append(content, {name: path}))
     const finalize = zip.finalize()
+    const bundleSize = zip.pointer()
 
-    const [response] = await Promise.all([request, finalize])
-    response.bundleSize = zip.pointer()
-    return response
+    try {
+      const [response] = await Promise.all([request, finalize])
+      response.bundleSize = zip.pointer()
+      return response
+    } catch (e) {
+      e.bundleSize = bundleSize
+      throw e
+    }
   }
 
   patch = async (app: string, changes: Change[]) => {
