@@ -34,7 +34,7 @@ export class HttpClient {
   private constructor (opts: ClientOptions) {
     const {baseURL, authToken, authType, cacheStorage, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
 
-    const headers = authType === AuthType.outbound ? {
+    const headers = authType === AuthType.vtexIdclientAutCookie ? {
       'Proxy-Authorization': authToken,
       VtexIdclientAutCookie: authToken,
     } : {
@@ -67,14 +67,8 @@ export class HttpClient {
   }
 
   static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
-    const {authToken, userAgent, timeout, cacheStorage} = opts
-    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage})
-  }
-
-  static forOutbound (endpoint: string, context: IOContext, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent, recorder} = context
-    const {timeout, cacheStorage} = opts
-    return new HttpClient({baseURL: endpoint, authType: AuthType.outbound, authToken, userAgent, timeout, cacheStorage})
+    const {authToken, userAgent, timeout, cacheStorage, authType} = opts
+    return new HttpClient({baseURL: endpoint, authType, authToken, userAgent, timeout, cacheStorage})
   }
 
   get = <T = any>(url: string, config: AxiosRequestConfig = {}): Promise<T> => {
@@ -144,6 +138,7 @@ export type InstanceOptions = {
 
 export type LegacyInstanceOptions = {
   authToken: string,
+  authType: AuthType,
   userAgent: string,
   timeout?: number,
   accept?: string,
@@ -156,10 +151,10 @@ export interface IOResponse<T> {
   status: number
 }
 
-enum AuthType {
+export enum AuthType {
   bearer = 'bearer',
   token = 'token',
-  outbound = 'outbound',
+  vtexIdclientAutCookie = 'vtexIdclientAutCookie',
 }
 
 type ClientOptions = {
