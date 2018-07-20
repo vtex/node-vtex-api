@@ -77,3 +77,17 @@ export type Range = {
   inclusiveTo?: number,
   multiplier: number,
 }
+
+export type AppBundleResponse = {
+  message: string,
+  id: string,
+}
+
+export type AppBundlePublished = AppBundleResponse & {
+  bundleSize?: number,
+}
+
+export type AppBundleLinked = AppBundleResponse & {
+  bundleSize?: number,
+}
+
