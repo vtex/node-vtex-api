@@ -90,7 +90,7 @@ export class Apps {
 
     try {
       const [response] = await Promise.all([request, finalize])
-      response.bundleSize = zip.pointer()
+      response.bundleSize = bundleSize
       return response
     } catch (e) {
       e.bundleSize = bundleSize
