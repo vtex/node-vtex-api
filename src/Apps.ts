@@ -86,14 +86,13 @@ export class Apps {
 
     files.forEach(({content, path}) => zip.append(content, {name: path}))
     const finalize = zip.finalize()
-    const bundleSize = zip.pointer()
 
     try {
       const [response] = await Promise.all([request, finalize])
-      response.bundleSize = bundleSize
+      response.bundleSize = zip.pointer()
       return response
     } catch (e) {
-      e.bundleSize = bundleSize
+      e.bundleSize = zip.pointer()
       throw e
     }
   }
