@@ -65,7 +65,7 @@ export class HttpClient {
 
   static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
     const {timeout, cacheStorage, headers} = opts
-    return new HttpClient({baseURL: endpoint, timeout, cacheStorage})
+    return new HttpClient({baseURL: endpoint, timeout, cacheStorage, headers})
   }
 
   get = <T = any>(url: string, config: AxiosRequestConfig = {}): Promise<T> => {
