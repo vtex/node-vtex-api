@@ -1,4 +1,5 @@
-import {HttpClient, LegacyInstanceOptions} from './HttpClient'
+import {HttpClient} from './HttpClient'
+import {CacheStorage} from './HttpClient/cache'
 
 const routes = {
   START: '/start',
@@ -18,11 +19,19 @@ const endpoint = (env: string) => {
 
 export class ID {
   private http: HttpClient
-  private defaultHeaders: Record<string, string>
+  private headers: Record<string, string>
 
-  constructor (endpointUrl: string = 'STABLE', opts: LegacyInstanceOptions) {
-    this.defaultHeaders = opts.accept ? {accept: opts.accept} : {}
-    this.http = HttpClient.forLegacy(endpoint(endpointUrl), opts)
+  constructor (endpointUrl: string = 'STABLE', opts: IDInstanceOptions) {
+    const {accept, authToken, userAgent, timeout, cacheStorage} = opts
+
+    this.headers = opts.accept ? {accept: opts.accept} : {}
+    this.headers = {
+      ...this.headers,
+      Authorization: `token ${opts.authToken}`,
+      'User-Agent': opts.userAgent,
+    }
+
+    this.http = HttpClient.forLegacy(endpoint(endpointUrl), {headers: this.headers, timeout, cacheStorage})
   }
 
   getTemporaryToken = () => {
@@ -31,7 +40,7 @@ export class ID {
 
   sendCodeToEmail = (token: string, email: string) => {
     const params = {authenticationToken: token, email}
-    return this.http.get(routes.SEND, {params, headers: this.defaultHeaders})
+    return this.http.get(routes.SEND, { params })
   }
 
   getEmailCodeAuthenticationToken = (token: string, email: string, code: string) => {
@@ -40,7 +49,7 @@ export class ID {
       accesskey: code,
       authenticationToken: token,
     }
-    return this.http.get<AuthenticationResponse>(routes.VALIDATE, {params, headers: this.defaultHeaders})
+    return this.http.get<AuthenticationResponse>(routes.VALIDATE, { params })
   }
 
   getPasswordAuthenticationToken = (token: string, email: string, password: string) => {
@@ -49,7 +58,7 @@ export class ID {
       password,
       authenticationToken: token,
     }
-    return this.http.get<AuthenticationResponse>(routes.VALIDATE_CLASSIC, {params, headers: this.defaultHeaders})
+    return this.http.get<AuthenticationResponse>(routes.VALIDATE_CLASSIC, { params })
   }
 }
 
@@ -69,4 +78,12 @@ export type AuthenticationResponse = {
   userId: string,
   phoneNumber: string,
   scope: any,
+}
+
+export type IDInstanceOptions = {
+  authToken: string,
+  userAgent: string,
+  timeout?: number,
+  accept?: string,
+  cacheStorage?: CacheStorage,
 }

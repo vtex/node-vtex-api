@@ -32,10 +32,11 @@ export class HttpClient {
   private http: AxiosInstance
 
   private constructor (opts: ClientOptions) {
-    const {baseURL, authToken, authType, cacheStorage, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
-    const headers = {
-      Authorization: `${authType} ${authToken}`,
-      'User-Agent': userAgent,
+    const {baseURL, authToken, cacheStorage, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
+
+    const headers = opts.headers || {
+      Authorization: `bearer ${authToken}`,
+      'User-Agent': `${userAgent}`,
     }
 
     this.http = createInstance(baseURL, headers, timeout)
@@ -52,19 +53,19 @@ export class HttpClient {
     const {authToken, userAgent, recorder} = context
     const {timeout, cacheStorage} = opts
     const baseURL = workspaceURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
+    return new HttpClient({baseURL, authToken, userAgent, timeout, recorder, cacheStorage})
   }
 
   static forRoot (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
     const {authToken, userAgent, recorder} = context
     const {timeout, cacheStorage} = opts
     const baseURL = rootURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
+    return new HttpClient({baseURL, authToken, userAgent, timeout, recorder, cacheStorage})
   }
 
   static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
-    const {authToken, userAgent, timeout, cacheStorage} = opts
-    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage})
+    const {timeout, cacheStorage, headers} = opts
+    return new HttpClient({baseURL: endpoint, timeout, cacheStorage, headers})
   }
 
   get = <T = any>(url: string, config: AxiosRequestConfig = {}): Promise<T> => {
@@ -133,10 +134,8 @@ export type InstanceOptions = {
 }
 
 export type LegacyInstanceOptions = {
-  authToken: string,
-  userAgent: string,
+  headers: Record<string, string>,
   timeout?: number,
-  accept?: string,
   cacheStorage?: CacheStorage,
 }
 
@@ -146,16 +145,11 @@ export interface IOResponse<T> {
   status: number
 }
 
-enum AuthType {
-  bearer = 'bearer',
-  token = 'token',
-}
-
 type ClientOptions = {
-  authType: AuthType,
-  authToken: string,
-  userAgent: string
+  authToken?: string,
+  userAgent?: string,
   baseURL: string,
+  headers?: Record<string, string>,
   timeout?: number,
   recorder?: Recorder,
   cacheStorage?: CacheStorage,
