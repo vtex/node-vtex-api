@@ -3,6 +3,7 @@ import {createInstance} from './axios'
 import {addCacheInterceptors, CacheableRequestConfig, CacheStorage} from './cache'
 import {Recorder, addRecorderInterceptors} from './recorder'
 import {IncomingMessage} from 'http'
+import {addNotFoundInterceptors} from './notFound'
 
 const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
@@ -32,15 +33,24 @@ export class HttpClient {
   private http: AxiosInstance
 
   private constructor (opts: ClientOptions) {
-    const {baseURL, authToken, authType, cacheStorage, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
+    const {baseURL, authToken, authType, cacheStorage, recorder, userAgent, nullIfNotFound, timeout = DEFAULT_TIMEOUT_MS} = opts
     const headers = {
       Authorization: `${authType} ${authToken}`,
       'User-Agent': userAgent,
     }
 
-    this.http = createInstance(baseURL, headers, timeout)
+    const validateStatus = (status: number) =>
+      (status >= 200 && status < 300) ||
+      (status === 304) ||
+      (status === 404 && !!nullIfNotFound)
+
+    this.http = createInstance(baseURL, headers, timeout, validateStatus)
     if (recorder) {
       addRecorderInterceptors(this.http, recorder)
+    }
+
+    if (nullIfNotFound) {
+      addNotFoundInterceptors(this.http)
     }
 
     if (cacheStorage) {
@@ -50,16 +60,16 @@ export class HttpClient {
 
   static forWorkspace (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
     const {authToken, userAgent, recorder} = context
-    const {timeout, cacheStorage} = opts
+    const {timeout, cacheStorage, nullIfNotFound} = opts
     const baseURL = workspaceURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, nullIfNotFound})
   }
 
   static forRoot (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
     const {authToken, userAgent, recorder} = context
-    const {timeout, cacheStorage} = opts
+    const {timeout, cacheStorage, nullIfNotFound} = opts
     const baseURL = rootURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, nullIfNotFound})
   }
 
   static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
@@ -130,6 +140,7 @@ export type InstanceOptions = {
   timeout?: number,
   cacheStorage?: CacheStorage,
   endpoint?: string,
+  nullIfNotFound?: boolean,
 }
 
 export type LegacyInstanceOptions = {
@@ -159,4 +170,5 @@ type ClientOptions = {
   timeout?: number,
   recorder?: Recorder,
   cacheStorage?: CacheStorage,
+  nullIfNotFound?: boolean,
 }

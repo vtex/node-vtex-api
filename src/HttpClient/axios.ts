@@ -1,19 +1,16 @@
 import axios, {AxiosInstance} from 'axios'
 import * as retry from 'axios-retry'
 
-export const createInstance = (baseURL: string, headers: Record<string, string>, timeout: number): AxiosInstance => {
+export const createInstance = (baseURL: string, headers: Record<string, string>, timeout: number, validateStatus: (status: number) => boolean): AxiosInstance => {
   const http = axios.create({
     baseURL,
     headers,
     maxRedirects: 0, // Do not follow redirects
     timeout,
-    validateStatus: status => (status >= 200 && status < 300) || status === 304,
+    validateStatus,
   })
   retry(http)
   http.interceptors.response.use(response => response, (err: any) => {
-    if (err.response && err.response.config) {
-      const {url, method} = err.response.config
-    }
     try {
       delete err.response.request
       delete err.response.config
