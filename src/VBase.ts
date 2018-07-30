@@ -52,12 +52,21 @@ export class VBase {
     return this.http.getBuffer(routes.File(bucket, path))
   }
 
+  getJSON = <T>(bucket: string, path: string) => {
+    return this.http.get<T>(routes.File(bucket, path))
+  }
+
   getFileStream = (bucket: string, path: string): Promise<IncomingMessage> => {
     return this.http.getStream(routes.File(bucket, path))
   }
 
   saveFile = (bucket: string, path: string, stream: Readable, gzip: boolean = true, ttl?: number) => {
     return this.saveContent(bucket, path, stream, {gzip, ttl})
+  }
+
+  saveJSON = <T>(bucket: string, path: string, data: T) => {
+    const headers = {'Content-Type': 'application/json'}
+    return this.http.put(routes.File(bucket, path), data, {headers})
   }
 
   saveZippedContent = (bucket: string, path: string, stream: Readable) => {
