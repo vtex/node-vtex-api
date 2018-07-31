@@ -90,4 +90,3 @@ export type AppBundlePublished = AppBundleResponse & {
 export type AppBundleLinked = AppBundleResponse & {
   bundleSize?: number,
 }
-

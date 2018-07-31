@@ -3,6 +3,7 @@ import {createInstance} from './axios'
 import {addCacheInterceptors, CacheableRequestConfig, CacheStorage} from './cache'
 import {Recorder, addRecorderInterceptors} from './recorder'
 import {IncomingMessage} from 'http'
+import {addNotFoundRequestInterceptor, addNotFoundResponseInterceptor} from './notFound'
 
 const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
@@ -39,6 +40,9 @@ export class HttpClient {
     }
 
     this.http = createInstance(baseURL, headers, timeout)
+
+    addNotFoundResponseInterceptor(this.http)
+
     if (recorder) {
       addRecorderInterceptors(this.http, recorder)
     }
@@ -46,6 +50,8 @@ export class HttpClient {
     if (cacheStorage) {
       addCacheInterceptors(this.http, cacheStorage)
     }
+
+    addNotFoundRequestInterceptor(this.http)
   }
 
   static forWorkspace (service: string, context: IOContext, opts: InstanceOptions): HttpClient {

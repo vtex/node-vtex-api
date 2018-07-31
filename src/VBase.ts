@@ -6,6 +6,7 @@ import { IncomingMessage } from 'http'
 
 import { HttpClient, InstanceOptions, IOContext } from './HttpClient'
 import { BucketMetadata, FileListItem } from './responses'
+import { IgnoreNotFoundRequestConfig } from './HttpClient/notFound'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']
@@ -52,12 +53,21 @@ export class VBase {
     return this.http.getBuffer(routes.File(bucket, path))
   }
 
+  getJSON = <T>(bucket: string, path: string, nullIfNotFound?: boolean) => {
+    return this.http.get<T>(routes.File(bucket, path), {nullIfNotFound} as IgnoreNotFoundRequestConfig)
+  }
+
   getFileStream = (bucket: string, path: string): Promise<IncomingMessage> => {
     return this.http.getStream(routes.File(bucket, path))
   }
 
   saveFile = (bucket: string, path: string, stream: Readable, gzip: boolean = true, ttl?: number) => {
     return this.saveContent(bucket, path, stream, {gzip, ttl})
+  }
+
+  saveJSON = <T>(bucket: string, path: string, data: T) => {
+    const headers = {'Content-Type': 'application/json'}
+    return this.http.put(routes.File(bucket, path), data, {headers})
   }
 
   saveZippedContent = (bucket: string, path: string, stream: Readable) => {

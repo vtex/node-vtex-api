@@ -11,9 +11,6 @@ export const createInstance = (baseURL: string, headers: Record<string, string>,
   })
   retry(http)
   http.interceptors.response.use(response => response, (err: any) => {
-    if (err.response && err.response.config) {
-      const {url, method} = err.response.config
-    }
     try {
       delete err.response.request
       delete err.response.config
