@@ -1,13 +1,13 @@
 import axios, {AxiosInstance} from 'axios'
 import * as retry from 'axios-retry'
 
-export const createInstance = (baseURL: string, headers: Record<string, string>, timeout: number, validateStatus: (status: number) => boolean): AxiosInstance => {
+export const createInstance = (baseURL: string, headers: Record<string, string>, timeout: number): AxiosInstance => {
   const http = axios.create({
     baseURL,
     headers,
     maxRedirects: 0, // Do not follow redirects
     timeout,
-    validateStatus,
+    validateStatus: status => (status >= 200 && status < 300) || status === 304,
   })
   retry(http)
   http.interceptors.response.use(response => response, (err: any) => {

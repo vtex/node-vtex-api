@@ -3,11 +3,11 @@ import {URL, URLSearchParams} from 'url'
 
 const EMPTY = {etag: null, response: null}
 
-const successOrNotModified = (status: number): boolean =>
-  status >= 200 && status < 300 || status === 304
+const addNotModified = (validateStatus: (status: number) => boolean) =>
+  (status: number) => validateStatus(status) || status === 304
 
 function isCacheable (arg: any): arg is CacheableRequestConfig {
-  return arg.cacheable !== undefined
+  return arg && arg.cacheable
 }
 
 const cacheKey = (config: AxiosRequestConfig) => {
@@ -22,10 +22,11 @@ export const addCacheInterceptors = (http: AxiosInstance, cacheStorage: CacheSto
     if (isCacheable(config)) {
       const key = cacheKey(config)
       const {etag, response} = cacheStorage.get(key) || EMPTY
-      if (etag) {
+      const validateStatus = addNotModified(config.validateStatus!)
+      if (etag && validateStatus(response.status)) {
         config.headers['if-none-match'] = etag
         config.cached = response
-        config.validateStatus = successOrNotModified
+        config.validateStatus = validateStatus
       }
     }
 
@@ -36,14 +37,14 @@ export const addCacheInterceptors = (http: AxiosInstance, cacheStorage: CacheSto
     const {status, data, headers, config} = response
     if (isCacheable(config)) {
       if (status === 304) {
-        return config.cached
+        return {...config.cached, status: 304}
       }
 
       if (headers.etag) {
         const key = cacheKey(config)
         cacheStorage.set(key, {
           etag: headers.etag,
-          response: {data, headers, status: 304},
+          response: {data, headers, status},
         })
       }
     }

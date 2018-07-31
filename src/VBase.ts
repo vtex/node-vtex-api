@@ -6,6 +6,7 @@ import { IncomingMessage } from 'http'
 
 import { HttpClient, InstanceOptions, IOContext } from './HttpClient'
 import { BucketMetadata, FileListItem } from './responses'
+import { IgnoreNotFoundRequestConfig } from './HttpClient/notFound'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']
@@ -52,8 +53,8 @@ export class VBase {
     return this.http.getBuffer(routes.File(bucket, path))
   }
 
-  getJSON = <T>(bucket: string, path: string) => {
-    return this.http.get<T>(routes.File(bucket, path))
+  getJSON = async <T> (bucket: string, path: string, nullIfNotFound?: boolean) => {
+    return await this.http.get<T>(routes.File(bucket, path), {nullIfNotFound} as IgnoreNotFoundRequestConfig)
   }
 
   getFileStream = (bucket: string, path: string): Promise<IncomingMessage> => {
