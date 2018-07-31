@@ -53,8 +53,8 @@ export class VBase {
     return this.http.getBuffer(routes.File(bucket, path))
   }
 
-  getJSON = async <T> (bucket: string, path: string, nullIfNotFound?: boolean) => {
-    return await this.http.get<T>(routes.File(bucket, path), {nullIfNotFound} as IgnoreNotFoundRequestConfig)
+  getJSON = <T>(bucket: string, path: string, nullIfNotFound?: boolean) => {
+    return this.http.get<T>(routes.File(bucket, path), {nullIfNotFound} as IgnoreNotFoundRequestConfig)
   }
 
   getFileStream = (bucket: string, path: string): Promise<IncomingMessage> => {
