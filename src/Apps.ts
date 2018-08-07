@@ -125,6 +125,10 @@ export class Apps {
     return this.http.delete(routes.Unlink(app))
   }
 
+  unlinkAll = () => {
+    return this.http.delete(routes.Links)
+  }
+
   saveAppSettings = (app: string, settings: any) => {
     const headers = {'Content-Type': 'application/json'}
     return this.http.put(routes.Settings(app), settings, {headers})
