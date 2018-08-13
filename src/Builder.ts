@@ -3,6 +3,7 @@ import * as archiver from 'archiver'
 import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
 import {File} from './Registry'
 import {Change} from './Apps'
+import {ZlibOptions} from 'zlib'
 
 const EMPTY_OBJECT = {}
 
@@ -30,8 +31,8 @@ export class Builder {
     return this.zipAndSend(routes.Publish(app), app, files, {tag})
   }
 
-  public linkApp = (app: string, files: File[], stickyHint?: string) => {
-    return this.zipAndSend(routes.Link(app), app, files, {sticky: true, stickyHint})
+  public linkApp = (app: string, files: File[], zipOptions: zipOptions = {sticky: true}) => {
+    return this.zipAndSend(routes.Link(app), app, files, zipOptions)
   }
 
   public relinkApp = (app: string, changes: Change[]) => {
@@ -50,7 +51,7 @@ export class Builder {
     return this.http.post<BuildResult>(routes.Clean(app), {headers})
   }
 
-  private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky, stickyHint}: zipOptions = {}) => {
+  private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky, stickyHint, zlib}: zipOptions = {}) => {
     if (!(files[0] && files[0].path && files[0].content)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -58,7 +59,7 @@ export class Builder {
     if (indexOfManifest === -1) {
       throw new Error('No manifest.json file found in files.')
     }
-    const zip = archiver('zip')
+    const zip = archiver('zip', {zlib})
     const hint = stickyHint || `request:${this.account}:${this.workspace}:${app}`
     const request = this.http.postRaw<BuildResult>(route, zip, {
       params: tag ? {tag} : EMPTY_OBJECT,
@@ -82,6 +83,7 @@ type zipOptions = {
   sticky?: boolean,
   stickyHint?: string,
   tag?: string,
+  zlib?: ZlibOptions,
 }
 
 export type BuildResult = {
