@@ -30,8 +30,8 @@ export class Builder {
     return this.zipAndSend(routes.Publish(app), app, files, {tag})
   }
 
-  public linkApp = (app: string, files: File[]) => {
-    return this.zipAndSend(routes.Link(app), app, files, {sticky: true})
+  public linkApp = (app: string, files: File[], stickyHint?: string) => {
+    return this.zipAndSend(routes.Link(app), app, files, {sticky: true, stickyHint})
   }
 
   public relinkApp = (app: string, changes: Change[]) => {
@@ -50,7 +50,7 @@ export class Builder {
     return this.http.post<BuildResult>(routes.Clean(app), {headers})
   }
 
-  private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky}: zipOptions = {}) => {
+  private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky, stickyHint}: zipOptions = {}) => {
     if (!(files[0] && files[0].path && files[0].content)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -59,12 +59,12 @@ export class Builder {
       throw new Error('No manifest.json file found in files.')
     }
     const zip = archiver('zip')
-    const stickyHint = `request:${this.account}:${this.workspace}:${app}`
+    const hint = stickyHint || `request:${this.account}:${this.workspace}:${app}`
     const request = this.http.postRaw<BuildResult>(route, zip, {
       params: tag ? {tag} : EMPTY_OBJECT,
       headers: {
         'Content-Type': 'application/octet-stream',
-        ...sticky && {'x-vtex-sticky-host': this.stickyHost || stickyHint},
+        ...sticky && {'x-vtex-sticky-host': this.stickyHost || hint},
       },
     })
 
@@ -80,6 +80,7 @@ export class Builder {
 
 type zipOptions = {
   sticky?: boolean,
+  stickyHint?: string,
   tag?: string,
 }
 
