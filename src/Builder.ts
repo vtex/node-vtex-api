@@ -60,6 +60,10 @@ export class Builder {
       throw new Error('No manifest.json file found in files.')
     }
     const zip = archiver('zip', {zlib})
+    // Throw stream errors so they reject the promise chain.
+    zip.on('error', (e) => {
+      throw e
+    })
     const hint = stickyHint || `request:${this.account}:${this.workspace}:${app}`
     const request = this.http.postRaw<BuildResult>(route, zip, {
       params: tag ? {tag} : EMPTY_OBJECT,
