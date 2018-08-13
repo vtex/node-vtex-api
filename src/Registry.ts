@@ -36,6 +36,10 @@ export class Registry {
       throw new Error('No manifest.json file found in files.')
     }
     const zip = archiver('zip', {zlib})
+    // Throw stream errors so they reject the promise chain.
+    zip.on('error', (e) => {
+      throw e
+    })
     const request = this.http.post<AppBundlePublished>(routes.Publish, zip, {
       params: tag ? {tag} : EMPTY_OBJECT,
       headers: {'Content-Type': 'application/zip'},

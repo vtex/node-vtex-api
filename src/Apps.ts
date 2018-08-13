@@ -80,6 +80,10 @@ export class Apps {
       throw new Error('No manifest.json file found in files.')
     }
     const zip = archiver('zip', {zlib})
+    // Throw stream errors so they reject the promise chain.
+    zip.on('error', (e) => {
+      throw e
+    })
     const request = this.http.put<AppBundleLinked>(routes.Link(app), zip, {
       headers: {'Content-Type': 'application/zip'},
     })
@@ -109,6 +113,10 @@ export class Apps {
       .join(':')
 
     const zip = archiver('zip', {zlib})
+    // Throw stream errors so they reject the promise chain.
+    zip.on('error', (e) => {
+      throw e
+    })
     const request = this.http.patch(routes.Link(app), zip, {
       headers: {'Content-Type': 'application/zip'},
       params: {deletedFiles},
