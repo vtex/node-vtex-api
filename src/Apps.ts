@@ -1,6 +1,6 @@
 import * as archiver from 'archiver'
 import {extract} from 'tar-fs'
-import {createGunzip} from 'zlib'
+import {createGunzip, ZlibOptions} from 'zlib'
 import {IncomingMessage} from 'http'
 import {Readable, Writable} from 'stream'
 import {stringify} from 'qs'
@@ -65,7 +65,7 @@ export class Apps {
     return this.http.put(routes.Acknowledge(app, service))
   }
 
-  link = async (app: string, files: Change[]) => {
+  link = async (app: string, files: Change[], {zlib}: zipOptions = {}) => {
     if (!(files[0] && files[0].path)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -79,7 +79,11 @@ export class Apps {
     if (indexOfManifest === -1) {
       throw new Error('No manifest.json file found in files.')
     }
-    const zip = archiver('zip')
+    const zip = archiver('zip', {zlib})
+    // Throw stream errors so they reject the promise chain.
+    zip.on('error', (e) => {
+      throw e
+    })
     const request = this.http.put<AppBundleLinked>(routes.Link(app), zip, {
       headers: {'Content-Type': 'application/zip'},
     })
@@ -97,7 +101,7 @@ export class Apps {
     }
   }
 
-  patch = async (app: string, changes: Change[]) => {
+  patch = async (app: string, changes: Change[], {zlib}: zipOptions = {}) => {
     if (!(changes[0] && changes[0].path)) {
       throw new Error('Argument changes must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -108,7 +112,11 @@ export class Apps {
       .map(change => change.path)
       .join(':')
 
-    const zip = archiver('zip')
+    const zip = archiver('zip', {zlib})
+    // Throw stream errors so they reject the promise chain.
+    zip.on('error', (e) => {
+      throw e
+    })
     const request = this.http.patch(routes.Link(app), zip, {
       headers: {'Content-Type': 'application/zip'},
       params: {deletedFiles},
@@ -222,6 +230,10 @@ export class Apps {
     const params = {apps, registries, filter}
     return this.http.get(routes.ResolveDependencies, {params, paramsSerializer})
   }
+}
+
+type zipOptions = {
+  zlib?: ZlibOptions,
 }
 
 export type AppsListItem = {

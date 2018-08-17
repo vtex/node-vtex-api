@@ -1,6 +1,6 @@
 import * as archiver from 'archiver'
 import {extract} from 'tar-fs'
-import {createGunzip} from 'zlib'
+import {createGunzip, ZlibOptions} from 'zlib'
 import {Readable, Writable} from 'stream'
 import {IncomingMessage} from 'http'
 
@@ -27,7 +27,7 @@ export class Registry {
     this.http = HttpClient.forWorkspace('apps', {...ioContext, workspace: DEFAULT_WORKSPACE}, opts)
   }
 
-  publishApp = async (files: File[], tag?: string) => {
+  publishApp = async (files: File[], tag?: string, {zlib}: zipOptions = {}) => {
     if (!(files[0] && files[0].path && files[0].content)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -35,7 +35,11 @@ export class Registry {
     if (indexOfManifest === -1) {
       throw new Error('No manifest.json file found in files.')
     }
-    const zip = archiver('zip')
+    const zip = archiver('zip', {zlib})
+    // Throw stream errors so they reject the promise chain.
+    zip.on('error', (e) => {
+      throw e
+    })
     const request = this.http.post<AppBundlePublished>(routes.Publish, zip, {
       params: tag ? {tag} : EMPTY_OBJECT,
       headers: {'Content-Type': 'application/zip'},
@@ -100,6 +104,10 @@ export class Registry {
         .pipe(extract(unpackPath)),
       )
   }
+}
+
+type zipOptions = {
+  zlib?: ZlibOptions,
 }
 
 export type AppsManifestOptions = {
