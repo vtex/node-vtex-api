@@ -55,8 +55,8 @@ export class Builder {
     return this.zipAndSend(routes.Link(app), app, files, zipOptions)
   }
 
-  public publishApp = (app: string, files: File[], tag?: string) => {
-    return this.zipAndSend(routes.Publish(app), app, files, {tag})
+  public publishApp = (app: string, files: File[], zipOptions: zipOptions = {sticky: true}) => {
+    return this.zipAndSend(routes.Publish(app), app, files, zipOptions)
   }
 
   public relinkApp = (app: string, changes: Change[]) => {
