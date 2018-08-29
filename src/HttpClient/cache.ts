@@ -14,7 +14,9 @@ const cacheKey = (config: AxiosRequestConfig) => {
   const url = new URL(config.url!)
   const params = new URLSearchParams(config.params)
   url.search = params.toString()
-  return url.toString()
+  return config.baseURL
+    ? config.baseURL + url.toString()
+    : url.toString()
 }
 
 export const addCacheInterceptors = (http: AxiosInstance, cacheStorage: CacheStorage) => {
