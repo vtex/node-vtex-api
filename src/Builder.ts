@@ -8,10 +8,11 @@ import {ZlibOptions} from 'zlib'
 const EMPTY_OBJECT = {}
 
 const routes = {
+  Availability: (app: string) => `${routes.Builder}/availability/${app}`,
   Builder: '/_v/builder/0',
   Clean: (app: string) => `${routes.Builder}/clean/${app}`,
-  Publish: (app: string) => `${routes.Builder}/publish/${app}`,
   Link: (app: string) => `${routes.Builder}/link/${app}`,
+  Publish: (app: string) => `${routes.Builder}/publish/${app}`,
   Relink: (app: string) => `${routes.Builder}/relink/${app}`,
 }
 
@@ -27,20 +28,19 @@ export class Builder {
     this.workspace = ioContext.workspace
   }
 
-  public publishApp = (app: string, files: File[], tag?: string) => {
-    return this.zipAndSend(routes.Publish(app), app, files, {tag})
-  }
-
-  public linkApp = (app: string, files: File[], zipOptions: zipOptions = {sticky: true}) => {
-    return this.zipAndSend(routes.Link(app), app, files, zipOptions)
-  }
-
-  public relinkApp = (app: string, changes: Change[]) => {
+  public availability = async (app: string, hintIndex: number) => {
+    const stickyHint = hintIndex === undefined || hintIndex === null ?
+      `request:${this.account}:${this.workspace}:${app}` :
+      `request:${this.account}:${this.workspace}:${app}:${hintIndex}`
     const headers = {
       'Content-Type': 'application/json',
-      ...this.stickyHost && {'x-vtex-sticky-host': this.stickyHost},
+      'x-vtex-sticky-host': stickyHint,
     }
-    return this.http.put<BuildResult>(routes.Relink(app), changes, {headers})
+    const {data: {availability},
+           headers: {'x-vtex-sticky-host': host},
+          } = await this.http.getRaw(routes.Availability(app), {headers})
+    const {hostname, score} = availability as AvailabilityResponse
+    return {host, hostname, score}
   }
 
   public clean = (app: string) => {
@@ -49,6 +49,22 @@ export class Builder {
       ...this.stickyHost && {'x-vtex-sticky-host': this.stickyHost},
     }
     return this.http.post<BuildResult>(routes.Clean(app), {headers})
+  }
+
+  public linkApp = (app: string, files: File[], zipOptions: zipOptions = {sticky: true}) => {
+    return this.zipAndSend(routes.Link(app), app, files, zipOptions)
+  }
+
+  public publishApp = (app: string, files: File[], zipOptions: zipOptions = {sticky: true}) => {
+    return this.zipAndSend(routes.Publish(app), app, files, zipOptions)
+  }
+
+  public relinkApp = (app: string, changes: Change[]) => {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...this.stickyHost && {'x-vtex-sticky-host': this.stickyHost},
+    }
+    return this.http.put<BuildResult>(routes.Relink(app), changes, {headers})
   }
 
   private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky, stickyHint, zlib}: zipOptions = {}) => {
@@ -91,7 +107,14 @@ type zipOptions = {
 }
 
 export type BuildResult = {
+  availability?: AvailabilityResponse
   code?: string,
   message?: any,
   timeNano?: number,
+}
+
+export type AvailabilityResponse = {
+  host: string | undefined,
+  hostname: string | undefined,
+  score: number,
 }
