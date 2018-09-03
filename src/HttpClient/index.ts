@@ -1,9 +1,11 @@
-import {AxiosInstance, AxiosRequestConfig} from 'axios'
-import {createInstance} from './axios'
-import {addCacheInterceptors, CacheableRequestConfig, CacheStorage} from './cache'
-import {Recorder, addRecorderInterceptors} from './recorder'
+import {AxiosRequestConfig, AxiosResponse} from 'axios'
+import {cacheMiddleware, CacheableRequestConfig, CacheStorage} from './middlewares/cache'
+import {Recorder, recorderMiddleware} from './middlewares/recorder'
 import {IncomingMessage} from 'http'
-import {addNotFoundRequestInterceptor, addNotFoundResponseInterceptor} from './notFound'
+import {notFoundFallbackMiddleware, acceptNotFoundMiddleware} from './middlewares/notFound'
+import {defaultsMiddleware, requestMiddleware} from './middlewares/request'
+import * as compose from 'koa-compose'
+import {MiddlewareContext} from './context'
 
 const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
@@ -30,7 +32,7 @@ const workspaceURL = (service: string, context: IOContext, opts: InstanceOptions
 }
 
 export class HttpClient {
-  private http: AxiosInstance
+  private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   private constructor (opts: ClientOptions) {
     const {baseURL, authToken, authType, cacheStorage, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
@@ -39,19 +41,14 @@ export class HttpClient {
       'User-Agent': userAgent,
     }
 
-    this.http = createInstance(baseURL, headers, timeout)
-
-    addNotFoundResponseInterceptor(this.http)
-
-    if (recorder) {
-      addRecorderInterceptors(this.http, recorder)
-    }
-
-    if (cacheStorage) {
-      addCacheInterceptors(this.http, cacheStorage)
-    }
-
-    addNotFoundRequestInterceptor(this.http)
+    this.runMiddlewares = compose([
+      defaultsMiddleware(baseURL, headers, timeout),
+      ...recorder ? [recorderMiddleware(recorder)] : [],
+      acceptNotFoundMiddleware,
+      ...cacheStorage ? [cacheMiddleware(cacheStorage)] : [],
+      notFoundFallbackMiddleware,
+      requestMiddleware,
+    ])
   }
 
   static forWorkspace (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
@@ -73,44 +70,55 @@ export class HttpClient {
     return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage})
   }
 
+  private request = async (config: AxiosRequestConfig): Promise<AxiosResponse> => {
+    const context: MiddlewareContext = {config}
+    await this.runMiddlewares(context)
+    return context.response!
+  }
+
   get = <T = any>(url: string, config: AxiosRequestConfig = {}): Promise<T> => {
-    const cacheableConfig = {...config, cacheable: true} as CacheableRequestConfig
-    return this.http.get(url, cacheableConfig).then(response => response.data as T)
+    const cacheableConfig = {...config, url, cacheable: true} as CacheableRequestConfig
+    return this.request(cacheableConfig).then(response => response.data as T)
   }
 
   getRaw = <T = any>(url: string, config: AxiosRequestConfig = {}): Promise<IOResponse<T>> => {
-    const cacheableConfig = {...config, cacheable: true} as CacheableRequestConfig
-    return this.http.get(url, cacheableConfig) as Promise<IOResponse<T>>
+    const cacheableConfig = {...config, url, cacheable: true} as CacheableRequestConfig
+    return this.request(cacheableConfig) as Promise<IOResponse<T>>
   }
 
   getBuffer = (url: string, config: AxiosRequestConfig = {}): Promise<{data: Buffer, headers: any}> => {
-    const bufferConfig = {...config, responseType: 'arraybuffer', transformResponse: noTransforms}
-    return this.http.get(url, bufferConfig)
+    const bufferConfig = {...config, url, responseType: 'arraybuffer', transformResponse: noTransforms}
+    return this.request(bufferConfig)
   }
 
   getStream = (url: string, config: AxiosRequestConfig = {}): Promise<IncomingMessage> => {
-    const streamConfig = {...config, responseType: 'stream', transformResponse: noTransforms}
-    return this.http.get(url, streamConfig).then(response => response.data as IncomingMessage)
+    const streamConfig = {...config, url, responseType: 'stream', transformResponse: noTransforms}
+    return this.request(streamConfig).then(response => response.data as IncomingMessage)
   }
 
-  put = <T = void>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
-    return this.http.put(url, data, config).then(response => response.data as T)
+  put = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
+    const putConfig: AxiosRequestConfig = {...config, url, data, method: 'put'}
+    return this.request(putConfig).then(response => response.data as T)
   }
 
-  post = <T = void>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
-    return this.http.post(url, data, config).then(response => response.data as T)
+  post = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
+    const postConfig: AxiosRequestConfig = {...config, url, data, method: 'post'}
+    return this.request(postConfig).then(response => response.data as T)
   }
 
-  postRaw = <T = void>(url: string, data?: any, config?: AxiosRequestConfig): Promise<IOResponse<T>> => {
-    return this.http.post(url, data, config) as Promise<IOResponse<T>>
+  postRaw = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<IOResponse<T>> => {
+    const postConfig: AxiosRequestConfig = {...config, url, data, method: 'post'}
+    return this.request(postConfig) as Promise<IOResponse<T>>
   }
 
-  patch = <T = void>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> => {
-    return this.http.patch(url, data, config).then(response => response.data as T)
+  patch = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
+    const patchConfig: AxiosRequestConfig = {...config, url, data, method: 'patch'}
+    return this.request(patchConfig).then(response => response.data as T)
   }
 
   delete = (url: string, config?: AxiosRequestConfig): Promise<void> => {
-    return this.http.delete(url, config).then(() => {})
+    const deleteConfig: AxiosRequestConfig = {...config, url, method: 'delete'}
+    return this.request(deleteConfig).then(() => {})
   }
 }
 

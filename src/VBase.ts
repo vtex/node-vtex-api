@@ -6,7 +6,7 @@ import { IncomingMessage } from 'http'
 
 import { HttpClient, InstanceOptions, IOContext } from './HttpClient'
 import { BucketMetadata, FileListItem } from './responses'
-import { IgnoreNotFoundRequestConfig } from './HttpClient/notFound'
+import { IgnoreNotFoundRequestConfig } from './HttpClient/middlewares/notFound'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']
