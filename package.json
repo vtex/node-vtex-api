@@ -26,6 +26,7 @@
     "archiver": "^2.1.0",
     "axios": "^0.16.0",
     "axios-retry": "^1.2.0",
+    "koa-compose": "^4.1.0",
     "mime-types": "^2.1.12",
     "multipart-stream": "^2.0.1",
     "qs": "^6.5.1",
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "@types/archiver": "^2.0.1",
+    "@types/koa-compose": "^3.2.2",
     "@types/mime-types": "^2.1.0",
     "@types/node": "^8.0.14",
     "@types/qs": "^6.5.1",
