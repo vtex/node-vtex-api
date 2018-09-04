@@ -11,14 +11,17 @@ const cacheKey = (config: AxiosRequestConfig) => {
   return urlObject.toString()
 }
 
-const parseCacheControl = (headers: Record<string, string>) => {
-  const {'cache-control': cacheControl = ''} = headers
+const parseCacheHeaders = (headers: Record<string, string>) => {
+  const {'cache-control': cacheControl = '', etag, age: ageStr} = headers
   const cacheDirectives = cacheControl.split(',').map(d => d.trim())
   const maxAgeDirective = cacheDirectives.find(d => d.startsWith('max-age'))
   const [, maxAgeStr] = maxAgeDirective ? maxAgeDirective.split('=') : [null, null]
   const maxAge = maxAgeStr ? parseInt(maxAgeStr, 10) : 0
+  const age = ageStr ? parseInt(ageStr, 10) : 0
 
   return {
+    age,
+    etag,
     maxAge,
     noCache: cacheDirectives.indexOf('no-cache') !== -1,
     noStore: cacheDirectives.indexOf('no-store') !== -1,
@@ -68,8 +71,7 @@ export const cacheMiddleware = (cacheStorage: CacheStorage) => {
     }
 
     const {headers} = response
-    const {etag} = headers
-    const {maxAge, noStore} = parseCacheControl(headers)
+    const {age, etag, maxAge, noStore} = parseCacheHeaders(headers)
     if (noStore && !etag) {
       return
     }
@@ -79,7 +81,7 @@ export const cacheMiddleware = (cacheStorage: CacheStorage) => {
       cacheStorage.set(key, {
         etag,
         response: {data, headers, status},
-        expiration: Date.now() + 1000 * maxAge,
+        expiration: Date.now() + (maxAge - age) * 1000,
       })
       return
     }
