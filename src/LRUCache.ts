@@ -16,7 +16,7 @@ export class LRUCache <K, V> {
     })
   }
 
-  public get = (key: K): V | undefined => {
+  public get = (key: K): V | void => {
     const value = this.storage.get(key)
     if (this.storage.has(key)) {
       this.hits += 1
