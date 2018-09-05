@@ -14,6 +14,7 @@ The clients currently available  in this library are:
 - [Router](https://github.com/vtex/node-vtex-api/blob/master/src/Router.ts)
 - [Workspaces](https://github.com/vtex/node-vtex-api/blob/master/src/Workspaces.ts)
 - [ID](https://github.com/vtex/node-vtex-api/blob/master/src/ID.ts)
+- [LRUCache](https://github.com/vtex/node-vtex-api/blob/master/src/LRUCache.ts)
 
 Usage:
 
