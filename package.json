@@ -30,7 +30,6 @@
     "mime-types": "^2.1.12",
     "multipart-stream": "^2.0.1",
     "qs": "^6.5.1",
-    "ramda": "^0.25.0",
     "tar-fs": "^1.15.3"
   },
   "devDependencies": {
@@ -39,7 +38,6 @@
     "@types/mime-types": "^2.1.0",
     "@types/node": "^8.0.14",
     "@types/qs": "^6.5.1",
-    "@types/ramda": "^0.25.37",
     "npm-run-all": "^2.3.0",
     "rimraf": "^2.5.2",
     "tslint": "^4.0.0",

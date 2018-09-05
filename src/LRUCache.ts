@@ -1,5 +1,4 @@
 import * as LRU from 'lru-cache'
-import { isNil, reject } from 'ramda'
 
 export class LRUCache <K, V> {
   private storage: LRU.Cache<K, V>
@@ -42,6 +41,6 @@ export class LRUCache <K, V> {
     this.hits = 0
     this.total = 0
     this.disposed = 0
-    return reject(isNil, stats)
+    return stats
   }
 }
