@@ -21,7 +21,7 @@ export const notFoundFallbackMiddleware = async (ctx: MiddlewareContext, next: (
   await next()
 
   const {config} = ctx
-  if (nullIfNotFound(config) && ctx.response) {
+  if (nullIfNotFound(config) && ctx.response && ctx.response.status === 404) {
     ctx.response.data = null
   }
 }
