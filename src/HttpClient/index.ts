@@ -1,11 +1,12 @@
 import {AxiosRequestConfig, AxiosResponse} from 'axios'
+import * as compose from 'koa-compose'
+import {IncomingMessage} from 'http'
+
+import {MiddlewareContext} from './context'
 import {cacheMiddleware, CacheableRequestConfig, CacheStorage} from './middlewares/cache'
 import {Recorder, recorderMiddleware} from './middlewares/recorder'
-import {IncomingMessage} from 'http'
 import {notFoundFallbackMiddleware, acceptNotFoundMiddleware} from './middlewares/notFound'
 import {defaultsMiddleware, requestMiddleware} from './middlewares/request'
-import * as compose from 'koa-compose'
-import {MiddlewareContext} from './context'
 
 const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
