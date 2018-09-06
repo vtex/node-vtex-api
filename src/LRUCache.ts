@@ -31,8 +31,9 @@ export class LRUCache <K, V> {
 
   public getStats = () => {
     const stats = {
-      count: this.storage.itemCount,
-      disposed: this.disposed,
+      itemCount: this.storage.itemCount,
+      length: this.storage.length,
+      disposedItems: this.disposed,
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
       hits: this.hits,
       max: this.storage.max,
