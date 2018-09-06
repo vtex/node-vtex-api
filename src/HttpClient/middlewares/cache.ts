@@ -60,28 +60,27 @@ export const cacheMiddleware = (cacheStorage: CacheStorage) => {
 
     await next()
 
-    const {response} = ctx
-    if (!response) {
+    if (!ctx.response) {
       return
     }
 
-    if (response.status === 304) {
-      ctx.response = {...cached!.response, status: 304}
-      return
+    const revalidated = ctx.response.status === 304
+    if (revalidated) {
+      ctx.response = cached!.response
     }
 
-    const {headers} = response
+    const {data, headers, status} = ctx.response
     const {age, etag, maxAge, noStore} = parseCacheHeaders(headers)
     if (noStore && !etag) {
       return
     }
 
     if (maxAge || etag) {
-      const {status, data} = response
+      const currentAge = revalidated ? 0 : age
       cacheStorage.set(key, {
         etag,
         response: {data, headers, status},
-        expiration: Date.now() + (maxAge - age) * 1000,
+        expiration: Date.now() + (maxAge - currentAge) * 1000,
       })
       return
     }
