@@ -29,10 +29,11 @@ export class LRUCache <K, V> {
 
   public has = (key: K): boolean => this.storage.has(key)
 
-  public getStats = () => {
+  public getStats = (): Stats => {
     const stats = {
-      count: this.storage.itemCount,
-      disposed: this.disposed,
+      itemCount: this.storage.itemCount,
+      length: this.storage.length,
+      disposedItems: this.disposed,
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
       hits: this.hits,
       max: this.storage.max,
@@ -43,4 +44,14 @@ export class LRUCache <K, V> {
     this.disposed = 0
     return stats
   }
+}
+
+export type Stats = {
+  itemCount: number,
+  length: number,
+  disposedItems: number,
+  hitRate: number | undefined,
+  hits: number,
+  max: number,
+  total: number,
 }
