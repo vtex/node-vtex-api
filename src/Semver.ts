@@ -51,7 +51,7 @@ export namespace Semver{
   // SemVer regex from https://github.com/sindresorhus/semver-regex
   const APP_ID_REGEX = /^[\w\-]+\.[\w\-]+@(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[\da-z\-]+(?:\.[\da-z\-]+)*)?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?$/
 
-  export const isValidLocator = (appId: string): boolean => {
+  export const isValidAppIdOrLocator = (appId: string): boolean => {
     return APP_ID_REGEX.test(appId)
   }
 
