@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "0.46.1",
+  "version": "0.47.0",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -32,14 +32,17 @@
     "mime-types": "^2.1.12",
     "multipart-stream": "^2.0.1",
     "qs": "^6.5.1",
+    "semver": "^5.5.1",
     "tar-fs": "^1.15.3"
   },
   "devDependencies": {
     "@types/archiver": "^2.0.1",
     "@types/koa-compose": "^3.2.2",
+    "@types/lru-cache": "^4.1.1",
     "@types/mime-types": "^2.1.0",
     "@types/node": "^8.0.14",
     "@types/qs": "^6.5.1",
+    "@types/semver": "^5.5.0",
     "npm-run-all": "^2.3.0",
     "rimraf": "^2.5.2",
     "tslint": "^4.0.0",
