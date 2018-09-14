@@ -15,7 +15,7 @@ The clients currently available  in this library are:
 - [Workspaces](https://github.com/vtex/node-vtex-api/blob/master/src/Workspaces.ts)
 - [ID](https://github.com/vtex/node-vtex-api/blob/master/src/ID.ts)
 - [LRUCache](https://github.com/vtex/node-vtex-api/blob/master/src/LRUCache.ts)
-- [Semver](https://github.com/vtex/node-vtex-api/blob/master/src/Semver.ts)
+- [AppId](https://github.com/vtex/node-vtex-api/blob/master/src/AppId.ts)
 
 Usage:
 

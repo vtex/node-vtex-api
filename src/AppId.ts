@@ -3,7 +3,7 @@ import * as semver from 'semver'
 // Note: The name that composes the part of the appId that precedes the
 // character '@' includes the name given to the app and the vendor name.
 
-export namespace Semver{
+export namespace AppId{
   export const removeBuild = (id: string): string => id.split('+')[0]
 
   export const removeVersionFromAppId = (appId: string): string => appId.split('@')[0]
