@@ -1,8 +1,16 @@
 import axios from 'axios'
-import {MiddlewareContext} from '../context'
 import * as retry from 'axios-retry'
+import {Agent} from 'http'
 
-const http = axios.create()
+import {MiddlewareContext} from '../context'
+
+const http = axios.create({
+  httpAgent: new Agent({
+    keepAlive: true,
+    maxFreeSockets: 50,
+  }),
+})
+
 retry(http)
 http.interceptors.response.use(response => response, (err: any) => {
   try {
