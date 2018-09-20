@@ -38,6 +38,7 @@ export class HttpClient {
   private constructor (opts: ClientOptions) {
     const {baseURL, authToken, authType, cacheStorage, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
     const headers = {
+      'Accept-Encoding': 'gzip',
       Authorization: `${authType} ${authToken}`,
       'User-Agent': userAgent,
     }
