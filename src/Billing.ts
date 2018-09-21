@@ -11,7 +11,7 @@ export class Billing {
     this.http = HttpClient.forWorkspace('billing.vtex', ioContext, opts)
   }
 
-  contractStatus = () => {
+  public contractStatus = () => {
     return this.http.get<ContractStatus>(routes.contractStatus)
   }
 }

@@ -1,11 +1,12 @@
 import {AxiosRequestConfig, AxiosResponse} from 'axios'
-import * as compose from 'koa-compose'
 import {IncomingMessage} from 'http'
+import {Context} from 'koa'
+import * as compose from 'koa-compose'
 
 import {MiddlewareContext} from './context'
-import {cacheMiddleware, CacheableRequestConfig, CacheStorage} from './middlewares/cache'
+import {CacheableRequestConfig, cacheMiddleware, CacheStorage} from './middlewares/cache'
+import {acceptNotFoundMiddleware, notFoundFallbackMiddleware} from './middlewares/notFound'
 import {Recorder, recorderMiddleware} from './middlewares/recorder'
-import {notFoundFallbackMiddleware, acceptNotFoundMiddleware} from './middlewares/notFound'
 import {defaultsMiddleware, requestMiddleware} from './middlewares/request'
 
 const DEFAULT_TIMEOUT_MS = 10000
@@ -33,6 +34,25 @@ const workspaceURL = (service: string, context: IOContext, opts: InstanceOptions
 }
 
 export class HttpClient {
+
+  public static forWorkspace (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
+    const {authToken, userAgent, recorder} = context
+    const {timeout, cacheStorage} = opts
+    const baseURL = workspaceURL(service, context, opts)
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
+  }
+
+  public static forRoot (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
+    const {authToken, userAgent, recorder} = context
+    const {timeout, cacheStorage} = opts
+    const baseURL = rootURL(service, context, opts)
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
+  }
+
+  public static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
+    const {authToken, userAgent, timeout, cacheStorage} = opts
+    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage})
+  }
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   private constructor (opts: ClientOptions) {
@@ -53,74 +73,55 @@ export class HttpClient {
     ])
   }
 
-  static forWorkspace (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent, recorder} = context
-    const {timeout, cacheStorage} = opts
-    const baseURL = workspaceURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
+  public get = <T = any>(url: string, config: AxiosRequestConfig = {}): Promise<T> => {
+    const cacheableConfig = {...config, url, cacheable: true} as CacheableRequestConfig
+    return this.request(cacheableConfig).then(response => response.data as T)
   }
 
-  static forRoot (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent, recorder} = context
-    const {timeout, cacheStorage} = opts
-    const baseURL = rootURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
+  public getRaw = <T = any>(url: string, config: AxiosRequestConfig = {}): Promise<IOResponse<T>> => {
+    const cacheableConfig = {...config, url, cacheable: true} as CacheableRequestConfig
+    return this.request(cacheableConfig) as Promise<IOResponse<T>>
   }
 
-  static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
-    const {authToken, userAgent, timeout, cacheStorage} = opts
-    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage})
+  public getBuffer = (url: string, config: AxiosRequestConfig = {}): Promise<{data: Buffer, headers: any}> => {
+    const bufferConfig = {...config, url, responseType: 'arraybuffer', transformResponse: noTransforms}
+    return this.request(bufferConfig)
+  }
+
+  public getStream = (url: string, config: AxiosRequestConfig = {}): Promise<IncomingMessage> => {
+    const streamConfig = {...config, url, responseType: 'stream', transformResponse: noTransforms}
+    return this.request(streamConfig).then(response => response.data as IncomingMessage)
+  }
+
+  public put = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
+    const putConfig: AxiosRequestConfig = {...config, url, data, method: 'put'}
+    return this.request(putConfig).then(response => response.data as T)
+  }
+
+  public post = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
+    const postConfig: AxiosRequestConfig = {...config, url, data, method: 'post'}
+    return this.request(postConfig).then(response => response.data as T)
+  }
+
+  public postRaw = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<IOResponse<T>> => {
+    const postConfig: AxiosRequestConfig = {...config, url, data, method: 'post'}
+    return this.request(postConfig) as Promise<IOResponse<T>>
+  }
+
+  public patch = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
+    const patchConfig: AxiosRequestConfig = {...config, url, data, method: 'patch'}
+    return this.request(patchConfig).then(response => response.data as T)
+  }
+
+  public delete = (url: string, config?: AxiosRequestConfig): Promise<void> => {
+    const deleteConfig: AxiosRequestConfig = {...config, url, method: 'delete'}
+    return this.request(deleteConfig).then(() => {})
   }
 
   private request = async (config: AxiosRequestConfig): Promise<AxiosResponse> => {
     const context: MiddlewareContext = {config}
     await this.runMiddlewares(context)
     return context.response!
-  }
-
-  get = <T = any>(url: string, config: AxiosRequestConfig = {}): Promise<T> => {
-    const cacheableConfig = {...config, url, cacheable: true} as CacheableRequestConfig
-    return this.request(cacheableConfig).then(response => response.data as T)
-  }
-
-  getRaw = <T = any>(url: string, config: AxiosRequestConfig = {}): Promise<IOResponse<T>> => {
-    const cacheableConfig = {...config, url, cacheable: true} as CacheableRequestConfig
-    return this.request(cacheableConfig) as Promise<IOResponse<T>>
-  }
-
-  getBuffer = (url: string, config: AxiosRequestConfig = {}): Promise<{data: Buffer, headers: any}> => {
-    const bufferConfig = {...config, url, responseType: 'arraybuffer', transformResponse: noTransforms}
-    return this.request(bufferConfig)
-  }
-
-  getStream = (url: string, config: AxiosRequestConfig = {}): Promise<IncomingMessage> => {
-    const streamConfig = {...config, url, responseType: 'stream', transformResponse: noTransforms}
-    return this.request(streamConfig).then(response => response.data as IncomingMessage)
-  }
-
-  put = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
-    const putConfig: AxiosRequestConfig = {...config, url, data, method: 'put'}
-    return this.request(putConfig).then(response => response.data as T)
-  }
-
-  post = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
-    const postConfig: AxiosRequestConfig = {...config, url, data, method: 'post'}
-    return this.request(postConfig).then(response => response.data as T)
-  }
-
-  postRaw = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<IOResponse<T>> => {
-    const postConfig: AxiosRequestConfig = {...config, url, data, method: 'post'}
-    return this.request(postConfig) as Promise<IOResponse<T>>
-  }
-
-  patch = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
-    const patchConfig: AxiosRequestConfig = {...config, url, data, method: 'patch'}
-    return this.request(patchConfig).then(response => response.data as T)
-  }
-
-  delete = (url: string, config?: AxiosRequestConfig): Promise<void> => {
-    const deleteConfig: AxiosRequestConfig = {...config, url, method: 'delete'}
-    return this.request(deleteConfig).then(() => {})
   }
 }
 
@@ -132,23 +133,34 @@ export type CacheStorage = CacheStorage
 
 export type Recorder = Recorder
 
-export type IOContext = {
-  authToken: string,
-  userAgent: string,
-  account: string,
-  workspace: string,
-  recorder?: Recorder,
-  region: string,
-  production: boolean,
+export interface ServiceContext extends Context {
+  vtex: IOContext
 }
 
-export type InstanceOptions = {
+export interface IOContext {
+  account: string,
+  authToken: string,
+  production: boolean,
+  recorder?: Recorder,
+  region: string,
+  route: {
+    declarer: string
+    id: string
+    params: {
+      [param: string]: string
+    }
+  }
+  userAgent: string,
+  workspace: string,
+}
+
+export interface InstanceOptions {
   timeout?: number,
   cacheStorage?: CacheStorage,
   endpoint?: string,
 }
 
-export type LegacyInstanceOptions = {
+export interface LegacyInstanceOptions {
   authToken: string,
   userAgent: string,
   timeout?: number,
@@ -167,7 +179,7 @@ enum AuthType {
   token = 'token',
 }
 
-type ClientOptions = {
+interface ClientOptions {
   authType: AuthType,
   authToken: string,
   userAgent: string

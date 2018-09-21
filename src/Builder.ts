@@ -1,9 +1,9 @@
 import * as archiver from 'archiver'
+import {ZlibOptions} from 'zlib'
 
+import {Change} from './Apps'
 import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
 import {File} from './Registry'
-import {Change} from './Apps'
-import {ZlibOptions} from 'zlib'
 
 const EMPTY_OBJECT = {}
 
@@ -51,11 +51,11 @@ export class Builder {
     return this.http.post<BuildResult>(routes.Clean(app), {headers})
   }
 
-  public linkApp = (app: string, files: File[], zipOptions: zipOptions = {sticky: true}) => {
+  public linkApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}) => {
     return this.zipAndSend(routes.Link(app), app, files, zipOptions)
   }
 
-  public publishApp = (app: string, files: File[], zipOptions: zipOptions = {sticky: true}) => {
+  public publishApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}) => {
     return this.zipAndSend(routes.Publish(app), app, files, zipOptions)
   }
 
@@ -67,7 +67,7 @@ export class Builder {
     return this.http.put<BuildResult>(routes.Relink(app), changes, {headers})
   }
 
-  private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky, stickyHint, zlib}: zipOptions = {}) => {
+  private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky, stickyHint, zlib}: ZipOptions = {}) => {
     if (!(files[0] && files[0].path && files[0].content)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -82,11 +82,11 @@ export class Builder {
     })
     const hint = stickyHint || `request:${this.account}:${this.workspace}:${app}`
     const request = this.http.postRaw<BuildResult>(route, zip, {
-      params: tag ? {tag} : EMPTY_OBJECT,
       headers: {
         'Content-Type': 'application/octet-stream',
         ...sticky && {'x-vtex-sticky-host': this.stickyHost || hint},
       },
+      params: tag ? {tag} : EMPTY_OBJECT,
     })
 
     files.forEach(({content, path}) => zip.append(content, {name: path}))
@@ -99,21 +99,21 @@ export class Builder {
   }
 }
 
-type zipOptions = {
+interface ZipOptions {
   sticky?: boolean,
   stickyHint?: string,
   tag?: string,
   zlib?: ZlibOptions,
 }
 
-export type BuildResult = {
+export interface BuildResult {
   availability?: AvailabilityResponse
   code?: string,
   message?: any,
   timeNano?: number,
 }
 
-export type AvailabilityResponse = {
+export interface AvailabilityResponse {
   host: string | undefined,
   hostname: string | undefined,
   score: number,

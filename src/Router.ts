@@ -1,12 +1,12 @@
 import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
 
 const routes = {
-  AvailableServices: '/_services',
   AvailableIoVersions: '/_io',
-  InstalledIoVersion: (account: string, workspace: string) => `/${account}/${workspace}/io`,
   AvailableServiceVersions: (service: string) => `${routes.AvailableServices}/${service}`,
-  InstalledServices: (account: string, workspace: string) => `/${account}/${workspace}/services`,
+  AvailableServices: '/_services',
+  InstalledIoVersion: (account: string, workspace: string) => `/${account}/${workspace}/io`,
   InstalledService: (account: string, workspace: string, name: string) => `/${routes.InstalledServices(account, workspace)}/services/${name}`,
+  InstalledServices: (account: string, workspace: string) => `/${account}/${workspace}/services`,
 }
 
 export class Router {
@@ -20,40 +20,40 @@ export class Router {
     this.http = HttpClient.forRoot('router', ioContext, opts)
   }
 
-  listAvailableIoVersions = () => {
+  public listAvailableIoVersions = () => {
     return this.http.get<AvaiableIO[]>(routes.AvailableIoVersions)
   }
 
-  getInstalledIoVersion = () => {
+  public getInstalledIoVersion = () => {
     if (!this.account || !this.workspace) {
       throw new Error('Missing client parameters: {account, workspace}')
     }
     return this.http.get<InstalledIO>(routes.InstalledIoVersion(this.account, this.workspace))
   }
 
-  installIo = (version: string) => {
+  public installIo = (version: string) => {
     if (!this.account || !this.workspace) {
       throw new Error('Missing client parameters: {account, workspace}')
     }
     return this.http.put(routes.InstalledIoVersion(this.account, this.workspace), {version})
   }
 
-  listAvailableServices = () => {
+  public listAvailableServices = () => {
     return this.http.get<AvailableServices>(routes.AvailableServices)
   }
 
-  getAvailableVersions = (name: string) => {
+  public getAvailableVersions = (name: string) => {
     return this.http.get<AvailableServiceVersions>(routes.AvailableServiceVersions(name))
   }
 
-  listInstalledServices = () => {
+  public listInstalledServices = () => {
     if (!this.account || !this.workspace) {
       throw new Error('Missing client parameters: {account, workspace}')
     }
     return this.http.get<InstalledService[]>(routes.InstalledServices(this.account, this.workspace))
   }
 
-  installService = (name: string, version: string) => {
+  public installService = (name: string, version: string) => {
     if (!this.account || !this.workspace) {
       throw new Error('Missing client parameters: {account, workspace}')
     }
@@ -61,7 +61,7 @@ export class Router {
   }
 }
 
-export type AvaiableIO = {
+export interface AvaiableIO {
   version: string,
   tested: boolean,
   services: {
@@ -71,17 +71,17 @@ export type AvaiableIO = {
 
 export type InstalledIO = AvaiableIO
 
-export type AvailableServiceVersions = {
+export interface AvailableServiceVersions {
   versions: {
     [region: string]: string[],
   },
 }
 
-export type AvailableServices = {
+export interface AvailableServices {
   [service: string]: AvailableServiceVersions,
 }
 
-export type InstalledService = {
+export interface InstalledService {
   name: string,
   version: string,
   serviceIsolation: number,

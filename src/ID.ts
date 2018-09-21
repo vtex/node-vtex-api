@@ -1,15 +1,15 @@
 import {HttpClient, LegacyInstanceOptions} from './HttpClient'
 
 const routes = {
-  START: '/start',
   SEND: '/accesskey/send',
+  START: '/start',
   VALIDATE: '/accesskey/validate',
   VALIDATE_CLASSIC: '/classic/validate',
 }
 
 const VTEXID_ENDPOINTS: Record<string, string> = {
-  STABLE: 'https://vtexid.vtex.com.br/api/vtexid/pub/authentication',
   BETA: 'https://vtexid.vtex.com.br/api/vtexid/pub/authentication',
+  STABLE: 'https://vtexid.vtex.com.br/api/vtexid/pub/authentication',
 }
 
 const endpoint = (env: string) => {
@@ -25,39 +25,39 @@ export class ID {
     this.http = HttpClient.forLegacy(endpoint(endpointUrl), opts)
   }
 
-  getTemporaryToken = () => {
+  public getTemporaryToken = () => {
     return this.http.get<TemporaryToken>(routes.START).then(({authenticationToken}) => authenticationToken)
   }
 
-  sendCodeToEmail = (token: string, email: string) => {
+  public sendCodeToEmail = (token: string, email: string) => {
     const params = {authenticationToken: token, email}
     return this.http.get(routes.SEND, {params, headers: this.defaultHeaders})
   }
 
-  getEmailCodeAuthenticationToken = (token: string, email: string, code: string) => {
+  public getEmailCodeAuthenticationToken = (token: string, email: string, code: string) => {
     const params = {
-      login: email,
       accesskey: code,
       authenticationToken: token,
+      login: email,
     }
     return this.http.get<AuthenticationResponse>(routes.VALIDATE, {params, headers: this.defaultHeaders})
   }
 
-  getPasswordAuthenticationToken = (token: string, email: string, password: string) => {
+  public getPasswordAuthenticationToken = (token: string, email: string, password: string) => {
     const params = {
+      authenticationToken: token,
       login: email,
       password,
-      authenticationToken: token,
     }
     return this.http.get<AuthenticationResponse>(routes.VALIDATE_CLASSIC, {params, headers: this.defaultHeaders})
   }
 }
 
-type TemporaryToken = {
+interface TemporaryToken {
   authenticationToken: string,
 }
 
-export type AuthenticationResponse = {
+export interface AuthenticationResponse {
   promptMFA: boolean,
   clientToken: any,
   authCookie: {

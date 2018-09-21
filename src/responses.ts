@@ -1,9 +1,9 @@
-export type Policy = {
+export interface Policy {
   name: string,
 }
 
-export type AppManifest = {
-  [_extra: string]: any // internal fields like _id, _link, _registry
+export interface AppManifest {
+  [internal: string]: any // internal fields like _id, _link, _registry
   vendor: string,
   name: string,
   version: string,
@@ -26,22 +26,22 @@ export type AppManifest = {
   },
 }
 
-export type FileListItem = {
+export interface FileListItem {
   path: string,
   hash: string,
 }
 
-export type AppFilesList = {
+export interface AppFilesList {
   data: FileListItem[],
 }
 
-export type BucketMetadata = {
+export interface BucketMetadata {
   state: string,
   lastModified: string,
   hash: string,
 }
 
-export type BillingOptions = {
+export interface BillingOptions {
   version?: string,
   free?: boolean,
   policies?: BillingPolicy[],
@@ -49,36 +49,36 @@ export type BillingOptions = {
   termsURL: string,
 }
 
-export type BillingPolicy = {
+export interface BillingPolicy {
   currency: string,
   billing: BillingChargeElements,
 }
 
-export type BillingChargeElements = {
+export interface BillingChargeElements {
   taxClassification: string,
   items: CalculationItem[],
 }
 
-export type CalculationItem = {
+export interface CalculationItem {
   itemCurrency: string,
   fixed: number,
   calculatedByMetricUnit: CalculatedByMetricUnit,
 }
 
-export type CalculatedByMetricUnit = {
+export interface CalculatedByMetricUnit {
   metricId: string,
   metricName: string,
   ranges: Range[],
   route: string,
 }
 
-export type Range = {
+export interface Range {
   exclusiveFrom: number,
   inclusiveTo?: number,
   multiplier: number,
 }
 
-export type AppBundleResponse = {
+export interface AppBundleResponse {
   message: string,
   id: string,
 }

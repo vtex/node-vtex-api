@@ -1,6 +1,6 @@
 import {AxiosRequestConfig, AxiosResponse} from 'axios'
 
-export type MiddlewareContext = {
+export interface MiddlewareContext {
   config: AxiosRequestConfig
   response?: AxiosResponse,
 }

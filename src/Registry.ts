@@ -1,23 +1,23 @@
 import * as archiver from 'archiver'
+import {IncomingMessage} from 'http'
+import {Readable, Writable} from 'stream'
 import {extract} from 'tar-fs'
 import {createGunzip, ZlibOptions} from 'zlib'
-import {Readable, Writable} from 'stream'
-import {IncomingMessage} from 'http'
 
-import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
 import {DEFAULT_WORKSPACE} from './constants'
-import {AppBundlePublished, AppManifest, AppFilesList} from './responses'
+import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
+import {AppBundlePublished, AppFilesList, AppManifest} from './responses'
 
 const EMPTY_OBJECT = {}
 
 const routes = {
-  Registry: '/registry',
-  Publish: '/v2/registry',
   App: (app: string) => `${routes.Registry}/${app}`,
-  AppVersion: (app: string, version: string) => `${routes.App(app)}/${version}`,
-  AppFiles: (app: string, version: string) => `${routes.AppVersion(app, version)}/files`,
-  AppFile: (app: string, version: string, path: string) => `${routes.AppFiles(app, version)}/${path}`,
   AppBundle: (app: string, version: string, path: string) => `${routes.AppVersion(app, version)}/bundle/${path}`,
+  AppFile: (app: string, version: string, path: string) => `${routes.AppFiles(app, version)}/${path}`,
+  AppFiles: (app: string, version: string) => `${routes.AppVersion(app, version)}/files`,
+  AppVersion: (app: string, version: string) => `${routes.App(app)}/${version}`,
+  Publish: '/v2/registry',
+  Registry: '/registry',
 }
 
 export class Registry {
@@ -27,7 +27,7 @@ export class Registry {
     this.http = HttpClient.forWorkspace('apps', {...ioContext, workspace: DEFAULT_WORKSPACE}, opts)
   }
 
-  publishApp = async (files: File[], tag?: string, {zlib}: zipOptions = {}) => {
+  public publishApp = async (files: File[], tag?: string, {zlib}: ZipOptions = {}) => {
     if (!(files[0] && files[0].path && files[0].content)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -41,8 +41,8 @@ export class Registry {
       throw e
     })
     const request = this.http.post<AppBundlePublished>(routes.Publish, zip, {
-      params: tag ? {tag} : EMPTY_OBJECT,
       headers: {'Content-Type': 'application/zip'},
+      params: tag ? {tag} : EMPTY_OBJECT,
     })
 
     files.forEach(({content, path}) => zip.append(content, {name: path}))
@@ -58,46 +58,46 @@ export class Registry {
     }
   }
 
-  listApps = () => {
+  public listApps = () => {
     return this.http.get<RegistryAppsList>(routes.Registry)
   }
 
-  listVersionsByApp = (app: string) => {
+  public listVersionsByApp = (app: string) => {
     return this.http.get<RegistryAppVersionsList>(routes.App(app))
   }
 
-  deprecateApp = (app: string, version: string) => {
+  public deprecateApp = (app: string, version: string) => {
     return this.http.patch(routes.AppVersion(app, version), {deprecated: true})
   }
 
-  getAppManifest = (app: string, version: string, opts?: AppsManifestOptions) => {
+  public getAppManifest = (app: string, version: string, opts?: AppsManifestOptions) => {
     return this.http.get<AppManifest>(routes.AppVersion(app, version), {params: opts})
   }
 
-  listAppFiles = (app: string, version: string, opts?: ListAppFilesOptions) => {
+  public listAppFiles = (app: string, version: string, opts?: ListAppFilesOptions) => {
     return this.http.get<AppFilesList>(routes.AppFiles(app, version), {params: opts})
   }
 
-  getAppFile = (app: string, version: string, path: string) => {
+  public getAppFile = (app: string, version: string, path: string) => {
     return this.http.getBuffer(routes.AppFile(app, version, path))
   }
 
-  getAppFileStream = (app: string, version: string, path: string): Promise<IncomingMessage> => {
+  public getAppFileStream = (app: string, version: string, path: string): Promise<IncomingMessage> => {
     return this.http.getStream(routes.AppFile(app, version, path))
   }
 
-  getAppBundle = (app: string, version: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
+  public getAppBundle = (app: string, version: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
     const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
     return this.http.getStream(routes.AppBundle(app, version, bundlePath), {
-      params,
       headers: {
         Accept: 'application/x-gzip',
         'Accept-Encoding': 'gzip',
       },
+      params,
     })
   }
 
-  unpackAppBundle = (app: string, version: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean): Promise<Writable> => {
+  public unpackAppBundle = (app: string, version: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean): Promise<Writable> => {
     return this.getAppBundle(app, version, bundlePath, generatePackageJson)
       .then(stream => stream
         .pipe(createGunzip())
@@ -106,37 +106,37 @@ export class Registry {
   }
 }
 
-type zipOptions = {
+interface ZipOptions {
   zlib?: ZlibOptions,
 }
 
-export type AppsManifestOptions = {
+export interface AppsManifestOptions {
   resolveDeps: boolean,
 }
 
-export type ListAppFilesOptions = {
+export interface ListAppFilesOptions {
   prefix: string,
 }
 
-export type RegistryAppsListItem = {
+export interface RegistryAppsListItem {
   partialIdentifier: string,
   location: string,
 }
 
-export type RegistryAppsList = {
+export interface RegistryAppsList {
   data: RegistryAppsListItem[],
 }
 
-export type RegistryAppVersionsListItem = {
+export interface RegistryAppVersionsListItem {
   versionIdentifier: string,
   location: string,
 }
 
-export type RegistryAppVersionsList = {
+export interface RegistryAppVersionsList {
   data: RegistryAppVersionsListItem[],
 }
 
-export type File = {
+export interface File {
   path: string,
   content: any,
 }

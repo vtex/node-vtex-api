@@ -31,11 +31,11 @@ export class LRUCache <K, V> {
 
   public getStats = (): Stats => {
     const stats = {
-      itemCount: this.storage.itemCount,
-      length: this.storage.length,
       disposedItems: this.disposed,
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
       hits: this.hits,
+      itemCount: this.storage.itemCount,
+      length: this.storage.length,
       max: this.storage.max,
       total: this.total,
     }
@@ -46,7 +46,7 @@ export class LRUCache <K, V> {
   }
 }
 
-export type Stats = {
+export interface Stats {
   itemCount: number,
   length: number,
   disposedItems: number,
