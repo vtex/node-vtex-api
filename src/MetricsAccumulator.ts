@@ -3,10 +3,6 @@ import {mean, median, percentile} from 'stats-lite'
 
 import {hrToMillis} from './Time'
 
-interface MetricsMap {
-  [name: string]: number[]
-}
-
 interface Metric {
   name: string
   [key: string]: number | boolean | string | undefined
@@ -56,9 +52,9 @@ const createMetricToAggregateReducer = (production: boolean) => (value: any, key
 
 export default class MetricsAccumulator {
   // Metrics from production workspaces
-  private metricsMillis: MetricsMap
+  private metricsMillis: Record<string, number[]>
   // Metrics from development workspaces
-  private devMetricsMillis: MetricsMap
+  private devMetricsMillis: Record<string, number[]>
   // Tracked cache instances
   private cacheMap: Record<string, GetStats>
 
