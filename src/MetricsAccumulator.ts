@@ -1,5 +1,5 @@
 import {flatten, map, mapObjIndexed, values} from 'ramda'
-import * as stats from 'stats-lite'
+import {mean, median, percentile} from 'stats-lite'
 
 import {hrToMillis} from './Time'
 
@@ -9,7 +9,7 @@ interface MetricsMap {
 
 interface Metric {
   name: string
-  [key: string]: any
+  [key: string]: number | boolean | string | undefined
 }
 
 interface AggregateMetric extends Metric {
@@ -39,29 +39,50 @@ function cpuUsage () {
   return diff
 }
 
-export default class MetricsAggregator {
+const createMetricToAggregateReducer = (production: boolean) => (value: any, key: string, obj: any): AggregateMetric => {
+  const aggregate: AggregateMetric = {
+    name: key,
+    count: value.length, // tslint:disable-line:object-literal-sort-keys
+    max: Math.max(...value),
+    mean: mean(value),
+    median: median(value),
+    percentile95: percentile(value, 0.95),
+    percentile99: percentile(value, 0.99),
+    production,
+  }
+  delete obj[key]
+  return aggregate
+}
+
+export default class MetricsAccumulator {
   // Metrics from production workspaces
   private metricsMillis: MetricsMap
   // Metrics from development workspaces
   private devMetricsMillis: MetricsMap
+  // Tracked cache instances
+  private cacheMap: Record<string, GetStats>
 
-  private onFlushMeters: Array<() => Metric | Metric[]>
+  private onFlushMetrics: Array<() => Metric | Metric[]>
+
+  private metricToAggregate = createMetricToAggregateReducer(true)
+  private devMetricToAggregate = createMetricToAggregateReducer(false)
 
   constructor() {
     this.metricsMillis = {}
     this.devMetricsMillis = {}
-    this.onFlushMeters = []
+    this.onFlushMetrics = []
+    this.cacheMap = {}
   }
 
   public batchHrTimeMetricFromEnd = (name: string, end: [number, number], production: boolean) => {
     this.batchMetric(name, hrToMillis(end), production)
   }
 
-  public batchHrTimeMetric = (name: string, start, production: boolean) => {
+  public batchHrTimeMetric = (name: string, start: [number, number], production: boolean) => {
     this.batchMetric(name, hrToMillis(process.hrtime(start)), production)
   }
 
-  public batchMetric = (name, timeMillis, production: boolean) => {
+  public batchMetric = (name: string, timeMillis: number, production: boolean) => {
     if (production) {
       if (!this.metricsMillis[name]) {
         this.metricsMillis[name] = []
@@ -75,37 +96,26 @@ export default class MetricsAggregator {
     }
   }
 
-  public addOnFlushMeter = (meter: () => Metric | Metric[]) => {
-    this.onFlushMeters.push(meter)
+  public addOnFlushMetric = (metricFn: () => Metric | Metric[]) => {
+    this.onFlushMetrics.push(metricFn)
+  }
+
+  public trackCache = (name: string, cacheInstance: GetStats) => {
+    this.cacheMap[name] = cacheInstance
   }
 
   public statusTrack = () => {
     return this.flushMetrics()
   }
 
-  private metricToAggregate = (production: boolean) => (value, key, obj): AggregateMetric => {
-    const aggregate: AggregateMetric = {
-      name: key,
-      count: value.length, // tslint:disable-line:object-literal-sort-keys
-      max: Math.max(...value),
-      mean: stats.mean(value),
-      median: stats.median(value),
-      percentile95: stats.percentile(value, 0.95),
-      percentile99: stats.percentile(value, 0.99),
-      production,
-    }
-    delete obj[key]
-    return aggregate
-  }
-
   private flushMetrics = (): Metric[] => {
     const aggregateMetrics: Metric[] = values(mapObjIndexed(
-      this.metricToAggregate(true),
+      this.metricToAggregate,
       this.metricsMillis,
     ))
 
     const aggregateDevMetrics: Metric[] = values(mapObjIndexed(
-      this.metricToAggregate(false),
+      this.devMetricToAggregate,
       this.devMetricsMillis,
     ))
 
@@ -120,10 +130,13 @@ export default class MetricsAggregator {
       }
     ]
 
-    const onFlushMetrics = flatten(map(getMetric => getMetric(), this.onFlushMeters))
+    const onFlushMetrics = flatten(map(getMetric => getMetric(), this.onFlushMetrics))
 
-    return [...systemMetrics, ...aggregateMetrics, ...aggregateDevMetrics, ...onFlushMetrics]
+    const cacheMetrics: Metric[] = values(mapObjIndexed((value: GetStats, key: string) => ({
+      name: `${key}-cache`,
+      ...value.getStats(),
+    }), this.cacheMap))
+
+    return [...systemMetrics, ...aggregateMetrics, ...aggregateDevMetrics, ...onFlushMetrics, ...cacheMetrics]
   }
 }
-
-
