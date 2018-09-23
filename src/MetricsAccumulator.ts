@@ -108,6 +108,11 @@ export default class MetricsAccumulator {
     return this.flushMetrics()
   }
 
+  private cacheToMetric = (value: GetStats, key: string): Metric => ({
+    name: `${key}-cache`,
+    ...value.getStats(),
+  })
+
   private flushMetrics = (): Metric[] => {
     const aggregateMetrics: Metric[] = values(mapObjIndexed(
       this.metricToAggregate,
@@ -132,10 +137,10 @@ export default class MetricsAccumulator {
 
     const onFlushMetrics = flatten(map(getMetric => getMetric(), this.onFlushMetrics))
 
-    const cacheMetrics: Metric[] = values(mapObjIndexed((value: GetStats, key: string) => ({
-      name: `${key}-cache`,
-      ...value.getStats(),
-    }), this.cacheMap))
+    const cacheMetrics = values(mapObjIndexed(
+      this.cacheToMetric,
+      this.cacheMap,
+    ))
 
     return [...systemMetrics, ...aggregateMetrics, ...aggregateDevMetrics, ...onFlushMetrics, ...cacheMetrics]
   }
