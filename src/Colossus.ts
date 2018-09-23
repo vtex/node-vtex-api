@@ -13,6 +13,22 @@ export class Colossus {
     this.http = HttpClient.forWorkspace('colossus', withoutRecorder(ioContext), opts)
   }
 
+  public debug = (message: any) => {
+    this.sendLog('-', message, 'debug')
+  }
+
+  public info = (message: any) => {
+    this.sendLog('-', message, 'info')
+  }
+
+  public warn = (message: any) => {
+    this.sendLog('-', message, 'warn')
+  }
+
+  public error = (message: any) => {
+    this.sendLog('-', message, 'error')
+  }
+
   public sendLog = (subject: string, message: any, level: string) => {
     return this.http.put(routes.Log(level), message, {params: {subject}})
   }
