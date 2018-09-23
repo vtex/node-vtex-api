@@ -1,6 +1,8 @@
 import * as LRU from 'lru-cache'
 
-export class LRUCache <K, V> {
+import {GetStats} from './MetricsAccumulator'
+
+export class LRUCache <K, V> implements GetStats {
   private storage: LRU.Cache<K, V>
   private hits: number
   private total: number
@@ -46,7 +48,8 @@ export class LRUCache <K, V> {
   }
 }
 
-export interface Stats {
+// tslint:disable-next-line:interface-over-type-literal
+export type Stats = {
   itemCount: number,
   length: number,
   disposedItems: number,
