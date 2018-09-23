@@ -18,7 +18,7 @@ interface AggregateMetric extends Metric {
   production: boolean
 }
 
-export interface GetStats {
+interface GetStats {
   getStats(): {
     [key: string]: number | boolean | string | undefined
   }
@@ -50,7 +50,7 @@ const createMetricToAggregateReducer = (production: boolean) => (value: any, key
   return aggregate
 }
 
-export default class MetricsAccumulator {
+export class MetricsAccumulator {
   // Metrics from production workspaces
   private metricsMillis: Record<string, number[]>
   // Metrics from development workspaces

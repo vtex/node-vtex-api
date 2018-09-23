@@ -1,8 +1,6 @@
 import * as LRU from 'lru-cache'
 
-import {GetStats} from './MetricsAccumulator'
-
-export class LRUCache <K, V> implements GetStats {
+export class LRUCache <K, V> {
   private storage: LRU.Cache<K, V>
   private hits: number
   private total: number
