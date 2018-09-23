@@ -1,7 +1,7 @@
 import {flatten, map, mapObjIndexed, values} from 'ramda'
 import {mean, median, percentile} from 'stats-lite'
 
-import {hrToMillis} from './Time'
+import {hrToMillis} from './utils/Time'
 
 interface Metric {
   name: string
