@@ -29,6 +29,25 @@ export class LRUCache <K, V> {
 
   public has = (key: K): boolean => this.storage.has(key)
 
+  public getOrSet = async (key: K, fetcher: () => Promise<V>) => {
+    let value = this.get(key)
+
+    // Support stale response by verifying need to fetch after get
+    if (!this.has(key)) {
+      const valueP = fetcher().then((v) => {
+        this.set(key, v)
+        return v
+      })
+
+      // When stale, value is present even though `has` failed
+      if (!value) {
+        value = await valueP
+      }
+    }
+
+    return value
+  }
+
   public getStats = (): Stats => {
     const stats = {
       disposedItems: this.disposed,
