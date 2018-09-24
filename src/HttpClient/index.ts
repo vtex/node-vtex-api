@@ -190,7 +190,7 @@ interface ClientOptions {
   authType?: AuthType,
   authToken?: string,
   userAgent: string
-  baseURL: string,
+  baseURL?: string,
   timeout?: number,
   recorder?: Recorder,
   cacheStorage?: CacheStorage,

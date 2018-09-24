@@ -22,7 +22,7 @@ http.interceptors.response.use(response => response, (err: any) => {
   return Promise.reject(err)
 })
 
-export const defaultsMiddleware = (baseURL: string, headers: Record<string, string>, timeout: number) => {
+export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<string, string>, timeout: number) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     ctx.config = {
       baseURL,
