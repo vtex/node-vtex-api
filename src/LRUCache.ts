@@ -40,12 +40,12 @@ export class LRUCache <K, V> {
       })
 
       // When stale, value is present even though `has` failed
-      if (!value) {
+      if (value === undefined) {
         value = await valueP
       }
     }
 
-    return value
+    return value as V
   }
 
   public getStats = (): Stats => {
