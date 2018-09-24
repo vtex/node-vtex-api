@@ -120,9 +120,9 @@ export class HttpClient {
     return this.request(patchConfig).then(response => response.data as T)
   }
 
-  public delete = (url: string, config?: RequestConfig): Promise<void> => {
+  public delete = (url: string, config?: RequestConfig): Promise<IOResponse<void>> => {
     const deleteConfig: RequestConfig = {...config, url, method: 'delete'}
-    return this.request(deleteConfig).then(() => {}) // tslint:disable-line
+    return this.request(deleteConfig)
   }
 
   private request = async (config: RequestConfig): Promise<AxiosResponse> => {
