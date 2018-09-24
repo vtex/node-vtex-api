@@ -58,7 +58,7 @@ export class HttpClient {
   }
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
-  private constructor (opts: ClientOptions) {
+  public constructor (opts: ClientOptions) {
     const {baseURL, authToken, authType, cacheStorage, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
     const headers: Record<string, string> = {
       'Accept-Encoding': 'gzip',
