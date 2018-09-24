@@ -45,15 +45,15 @@ export const cacheMiddleware = (cacheStorage: CacheStorage) => {
     const cached = cacheStorage.get<Cached>(key)
 
     if (cached) {
-      const {etag, response, expiration} = cached
+      const {etag: cachedEtag, response, expiration} = cached
       if (expiration > Date.now()) {
         ctx.response = response
         return
       }
 
       const validateStatus = addNotModified(ctx.config.validateStatus!)
-      if (etag && validateStatus(response.status)) {
-        ctx.config.headers['if-none-match'] = etag
+      if (cachedEtag && validateStatus(response.status)) {
+        ctx.config.headers['if-none-match'] = cachedEtag
         ctx.config.validateStatus = validateStatus
       }
     }
@@ -79,8 +79,8 @@ export const cacheMiddleware = (cacheStorage: CacheStorage) => {
       const currentAge = revalidated ? 0 : age
       cacheStorage.set(key, {
         etag,
-        response: {data, headers, status},
         expiration: Date.now() + (maxAge - currentAge) * 1000,
+        response: {data, headers, status},
       })
       return
     }
