@@ -18,7 +18,7 @@ http.interceptors.response.use(response => response, (err: any) => {
     delete err.response.config
     delete err.config.res
     delete err.config.data
-  } catch (e) {}
+  } catch (e) {} // tslint:disable-line
   return Promise.reject(err)
 })
 

@@ -1,10 +1,13 @@
-import {AxiosRequestConfig, AxiosResponse} from 'axios'
+import {AxiosResponse} from 'axios'
 import {IncomingMessage} from 'http'
 import {Context} from 'koa'
 import * as compose from 'koa-compose'
 
-import {MiddlewareContext} from './context'
+import {MetricsAccumulator} from '../MetricsAccumulator'
+
+import {MiddlewareContext, RequestConfig} from './context'
 import {CacheableRequestConfig, cacheMiddleware, CacheStorage} from './middlewares/cache'
+import {metricsMiddleware} from './middlewares/metrics'
 import {acceptNotFoundMiddleware, notFoundFallbackMiddleware} from './middlewares/notFound'
 import {Recorder, recorderMiddleware} from './middlewares/recorder'
 import {defaultsMiddleware, requestMiddleware} from './middlewares/request'
@@ -56,11 +59,14 @@ export class HttpClient {
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   private constructor (opts: ClientOptions) {
-    const {baseURL, authToken, authType, cacheStorage, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
-    const headers = {
+    const {baseURL, authToken, authType, cacheStorage, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
+    const headers: Record<string, string> = {
       'Accept-Encoding': 'gzip',
-      Authorization: `${authType} ${authToken}`,
       'User-Agent': userAgent,
+    }
+
+    if (authType && authToken) {
+      headers['Authorization'] = `${authType} ${authToken}` // tslint:disable-line
     }
 
     this.runMiddlewares = compose([
@@ -69,56 +75,57 @@ export class HttpClient {
       acceptNotFoundMiddleware,
       ...cacheStorage ? [cacheMiddleware(cacheStorage)] : [],
       notFoundFallbackMiddleware,
+      ...metrics ? [metricsMiddleware(metrics)] : [],
       requestMiddleware,
     ])
   }
 
-  public get = <T = any>(url: string, config: AxiosRequestConfig = {}): Promise<T> => {
+  public get = <T = any>(url: string, config: RequestConfig = {}): Promise<T> => {
     const cacheableConfig = {...config, url, cacheable: true} as CacheableRequestConfig
     return this.request(cacheableConfig).then(response => response.data as T)
   }
 
-  public getRaw = <T = any>(url: string, config: AxiosRequestConfig = {}): Promise<IOResponse<T>> => {
+  public getRaw = <T = any>(url: string, config: RequestConfig = {}): Promise<IOResponse<T>> => {
     const cacheableConfig = {...config, url, cacheable: true} as CacheableRequestConfig
     return this.request(cacheableConfig) as Promise<IOResponse<T>>
   }
 
-  public getBuffer = (url: string, config: AxiosRequestConfig = {}): Promise<{data: Buffer, headers: any}> => {
+  public getBuffer = (url: string, config: RequestConfig = {}): Promise<{data: Buffer, headers: any}> => {
     const bufferConfig = {...config, url, responseType: 'arraybuffer', transformResponse: noTransforms}
     return this.request(bufferConfig)
   }
 
-  public getStream = (url: string, config: AxiosRequestConfig = {}): Promise<IncomingMessage> => {
+  public getStream = (url: string, config: RequestConfig = {}): Promise<IncomingMessage> => {
     const streamConfig = {...config, url, responseType: 'stream', transformResponse: noTransforms}
     return this.request(streamConfig).then(response => response.data as IncomingMessage)
   }
 
-  public put = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
-    const putConfig: AxiosRequestConfig = {...config, url, data, method: 'put'}
+  public put = <T = void>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
+    const putConfig: RequestConfig = {...config, url, data, method: 'put'}
     return this.request(putConfig).then(response => response.data as T)
   }
 
-  public post = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
-    const postConfig: AxiosRequestConfig = {...config, url, data, method: 'post'}
+  public post = <T = void>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
+    const postConfig: RequestConfig = {...config, url, data, method: 'post'}
     return this.request(postConfig).then(response => response.data as T)
   }
 
-  public postRaw = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<IOResponse<T>> => {
-    const postConfig: AxiosRequestConfig = {...config, url, data, method: 'post'}
+  public postRaw = <T = void>(url: string, data?: any, config: RequestConfig = {}): Promise<IOResponse<T>> => {
+    const postConfig: RequestConfig = {...config, url, data, method: 'post'}
     return this.request(postConfig) as Promise<IOResponse<T>>
   }
 
-  public patch = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
-    const patchConfig: AxiosRequestConfig = {...config, url, data, method: 'patch'}
+  public patch = <T = void>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
+    const patchConfig: RequestConfig = {...config, url, data, method: 'patch'}
     return this.request(patchConfig).then(response => response.data as T)
   }
 
-  public delete = (url: string, config?: AxiosRequestConfig): Promise<void> => {
-    const deleteConfig: AxiosRequestConfig = {...config, url, method: 'delete'}
-    return this.request(deleteConfig).then(() => {})
+  public delete = (url: string, config?: RequestConfig): Promise<void> => {
+    const deleteConfig: RequestConfig = {...config, url, method: 'delete'}
+    return this.request(deleteConfig).then(() => {}) // tslint:disable-line
   }
 
-  private request = async (config: AxiosRequestConfig): Promise<AxiosResponse> => {
+  private request = async (config: RequestConfig): Promise<AxiosResponse> => {
     const context: MiddlewareContext = {config}
     await this.runMiddlewares(context)
     return context.response!
@@ -180,11 +187,12 @@ enum AuthType {
 }
 
 interface ClientOptions {
-  authType: AuthType,
-  authToken: string,
+  authType?: AuthType,
+  authToken?: string,
   userAgent: string
   baseURL: string,
   timeout?: number,
   recorder?: Recorder,
   cacheStorage?: CacheStorage,
+  metrics?: MetricsAccumulator,
 }
