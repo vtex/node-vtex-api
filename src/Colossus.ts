@@ -25,7 +25,7 @@ export class Colossus {
     this.sendLog('-', message, 'warn')
   }
 
-  public error = (message: any) => {
+  public error = (message: ErrorLog) => {
     this.sendLog('-', message, 'error')
   }
 
@@ -40,6 +40,21 @@ export class Colossus {
   public sendMetric = (metric: BillingMetric) => {
     return this.http.post(routes.Metric(), metric)
   }
+}
+
+export interface ErrorLog {
+  // Consistent accross many errors of the same type
+  code: string
+  // User-facing message, may vary by error
+  message: string
+  // Axios-compatible error format
+  response?: {
+    status: number
+    data: string
+    headers: Record<string, string>
+  }
+  // You might add any other keys with extra information
+  [key: string]: any
 }
 
 export interface BillingMetric {
