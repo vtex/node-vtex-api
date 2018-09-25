@@ -1,5 +1,7 @@
 import {HttpClient, InstanceOptions, IOContext, withoutRecorder} from './HttpClient'
 
+const DEFAULT_SUBJECT = '-'
+
 const routes = {
   Event: (route: string) => `/events/${route}`,
   Log: (level: string) => `/logs/${level}`,
@@ -13,21 +15,17 @@ export class Colossus {
     this.http = HttpClient.forWorkspace('colossus', withoutRecorder(ioContext), opts)
   }
 
-  public debug = (message: any) => {
-    this.sendLog('-', message, 'debug')
-  }
+  public debug = (message: any, subject: string = DEFAULT_SUBJECT) =>
+    this.sendLog(subject, message, 'debug')
 
-  public info = (message: any) => {
-    this.sendLog('-', message, 'info')
-  }
+  public info = (message: any, subject: string = DEFAULT_SUBJECT) =>
+    this.sendLog(subject, message, 'info')
 
-  public warn = (message: any) => {
-    this.sendLog('-', message, 'warn')
-  }
+  public warn = (message: any, subject: string = DEFAULT_SUBJECT) =>
+    this.sendLog(subject, message, 'warn')
 
-  public error = (message: ErrorLog) => {
-    this.sendLog('-', message, 'error')
-  }
+  public error = (message: ErrorLog, subject: string = DEFAULT_SUBJECT) =>
+    this.sendLog(subject, message, 'error')
 
   public sendLog = (subject: string, message: any, level: string) => {
     return this.http.put(routes.Log(level), message, {params: {subject}})
