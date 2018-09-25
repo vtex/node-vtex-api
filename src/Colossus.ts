@@ -15,7 +15,7 @@ const errorReplacer = (key: string, value: any) => {
     return undefined
   }
   if (value && typeof value === 'string' && value.length > 1024) {
-    return value.substr(0, 1024) + '[...TRUNCATED]'
+    return value.substr(0, 256) + '[...TRUNCATED]'
   }
   return value
 }
@@ -47,7 +47,7 @@ export class Colossus {
     const code = errorCode || response && `http-${response.status}`
     const d = response
       ? { response, ...details }
-      : { stringified: stringify(rest, errorReplacer), ...details }
+      : { ...JSON.parse(stringify(rest, errorReplacer)), ...details }
 
     return this.sendLog(subject, {code, message, stack, details: d}, 'error')
   }
