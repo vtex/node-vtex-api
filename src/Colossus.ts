@@ -49,7 +49,7 @@ export class Colossus {
       ? { response, ...details }
       : { stringified: stringify(rest, errorReplacer), ...details }
 
-    this.sendLog(subject, {code, message, stack, details: d}, 'error')
+    return this.sendLog(subject, {code, message, stack, details: d}, 'error')
   }
 
   public sendLog = (subject: string, message: any, level: string) => {
