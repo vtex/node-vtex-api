@@ -38,7 +38,7 @@ export class Colossus {
   public warn = (message: any, subject: string = DEFAULT_SUBJECT) =>
     this.sendLog(subject, message, 'warn')
 
-  public error = (error: any, details: Record<string, any>, subject: string = DEFAULT_SUBJECT) => {
+  public error = (error: any, details?: Record<string, any>, subject: string = DEFAULT_SUBJECT) => {
     if (!error) {
       error = new Error('Colossus.error was called with null or undefined error')
       error.code = 'ERR_NIL_ERR'
@@ -54,8 +54,9 @@ export class Colossus {
       ...JSON.parse(stringify(rest, errorReplacer)),
       ...details,
     }
+    const hasDetails = Object.keys(pickedDetails).length > 0
 
-    return this.sendLog(subject, {code, message, stack, details: pickedDetails}, 'error')
+    return this.sendLog(subject, {code, message, stack, details: hasDetails ? pickedDetails : undefined}, 'error')
   }
 
   public sendLog = (subject: string, message: any, level: string) => {
