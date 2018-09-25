@@ -1,3 +1,5 @@
+import * as stringify from 'json-stringify-safe'
+
 import {HttpClient, InstanceOptions, IOContext, withoutRecorder} from './HttpClient'
 
 const DEFAULT_SUBJECT = '-'
@@ -6,6 +8,16 @@ const routes = {
   Event: (route: string) => `/events/${route}`,
   Log: (level: string) => `/logs/${level}`,
   Metric: () => `/metrics`,
+}
+
+const errorReplacer = (key: string, value: any) => {
+  if (key.startsWith('_')) {
+    return undefined
+  }
+  if (value && typeof value === 'string' && value.length > 1024) {
+    return value.substr(0, 1024) + '[...TRUNCATED]'
+  }
+  return value
 }
 
 export class Colossus {
@@ -24,8 +36,21 @@ export class Colossus {
   public warn = (message: any, subject: string = DEFAULT_SUBJECT) =>
     this.sendLog(subject, message, 'warn')
 
-  public error = (message: ErrorLog, subject: string = DEFAULT_SUBJECT) =>
-    this.sendLog(subject, message, 'error')
+  public error = (error: any, details: Record<string, any>, subject: string = DEFAULT_SUBJECT) => {
+    if (!error) {
+      error = new Error('Colossus.error was called with null or undefined error')
+      error.code = 'ERR_NIL_ERR'
+      console.error(error)
+    }
+
+    const {code: errorCode, message, stack, response, ...rest} = error
+    const code = errorCode || response && `http-${response.status}`
+    const d = response
+      ? { response, ...details }
+      : { stringified: stringify(rest, errorReplacer), ...details }
+
+    this.sendLog(subject, {code, message, stack, details: d}, 'error')
+  }
 
   public sendLog = (subject: string, message: any, level: string) => {
     return this.http.put(routes.Log(level), message, {params: {subject}})
