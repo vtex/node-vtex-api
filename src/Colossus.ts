@@ -1,8 +1,10 @@
 import * as stringify from 'json-stringify-safe'
+import {pick} from 'ramda'
 
 import {HttpClient, InstanceOptions, IOContext, withoutRecorder} from './HttpClient'
 
 const DEFAULT_SUBJECT = '-'
+const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url']
 
 const routes = {
   Event: (route: string) => `/events/${route}`,
@@ -43,13 +45,17 @@ export class Colossus {
       console.error(error)
     }
 
-    const {code: errorCode, message, stack, response, ...rest} = error
+    const {code: errorCode, message, stack, config, request, response, ...rest} = error
     const code = errorCode || response && `http-${response.status}`
-    const d = response
-      ? { response, ...details }
-      : { ...JSON.parse(stringify(rest, errorReplacer)), ...details }
+    const pickedDetails = {
+      ... config ? {config: pick(PICKED_AXIOS_PROPS, config)} : undefined,
+      ... request ? {request: pick(PICKED_AXIOS_PROPS, request)} : undefined,
+      ... response ? {response: pick(PICKED_AXIOS_PROPS, response)} : undefined,
+      ...JSON.parse(stringify(rest, errorReplacer)),
+      ...details,
+    }
 
-    return this.sendLog(subject, {code, message, stack, details: d}, 'error')
+    return this.sendLog(subject, {code, message, stack, details: pickedDetails}, 'error')
   }
 
   public sendLog = (subject: string, message: any, level: string) => {
