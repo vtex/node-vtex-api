@@ -7,27 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [1.0.0-beta.8] - 2018-09-24
-
-## [1.0.0-beta.7] - 2018-09-24
-
-## [1.0.0-beta.6] - 2018-09-23
-
-## [1.0.0-beta.5] - 2018-09-23
-
-## [1.0.0-beta.4] - 2018-09-23
-
-## [1.0.0-beta.3] - 2018-09-23
-
-## [1.0.0-beta.2] - 2018-09-23
-
-## [1.0.0-beta.1] - 2018-09-23
-
-## [1.0.0-beta.0] - 2018-09-23
-
 ## [1.0.0-beta] - 2018-09-21
 ### Added
 - Added changelog :grimacing:.
+- Added MetricsAccumulator
+- Added Metrics support in HttpClient
 
 ### Changed
 - Lint the whole damn thing.
