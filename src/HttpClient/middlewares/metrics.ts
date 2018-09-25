@@ -18,6 +18,10 @@ export const metricsMiddleware = (metrics: MetricsAccumulator) => {
     } catch (err) {
       if (err.response && err.response.status && ctx.config.metric) {
         status = statusLabel(err.response.status)
+      } else if (err.code === 'ECONNABORTED') {
+        status = 'timeout'
+      } else {
+        status = 'error'
       }
       throw err
     } finally {
