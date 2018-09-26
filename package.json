@@ -24,6 +24,7 @@
   "license": "MIT",
   "dependencies": {
     "@types/lru-cache": "^4.1.1",
+    "@types/p-queue": "^2.3.1",
     "@types/ramda": "^0.25.38",
     "archiver": "^3.0.0",
     "axios": "^0.18.0",
@@ -33,6 +34,7 @@
     "lru-cache": "^4.1.3",
     "mime-types": "^2.1.12",
     "multipart-stream": "^2.0.1",
+    "p-queue": "^3.0.0",
     "qs": "^6.5.1",
     "ramda": "^0.25.0",
     "semver": "^5.5.1",
