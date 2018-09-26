@@ -1,10 +1,13 @@
 import * as stringify from 'json-stringify-safe'
+import * as PQueue from 'p-queue'
 import {pick} from 'ramda'
 
 import {HttpClient, InstanceOptions, IOContext, withoutRecorder} from './HttpClient'
 
 const DEFAULT_SUBJECT = '-'
 const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url']
+
+const queue = new PQueue({concurrency: 1})
 
 const routes = {
   Event: (route: string) => `/events/${route}`,
@@ -59,8 +62,8 @@ export class Logger {
     return this.sendLog(subject, {code, message, stack, details: hasDetails ? pickedDetails : undefined}, 'error')
   }
 
-  public sendLog = (subject: string, message: any, level: string) => {
-    return this.http.put(routes.Log(level), message, {params: {subject}})
+  public sendLog = (subject: string, message: any, level: string) : Promise<void> => {
+    return queue.add(() => this.http.put(routes.Log(level), message, {params: {subject}}))
   }
 }
 
