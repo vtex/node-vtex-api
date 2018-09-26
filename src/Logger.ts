@@ -22,7 +22,7 @@ const errorReplacer = (key: string, value: any) => {
   return value
 }
 
-export class Colossus {
+export class Logger {
   private http: HttpClient
 
   constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
@@ -62,14 +62,6 @@ export class Colossus {
   public sendLog = (subject: string, message: any, level: string) => {
     return this.http.put(routes.Log(level), message, {params: {subject}})
   }
-
-  public sendEvent = (subject: string, route: string, message?: any) => {
-    return this.http.put(routes.Event(route), message, {params: {subject}})
-  }
-
-  public sendMetric = (metric: BillingMetric) => {
-    return this.http.post(routes.Metric(), metric)
-  }
 }
 
 export interface ErrorLog {
@@ -85,11 +77,4 @@ export interface ErrorLog {
   }
   // You might add any other keys with extra information
   [key: string]: any
-}
-
-export interface BillingMetric {
-  value: number,
-  unit: string,
-  metricId: string,
-  timestamp?: number,
 }
