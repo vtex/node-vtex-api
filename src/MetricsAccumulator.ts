@@ -145,7 +145,7 @@ export class MetricsAccumulator {
       }
     ]
 
-    const onFlushMetrics = flatten(map(getMetric => getMetric(), this.onFlushMetrics))
+    const onFlushMetrics = flatten(map(getMetric => getMetric(), this.onFlushMetrics)) as Metric[]
 
     const cacheMetrics = values(mapObjIndexed(
       this.cacheToMetric,
