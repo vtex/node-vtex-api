@@ -89,7 +89,7 @@ export class MetricsAccumulator {
     return this.flushMetrics()
   }
 
-  protected createMetricToAggregateReducer = (production: boolean) => (value: any, key: string, obj: any): EnrichedAggregateMetric => { //must be protected in order to override
+  protected createMetricToAggregateReducer = (production: boolean) => (value: any, key: string, obj: any): EnrichedAggregateMetric => {
     const metricToAggregateReducer: EnrichedAggregateMetric = {
       name: key,
       production,
@@ -132,7 +132,7 @@ export class MetricsAccumulator {
     return [...aggregateMetrics, ...aggregateDevMetrics]
   }
 
-  protected flushMetrics = (): Metric[] => {      // must it be protected in order to override
+  protected flushMetrics = (): Metric[] => {
 
     const systemMetrics: Metric[] = [
       {
