@@ -5,7 +5,6 @@ import {Readable, Writable} from 'stream'
 import {IncomingMessage} from 'http'
 
 import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
-import {DEFAULT_WORKSPACE} from './constants'
 import {AppBundlePublished, AppManifest, AppFilesList} from './responses'
 
 const EMPTY_OBJECT = {}
@@ -24,7 +23,7 @@ export class Registry {
   private http: HttpClient
 
   constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
-    this.http = HttpClient.forWorkspace('apps', {...ioContext, workspace: DEFAULT_WORKSPACE}, opts)
+    this.http = HttpClient.forWorkspace('apps', ioContext, opts)
   }
 
   publishApp = async (files: File[], tag?: string, {zlib}: zipOptions = {}) => {
