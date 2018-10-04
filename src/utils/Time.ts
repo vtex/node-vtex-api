@@ -9,7 +9,7 @@ export const hrToNano = ([seconds, nanoseconds]: [number, number]) =>
 export const formatNano = (nanoseconds: number): string =>
   `${(nanoseconds / 1e9).toFixed(0)}s ${((nanoseconds / 1e6) % 1e3).toFixed(0)}ms`
 
-export const reduceHrToNano =
-  reduce((acc: number, hr: [number, number]) => acc + hrToNano(hr), 0 as number)
+export const reduceHrToNano = (hrs: Array<[number, number]>) =>
+  reduce((acc: number, hr: [number, number]) => acc + hrToNano(hr), 0 as number, hrs)
 
 export const nanoToMillis = (nanoseconds: number) => Math.round(nanoseconds / 1e6)
