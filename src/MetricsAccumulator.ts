@@ -1,4 +1,4 @@
-import {filter, flatten, map, mapObjIndexed, values} from 'ramda'
+import {flatten, map, mapObjIndexed, values} from 'ramda'
 import {mean, median, percentile} from 'stats-lite'
 
 import {hrToMillis} from './utils/Time'
@@ -8,7 +8,7 @@ interface Metric {
   [key: string]: number | boolean | string | undefined
 }
 
-interface AggregateMetric {
+interface AggregateStats {
   count: number
   max: number
   mean: number
@@ -18,9 +18,7 @@ interface AggregateMetric {
   percentile99: number
 }
 
-interface ContextMetric extends Metric, AggregateMetric {
-  production: boolean
-}
+interface AggregateMetric extends Metric, AggregateStats {}
 
 interface GetStats {
   getStats(): {
@@ -29,7 +27,9 @@ interface GetStats {
 }
 
 export class MetricsAccumulator {
-  static lastCpu: NodeJS.CpuUsage = process.cpuUsage()
+  private static lastCpu: NodeJS.CpuUsage = process.cpuUsage()
+  
+  protected onFlushMetrics: Array<() => Metric | Metric[]>
 
   // Metrics from production workspaces
   private metricsMillis: Record<string, number[]> = {}
@@ -38,24 +38,15 @@ export class MetricsAccumulator {
   // Tracked cache instances
   private cacheMap: Record<string, GetStats>
   
-  private onFlushMetrics: Array<() => Metric | Metric[]>
-
-  protected createMetricToAggregateReducer = (production: boolean) => (value: any, key: string, obj: any): EnrichedAggregateMetric => {
-    const metricToAggregateReducer: ContextMetric = {
-      name: key,
-      production,
-      ...this.aggregate(value),
-    }
-    return metricToAggregateReducer
-  }
-
-  private metricToAggregate = this.createMetricToAggregateReducer(true)
-  private devMetricToAggregate = this.createMetricToAggregateReducer(false)
+  private metricToAggregate: (value: any, key: string, obj: any) => AggregateMetric
+  private devMetricToAggregate: (value: any, key: string, obj: any) => AggregateMetric
   
   constructor() {
     this.onFlushMetrics = []
     this.cacheMap = {}
     this.resetAccumulators()
+    this.metricToAggregate = this.createMetricToAggregateReducer(true)
+    this.devMetricToAggregate = this.createMetricToAggregateReducer(false)
   }
 
   public batchHrTimeMetricFromEnd = (name: string, end: [number, number], production: boolean) => {
@@ -91,8 +82,8 @@ export class MetricsAccumulator {
   public statusTrack = () => {
     return this.flushMetrics()
   }
-  
-  protected aggregate = (value: number[]): AggregateMetric => ({
+
+  protected aggregate = (value: number[]): AggregateStats => ({
     count: value.length, // tslint:disable-line:object-literal-sort-keys
     max: Math.max(...value),
     mean: mean(value),
@@ -102,19 +93,14 @@ export class MetricsAccumulator {
     percentile99: percentile(value, 0.99),
   })
 
-  protected resetAccumulators = () => {
-    this.metricsMillis = {}
-    this.devMetricsMillis = {}
-  }
-
   protected getAggregateMetrics = (): Metric[] => {
-    const aggregateMetricsAll: ContextMetric[] = values(mapObjIndexed(
+    const aggregateMetricsAll: AggregateMetric[] = values(mapObjIndexed(
       this.metricToAggregate,
       this.metricsMillis,
     ))
     const aggregateMetrics = aggregateMetricsAll
 
-    const aggregateDevMetricsAll: ContextMetric[] = values(mapObjIndexed(
+    const aggregateDevMetricsAll: AggregateMetric[] = values(mapObjIndexed(
       this.devMetricToAggregate,
       this.devMetricsMillis,
     ))
@@ -130,6 +116,20 @@ export class MetricsAccumulator {
       user: MetricsAccumulator.lastCpu.user + diff.user,
     }
     return diff
+  }
+
+  protected createMetricToAggregateReducer = (production: boolean) => (value: any, key: string, obj: any): AggregateMetric => {
+    const metricToAggregateReducer: AggregateMetric = {
+      name: key,
+      production,
+      ...this.aggregate(value),
+    }
+    return metricToAggregateReducer
+  }
+  
+  protected resetAccumulators = () => {
+    this.metricsMillis = {}
+    this.devMetricsMillis = {}
   }
 
   protected flushMetrics = (): Metric[] => {
