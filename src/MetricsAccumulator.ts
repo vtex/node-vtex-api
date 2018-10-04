@@ -3,12 +3,12 @@ import {mean, median, percentile} from 'stats-lite'
 
 import {hrToMillis} from './utils/Time'
 
-interface Metric {
+export interface Metric {
   name: string
-  [key: string]: number | boolean | string | undefined
+  [key: string]: any
 }
 
-interface AggregateStats {
+export interface AggregateStats {
   count: number
   max: number
   mean: number
@@ -18,7 +18,7 @@ interface AggregateStats {
   percentile99: number
 }
 
-interface AggregateMetric extends Metric, AggregateStats {}
+export interface AggregateMetric extends Metric, AggregateStats {}
 
 interface GetStats {
   getStats(): {
