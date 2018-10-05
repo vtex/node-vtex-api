@@ -118,21 +118,25 @@ export class MetricsAccumulator {
     return diff
   }
 
-  protected createMetricToAggregateReducer = (production: boolean) => (value: any, key: string, obj: any): AggregateMetric => {
-    const metricToAggregateReducer: AggregateMetric = {
-      name: key,
-      production,
-      ...this.aggregate(value),
+  // Avoiding arrow function: the traditional syntax works better with overriding.
+  protected createMetricToAggregateReducer(production: boolean): (value: any, key: string, obj: any) => AggregateMetric {
+    const metricToAggregateReducer = (value: any, key: string, obj: any): AggregateMetric => {
+      const aggregateMetric: AggregateMetric = {
+        name: key,
+        production,
+        ...this.aggregate(value),
+      }
+      return aggregateMetric
     }
     return metricToAggregateReducer
   }
   
-  protected resetAccumulators = () => {
+  protected resetAccumulators() {
     this.metricsMillis = {}
     this.devMetricsMillis = {}
   }
 
-  protected flushMetrics = (): Metric[] => {
+  protected flushMetrics(): Metric[] {
 
     const systemMetrics: Metric[] = [
       {
