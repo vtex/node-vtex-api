@@ -5,7 +5,7 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
   private hits = 0
   private total = 0
 
-  constructor(private caches: Array<CacheLayer<K, V>>) {}
+  constructor (private caches: Array<CacheLayer<K, V>>) {}
 
   public get = async (key: K, fetcher?: () => V): Promise<V | void> => {
     let value: V | void
@@ -13,12 +13,11 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
       const [getValue, hasKey] = await Promise.all([cache.get(key), cache.has(key)])
       value = getValue
       return hasKey
-    },this.caches)
+    }, this.caches)
     if (successIndex === -1) {
       if (fetcher) {
         value = fetcher()
-      }
-      else {
+      } else {
         return undefined
       }
       successIndex = Infinity
@@ -48,7 +47,7 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
         ? cache.getStats()
         : undefined
       , this.caches))
-    const multilayerStats =  {
+    const multilayerStats = {
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
       hits: this.hits,
       layers: layersStats,
@@ -60,7 +59,7 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
 
   private findIndex = async <T> (func: (item: T) => Promise<boolean>, array: T[]): Promise<number> => {
     this.total += 1
-    for(let index=0; index < array.length; index++) {
+    for (let index = 0; index < array.length; index++) {
       const hasKey = await func(array[index])
       if (hasKey) {
         this.hits += 1
@@ -70,17 +69,17 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
     return -1
   }
 
-  private resetCounters() {
+  private resetCounters () {
     this.hits = 0
     this.total = 0
   }
 }
 
 export interface CacheLayer<K, V> {
-  get(key: K, fetcher?: () => V): Promise<V | void>,
-  has(key: K): Promise<boolean>,
-  set(key: K, value: V): void,
-  getStats?(): any,
+  get (key: K, fetcher?: () => V): Promise<V | void>,
+  has (key: K): Promise<boolean>,
+  set (key: K, value: V): void,
+  getStats? (): any,
 }
 
 export interface MultilayerStats {
