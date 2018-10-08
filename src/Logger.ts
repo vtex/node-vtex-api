@@ -10,9 +10,7 @@ const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers
 const queue = new PQueue({concurrency: 1})
 
 const routes = {
-  Event: (route: string) => `/events/${route}`,
   Log: (level: string) => `/logs/${level}`,
-  Metric: () => `/metrics`,
 }
 
 const errorReplacer = (key: string, value: any) => {
