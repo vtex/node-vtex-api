@@ -6,11 +6,12 @@ import * as compose from 'koa-compose'
 import {MetricsAccumulator} from '../MetricsAccumulator'
 
 import {MiddlewareContext, RequestConfig} from './context'
-import {CacheableRequestConfig, cacheMiddleware, CacheStorage} from './middlewares/cache'
+import {CacheableRequestConfig, cacheMiddleware, Cached} from './middlewares/cache'
 import {metricsMiddleware} from './middlewares/metrics'
 import {acceptNotFoundMiddleware, notFoundFallbackMiddleware} from './middlewares/notFound'
 import {Recorder, recorderMiddleware} from './middlewares/recorder'
 import {defaultsMiddleware, requestMiddleware} from './middlewares/request'
+import {CacheLayer} from '../MultilayeredCache'
 
 const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
@@ -136,7 +137,7 @@ export const withoutRecorder = (ioContext: IOContext): IOContext => {
   return {...ioContext, recorder: undefined}
 }
 
-export type CacheStorage = CacheStorage
+export type CacheStorage = CacheLayer<string, Cached>
 
 export type Recorder = Recorder
 
@@ -163,7 +164,7 @@ export interface IOContext {
 
 export interface InstanceOptions {
   timeout?: number,
-  cacheStorage?: CacheStorage,
+  cacheStorage?: CacheLayer<string, Cached>,
   endpoint?: string,
 }
 
@@ -172,7 +173,7 @@ export interface LegacyInstanceOptions {
   userAgent: string,
   timeout?: number,
   accept?: string,
-  cacheStorage?: CacheStorage,
+  cacheStorage?: CacheLayer<string, Cached>,
 }
 
 export interface IOResponse<T> {
@@ -193,6 +194,6 @@ interface ClientOptions {
   baseURL?: string,
   timeout?: number,
   recorder?: Recorder,
-  cacheStorage?: CacheStorage,
   metrics?: MetricsAccumulator,
+  cacheStorage?: CacheLayer<string, Cached>,
 }
