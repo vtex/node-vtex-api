@@ -6,32 +6,44 @@ This client enables Node developers to quickly integrate with the VTEX IO APIs.
 
 ## Getting started
 
-The clients currently available  in this library are:
-
-- [VBase](https://github.com/vtex/node-vtex-api/blob/master/src/VBase.ts)
-- [Apps](https://github.com/vtex/node-vtex-api/blob/master/src/Apps.ts)
-- [Registry](https://github.com/vtex/node-vtex-api/blob/master/src/Registry.ts)
-- [Router](https://github.com/vtex/node-vtex-api/blob/master/src/Router.ts)
-- [Workspaces](https://github.com/vtex/node-vtex-api/blob/master/src/Workspaces.ts)
-- [ID](https://github.com/vtex/node-vtex-api/blob/master/src/ID.ts)
-- [LRUCache](https://github.com/vtex/node-vtex-api/blob/master/src/LRUCache.ts)
-- [AppId](https://github.com/vtex/node-vtex-api/blob/master/src/AppId.ts)
-
 Usage:
 
-```js
-import { AppsClient } from '@vtex/api';
+We generally create a `Resources` class that groups all relevant clients and initialize them with the current request's `ctx.vtex` context, which includes `authToken`, `account`, `workspace`, etc.
 
-const client = new AppsClient({
-  authToken: yourAuthToken,
-  userAgent: myUserAgent
-});
+```
+import {Apps, LRUCache, Registry, VBase, ServiceContext} from '@vtex/api'
+
+const MAX_ELEMS = 1000
+const RESPONSE_CACHE_TTL_MS = 60 * 60 * 1000
+const LONG_TIMEOUT = 20 * 1000
+
+const cacheStorage = new LRUCache<string, any>({
+  max: MAX_ELEMS,
+  maxAge: RESPONSE_CACHE_TTL_MS,
+})
+
+// `cacheStorage` has a `getStats` method.
+metrics.addOnFlushMeter(() => ({...cacheStorage.getStats(), name: 'example-cache-stats'}))
+
+export default class Resources {
+  public apps: Apps
+  public registry: Registry
+  public vbase: VBase
+  
+  constructor (ctx: ColossusContext) {
+    const opts = {cacheStorage}
+    const withLongTimeout = {...opts, timeout: LONG_TIMEOUT}
+
+    this.apps = new Apps(ctx.vtex, withLongTimeout)
+    this.registry = new Registry(ctx.vtex, withLongTimeout)
+    this.vbase = new VBase(ctx.vtex, opts)
+  }
+}
 ```
 
 ## Development
 
-Install the dependencies (`npm install`) and run `npm run build`.
-
+Install the dependencies (`yarn`) and run `yarn watch`.
 
 ### Using VBaseClient.sendFile
 

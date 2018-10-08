@@ -1,20 +1,20 @@
-import { createGzip } from 'zlib'
-import { basename } from 'path'
-import * as mime from 'mime-types'
-import { Readable } from 'stream'
 import { IncomingMessage } from 'http'
+import * as mime from 'mime-types'
+import { basename } from 'path'
+import { Readable } from 'stream'
+import { createGzip } from 'zlib'
 
 import { HttpClient, InstanceOptions, IOContext } from './HttpClient'
-import { BucketMetadata, FileListItem } from './responses'
 import { IgnoreNotFoundRequestConfig } from './HttpClient/middlewares/notFound'
+import { BucketMetadata, FileListItem } from './responses'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']
 
 const routes = {
   Bucket: (bucket: string) => `/buckets/${runningAppName}/${bucket}`,
-  Files: (bucket: string) => `${routes.Bucket(bucket)}/files`,
   File: (bucket: string, path: string) => `${routes.Bucket(bucket)}/files/${path}`,
+  Files: (bucket: string) => `${routes.Bucket(bucket)}/files`,
 }
 
 const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
@@ -31,15 +31,15 @@ export class VBase {
     this.http = HttpClient.forWorkspace('vbase', ioContext, opts)
   }
 
-  getBucket = (bucket: string) => {
+  public getBucket = (bucket: string) => {
     return this.http.get<BucketMetadata>(routes.Bucket(bucket))
   }
 
-  resetBucket = (bucket: string) => {
+  public resetBucket = (bucket: string) => {
     return this.http.delete(routes.Files(bucket))
   }
 
-  listFiles = (bucket: string, opts?: string | VBaseOptions) => {
+  public listFiles = (bucket: string, opts?: string | VBaseOptions) => {
     let params: VBaseOptions = {}
     if (isVBaseOptions(opts)) {
       params = opts
@@ -49,32 +49,32 @@ export class VBase {
     return this.http.get<BucketFileList>(routes.Files(bucket), {params})
   }
 
-  getFile = (bucket: string, path: string) => {
+  public getFile = (bucket: string, path: string) => {
     return this.http.getBuffer(routes.File(bucket, path))
   }
 
-  getJSON = <T>(bucket: string, path: string, nullIfNotFound?: boolean) => {
+  public getJSON = <T>(bucket: string, path: string, nullIfNotFound?: boolean) => {
     return this.http.get<T>(routes.File(bucket, path), {nullIfNotFound} as IgnoreNotFoundRequestConfig)
   }
 
-  getFileStream = (bucket: string, path: string): Promise<IncomingMessage> => {
+  public getFileStream = (bucket: string, path: string): Promise<IncomingMessage> => {
     return this.http.getStream(routes.File(bucket, path))
   }
 
-  saveFile = (bucket: string, path: string, stream: Readable, gzip: boolean = true, ttl?: number) => {
+  public saveFile = (bucket: string, path: string, stream: Readable, gzip: boolean = true, ttl?: number) => {
     return this.saveContent(bucket, path, stream, {gzip, ttl})
   }
 
-  saveJSON = <T>(bucket: string, path: string, data: T) => {
+  public saveJSON = <T>(bucket: string, path: string, data: T) => {
     const headers = {'Content-Type': 'application/json'}
     return this.http.put(routes.File(bucket, path), data, {headers})
   }
 
-  saveZippedContent = (bucket: string, path: string, stream: Readable) => {
+  public saveZippedContent = (bucket: string, path: string, stream: Readable) => {
     return this.saveContent(bucket, path, stream, {unzip: true})
   }
 
-  deleteFile = (bucket: string, path: string) => {
+  public deleteFile = (bucket: string, path: string) => {
     return this.http.delete(routes.File(bucket, path))
   }
 
@@ -98,21 +98,21 @@ export class VBase {
   }
 }
 
-type Headers = { [key: string]: string | number }
+interface Headers { [key: string]: string | number }
 
-export type BucketFileList = {
+export interface BucketFileList {
   data: FileListItem[],
   next: string,
   smartCacheHeaders: any,
 }
 
-export type VBaseOptions = {
+export interface VBaseOptions {
   prefix?: string,
   _next?: string,
   _limit?: number,
 }
 
-export type VBaseSaveOptions = {
+export interface VBaseSaveOptions {
   gzip?: boolean,
   unzip?: boolean,
   ttl?: number,

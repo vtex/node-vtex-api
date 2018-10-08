@@ -29,13 +29,32 @@ export class LRUCache <K, V> {
 
   public has = (key: K): boolean => this.storage.has(key)
 
+  public getOrSet = async (key: K, fetcher: () => Promise<V>) => {
+    let value = this.get(key)
+
+    // Support stale response by verifying need to fetch after get
+    if (!this.has(key)) {
+      const valueP = fetcher().then((v) => {
+        this.set(key, v)
+        return v
+      })
+
+      // When stale, value is present even though `has` failed
+      if (value === undefined) {
+        value = await valueP
+      }
+    }
+
+    return value as V
+  }
+
   public getStats = (): Stats => {
     const stats = {
-      itemCount: this.storage.itemCount,
-      length: this.storage.length,
       disposedItems: this.disposed,
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
       hits: this.hits,
+      itemCount: this.storage.itemCount,
+      length: this.storage.length,
       max: this.storage.max,
       total: this.total,
     }
@@ -46,6 +65,7 @@ export class LRUCache <K, V> {
   }
 }
 
+// tslint:disable-next-line:interface-over-type-literal
 export type Stats = {
   itemCount: number,
   length: number,

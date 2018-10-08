@@ -1,26 +1,26 @@
 import * as archiver from 'archiver'
+import {IncomingMessage} from 'http'
+import {stringify} from 'qs'
+import {Readable, Writable} from 'stream'
 import {extract} from 'tar-fs'
 import {createGunzip, ZlibOptions} from 'zlib'
-import {IncomingMessage} from 'http'
-import {Readable, Writable} from 'stream'
-import {stringify} from 'qs'
 
 import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
-import {AppBundleLinked, AppManifest, AppFilesList} from './responses'
+import {AppBundleLinked, AppFilesList, AppManifest} from './responses'
 
 const routes = {
-  Apps: '/apps',
-  App: (app: string) => `${routes.Apps}/${app}`,
-  Links: '/links',
-  Link: (app: string) => `/v2/links/${app}`,
-  Unlink: (app: string) => `${routes.Links}/${app}`,
   Acknowledge: (app: string, service: string) => `${routes.App(app)}/acknowledge/${service}`,
-  Settings: (app: string) => `${routes.App(app)}/settings`,
-  Files: (app: string) => `${routes.App(app)}/files`,
-  File: (app: string, path: string) => `${routes.Files(app)}/${path}`,
+  App: (app: string) => `${routes.Apps}/${app}`,
   AppBundle: (app: string, path: string) => `${routes.App(app)}/bundle/${path}`,
+  Apps: '/apps',
   Dependencies: '/dependencies',
+  File: (app: string, path: string) => `${routes.Files(app)}/${path}`,
+  Files: (app: string) => `${routes.App(app)}/files`,
+  Link: (app: string) => `/v2/links/${app}`,
+  Links: '/links',
   ResolveDependencies: 'dependencies/_resolve',
+  Settings: (app: string) => `${routes.App(app)}/settings`,
+  Unlink: (app: string) => `${routes.Links}/${app}`,
 }
 
 const contextQuery = (context?: string[]) => context ? context.join('/') : context
@@ -53,19 +53,19 @@ export class Apps {
     this.http = HttpClient.forWorkspace('apps', ioContext, opts)
   }
 
-  installApp = (descriptor: string) => {
+  public installApp = (descriptor: string) => {
     return this.http.post(routes.Apps, {id: descriptor})
   }
 
-  uninstallApp = (app: string) => {
+  public uninstallApp = (app: string) => {
     return this.http.delete(routes.App(app))
   }
 
-  acknowledgeApp = (app: string, service: string) => {
+  public acknowledgeApp = (app: string, service: string) => {
     return this.http.put(routes.Acknowledge(app, service))
   }
 
-  link = async (app: string, files: Change[], {zlib}: zipOptions = {}) => {
+  public link = async (app: string, files: Change[], {zlib}: ZipOptions = {}) => {
     if (!(files[0] && files[0].path)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -101,7 +101,7 @@ export class Apps {
     }
   }
 
-  patch = async (app: string, changes: Change[], {zlib}: zipOptions = {}) => {
+  public patch = async (app: string, changes: Change[], {zlib}: ZipOptions = {}) => {
     if (!(changes[0] && changes[0].path)) {
       throw new Error('Argument changes must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -129,62 +129,62 @@ export class Apps {
     return response
   }
 
-  unlink = (app: string) => {
+  public unlink = (app: string) => {
     return this.http.delete(routes.Unlink(app))
   }
 
-  unlinkAll = () => {
+  public unlinkAll = () => {
     return this.http.delete(routes.Links)
   }
 
-  saveAppSettings = (app: string, settings: any) => {
+  public saveAppSettings = (app: string, settings: any) => {
     const headers = {'Content-Type': 'application/json'}
     return this.http.put(routes.Settings(app), settings, {headers})
   }
 
-  listApps = ({oldVersion, context, since, service}: ListAppsOptions = {}) => {
+  public listApps = ({oldVersion, context, since, service}: ListAppsOptions = {}) => {
     const params = {
-      oldVersion,
       context: contextQuery(context),
-      since,
+      oldVersion,
       service,
+      since,
     }
     return this.http.get<AppsList>(routes.Apps, {params})
   }
 
-  listAppFiles = (app: string, {prefix, context, nextMarker}: ListFilesOptions = {}) => {
+  public listAppFiles = (app: string, {prefix, context, nextMarker}: ListFilesOptions = {}) => {
     const params = {
-      prefix,
       context: contextQuery(context),
       marker: nextMarker,
+      prefix,
     }
     return this.http.get<AppFilesList>(routes.Files(app), {params})
   }
 
-  listLinks = () => {
+  public listLinks = () => {
     return this.http.get<string[]>(routes.Links)
   }
 
-  getAppFile = (app: string, path: string, context: Array<string> = []) => {
+  public getAppFile = (app: string, path: string, context: string[] = []) => {
     const params = {context: contextQuery(context)}
     return this.http.getBuffer(routes.File(app, path), {params})
   }
 
-  getAppFileStream = (app: string, path: string, context: Array<string> = []): Promise<IncomingMessage> => {
+  public getAppFileStream = (app: string, path: string, context: string[] = []): Promise<IncomingMessage> => {
     const params = {context: contextQuery(context)}
     return this.http.getStream(routes.File(app, path), {params})
   }
 
-  getApp = (app: string, context: Array<string> = []) => {
+  public getApp = (app: string, context: string[] = []) => {
     const params = {context: contextQuery(context)}
     return this.http.get<AppManifest>(routes.App(app), {params})
   }
 
-  getAppSettings = (app: string) => {
+  public getAppSettings = (app: string) => {
     return this.http.get<any>(routes.Settings(app))
   }
 
-  getAllAppsSettings = (listAppsOptions: ListAppsOptions = {}): Promise<AppsSettings> => {
+  public getAllAppsSettings = (listAppsOptions: ListAppsOptions = {}): Promise<AppsSettings> => {
     return this.listApps(listAppsOptions).then(({data: installedApps}: AppsList) => {
       const names = installedApps.map(getVendorAndName)
       const settingsPromises = names.map(vendorAndName => this.getAppSettings(vendorAndName).catch(notFound))
@@ -194,18 +194,18 @@ export class Apps {
     })
   }
 
-  getAppBundle = (app: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
+  public getAppBundle = (app: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
     const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
     return this.http.getStream(routes.AppBundle(app, bundlePath), {
-      params,
       headers: {
         Accept: 'application/x-gzip',
         'Accept-Encoding': 'gzip',
       },
+      params,
     })
   }
 
-  unpackAppBundle = (app: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean): Promise<Writable> => {
+  public unpackAppBundle = (app: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean): Promise<Writable> => {
     return this.getAppBundle(app, bundlePath, generatePackageJson)
       .then(stream => stream
         .pipe(createGunzip())
@@ -213,57 +213,57 @@ export class Apps {
       )
   }
 
-  getDependencies = (filter: string = '') => {
+  public getDependencies = (filter: string = '') => {
     const params = {filter}
     return this.http.get<Record<string, string[]>>(routes.Dependencies, {params})
   }
 
-  updateDependencies = () => {
+  public updateDependencies = () => {
     return this.http.put<Record<string, string[]>>(routes.Dependencies)
   }
 
-  updateDependency = (name: string, version: string, registry: string) => {
+  public updateDependency = (name: string, version: string, registry: string) => {
     return this.http.patch(routes.Apps, [{name, version, registry}])
   }
 
-  resolveDependencies = (apps: string[], registries: string[], filter: string = '') => {
+  public resolveDependencies = (apps: string[], registries: string[], filter: string = '') => {
     const params = {apps, registries, filter}
     return this.http.get(routes.ResolveDependencies, {params, paramsSerializer})
   }
 }
 
-type zipOptions = {
+interface ZipOptions {
   zlib?: ZlibOptions,
 }
 
-export type AppsListItem = {
+export interface AppsListItem {
   app: string,
   id: string,
   location: string,
 }
 
-export type AppsList = {
+export interface AppsList {
   data: AppsListItem[],
 }
 
-export type Change = {
+export interface Change {
   path: string,
   content: string | Readable | Buffer,
 }
 
-export type ListAppsOptions = {
+export interface ListAppsOptions {
   oldVersion?: string,
   context?: string[],
   since?: string,
   service?: string,
 }
 
-export type ListFilesOptions = {
+export interface ListFilesOptions {
   prefix?: string,
   context?: string[],
   nextMarker?: string,
 }
 
-export type AppsSettings = {
+export interface AppsSettings {
   [app: string]: any,
 }

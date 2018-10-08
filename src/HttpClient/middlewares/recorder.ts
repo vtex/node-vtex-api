@@ -16,6 +16,4 @@ export const recorderMiddleware = (recorder: Recorder) => {
   }
 }
 
-export interface Recorder {
-  (headers: any): void
-}
+export type Recorder = (headers: any) => void

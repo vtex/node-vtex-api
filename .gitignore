@@ -37,3 +37,6 @@ npm-debug.log
 yarn-error.log
 .build/
 lib/
+
+package-lock.json
+yarn-error.log
