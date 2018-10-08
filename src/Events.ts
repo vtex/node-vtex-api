@@ -2,7 +2,7 @@ import {HttpClient, InstanceOptions, IOContext, withoutRecorder} from './HttpCli
 
 const eventRoute = (route: string) => `/events/${route}`
 
-export class Event {
+export class Events {
   private http: HttpClient
 
   constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
