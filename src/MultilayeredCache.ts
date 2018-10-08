@@ -5,7 +5,7 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
   private hits = 0
   private total = 0
 
-  constructor (private caches: Array<CacheLayer<K, V>>) {}
+  constructor (private caches: Array<CacheLayer<K, V>>, private name?: string) {}
 
   public get = async (key: K, fetcher?: () => V): Promise<V | void> => {
     let value: V | void
@@ -28,9 +28,11 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
   }
 
   public set = async (key: K, value: V) => {
+    let setInAtLeastOneCache = false
     this.caches.forEach(async (cache: CacheLayer<K, V>) => {
-      await cache.set(key, value)
+      setInAtLeastOneCache = setInAtLeastOneCache || await cache.set(key, value)
     })
+    return setInAtLeastOneCache
   }
 
   public has = async (key: K): Promise<boolean> => {
@@ -43,8 +45,8 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
 
   public getStats = async (): Promise<MultilayerStats> => {
     const layersStats = Promise.all(map(
-      (cache: CacheLayer<K, V>) => cache.getStats
-        ? cache.getStats()
+      async (cache: CacheLayer<K, V>) => cache.getStats
+        ? await cache.getStats()
         : undefined
       , this.caches))
     const multilayerStats = {
@@ -78,13 +80,13 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
 export interface CacheLayer<K, V> {
   get (key: K, fetcher?: () => V): Promise<V | void>,
   has (key: K): Promise<boolean>,
-  set (key: K, value: V): void,
-  getStats? (): any,
+  set (key: K, value: V): Promise<boolean>,
+  getStats? (): Promise<any>,
 }
 
 export interface MultilayerStats {
   hitRate: number | undefined,
   hits: number,
   total: number,
-  layers: any
+  layers: any,
 }

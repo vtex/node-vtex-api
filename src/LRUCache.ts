@@ -1,6 +1,7 @@
 import * as LRU from 'lru-cache'
+import {CacheLayer} from './MultilayeredCache'
 
-export class LRUCache <K, V> {
+export class LRUCache <K, V> implements CacheLayer<K, V>{
   private storage: LRU.Cache<K, V>
   private hits: number
   private total: number
@@ -16,7 +17,7 @@ export class LRUCache <K, V> {
     })
   }
 
-  public get = (key: K): V | void => {
+  public get = async (key: K): Promise<V | void> => {
     const value = this.storage.get(key)
     if (this.storage.has(key)) {
       this.hits += 1
@@ -25,9 +26,9 @@ export class LRUCache <K, V> {
     return value
   }
 
-  public set = (key: K, value: V): boolean => this.storage.set(key, value)
+  public set = async (key: K, value: V): Promise<boolean> => this.storage.set(key, value)
 
-  public has = (key: K): boolean => this.storage.has(key)
+  public has = async (key: K): Promise<boolean> => this.storage.has(key)
 
   public getOrSet = async (key: K, fetcher: () => Promise<V>) => {
     let value = this.get(key)
@@ -48,7 +49,7 @@ export class LRUCache <K, V> {
     return value as V
   }
 
-  public getStats = (): Stats => {
+  public getStats = async (): Promise<Stats> => {
     const stats = {
       disposedItems: this.disposed,
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
