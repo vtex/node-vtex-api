@@ -1,10 +1,6 @@
 {
   "name": "@vtex/api",
-<<<<<<< HEAD
   "version": "1.0.0",
-=======
-  "version": "0.48.0",
->>>>>>> fixing types
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",

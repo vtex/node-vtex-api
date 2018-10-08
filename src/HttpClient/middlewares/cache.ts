@@ -46,26 +46,15 @@ export const cacheMiddleware = (cacheStorage: CacheLayer<string, Cached>) => {
     const cached = await cacheStorage.get(key)
 
     if (cached) {
-<<<<<<< HEAD
-      const {etag: cachedEtag, response, expiration} = cached
-      if (expiration > Date.now()) {
-        ctx.response = response
-=======
-      const {etag, response, expiration} = cached as Cached
+      const {etag: cachedEtag, response, expiration} = cached as Cached
       if (expiration > Date.now() && response) {
         ctx.response = response as AxiosResponse
->>>>>>> fixing types
         return
       }
 
       const validateStatus = addNotModified(ctx.config.validateStatus!)
-<<<<<<< HEAD
-      if (cachedEtag && validateStatus(response.status)) {
+      if (cachedEtag && validateStatus(response.status as number)) {
         ctx.config.headers['if-none-match'] = cachedEtag
-=======
-      if (etag && validateStatus(response!.status as number)) {
-        ctx.config.headers['if-none-match'] = etag
->>>>>>> fixing types
         ctx.config.validateStatus = validateStatus
       }
     }

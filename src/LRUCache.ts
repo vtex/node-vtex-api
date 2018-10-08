@@ -31,7 +31,7 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
   public has = async (key: K): Promise<boolean> => this.storage.has(key)
 
   public getOrSet = async (key: K, fetcher: () => Promise<V>) => {
-    let value = this.get(key)
+    let value = await this.get(key)
 
     // Support stale response by verifying need to fetch after get
     if (!this.has(key)) {
