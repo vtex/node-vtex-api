@@ -11,7 +11,7 @@ import {metricsMiddleware} from './middlewares/metrics'
 import {acceptNotFoundMiddleware, notFoundFallbackMiddleware} from './middlewares/notFound'
 import {Recorder, recorderMiddleware} from './middlewares/recorder'
 import {defaultsMiddleware, requestMiddleware} from './middlewares/request'
-import {CacheLayer} from '../MultilayeredCache'
+import {CacheLayer} from '../caches/CacheLayer'
 
 const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]

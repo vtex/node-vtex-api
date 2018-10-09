@@ -1,5 +1,5 @@
 import * as LRU from 'lru-cache'
-import {CacheLayer} from './MultilayeredCache'
+import { CacheLayer } from './CacheLayer'
 
 export class LRUCache <K, V> implements CacheLayer<K, V>{
   private storage: LRU.Cache<K, V>

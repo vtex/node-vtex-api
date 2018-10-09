@@ -1,4 +1,5 @@
 import { map, slice } from 'ramda'
+import { CacheLayer } from './CacheLayer'
 
 export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
 
@@ -75,13 +76,6 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
     this.hits = 0
     this.total = 0
   }
-}
-
-export interface CacheLayer<K, V> {
-  get (key: K, fetcher?: () => V): Promise<V | void>,
-  has (key: K): Promise<boolean>,
-  set (key: K, value: V): Promise<boolean>,
-  getStats? (): any,
 }
 
 export interface MultilayerStats {
