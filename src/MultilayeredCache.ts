@@ -44,11 +44,11 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
   }
 
   public getStats = (): MultilayerStats => {
-    const layersStats = Promise.all(map(
-      async (cache: CacheLayer<K, V>) => cache.getStats
+    const layersStats = map(
+      (cache: CacheLayer<K, V>) => cache.getStats
         ? cache.getStats()
         : undefined
-      , this.caches))
+      , this.caches)
     const multilayerStats = {
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
       hits: this.hits,
