@@ -49,7 +49,7 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
     return value as V
   }
 
-  public getStats = async (): Promise<Stats> => {
+  public getStats = (): Stats => {
     const stats = {
       disposedItems: this.disposed,
       hitRate: this.total > 0 ? this.hits / this.total : undefined,

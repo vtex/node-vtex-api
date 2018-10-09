@@ -43,10 +43,10 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
     return hasInAtLeastOneCache
   }
 
-  public getStats = async (): Promise<MultilayerStats> => {
+  public getStats = (): MultilayerStats => {
     const layersStats = Promise.all(map(
       async (cache: CacheLayer<K, V>) => cache.getStats
-        ? await cache.getStats()
+        ? cache.getStats()
         : undefined
       , this.caches))
     const multilayerStats = {
@@ -81,7 +81,7 @@ export interface CacheLayer<K, V> {
   get (key: K, fetcher?: () => V): Promise<V | void>,
   has (key: K): Promise<boolean>,
   set (key: K, value: V): Promise<boolean>,
-  getStats? (): Promise<any>,
+  getStats? (): any,
 }
 
 export interface MultilayerStats {
