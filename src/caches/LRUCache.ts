@@ -49,7 +49,7 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
     return value as V
   }
 
-  public getStats = (): Stats => {
+  public getStats = (name='lru-cache'): Stats => {
     const stats = {
       disposedItems: this.disposed,
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
@@ -57,6 +57,7 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
       itemCount: this.storage.itemCount,
       length: this.storage.length,
       max: this.storage.max,
+      name,
       total: this.total,
     }
     this.hits = 0
@@ -74,5 +75,6 @@ export type Stats = {
   hitRate: number | undefined,
   hits: number,
   max: number,
+  name: string,
   total: number,
 }

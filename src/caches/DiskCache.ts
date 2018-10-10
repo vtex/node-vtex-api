@@ -20,10 +20,10 @@ export class DiskCache<V> implements CacheLayer<string, V>{
     }
   }
 
-  public getStats = (): any => {
+  public getStats = (name='disk-cache'): any => {
     const stats = {
       hits: this.hits,
-      name: 'disk-cache',
+      name,
       total: this.total,
     }
     this.hits = 0

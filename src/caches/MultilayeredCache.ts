@@ -44,7 +44,7 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
     return hasInAtLeastOneCache
   }
 
-  public getStats = (): MultilayerStats => {
+  public getStats = (name='multilayred-cache'): MultilayerStats => {
     const layersStats = map(
       (cache: CacheLayer<K, V>) => cache.getStats
         ? cache.getStats()
@@ -53,6 +53,7 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
     const multilayerStats = {
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
       hits: this.hits,
+      name,
       layers: layersStats,
       total: this.total,
     }
@@ -83,4 +84,5 @@ export interface MultilayerStats {
   hits: number,
   total: number,
   layers: any,
+  name: string,
 }
