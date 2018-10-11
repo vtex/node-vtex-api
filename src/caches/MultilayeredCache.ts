@@ -6,9 +6,9 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
   private hits = 0
   private total = 0
 
-  constructor (private caches: Array<CacheLayer<K, V>>, private name?: string) {}
+  constructor (private caches: Array<CacheLayer<K, V>>) {}
 
-  public get = async (key: K, fetcher?: () => V): Promise<V | void> => {
+  public get = async (key: K, fetcher?: () => Promise<V>): Promise<V | void> => {
     let value: V | void
     let successIndex = await this.findIndex(async (cache: CacheLayer<K, V>) => {
       const [getValue, hasKey] = await Promise.all([cache.get(key), cache.has(key)])
@@ -17,7 +17,7 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
     }, this.caches)
     if (successIndex === -1) {
       if (fetcher) {
-        value = fetcher()
+        value = await fetcher()
       } else {
         return undefined
       }
