@@ -44,7 +44,8 @@ export class DiskCache<V> implements CacheLayer<string, V>{
   }
 
   public set = async (key: string, json: V) => {
-    await this.writeFile(key, json)
+    const cacheKey = this.getCacheKey(key)
+    await this.writeFile(cacheKey, json)
     return true
   }
 
