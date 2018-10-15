@@ -1,6 +1,6 @@
 import { CacheLayer } from './CacheLayer'
 
-import { outputJSON, readJSON, stat } from 'fs-extra'
+import { outputJSON, pathExists, readJSON } from 'fs-extra'
 import { join } from 'path'
 
 export class DiskCache<V> implements CacheLayer<string, V>{
@@ -12,12 +12,7 @@ export class DiskCache<V> implements CacheLayer<string, V>{
 
   public has = async (key: string): Promise<boolean> => {
     const cacheKey = this.getCacheKey(key)
-    try {
-      await stat(cacheKey)
-      return true
-    } catch(e) {
-      return false
-    }
+    return await pathExists(cacheKey)
   }
 
   public getStats = (name='disk-cache'): any => {

@@ -1,4 +1,4 @@
-import { map, slice } from 'ramda'
+import { any, map, slice } from 'ramda'
 import { CacheLayer } from './CacheLayer'
 
 export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
@@ -24,24 +24,18 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
       successIndex = Infinity
     }
     const failedCaches = slice(0, successIndex, this.caches)
-    failedCaches.forEach(cache => cache.set(key, value as V))
+    await Promise.all(map(cache => cache.set(key, value as V), failedCaches))
     return value
   }
 
   public set = async (key: K, value: V) => {
-    let setInAtLeastOneCache = false
-    this.caches.forEach(async (cache: CacheLayer<K, V>) => {
-      setInAtLeastOneCache = setInAtLeastOneCache || await cache.set(key, value)
-    })
-    return setInAtLeastOneCache
+    const isSet = await Promise.all(map(cache => cache.set(key, value), this.caches))
+    return any(item => item, isSet)
   }
 
   public has = async (key: K): Promise<boolean> => {
-    let hasInAtLeastOneCache = false
-    this.caches.forEach(async (cache: CacheLayer<K, V>) => {
-      hasInAtLeastOneCache = hasInAtLeastOneCache || await cache.has(key)
-    })
-    return hasInAtLeastOneCache
+    const hasList = await Promise.all(map(cache => cache.has(key), this.caches))
+    return any(item => item, hasList)
   }
 
   public getStats = (name='multilayred-cache'): MultilayerStats => {
@@ -53,8 +47,8 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
     const multilayerStats = {
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
       hits: this.hits,
-      name,
       layers: layersStats,
+      name,
       total: this.total,
     }
     this.resetCounters()
