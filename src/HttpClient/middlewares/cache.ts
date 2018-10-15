@@ -1,6 +1,7 @@
 import {AxiosRequestConfig, AxiosResponse} from 'axios'
 import {URL, URLSearchParams} from 'url'
 import {MiddlewareContext} from '../context'
+import {CacheLayer} from '../../caches/CacheLayer'
 
 const cacheKey = (config: AxiosRequestConfig) => {
   const {baseURL = '', url = '', params} = config
@@ -35,24 +36,24 @@ function isCacheable (arg: any): arg is CacheableRequestConfig {
 const addNotModified = (validateStatus: (status: number) => boolean) =>
   (status: number) => validateStatus(status) || status === 304
 
-export const cacheMiddleware = (cacheStorage: CacheStorage) => {
+export const cacheMiddleware = (cacheStorage: CacheLayer<string, Cached>) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     if (!isCacheable(ctx.config)) {
       return await next()
     }
 
     const key = cacheKey(ctx.config)
-    const cached = cacheStorage.get<Cached>(key)
+    const cached = await cacheStorage.get(key)
 
     if (cached) {
-      const {etag: cachedEtag, response, expiration} = cached
-      if (expiration > Date.now()) {
-        ctx.response = response
+      const {etag: cachedEtag, response, expiration} = cached as Cached
+      if (expiration > Date.now() && response) {
+        ctx.response = response as AxiosResponse
         return
       }
 
       const validateStatus = addNotModified(ctx.config.validateStatus!)
-      if (cachedEtag && validateStatus(response.status)) {
+      if (cachedEtag && validateStatus(response.status as number)) {
         ctx.config.headers['if-none-match'] = cachedEtag
         ctx.config.validateStatus = validateStatus
       }
@@ -65,11 +66,11 @@ export const cacheMiddleware = (cacheStorage: CacheStorage) => {
     }
 
     const revalidated = ctx.response.status === 304
-    if (revalidated) {
-      ctx.response = cached!.response
+    if (revalidated && cached) {
+      ctx.response = cached.response as AxiosResponse
     }
 
-    const {data, headers, status} = ctx.response
+    const {data, headers, status} = ctx.response as AxiosResponse
     const {age, etag, maxAge, noStore} = parseCacheHeaders(headers)
     if (noStore && !etag) {
       return
@@ -77,7 +78,7 @@ export const cacheMiddleware = (cacheStorage: CacheStorage) => {
 
     if (maxAge || etag) {
       const currentAge = revalidated ? 0 : age
-      cacheStorage.set(key, {
+      await cacheStorage.set(key, {
         etag,
         expiration: Date.now() + (maxAge - currentAge) * 1000,
         response: {data, headers, status},
@@ -87,15 +88,10 @@ export const cacheMiddleware = (cacheStorage: CacheStorage) => {
   }
 }
 
-interface Cached {
+export interface Cached {
   etag: string
   expiration: number
-  response: AxiosResponse
-}
-
-export interface CacheStorage {
-  get<T> (key: string): T | undefined
-  set (key: string, value: any): void
+  response: Partial<AxiosResponse>
 }
 
 export type CacheableRequestConfig = AxiosRequestConfig & {

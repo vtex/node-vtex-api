@@ -1,6 +1,7 @@
 import * as LRU from 'lru-cache'
+import { CacheLayer } from './CacheLayer'
 
-export class LRUCache <K, V> {
+export class LRUCache <K, V> implements CacheLayer<K, V>{
   private storage: LRU.Cache<K, V>
   private hits: number
   private total: number
@@ -16,7 +17,7 @@ export class LRUCache <K, V> {
     })
   }
 
-  public get = (key: K): V | void => {
+  public get = async (key: K): Promise<V | void> => {
     const value = this.storage.get(key)
     if (this.storage.has(key)) {
       this.hits += 1
@@ -25,12 +26,12 @@ export class LRUCache <K, V> {
     return value
   }
 
-  public set = (key: K, value: V): boolean => this.storage.set(key, value)
+  public set = async (key: K, value: V): Promise<boolean> => this.storage.set(key, value)
 
-  public has = (key: K): boolean => this.storage.has(key)
+  public has = async (key: K): Promise<boolean> => this.storage.has(key)
 
   public getOrSet = async (key: K, fetcher: () => Promise<V>) => {
-    let value = this.get(key)
+    let value = await this.get(key)
 
     // Support stale response by verifying need to fetch after get
     if (!this.has(key)) {
@@ -48,7 +49,7 @@ export class LRUCache <K, V> {
     return value as V
   }
 
-  public getStats = (): Stats => {
+  public getStats = (name='lru-cache'): Stats => {
     const stats = {
       disposedItems: this.disposed,
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
@@ -56,6 +57,7 @@ export class LRUCache <K, V> {
       itemCount: this.storage.itemCount,
       length: this.storage.length,
       max: this.storage.max,
+      name,
       total: this.total,
     }
     this.hits = 0
@@ -73,5 +75,6 @@ export type Stats = {
   hitRate: number | undefined,
   hits: number,
   max: number,
+  name: string,
   total: number,
 }
