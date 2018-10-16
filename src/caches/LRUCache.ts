@@ -35,7 +35,7 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
 
   public has = (key: K): boolean => this.storage.has(key)
 
-  public getStats = (name='lru-cache-sync'): Stats => {
+  public getStats = (name='lru-cache'): Stats => {
     const stats = {
       disposedItems: this.disposed,
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
