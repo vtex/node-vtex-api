@@ -28,7 +28,7 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
     return value
   }
 
-  public set = async (key: K, value: V) => {
+  public set = async (key: K, value: V): Promise<boolean> => {
     const isSet = await Promise.all(map(cache => cache.set(key, value), this.caches))
     return any(item => item, isSet)
   }
@@ -39,15 +39,9 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
   }
 
   public getStats = (name='multilayred-cache'): MultilayerStats => {
-    const layersStats = map(
-      (cache: CacheLayer<K, V>) => cache.getStats
-        ? cache.getStats()
-        : undefined
-      , this.caches)
     const multilayerStats = {
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
       hits: this.hits,
-      layers: layersStats,
       name,
       total: this.total,
     }
@@ -73,10 +67,10 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
   }
 }
 
-export interface MultilayerStats {
+// tslint:disable-next-line:interface-over-type-literal
+export type MultilayerStats = {
   hitRate: number | undefined,
   hits: number,
   total: number,
-  layers: any,
   name: string,
 }
