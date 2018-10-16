@@ -67,7 +67,8 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
   }
 }
 
-export interface MultilayerStats {
+// tslint:disable-next-line:interface-over-type-literal
+export type MultilayerStats = {
   hitRate: number | undefined,
   hits: number,
   total: number,

@@ -15,7 +15,7 @@ export class DiskCache<V> implements CacheLayer<string, V>{
     return await pathExists(cacheKey)
   }
 
-  public getStats = (name='disk-cache'): any => {
+  public getStats = (name='disk-cache'): DiskStats => {
     const stats = {
       hits: this.hits,
       name,
@@ -45,4 +45,11 @@ export class DiskCache<V> implements CacheLayer<string, V>{
   }
 
   private getCacheKey = (key: string) => join(this.cachePath, key)
+}
+
+// tslint:disable-next-line:interface-over-type-literal
+export type DiskStats = {
+  hits: number,
+  total: number,
+  name: string,
 }
