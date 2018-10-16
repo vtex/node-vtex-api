@@ -1,7 +1,9 @@
 import * as LRU from 'lru-cache'
 import { CacheLayer } from './CacheLayer'
+import { MultilayeredCache } from './MultilayeredCache'
 
 export class LRUCache <K, V> implements CacheLayer<K, V>{
+  private multilayer: MultilayeredCache<K, V>
   private storage: LRU.Cache<K, V>
   private hits: number
   private total: number
@@ -15,9 +17,10 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
       ...options,
       dispose: () => this.disposed += 1,
     })
+    this.multilayer = new MultilayeredCache([this])
   }
 
-  public get = async (key: K): Promise<V | void> => {
+  public get = (key: K): V | void => {
     const value = this.storage.get(key)
     if (this.storage.has(key)) {
       this.hits += 1
@@ -26,30 +29,13 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
     return value
   }
 
-  public set = async (key: K, value: V): Promise<boolean> => this.storage.set(key, value)
+  public getOrSet = async (key: K, fetcher?: () => Promise<V>): Promise<V | void> => this.multilayer.get(key, fetcher)
 
-  public has = async (key: K): Promise<boolean> => this.storage.has(key)
+  public set = (key: K, value: V): boolean => this.storage.set(key, value)
 
-  public getOrSet = async (key: K, fetcher: () => Promise<V>) => {
-    let value = await this.get(key)
+  public has = (key: K): boolean => this.storage.has(key)
 
-    // Support stale response by verifying need to fetch after get
-    if (!this.has(key)) {
-      const valueP = fetcher().then((v) => {
-        this.set(key, v)
-        return v
-      })
-
-      // When stale, value is present even though `has` failed
-      if (value === undefined) {
-        value = await valueP
-      }
-    }
-
-    return value as V
-  }
-
-  public getStats = (name='lru-cache'): Stats => {
+  public getStats = (name='lru-cache-sync'): Stats => {
     const stats = {
       disposedItems: this.disposed,
       hitRate: this.total > 0 ? this.hits / this.total : undefined,

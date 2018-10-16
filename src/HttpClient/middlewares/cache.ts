@@ -1,7 +1,7 @@
 import {AxiosRequestConfig, AxiosResponse} from 'axios'
 import {URL, URLSearchParams} from 'url'
-import {MiddlewareContext} from '../context'
 import {CacheLayer} from '../../caches/CacheLayer'
+import {MiddlewareContext} from '../context'
 
 const cacheKey = (config: AxiosRequestConfig) => {
   const {baseURL = '', url = '', params} = config
