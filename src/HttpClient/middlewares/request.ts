@@ -12,8 +12,8 @@ const http = axios.create({
 })
 
 retry(http, {
-  retries: 5,
-  retryDelay: (retryCount: number) => (2 ** retryCount) + Math.random()
+  retries: 3,
+  retryDelay: retry.exponentialDelay
 })
 http.interceptors.response.use(response => response, (err: any) => {
   try {

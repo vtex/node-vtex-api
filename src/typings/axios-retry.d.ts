@@ -35,7 +35,8 @@ declare module 'axios-retry' {
     (
       axios: AxiosStatic | AxiosInstance,
       axiosRetryConfig?: IAxiosRetryConfig,
-    ): void
+    ): void,
+    exponentialDelay: (retryNumber: number) => number
   }
   
   var R: Retry
