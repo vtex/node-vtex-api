@@ -10,7 +10,7 @@ Usage:
 
 We generally create a `Resources` class that groups all relevant clients and initialize them with the current request's `ctx.vtex` context, which includes `authToken`, `account`, `workspace`, etc.
 
-```
+```js
 import {Apps, LRUCache, Registry, VBase, ServiceContext} from '@vtex/api'
 
 const MAX_ELEMS = 1000
@@ -23,7 +23,7 @@ const cacheStorage = new LRUCache<string, any>({
 })
 
 // `cacheStorage` has a `getStats` method.
-metrics.addOnFlushMeter(() => ({...cacheStorage.getStats(), name: 'example-cache-stats'}))
+metrics.addOnFlushMeter(() => cacheStorage.getStats('example-cache-stats'))
 
 export default class Resources {
   public apps: Apps
