@@ -1,5 +1,4 @@
-import {LegacyInstanceOptions} from './HttpClient'
-import {forLegacy, IODataSource} from './utils/dataSource'
+import {HttpClient, LegacyInstanceOptions} from './HttpClient'
 
 const routes = {
   SEND: '/accesskey/send',
@@ -17,15 +16,13 @@ const endpoint = (env: string) => {
   return VTEXID_ENDPOINTS[env] || env
 }
 
-export class ID extends IODataSource {
+export class ID {
+  private http: HttpClient
   private defaultHeaders: Record<string, string>
 
-  constructor (endpointUrl: string = 'STABLE', options: LegacyInstanceOptions) {
-    super(forLegacy, {
-      options,
-      service: endpoint(endpointUrl),
-    })
-    this.defaultHeaders = options.accept ? {accept: options.accept} : {}
+  constructor (endpointUrl: string = 'STABLE', opts: LegacyInstanceOptions) {
+    this.http = HttpClient.forLegacy(endpoint(endpointUrl), opts)
+    this.defaultHeaders = opts.accept ? {accept: opts.accept} : {}
   }
 
   public getTemporaryToken = () => {

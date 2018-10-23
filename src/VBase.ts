@@ -23,12 +23,11 @@ const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
 }
 
 export class VBase extends IODataSource {
+  protected httpClientFactory = forWorkspace
+  protected service = 'vbase'
+
   constructor (context?: IOContext, options: InstanceOptions = {}) {
-    super(forWorkspace, {
-      context,
-      options,
-      service: 'vbase',
-    })
+    super(context, options)
     if (runningAppName === '') {
       throw new Error(`Invalid path to access Vbase. Variable VTEX_APP_ID is not available.`)
     }

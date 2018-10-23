@@ -2,30 +2,34 @@ import {DataSource, DataSourceConfig} from 'apollo-datasource'
 import {HttpClient, InstanceOptions, IOContext, LegacyInstanceOptions, ServiceContext} from '../HttpClient'
 
 interface HttpClientFactoryOptions {
-  service?: string
-  context?: IOContext
-  options?: InstanceOptions | LegacyInstanceOptions
+  service: string | void
+  context: IOContext | void
+  options: InstanceOptions | LegacyInstanceOptions | void
 }
 
 export type HttpClientFactory = (opts: HttpClientFactoryOptions) => HttpClient | void
 
-export class IODataSource extends DataSource<ServiceContext> {
-  private httpClient: HttpClient | void
+export abstract class IODataSource extends DataSource<ServiceContext> {
+  protected abstract httpClientFactory: HttpClientFactory
+  protected service: string | void = undefined
+  private httpClient: HttpClient | void = undefined
 
   constructor (
-    private httpClientFactory: HttpClientFactory,
-    private opts: HttpClientFactoryOptions = {}
+    private context?: IOContext,
+    private options: InstanceOptions = {}
   ) {
     super()
-    this.httpClient = httpClientFactory(opts)
+    if (this.context) {
+      this.initialize({context: {vtex: this.context}} as any)
+    }
   }
 
   public initialize(config: DataSourceConfig<ServiceContext>) {
     const {context: {vtex: context}, cache: cacheStorage} = config
     this.httpClient = this.httpClientFactory({
       context,
-      options: {cacheStorage, ...this.opts.options} as any,
-      service: this.opts.service,
+      options: {cacheStorage, ...this.options} as any,
+      service: this.service,
     })
   }
 

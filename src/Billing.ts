@@ -1,4 +1,3 @@
-import {InstanceOptions, IOContext} from './HttpClient'
 import {forWorkspace, IODataSource} from './utils/dataSource'
 
 const metricRoute = `/metrics`
@@ -8,13 +7,8 @@ const routes = {
 }
 
 export class Billing extends IODataSource {
-  constructor (context?: IOContext, options: InstanceOptions = {}) {
-    super(forWorkspace, {
-      context,
-      options,
-      service: 'billing.vtex',
-    })
-  }
+  protected service = 'billing.vtex'
+  protected httpClientFactory = forWorkspace
 
   public contractStatus = () => {
     return this.http.get<ContractStatus>(routes.contractStatus)

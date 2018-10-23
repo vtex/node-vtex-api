@@ -26,13 +26,8 @@ const forWorkspaceMaster: HttpClientFactory = ({service, context, options}) => (
   : undefined
 
 export class Registry extends IODataSource {
-  constructor (context: IOContext, options: InstanceOptions = {}) {
-    super(forWorkspaceMaster, {
-      context,
-      options,
-      service: 'apps',
-    })
-  }
+  protected httpClientFactory = forWorkspaceMaster
+  protected service = 'apps'
 
   public publishApp = async (files: File[], tag?: string, {zlib}: ZipOptions = {}) => {
     if (!(files[0] && files[0].path && files[0].content)) {

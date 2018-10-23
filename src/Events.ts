@@ -8,13 +8,8 @@ const forWorkspaceWithoutRecorder: HttpClientFactory = ({service, context, optio
   : undefined
 
 export class Events extends IODataSource {
-  constructor (context: IOContext, options: InstanceOptions = {}) {
-    super(forWorkspaceWithoutRecorder, {
-      context,
-      options,
-      service: 'colossus',
-    })
-  }
+  protected service = 'colossus'
+  protected httpClientFactory = forWorkspaceWithoutRecorder
 
   public sendEvent = (subject: string, route: string, message?: any) => {
     return this.http.put(eventRoute(route), message, {params: {subject}})

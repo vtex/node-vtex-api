@@ -1,5 +1,4 @@
 import {DEFAULT_WORKSPACE} from './constants'
-import {InstanceOptions, IOContext} from './HttpClient'
 import {forRoot, IODataSource} from './utils/dataSource'
 
 const routes = {
@@ -9,13 +8,8 @@ const routes = {
 }
 
 export class Workspaces extends IODataSource {
-  constructor (context: IOContext, options: InstanceOptions = {}) {
-    super(forRoot, {
-      context,
-      options,
-      service: 'router',
-    })
-  }
+  protected service = 'router'
+  protected httpClientFactory = forRoot
 
   public list = (account: string) => {
     return this.http.get<WorkspaceMetadata[]>(routes.Account(account))

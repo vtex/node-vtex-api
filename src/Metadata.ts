@@ -23,12 +23,11 @@ export interface MetadataEntryList {
 }
 
 export class Metadata extends IODataSource{
+  protected service = 'router'
+  protected httpClientFactory = forWorkspace
+
   constructor (context?: IOContext, options: InstanceOptions = {}) {
-    super(forWorkspace, {
-      context,
-      options,
-      service: 'router',
-    })
+    super(context, options)
     if (runningAppName === '') {
       throw new Error(`Invalid path to access Metadata. Variable VTEX_APP_ID is not available.`)
     }
