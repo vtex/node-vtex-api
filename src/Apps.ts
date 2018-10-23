@@ -5,8 +5,9 @@ import {Readable, Writable} from 'stream'
 import {extract} from 'tar-fs'
 import {createGunzip, ZlibOptions} from 'zlib'
 
-import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
+import {InstanceOptions, IOContext} from './HttpClient'
 import {AppBundleLinked, AppFilesList, AppManifest} from './responses'
+import {IODataSource, workspaceClientFactory} from './utils/dataSource'
 
 const routes = {
   Acknowledge: (app: string, service: string) => `${routes.App(app)}/acknowledge/${service}`,
@@ -46,11 +47,13 @@ const paramsSerializer = (params: any) => {
   return stringify(params, {arrayFormat: 'repeat'})
 }
 
-export class Apps {
-  private http: HttpClient
-
-  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
-    this.http = HttpClient.forWorkspace('apps', ioContext, opts)
+export class Apps extends IODataSource {
+  constructor (context?: IOContext, options: InstanceOptions = {}) {
+    super(workspaceClientFactory, {
+      context,
+      options,
+      service: 'apps',
+    })
   }
 
   public installApp = (descriptor: string) => {

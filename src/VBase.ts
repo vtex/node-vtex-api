@@ -4,9 +4,10 @@ import { basename } from 'path'
 import { Readable } from 'stream'
 import { createGzip } from 'zlib'
 
-import { HttpClient, InstanceOptions, IOContext } from './HttpClient'
+import { InstanceOptions, IOContext } from './HttpClient'
 import { IgnoreNotFoundRequestConfig } from './HttpClient/middlewares/notFound'
 import { BucketMetadata, FileListItem } from './responses'
+import { IODataSource, workspaceClientFactory } from './utils/dataSource'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']
@@ -21,14 +22,16 @@ const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
   return typeof opts !== 'string' && !(opts instanceof String)
 }
 
-export class VBase {
-  private http: HttpClient
-
-  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
+export class VBase extends IODataSource {
+  constructor (context?: IOContext, options: InstanceOptions = {}) {
+    super(workspaceClientFactory, {
+      context,
+      options,
+      service: 'vbase',
+    })
     if (runningAppName === '') {
       throw new Error(`Invalid path to access Vbase. Variable VTEX_APP_ID is not available.`)
     }
-    this.http = HttpClient.forWorkspace('vbase', ioContext, opts)
   }
 
   public getBucket = (bucket: string) => {

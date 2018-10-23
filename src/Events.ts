@@ -1,12 +1,15 @@
-import {HttpClient, InstanceOptions, IOContext, withoutRecorder} from './HttpClient'
+import {InstanceOptions, IOContext, withoutRecorder} from './HttpClient'
+import {IODataSource, workspaceClientFactory} from './utils/dataSource'
 
 const eventRoute = (route: string) => `/events/${route}`
 
-export class Events {
-  private http: HttpClient
-
+export class Events extends IODataSource {
   constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
-    this.http = HttpClient.forWorkspace('colossus', withoutRecorder(ioContext), opts)
+    super(workspaceClientFactory, {
+      context: withoutRecorder(ioContext),
+      options,
+      service: 'colossus',
+    })
   }
 
   public sendEvent = (subject: string, route: string, message?: any) => {
