@@ -6,8 +6,8 @@ import { createGzip } from 'zlib'
 
 import { InstanceOptions, IOContext } from './HttpClient'
 import { IgnoreNotFoundRequestConfig } from './HttpClient/middlewares/notFound'
+import { forWorkspace, IODataSource } from './IODataSource'
 import { BucketMetadata, FileListItem } from './responses'
-import { forWorkspace, IODataSource } from './utils/dataSource'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']

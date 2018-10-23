@@ -1,5 +1,5 @@
 import {DEFAULT_WORKSPACE} from './constants'
-import {forRoot, IODataSource} from './utils/dataSource'
+import {forRoot, IODataSource} from './IODataSource'
 
 const routes = {
   Account: (account: string) => `/${account}`,

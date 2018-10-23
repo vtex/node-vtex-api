@@ -5,8 +5,8 @@ import {Readable, Writable} from 'stream'
 import {extract} from 'tar-fs'
 import {createGunzip, ZlibOptions} from 'zlib'
 
+import {forWorkspace, IODataSource} from './IODataSource'
 import {AppBundleLinked, AppFilesList, AppManifest} from './responses'
-import {forWorkspace, IODataSource} from './utils/dataSource'
 
 const routes = {
   Acknowledge: (app: string, service: string) => `${routes.App(app)}/acknowledge/${service}`,

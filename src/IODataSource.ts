@@ -1,5 +1,5 @@
 import {DataSource, DataSourceConfig} from 'apollo-datasource'
-import {HttpClient, InstanceOptions, IOContext, LegacyInstanceOptions, ServiceContext} from '../HttpClient'
+import {HttpClient, InstanceOptions, IOContext, LegacyInstanceOptions, ServiceContext} from './HttpClient'
 
 interface HttpClientFactoryOptions {
   service: string | void
@@ -13,15 +13,13 @@ export abstract class IODataSource extends DataSource<ServiceContext> {
   protected abstract httpClientFactory: HttpClientFactory
   protected service: string | void = undefined
   private httpClient: HttpClient | void = undefined
+  private initialized = false
 
   constructor (
     private context?: IOContext,
     private options: InstanceOptions = {}
   ) {
     super()
-    if (this.context) {
-      this.initialize({context: {vtex: this.context}} as any)
-    }
   }
 
   public initialize(config: DataSourceConfig<ServiceContext>) {
@@ -31,9 +29,13 @@ export abstract class IODataSource extends DataSource<ServiceContext> {
       options: {cacheStorage, ...this.options} as any,
       service: this.service,
     })
+    this.initialized = true
   }
 
   get http(): HttpClient {
+    if (!this.initialized) {
+      this.initialize({context: {vtex: this.context}} as any)
+    }
     if (this.httpClient) {
       return this.httpClient
     }

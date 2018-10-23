@@ -5,9 +5,9 @@ import {extract} from 'tar-fs'
 import {createGunzip, ZlibOptions} from 'zlib'
 
 import {DEFAULT_WORKSPACE} from './constants'
-import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
+import {HttpClient} from './HttpClient'
+import {HttpClientFactory, IODataSource} from './IODataSource'
 import {AppBundlePublished, AppFilesList, AppManifest} from './responses'
-import {HttpClientFactory, IODataSource} from './utils/dataSource'
 
 const EMPTY_OBJECT = {}
 

@@ -1,6 +1,6 @@
 import { InstanceOptions, IOContext } from './HttpClient'
+import { forWorkspace, IODataSource } from './IODataSource'
 import { BucketMetadata } from './responses'
-import { forWorkspace, IODataSource } from './utils/dataSource'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']
