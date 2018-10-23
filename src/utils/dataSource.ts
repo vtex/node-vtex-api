@@ -45,6 +45,6 @@ export const forRoot: HttpClientFactory = ({context, service, options}) => (cont
   ? HttpClient.forRoot(service, context, options || {})
   : undefined
 
-export const forLegacy: HttpClientFactory = ({context, service, options}) => service
+export const forLegacy: HttpClientFactory = ({service, options}) => service
   ? HttpClient.forLegacy(service, options || {} as any)
   : undefined
