@@ -21,13 +21,13 @@ const routes = {
   Registry: '/registry',
 }
 
-const forWorkspaceWithoutRecorder: HttpClientFactory = ({service, context, options}) => (service && context)
+const forWorkspaceMaster: HttpClientFactory = ({service, context, options}) => (service && context)
   ? HttpClient.forWorkspace(service, {...context, workspace: DEFAULT_WORKSPACE}, options || {})
   : undefined
 
 export class Registry extends IODataSource {
   constructor (context: IOContext, options: InstanceOptions = {}) {
-    super(forWorkspaceWithoutRecorder, {
+    super(forWorkspaceMaster, {
       context,
       options,
       service: 'apps',
