@@ -1,5 +1,5 @@
 import {LegacyInstanceOptions} from './HttpClient'
-import {IODataSource, legacyClientFactory} from './utils/dataSource'
+import {forLegacy, IODataSource} from './utils/dataSource'
 
 const routes = {
   SEND: '/accesskey/send',
@@ -21,7 +21,7 @@ export class ID extends IODataSource {
   private defaultHeaders: Record<string, string>
 
   constructor (endpointUrl: string = 'STABLE', options: LegacyInstanceOptions) {
-    super(legacyClientFactory, {
+    super(forLegacy, {
       options,
       service: endpoint(endpointUrl),
     })

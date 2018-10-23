@@ -1,5 +1,5 @@
-import { InstanceOptions, IOContext } from './HttpClient'
-import { IODataSource, workspaceClientFactory } from './utils/dataSource'
+import {InstanceOptions, IOContext} from './HttpClient'
+import {forWorkspace, IODataSource} from './utils/dataSource'
 
 const metricRoute = `/metrics`
 
@@ -9,7 +9,7 @@ const routes = {
 
 export class Billing extends IODataSource {
   constructor (context?: IOContext, options: InstanceOptions = {}) {
-    super(workspaceClientFactory, {
+    super(forWorkspace, {
       context,
       options,
       service: 'billing.vtex',

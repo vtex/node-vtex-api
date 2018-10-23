@@ -3,6 +3,7 @@ import * as PQueue from 'p-queue'
 import {pick} from 'ramda'
 
 import {HttpClient, InstanceOptions, IOContext, withoutRecorder} from './HttpClient'
+import {HttpClientFactory, IODataSource} from './utils/dataSource'
 
 const DEFAULT_SUBJECT = '-'
 const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url']
@@ -23,11 +24,17 @@ const errorReplacer = (key: string, value: any) => {
   return value
 }
 
-export class Logger {
-  private http: HttpClient
+const forWorkspaceWithoutRecorder: HttpClientFactory = ({service, context, options}) => (service && context)
+  ? HttpClient.forWorkspace(service, withoutRecorder(context), options || {})
+  : undefined
 
-  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
-    this.http = HttpClient.forWorkspace('colossus', withoutRecorder(ioContext), opts)
+export class Logger extends IODataSource {
+  constructor (context: IOContext, options: InstanceOptions = {}) {
+    super(forWorkspaceWithoutRecorder, {
+      context,
+      options,
+      service: 'colossus',
+    })
   }
 
   public debug = (message: any, subject: string = DEFAULT_SUBJECT) =>

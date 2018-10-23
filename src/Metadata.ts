@@ -1,6 +1,6 @@
 import { InstanceOptions, IOContext } from './HttpClient'
 import { BucketMetadata } from './responses'
-import { IODataSource, workspaceClientFactory } from './utils/dataSource'
+import { forWorkspace, IODataSource } from './utils/dataSource'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']
@@ -24,7 +24,7 @@ export interface MetadataEntryList {
 
 export class Metadata extends IODataSource{
   constructor (context?: IOContext, options: InstanceOptions = {}) {
-    super(workspaceClientFactory, {
+    super(forWorkspace, {
       context,
       options,
       service: 'router',

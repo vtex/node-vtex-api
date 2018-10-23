@@ -1,5 +1,6 @@
 import {DEFAULT_WORKSPACE} from './constants'
-import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
+import {InstanceOptions, IOContext} from './HttpClient'
+import {forRoot, IODataSource} from './utils/dataSource'
 
 const routes = {
   Account: (account: string) => `/${account}`,
@@ -7,11 +8,13 @@ const routes = {
   Workspace: (account: string, workspace: string) => `${routes.Account(account)}/${workspace}`,
 }
 
-export class Workspaces {
-  private http: HttpClient
-
-  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
-    this.http = HttpClient.forRoot('router', ioContext, opts)
+export class Workspaces extends IODataSource {
+  constructor (context: IOContext, options: InstanceOptions = {}) {
+    super(forRoot, {
+      context,
+      options,
+      service: 'router',
+    })
   }
 
   public list = (account: string) => {

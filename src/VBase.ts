@@ -7,7 +7,7 @@ import { createGzip } from 'zlib'
 import { InstanceOptions, IOContext } from './HttpClient'
 import { IgnoreNotFoundRequestConfig } from './HttpClient/middlewares/notFound'
 import { BucketMetadata, FileListItem } from './responses'
-import { IODataSource, workspaceClientFactory } from './utils/dataSource'
+import { forWorkspace, IODataSource } from './utils/dataSource'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']
@@ -24,7 +24,7 @@ const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
 
 export class VBase extends IODataSource {
   constructor (context?: IOContext, options: InstanceOptions = {}) {
-    super(workspaceClientFactory, {
+    super(forWorkspace, {
       context,
       options,
       service: 'vbase',

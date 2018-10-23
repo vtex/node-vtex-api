@@ -7,7 +7,7 @@ import {createGunzip, ZlibOptions} from 'zlib'
 
 import {InstanceOptions, IOContext} from './HttpClient'
 import {AppBundleLinked, AppFilesList, AppManifest} from './responses'
-import {IODataSource, workspaceClientFactory} from './utils/dataSource'
+import {forWorkspace, IODataSource} from './utils/dataSource'
 
 const routes = {
   Acknowledge: (app: string, service: string) => `${routes.App(app)}/acknowledge/${service}`,
@@ -49,7 +49,7 @@ const paramsSerializer = (params: any) => {
 
 export class Apps extends IODataSource {
   constructor (context?: IOContext, options: InstanceOptions = {}) {
-    super(workspaceClientFactory, {
+    super(forWorkspace, {
       context,
       options,
       service: 'apps',

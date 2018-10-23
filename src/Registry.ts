@@ -7,6 +7,7 @@ import {createGunzip, ZlibOptions} from 'zlib'
 import {DEFAULT_WORKSPACE} from './constants'
 import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
 import {AppBundlePublished, AppFilesList, AppManifest} from './responses'
+import {HttpClientFactory, IODataSource} from './utils/dataSource'
 
 const EMPTY_OBJECT = {}
 
@@ -20,11 +21,17 @@ const routes = {
   Registry: '/registry',
 }
 
-export class Registry {
-  private http: HttpClient
+const forWorkspaceWithoutRecorder: HttpClientFactory = ({service, context, options}) => (service && context)
+  ? HttpClient.forWorkspace(service, {...context, workspace: DEFAULT_WORKSPACE}, options || {})
+  : undefined
 
-  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
-    this.http = HttpClient.forWorkspace('apps', {...ioContext, workspace: DEFAULT_WORKSPACE}, opts)
+export class Registry extends IODataSource {
+  constructor (context: IOContext, options: InstanceOptions = {}) {
+    super(forWorkspaceWithoutRecorder, {
+      context,
+      options,
+      service: 'apps',
+    })
   }
 
   public publishApp = async (files: File[], tag?: string, {zlib}: ZipOptions = {}) => {

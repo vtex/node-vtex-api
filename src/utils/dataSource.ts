@@ -1,31 +1,31 @@
 import {DataSource, DataSourceConfig} from 'apollo-datasource'
 import {HttpClient, InstanceOptions, IOContext, LegacyInstanceOptions, ServiceContext} from '../HttpClient'
 
-export interface IODataSourceOptions {
+interface HttpClientFactoryOptions {
   service?: string
   context?: IOContext
   options?: InstanceOptions | LegacyInstanceOptions
 }
 
-type HttpClientFactory = (options: IODataSourceOptions) => HttpClient | void
+export type HttpClientFactory = (opts: HttpClientFactoryOptions) => HttpClient | void
 
 export class IODataSource extends DataSource<ServiceContext> {
   private httpClient: HttpClient | void
 
   constructor (
-    private httpClientFactory: (opts: IODataSourceOptions) => HttpClient | void,
-    private options: IODataSourceOptions
+    private httpClientFactory: HttpClientFactory,
+    private opts: HttpClientFactoryOptions = {}
   ) {
     super()
-    this.httpClient = httpClientFactory(options)
+    this.httpClient = httpClientFactory(opts)
   }
 
   public initialize(config: DataSourceConfig<ServiceContext>) {
-    const {context: {vtex}, cache} = config
+    const {context: {vtex: context}, cache: cacheStorage} = config
     this.httpClient = this.httpClientFactory({
-      context: vtex,
-      options: {cacheStorage: cache as any, ...this.options && this.options.options},
-      service: this.options && this.options.service,
+      context,
+      options: {cacheStorage, ...this.opts.options} as any,
+      service: this.opts.service,
     })
   }
 
@@ -37,14 +37,14 @@ export class IODataSource extends DataSource<ServiceContext> {
   }
 }
 
-export const workspaceClientFactory: HttpClientFactory = ({service, context, options}) => (service && context)
+export const forWorkspace: HttpClientFactory = ({context, service, options}) => (context && service)
   ? HttpClient.forWorkspace(service, context, options || {})
   : undefined
 
-export const legacyClientFactory: HttpClientFactory = ({service, options}) => service
-  ? HttpClient.forLegacy(service, options || {} as any)
+export const forRoot: HttpClientFactory = ({context, service, options}) => (context && service)
+  ? HttpClient.forRoot(service, context, options || {})
   : undefined
 
-export const rootClientFactory: HttpClientFactory = ({service, context, options}) => (service && context)
-  ? HttpClient.forRoot(service, context, options || {})
+export const forLegacy: HttpClientFactory = ({context, service, options}) => service
+  ? HttpClient.forLegacy(service, options || {} as any)
   : undefined

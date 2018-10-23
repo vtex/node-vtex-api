@@ -1,12 +1,16 @@
-import {InstanceOptions, IOContext, withoutRecorder} from './HttpClient'
-import {IODataSource, workspaceClientFactory} from './utils/dataSource'
+import {HttpClient, InstanceOptions, IOContext, withoutRecorder} from './HttpClient'
+import {HttpClientFactory, IODataSource} from './utils/dataSource'
 
 const eventRoute = (route: string) => `/events/${route}`
 
+const forWorkspaceWithoutRecorder: HttpClientFactory = ({service, context, options}) => (service && context)
+  ? HttpClient.forWorkspace(service, withoutRecorder(context), options || {})
+  : undefined
+
 export class Events extends IODataSource {
-  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
-    super(workspaceClientFactory, {
-      context: withoutRecorder(ioContext),
+  constructor (context: IOContext, options: InstanceOptions = {}) {
+    super(forWorkspaceWithoutRecorder, {
+      context,
       options,
       service: 'colossus',
     })
