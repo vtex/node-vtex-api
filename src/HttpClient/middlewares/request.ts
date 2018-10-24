@@ -1,29 +1,34 @@
-import axios from 'axios'
+import axios, { AxiosInstance } from 'axios'
 import * as retry from 'axios-retry'
 import {Agent} from 'http'
 
 import {MiddlewareContext} from '../context'
 
-const http = axios.create({
-  httpAgent: new Agent({
-    keepAlive: true,
-    maxFreeSockets: 50,
-  }),
-})
+export const getAxiosInstance = (retries: number) => {
+  const http = axios.create({
+    httpAgent: new Agent({
+      keepAlive: true,
+      maxFreeSockets: 50,
+    }),
+  })
 
-retry(http, {
-  retries: 3,
-  retryDelay: retry.exponentialDelay
-})
-http.interceptors.response.use(response => response, (err: any) => {
-  try {
-    delete err.response.request
-    delete err.response.config
-    delete err.config.res
-    delete err.config.data
-  } catch (e) {} // tslint:disable-line
-  return Promise.reject(err)
-})
+  retry(http, {
+    retries,
+    retryDelay: retry.exponentialDelay
+  })
+
+  http.interceptors.response.use(response => response, (err: any) => {
+    try {
+      delete err.response.request
+      delete err.response.config
+      delete err.config.res
+      delete err.config.data
+    } catch (e) {} // tslint:disable-line
+    return Promise.reject(err)
+  })
+
+  return http
+}
 
 export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<string, string>, timeout: number) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
@@ -43,6 +48,6 @@ export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<
   }
 }
 
-export const requestMiddleware = async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+export const requestMiddleware = (http: AxiosInstance) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
   ctx.response = await http.request(ctx.config)
 }

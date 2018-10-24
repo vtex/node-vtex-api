@@ -11,7 +11,7 @@ import {CacheableRequestConfig, Cached, cacheMiddleware} from './middlewares/cac
 import {metricsMiddleware} from './middlewares/metrics'
 import {acceptNotFoundMiddleware, notFoundFallbackMiddleware} from './middlewares/notFound'
 import {Recorder, recorderMiddleware} from './middlewares/recorder'
-import {defaultsMiddleware, requestMiddleware} from './middlewares/request'
+import {defaultsMiddleware, getAxiosInstance, requestMiddleware} from './middlewares/request'
 
 const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
@@ -60,7 +60,7 @@ export class HttpClient {
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor (opts: ClientOptions) {
-    const {baseURL, authToken, authType, cacheStorage, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
+    const {baseURL, authToken, authType, cacheStorage, metrics, recorder, retries = 3, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
     const headers: Record<string, string> = {
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
@@ -70,6 +70,8 @@ export class HttpClient {
       headers['Authorization'] = `${authType} ${authToken}` // tslint:disable-line
     }
 
+    const axiosInstance = getAxiosInstance(retries)
+
     this.runMiddlewares = compose([
       defaultsMiddleware(baseURL, headers, timeout),
       ...recorder ? [recorderMiddleware(recorder)] : [],
@@ -77,7 +79,7 @@ export class HttpClient {
       ...cacheStorage ? [cacheMiddleware(cacheStorage)] : [],
       notFoundFallbackMiddleware,
       ...metrics ? [metricsMiddleware(metrics)] : [],
-      requestMiddleware,
+      requestMiddleware(axiosInstance),
     ])
   }
 
@@ -194,6 +196,7 @@ interface ClientOptions {
   baseURL?: string,
   timeout?: number,
   recorder?: Recorder,
+  retries?: number,
   metrics?: MetricsAccumulator,
   cacheStorage?: CacheLayer<string, Cached>,
 }
