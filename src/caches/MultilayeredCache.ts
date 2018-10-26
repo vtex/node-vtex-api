@@ -1,5 +1,6 @@
 import { any, map, slice } from 'ramda'
 import { CacheLayer } from './CacheLayer'
+import { FetchResult, MultilayerStats } from './typings'
 
 export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
 
@@ -8,8 +9,9 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
 
   constructor (private caches: Array<CacheLayer<K, V>>) {}
 
-  public get = async (key: K, fetcher?: () => Promise<V>): Promise<V | void> => {
+  public get = async (key: K, fetcher?: () => Promise<FetchResult<V>>): Promise<V | void> => {
     let value: V | void
+    let maxAge: number | void
     let successIndex = await this.findIndex(async (cache: CacheLayer<K, V>) => {
       const [getValue, hasKey] = await Promise.all([cache.get(key), cache.has(key)])
       value = getValue
@@ -17,19 +19,21 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
     }, this.caches)
     if (successIndex === -1) {
       if (fetcher) {
-        value = await fetcher()
+        const fetched = await fetcher()
+        value = fetched.value
+        maxAge = fetched.maxAge
       } else {
         return undefined
       }
       successIndex = Infinity
     }
     const failedCaches = slice(0, successIndex, this.caches)
-    await Promise.all(map(cache => cache.set(key, value as V), failedCaches))
+    await Promise.all(map(cache => cache.set(key, value as V, maxAge), failedCaches))
     return value
   }
 
-  public set = async (key: K, value: V): Promise<boolean> => {
-    const isSet = await Promise.all(map(cache => cache.set(key, value), this.caches))
+  public set = async (key: K, value: V, maxAge?: number): Promise<boolean> => {
+    const isSet = await Promise.all(map(cache => cache.set(key, value, maxAge), this.caches))
     return any(item => item, isSet)
   }
 
@@ -65,12 +69,4 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
     this.hits = 0
     this.total = 0
   }
-}
-
-// tslint:disable-next-line:interface-over-type-literal
-export type MultilayerStats = {
-  hitRate: number | undefined,
-  hits: number,
-  total: number,
-  name: string,
 }

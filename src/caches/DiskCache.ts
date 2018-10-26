@@ -1,4 +1,5 @@
 import { CacheLayer } from './CacheLayer'
+import { DiskStats } from './typings'
 
 import { outputJSON, pathExists, readJSON } from 'fs-extra'
 import { join } from 'path'
@@ -38,18 +39,11 @@ export class DiskCache<V> implements CacheLayer<string, V>{
     }
   }
 
-  public set = async (key: string, json: V) => {
+  public set = async (key: string, value: V, maxAge?: number) => {
     const cacheKey = this.getCacheKey(key)
-    await this.writeFile(cacheKey, json)
+    await this.writeFile(cacheKey, value)
     return true
   }
 
   private getCacheKey = (key: string) => join(this.cachePath, key)
-}
-
-// tslint:disable-next-line:interface-over-type-literal
-export type DiskStats = {
-  hits: number,
-  total: number,
-  name: string,
 }
