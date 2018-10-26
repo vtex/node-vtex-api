@@ -12,18 +12,17 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   private hits = 0
   private total = 0
   private lruStorage: LRU.Cache<string, number>
+  private fileToBeDeleted: string
 
   constructor(private cachePath: string, options: LRUDiskCacheOptions, private readFile=readJSON, private writeFile=outputJSON) {
     this.hits = 0
     this.total = 0
     this.disposed = 0
+    this.fileToBeDeleted = ''
 
     const dispose = (key: string, timeOfDeath: number): void => {
       const pathKey = this.getPathKey(key, timeOfDeath)
-      remove(pathKey)
-      .catch(err => {
-        console.error(err)
-      })
+      this.fileToBeDeleted = pathKey
       this.disposed += 1
     }
 
@@ -62,14 +61,17 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
 
   public get = async (key: string): Promise<V | void>  => {
     this.total += 1
-    const maxAge = this.lruStorage.get(key)
-    if (maxAge === undefined) {
+    const timeOfDeath = this.lruStorage.get(key)
+    if (timeOfDeath === undefined) {
       return undefined
     }
-    const pathKey = this.getPathKey(key, maxAge)
+    const pathKey = this.getPathKey(key, timeOfDeath)
     try {
       const data = await this.readFile(pathKey)
       this.hits += 1
+      if (!this.lruStorage.has(key)) {
+        this.deleteFile()
+      }
       return data
     } catch (e) {
       return undefined
@@ -85,6 +87,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     else {
       this.lruStorage.set(key, NaN)
     }
+    this.deleteFile()
     const pathKey = this.getPathKey(key, timeOfDeath)
     await this.writeFile(pathKey, value)
     return true
@@ -96,6 +99,17 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     }
     else {
       return join(this.cachePath, `${key}`)
+    }
+  }
+
+  private deleteFile = () => {
+    const fileToBeDeleted = this.fileToBeDeleted
+    this.fileToBeDeleted = ''
+    if (fileToBeDeleted) {
+      remove(fileToBeDeleted)
+      .catch(err => {
+        console.error(err)
+      })
     }
   }
 }

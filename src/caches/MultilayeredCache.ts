@@ -28,7 +28,9 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
       successIndex = Infinity
     }
     const failedCaches = slice(0, successIndex, this.caches)
-    await Promise.all(map(cache => cache.set(key, value as V, maxAge), failedCaches))
+
+    const [firstPromise] = map(cache => cache.set(key, value as V, maxAge), failedCaches)
+    await firstPromise
     return value
   }
 
