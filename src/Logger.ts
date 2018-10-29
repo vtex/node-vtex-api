@@ -2,7 +2,8 @@ import * as stringify from 'json-stringify-safe'
 import * as PQueue from 'p-queue'
 import {pick} from 'ramda'
 
-import {HttpClient, InstanceOptions, IOContext, withoutRecorder} from './HttpClient'
+import {HttpClient, withoutRecorder} from './HttpClient'
+import {HttpClientFactory, IODataSource} from './IODataSource'
 
 const DEFAULT_SUBJECT = '-'
 const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url']
@@ -23,12 +24,13 @@ const errorReplacer = (key: string, value: any) => {
   return value
 }
 
-export class Logger {
-  private http: HttpClient
+const forWorkspaceWithoutRecorder: HttpClientFactory = ({service, context, options}) => (service && context)
+  ? HttpClient.forWorkspace(service, withoutRecorder(context), options || {})
+  : undefined
 
-  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
-    this.http = HttpClient.forWorkspace('colossus', withoutRecorder(ioContext), opts)
-  }
+export class Logger extends IODataSource {
+  protected service = 'colossus'
+  protected httpClientFactory = forWorkspaceWithoutRecorder
 
   public debug = (message: any, subject: string = DEFAULT_SUBJECT) =>
     this.sendLog(subject, message, 'debug')

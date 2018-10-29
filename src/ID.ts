@@ -21,8 +21,8 @@ export class ID {
   private defaultHeaders: Record<string, string>
 
   constructor (endpointUrl: string = 'STABLE', opts: LegacyInstanceOptions) {
-    this.defaultHeaders = opts.accept ? {accept: opts.accept} : {}
     this.http = HttpClient.forLegacy(endpoint(endpointUrl), opts)
+    this.defaultHeaders = opts.accept ? {accept: opts.accept} : {}
   }
 
   public getTemporaryToken = () => {
