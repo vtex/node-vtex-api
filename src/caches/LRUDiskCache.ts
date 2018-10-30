@@ -75,9 +75,12 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
       this.hits += 1
       this.removeReader(key, diskItem)
       const updatedDiskItem = this.metaStorage.get(key) as DiskItem<V>
+  
+      // No need to create a promise in order to delete the file,
+      // only the last reader must delete outdated files.
       if (diskItem.timeOfDeath < Date.now() && updatedDiskItem.deletable) {
         this.lruStorage.del(key)
-        this.deleteFile(key)
+        await this.deleteFile(key)
       }
       return data
     } catch (e) {
@@ -89,15 +92,12 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     if (this.metaStorage.has(key)) {
       const diskItem = this.metaStorage.get(key) as DiskItem<V>
       if (!diskItem.deletable) {
-        return new Promise<boolean>(resolve => {
-          this.addDeleteResolver(key, resolve)
-          return this.set(key, value, maxAge)
-        })
+        return this.promiseOnDelete(key, () => this.set(key, value, maxAge))
       }
     }
     const newDiskItem: DiskItem<V> = {
       deletable: false,
-      deleteResolvers: [],
+      deleteResolver: undefined,
       getResolvers: [],
       readable: false,
       readingCount: 0,
@@ -111,11 +111,9 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     if (this.keyToBeDeleted && this.keyToBeDeleted !== key) {
       const diskItem = this.metaStorage.get(this.keyToBeDeleted) as DiskItem<V>
       if (!diskItem.deletable) {
-        promise = new Promise<boolean>(resolve => {
-          this.addDeleteResolver(key, resolve)
-          this.deleteFile(this.keyToBeDeleted)
-          return true
-        })
+        promise = this.promiseOnDelete(
+          this.keyToBeDeleted,
+          () => this.deleteFile(this.keyToBeDeleted))
       }
       else {
         this.deleteFile(this.keyToBeDeleted)
@@ -134,25 +132,29 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     return join(this.cachePath, key)
   }
 
-  private deleteFile = (key: string) => {
+  private deleteFile = async (key: string): Promise<boolean> => {
     this.keyToBeDeleted = ''
     if (key) {
-      this.metaStorage.delete(key)
+      this.setDeletingStatus(key)
       const pathKey = this.getPathKey(key)
-      remove(pathKey)
-      .catch(err => {
-        console.error(err)
-      })
+      await remove(pathKey)
+      this.metaStorage.delete(key)
     }
+    return true
   }
 
-  private addDeleteResolver = (key: string, resolve: () => void) => {
+  private addDeleteResolver = (key: string, resolve: () => void): boolean => {
     if (!this.metaStorage.has(key)) {
-      return
+      return false
     }
     const diskItem = this.metaStorage.get(key) as DiskItem<V>
-    diskItem.deleteResolvers.push(resolve)
-    this.metaStorage.set(key, diskItem)
+    if (diskItem.deleteResolver === undefined) {
+      diskItem.deleteResolver = resolve
+      this.metaStorage.set(key, diskItem)
+      return true
+    }
+    resolve()
+    return false
   }
 
   private addGetResolver = (key: string, resolve: () => void) => {
@@ -174,10 +176,18 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     diskItem.readingCount -= 1
     if (diskItem.readingCount === 0){
       diskItem.deletable = true
-      diskItem.deleteResolvers.forEach(resolve => resolve())
-      diskItem.deleteResolvers = []
+      diskItem = this.cleanDeleteResolver(diskItem)
     }
     this.metaStorage.set(key, diskItem)
+  }
+
+  private setDeletingStatus = (key: string) => {
+    if (this.metaStorage.has(key)) {
+      const diskItem = this.metaStorage.get(key) as DiskItem<V>
+      diskItem.deletable = false
+      diskItem.readable = false
+      this.metaStorage.set(key, diskItem)
+    }
   }
 
   private setDefaultStatus = (key: string, diskItem: DiskItem<V>) => {
@@ -188,9 +198,27 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
       diskItem.getResolvers = []
     }
     else {
-      diskItem.deleteResolvers.forEach(resolve => resolve())
-      diskItem.deleteResolvers = []
+      diskItem = this.cleanDeleteResolver(diskItem)
     }
     this.metaStorage.set(key, diskItem)
+  }
+
+  private cleanDeleteResolver = (diskItem: DiskItem<V>): DiskItem<V> => {
+    if (diskItem.deleteResolver) {
+      diskItem.deleteResolver()
+    }
+    diskItem.deleteResolver = undefined
+    return diskItem
+  }
+
+  private promiseOnDelete = (key: string, onDeleteFunction: () => Promise<boolean>): Promise<boolean> => {
+    return new Promise<boolean>(resolve => {
+      if (this.addDeleteResolver(key, resolve)) {
+        return onDeleteFunction()
+      }
+      else {
+        return false
+      }
+    })
   }
 }

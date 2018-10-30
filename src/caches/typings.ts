@@ -37,7 +37,7 @@ export type DiskItem<V> = {
   getResolvers: Array<() => void>
   readable: boolean
   readingCount: number
-  deleteResolvers: Array<() => void>
+  deleteResolver: (() => void) | undefined
   timeOfDeath: number
 }
 
