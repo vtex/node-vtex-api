@@ -32,16 +32,6 @@ export type MultilayerStats = {
 }
 
 // tslint:disable-next-line:interface-over-type-literal
-export type DiskItem<V> = {
-  deletable: boolean
-  getResolvers: Array<() => void>
-  readable: boolean
-  readingCount: number
-  deleteResolver: (() => void) | undefined
-  timeOfDeath: number
-}
-
-// tslint:disable-next-line:interface-over-type-literal
 export type LRUDiskCacheOptions = {
   /**
    * The maximum size of the cache, checked by applying the length
