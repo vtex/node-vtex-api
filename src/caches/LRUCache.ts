@@ -1,6 +1,7 @@
 import * as LRU from 'lru-cache'
 import { CacheLayer } from './CacheLayer'
 import { MultilayeredCache } from './MultilayeredCache'
+import { FetchResult, LRUStats } from './typings'
 
 export class LRUCache <K, V> implements CacheLayer<K, V>{
   private multilayer: MultilayeredCache<K, V>
@@ -29,13 +30,13 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
     return value
   }
 
-  public getOrSet = async (key: K, fetcher?: () => Promise<V>): Promise<V | void> => this.multilayer.get(key, fetcher)
+  public getOrSet = async (key: K, fetcher?: () => Promise<FetchResult<V>>): Promise<V | void> => this.multilayer.get(key, fetcher)
 
-  public set = (key: K, value: V): boolean => this.storage.set(key, value)
+  public set = (key: K, value: V, maxAge?: number): boolean => this.storage.set(key, value, maxAge)
 
   public has = (key: K): boolean => this.storage.has(key)
 
-  public getStats = (name='lru-cache'): Stats => {
+  public getStats = (name='lru-cache'): LRUStats => {
     const stats = {
       disposedItems: this.disposed,
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
@@ -51,16 +52,4 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
     this.disposed = 0
     return stats
   }
-}
-
-// tslint:disable-next-line:interface-over-type-literal
-export type Stats = {
-  itemCount: number,
-  length: number,
-  disposedItems: number,
-  hitRate: number | undefined,
-  hits: number,
-  max: number,
-  name: string,
-  total: number,
 }
