@@ -1,7 +1,7 @@
 import { CacheLayer } from './CacheLayer'
 import { DiskStats } from './typings'
 
-import { outputJSON, pathExists, readJSON } from 'fs-extra'
+import { outputJSON, pathExistsSync, readJSON } from 'fs-extra'
 import { join } from 'path'
 import * as ReadWriteLock from 'rwlock'
 
@@ -15,9 +15,9 @@ export class DiskCache<V> implements CacheLayer<string, V>{
     this.lock = new ReadWriteLock()
   }
 
-  public has = async (key: string): Promise<boolean> => {
+  public has = (key: string): boolean => {
     const pathKey = this.getPathKey(key)
-    return await pathExists(pathKey)
+    return pathExistsSync(pathKey)
   }
 
   public getStats = (name='disk-cache'): DiskStats => {
@@ -33,32 +33,38 @@ export class DiskCache<V> implements CacheLayer<string, V>{
 
   public get = async (key: string): Promise<V | void>  => {
     const pathKey = this.getPathKey(key)
-    try {
-      this.total += 1
-      const data = await new Promise<V>(resolve => {
-        this.lock.readLock(key, async (release: () => void) => {
+    this.total += 1
+    const data = await new Promise<V>(resolve => {
+      this.lock.readLock(key, async (release: () => void) => {
+        try {
           const fileData = await this.readFile(pathKey)
           release()
+          this.hits += 1
           resolve(fileData)
-        })
+        } catch (e) {
+          release()
+          resolve(undefined)
+        }
       })
-      this.hits += 1
-      return data
-    } catch (e) {
-      return undefined
-    }
+    })
+    return data
   }
 
   public set = async (key: string, value: V) => {
     const pathKey = this.getPathKey(key)
-    await new Promise<void>(resolve => {
+    const failure = await new Promise<void | boolean>(resolve => {
       this.lock.writeLock(key, async (release: () => void) => {
-        const writePromise = await this.writeFile(pathKey, value)
-        resolve(writePromise)
-        release()
+        try {
+          const writePromise = await this.writeFile(pathKey, value)
+          release()
+          resolve(writePromise)
+        } catch (e) {
+          release()
+          resolve(true)
+        }
       })
     })
-    return true
+    return !failure
   }
 
   private getPathKey = (key: string) => join(this.cachePath, key)
