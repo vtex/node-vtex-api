@@ -58,29 +58,32 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     const timeOfDeath = this.lruStorage.get(key)
     if (timeOfDeath === undefined) {
       this.total += 1
+
+      // if it is an outdated file when stale=false
+      if (this.keyToBeDeleted) {
+        await this.deleteFile(key)
+      }
       return undefined
     }
+
     const pathKey = this.getPathKey(key)
     try {
-      
-      let data: V | undefined
-      this.lock.readLock(key, async (release: () => void) => {
-        data = await this.readFile(pathKey)
-        release()
+      const data = await new Promise<V>(resolve => {
+        this.lock.readLock(key, async (release: () => void) => {
+          const fileData = await this.readFile(pathKey)
+          release()
+          resolve(fileData)
+        })
       })
   
       this.total += 1
       this.hits += 1
   
-      if (timeOfDeath < Date.now()) {
-        this.lruStorage.del(key)
-
-        this.lock.writeLock(key, async (release: () => void) => {
-          await this.deleteFile(key)
-          release()
-        })
-
+      // if it is an outdated file when stale=true
+      if (!this.lruStorage.has(key)) {
+        await this.deleteFile(key)
       }
+
       return data
     } catch (e) {
       return undefined
@@ -89,42 +92,50 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
 
   public set = async (key: string, value: V, maxAge?: number): Promise<boolean> => {
 
-    this.lock.writeLock(key, async (release: () => void) => {
+    await new Promise<[void, void]>(resolve => {
+      
+      this.lock.writeLock(key, async (release: () => void) => {
+  
+        let timeOfDeath = NaN
+        if (maxAge) {
+          timeOfDeath = maxAge + Date.now()
+          this.lruStorage.set(key, timeOfDeath, maxAge)
+        }
+        else {
+          this.lruStorage.set(key, NaN)
+        }
 
-      let timeOfDeath = NaN
-      if (maxAge) {
-        timeOfDeath = maxAge + Date.now()
-        this.lruStorage.set(key, timeOfDeath, maxAge)
-      }
-      else {
-        this.lruStorage.set(key, NaN)
-      }
+        let deletePromise: void
+        if (this.keyToBeDeleted && this.keyToBeDeleted !== key) {
+          deletePromise = await this.deleteFile(this.keyToBeDeleted)
+        }
 
-      if (this.keyToBeDeleted && this.keyToBeDeleted !== key) {
-        
-        this.lock.writeLock(key, async (innerRelease: () => void) => {
-          await this.deleteFile(this.keyToBeDeleted)
-          innerRelease()
-        })
+        const pathKey = this.getPathKey(key)
+        const writePromise = await this.writeFile(pathKey, value)
+  
+        resolve(Promise.all([deletePromise, writePromise]))
 
-      }
-
-      const pathKey = this.getPathKey(key)
-      await this.writeFile(pathKey, value)  
-
-      release()
+        release()
+      })
     })
 
     return true
   }
 
-  private getPathKey = (key: string) => {
+  private getPathKey = (key: string): string => {
     return join(this.cachePath, key)
   }
 
-  private deleteFile = async (key: string) => {
-    this.keyToBeDeleted = ''
-    const pathKey = this.getPathKey(key)
-    await remove(pathKey)
+  private deleteFile = async (key: string): Promise<void> => {
+
+    return new Promise<void>(resolve => {
+      this.lock.writeLock(key, async (release: () => void) => {
+        this.keyToBeDeleted = ''
+        const pathKey = this.getPathKey(key)
+        const removePromise = await remove(pathKey)
+        release()
+        resolve(removePromise)
+      })
+    }) 
   }
 }
