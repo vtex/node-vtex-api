@@ -3,17 +3,21 @@ import { DiskStats } from './typings'
 
 import { outputJSON, pathExists, readJSON } from 'fs-extra'
 import { join } from 'path'
+import * as ReadWriteLock from 'rwlock'
 
 export class DiskCache<V> implements CacheLayer<string, V>{
 
   private hits = 0
   private total = 0
+  private lock: ReadWriteLock
 
-  constructor(private cachePath: string, private readFile=readJSON, private writeFile=outputJSON) {}
+  constructor(private cachePath: string, private readFile=readJSON, private writeFile=outputJSON) {
+    this.lock = new ReadWriteLock()
+  }
 
   public has = async (key: string): Promise<boolean> => {
-    const cacheKey = this.getCacheKey(key)
-    return await pathExists(cacheKey)
+    const pathKey = this.getPathKey(key)
+    return await pathExists(pathKey)
   }
 
   public getStats = (name='disk-cache'): DiskStats => {
@@ -28,10 +32,16 @@ export class DiskCache<V> implements CacheLayer<string, V>{
   }
 
   public get = async (key: string): Promise<V | void>  => {
-    const cacheKey = this.getCacheKey(key)
+    const pathKey = this.getPathKey(key)
     try {
       this.total += 1
-      const data = await this.readFile(cacheKey)
+      const data = await new Promise<V>(resolve => {
+        this.lock.readLock(key, async (release: () => void) => {
+          const fileData = await this.readFile(pathKey)
+          release()
+          resolve(fileData)
+        })
+      })
       this.hits += 1
       return data
     } catch (e) {
@@ -39,11 +49,17 @@ export class DiskCache<V> implements CacheLayer<string, V>{
     }
   }
 
-  public set = async (key: string, value: V, maxAge?: number) => {
-    const cacheKey = this.getCacheKey(key)
-    await this.writeFile(cacheKey, value)
+  public set = async (key: string, value: V) => {
+    const pathKey = this.getPathKey(key)
+    await new Promise<void>(resolve => {
+      this.lock.writeLock(key, async (release: () => void) => {
+        const writePromise = await this.writeFile(pathKey, value)
+        resolve(writePromise)
+        release()
+      })
+    })
     return true
   }
 
-  private getCacheKey = (key: string) => join(this.cachePath, key)
+  private getPathKey = (key: string) => join(this.cachePath, key)
 }

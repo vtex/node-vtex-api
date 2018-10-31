@@ -6,7 +6,6 @@ import * as LRU from 'lru-cache'
 import { join } from 'path'
 import * as ReadWriteLock from 'rwlock'
 
-
 export class LRUDiskCache<V> implements CacheLayer<string, V>{
   
   private lock: ReadWriteLock
@@ -23,7 +22,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     this.keyToBeDeleted = ''
     this.lock = new ReadWriteLock()
 
-    const dispose = (key: string, timeOfDeath: number): void => {
+    const dispose = (key: string): void => {
       this.keyToBeDeleted = key
       this.disposed += 1
     }
@@ -80,7 +79,8 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
       this.hits += 1
   
       // if it is an outdated file when stale=true
-      if (!this.lruStorage.has(key)) {
+      if (timeOfDeath < Date.now()) {
+        this.lruStorage.del(key)
         await this.deleteFile(key)
       }
 
@@ -91,7 +91,6 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   }
 
   public set = async (key: string, value: V, maxAge?: number): Promise<boolean> => {
-
     let timeOfDeath = NaN
     if (maxAge) {
       timeOfDeath = maxAge + Date.now()
