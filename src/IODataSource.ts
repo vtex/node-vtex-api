@@ -1,9 +1,9 @@
 import {DataSource, DataSourceConfig} from 'apollo-datasource'
-import {HttpClient, InstanceOptions, IOContext, LegacyInstanceOptions, ServiceContext} from './HttpClient'
+import {HttpClient, InstanceOptions, IOClientContext, LegacyInstanceOptions, ServiceContext} from './HttpClient'
 
 interface HttpClientFactoryOptions {
   service: string | void
-  context: IOContext | void
+  context: IOClientContext | void
   options: InstanceOptions | LegacyInstanceOptions | void
 }
 
@@ -16,7 +16,7 @@ export abstract class IODataSource extends DataSource<ServiceContext> {
   private initialized = false
 
   constructor (
-    private context?: IOContext,
+    private context?: IOClientContext,
     private options: InstanceOptions = {}
   ) {
     super()

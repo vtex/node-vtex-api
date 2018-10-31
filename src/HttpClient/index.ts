@@ -16,7 +16,7 @@ import {defaultsMiddleware, requestMiddleware} from './middlewares/request'
 const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
 
-const rootURL = (service: string, {region}: IOContext, {endpoint}: InstanceOptions): string => {
+const rootURL = (service: string, {region}: IOClientContext, {endpoint}: InstanceOptions): string => {
   if (endpoint) {
     return 'http://' + endpoint
   }
@@ -28,7 +28,7 @@ const rootURL = (service: string, {region}: IOContext, {endpoint}: InstanceOptio
   throw new Error('Missing required: should specify either {region} or {endpoint}')
 }
 
-const workspaceURL = (service: string, context: IOContext, opts: InstanceOptions): string => {
+const workspaceURL = (service: string, context: IOClientContext, opts: InstanceOptions): string => {
   const {account, workspace} = context
   if (!account || !workspace) {
     throw new Error('Missing required arguments: {account, workspace}')
@@ -39,14 +39,14 @@ const workspaceURL = (service: string, context: IOContext, opts: InstanceOptions
 
 export class HttpClient {
 
-  public static forWorkspace (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
+  public static forWorkspace (service: string, context: IOClientContext, opts: InstanceOptions): HttpClient {
     const {authToken, userAgent, recorder} = context
     const {timeout, cacheStorage} = opts
     const baseURL = workspaceURL(service, context, opts)
     return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
   }
 
-  public static forRoot (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
+  public static forRoot (service: string, context: IOClientContext, opts: InstanceOptions): HttpClient {
     const {authToken, userAgent, recorder} = context
     const {timeout, cacheStorage} = opts
     const baseURL = rootURL(service, context, opts)
@@ -133,7 +133,7 @@ export class HttpClient {
   }
 }
 
-export const withoutRecorder = (ioContext: IOContext): IOContext => {
+export const withoutRecorder = (ioContext: IOClientContext): IOClientContext => {
   return {...ioContext, recorder: undefined}
 }
 
@@ -145,12 +145,17 @@ export interface ServiceContext extends Context {
   vtex: IOContext
 }
 
-export interface IOContext {
+export interface IOClientContext {
   account: string,
   authToken: string,
   production: boolean,
   recorder?: Recorder,
   region: string,
+  userAgent: string,
+  workspace: string,
+}
+
+export interface IOContext extends IOClientContext {
   route: {
     declarer: string
     id: string
@@ -158,8 +163,6 @@ export interface IOContext {
       [param: string]: string
     }
   }
-  userAgent: string,
-  workspace: string,
 }
 
 export interface InstanceOptions {

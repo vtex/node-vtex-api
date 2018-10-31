@@ -2,7 +2,7 @@ import * as archiver from 'archiver'
 import {ZlibOptions} from 'zlib'
 
 import {Change} from './Apps'
-import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
+import {HttpClient, InstanceOptions, IOClientContext} from './HttpClient'
 import {File} from './Registry'
 
 const EMPTY_OBJECT = {}
@@ -22,7 +22,7 @@ export class Builder {
   private http: HttpClient
   private stickyHost!: string
 
-  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
+  constructor (ioContext: IOClientContext, opts: InstanceOptions = {}) {
     this.http = HttpClient.forWorkspace('builder-hub.vtex', ioContext, opts)
     this.account = ioContext.account
     this.workspace = ioContext.workspace
