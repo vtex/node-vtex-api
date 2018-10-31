@@ -122,9 +122,8 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   }
 
   private deleteFile = async (key: string): Promise<void> => {
-
-    this.keyToBeDeleted = ''
     const pathKey = this.getPathKey(key)
+    this.keyToBeDeleted = ''
     return new Promise<void>(resolve => {
       this.lock.writeLock(key, async (release: () => void) => {
         const removePromise = await remove(pathKey)
