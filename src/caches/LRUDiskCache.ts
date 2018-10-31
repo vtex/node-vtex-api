@@ -92,29 +92,24 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
 
   public set = async (key: string, value: V, maxAge?: number): Promise<boolean> => {
 
-    await new Promise<[void, void]>(resolve => {
-      
+    let timeOfDeath = NaN
+    if (maxAge) {
+      timeOfDeath = maxAge + Date.now()
+      this.lruStorage.set(key, timeOfDeath, maxAge)
+    }
+    else {
+      this.lruStorage.set(key, NaN)
+    }
+
+    if (this.keyToBeDeleted && this.keyToBeDeleted !== key) {
+      await this.deleteFile(this.keyToBeDeleted)
+    }
+
+    const pathKey = this.getPathKey(key)
+    await new Promise<void>(resolve => {
       this.lock.writeLock(key, async (release: () => void) => {
-  
-        let timeOfDeath = NaN
-        if (maxAge) {
-          timeOfDeath = maxAge + Date.now()
-          this.lruStorage.set(key, timeOfDeath, maxAge)
-        }
-        else {
-          this.lruStorage.set(key, NaN)
-        }
-
-        let deletePromise: void
-        if (this.keyToBeDeleted && this.keyToBeDeleted !== key) {
-          deletePromise = await this.deleteFile(this.keyToBeDeleted)
-        }
-
-        const pathKey = this.getPathKey(key)
         const writePromise = await this.writeFile(pathKey, value)
-  
-        resolve(Promise.all([deletePromise, writePromise]))
-
+        resolve(writePromise)
         release()
       })
     })
@@ -128,10 +123,10 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
 
   private deleteFile = async (key: string): Promise<void> => {
 
+    this.keyToBeDeleted = ''
+    const pathKey = this.getPathKey(key)
     return new Promise<void>(resolve => {
       this.lock.writeLock(key, async (release: () => void) => {
-        this.keyToBeDeleted = ''
-        const pathKey = this.getPathKey(key)
         const removePromise = await remove(pathKey)
         release()
         resolve(removePromise)
