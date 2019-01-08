@@ -7,40 +7,45 @@ type Body = BodyInit | object
 export class OutboundDataSource<T extends ServiceContext> extends RESTDataSource<T> {
   protected modifiers: Modifier[] = []
 
-  protected get = async <TResult = any>(
+  protected async get <TResult = any>(
     path: string,
     params?: URLSearchParamsInit,
     init?: RequestInit,
-  ): Promise<TResult> =>
-    super.get<TResult>(path, params, this.modify(init))
+  ): Promise<TResult> {
+    return super.get<TResult>(path, params, this.modify(init))
+  }
 
-  protected post = async <TResult = any>(
+  protected async post <TResult = any>(
     path: string,
     body?: Body,
     init?: RequestInit,
-  ): Promise<TResult> =>
-    super.post<TResult>(path, body, this.modify(init))
+  ): Promise<TResult> {
+    return super.post<TResult>(path, body, this.modify(init))
+  }
 
-  protected patch = async <TResult = any>(
+  protected async patch <TResult = any>(
     path: string,
     body?: Body,
     init?: RequestInit,
-  ): Promise<TResult> =>
-    super.patch<TResult>(path, body, this.modify(init))
+  ): Promise<TResult> {
+    return super.patch<TResult>(path, body, this.modify(init))
+  }
 
-  protected put = async <TResult = any>(
+  protected async put <TResult = any>(
     path: string,
     body?: Body,
     init?: RequestInit,
-  ): Promise<TResult> =>
-    super.put<TResult>(path, body, this.modify(init))
+  ): Promise<TResult> {
+    return super.put<TResult>(path, body, this.modify(init))
+  }
 
-  protected delete = async <TResult = any>(
+  protected async delete <TResult = any>(
     path: string,
     params?: URLSearchParamsInit,
     init?: RequestInit,
-  ): Promise<TResult> =>
-    super.delete<TResult>(path, params, this.modify(init))
+  ): Promise<TResult> {
+    return super.delete<TResult>(path, params, this.modify(init))
+  }
 
   private modify = (init?: RequestInit) => {
     const options: ModOptions = init as ModOptions || {} as ModOptions
