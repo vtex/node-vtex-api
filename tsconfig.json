@@ -2,7 +2,11 @@
   "compilerOptions": {
     "types": ["node"],
     "typeRoots": ["node_modules/@types"],
-    "target": "es2015",
+    "target": "es2017",
+    "lib": [
+      "es2017",
+      "esnext.asynciterable"
+    ],
     "module": "commonjs",
     "strict": true,
     "declaration": true,
