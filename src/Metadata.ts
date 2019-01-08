@@ -1,5 +1,5 @@
+import { forWorkspace, IODataSource } from './datasources/IODataSource'
 import { InstanceOptions, IOContext } from './HttpClient'
-import { forWorkspace, IODataSource } from './IODataSource'
 import { BucketMetadata } from './responses'
 
 const appId = process.env.VTEX_APP_ID

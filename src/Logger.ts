@@ -2,8 +2,8 @@ import * as stringify from 'json-stringify-safe'
 import * as PQueue from 'p-queue'
 import {pick} from 'ramda'
 
+import {HttpClientFactory, IODataSource} from './datasources/IODataSource'
 import {HttpClient, withoutRecorder} from './HttpClient'
-import {HttpClientFactory, IODataSource} from './IODataSource'
 
 const DEFAULT_SUBJECT = '-'
 const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url']

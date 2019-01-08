@@ -4,9 +4,9 @@ import { basename } from 'path'
 import { Readable } from 'stream'
 import { createGzip } from 'zlib'
 
+import { forWorkspace, IODataSource } from './datasources/IODataSource'
 import { InstanceOptions, IOContext } from './HttpClient'
 import { IgnoreNotFoundRequestConfig } from './HttpClient/middlewares/notFound'
-import { forWorkspace, IODataSource } from './IODataSource'
 import { BucketMetadata, FileListItem } from './responses'
 
 const appId = process.env.VTEX_APP_ID
