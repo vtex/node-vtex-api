@@ -155,8 +155,8 @@ export interface IOContext {
     declarer: string
     id: string
     params: {
-      [param: string]: string
-    }
+      [param: string]: string,
+    },
   }
   userAgent: string,
   workspace: string,

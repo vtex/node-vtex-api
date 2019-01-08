@@ -20,7 +20,7 @@ interface AggregateMetric extends Metric {
 
 interface GetStats {
   getStats(): {
-    [key: string]: number | boolean | string | undefined
+    [key: string]: number | boolean | string | undefined,
   }
 }
 
@@ -128,7 +128,7 @@ export class MetricsAccumulator {
       {
         name: 'memory',
         ...process.memoryUsage(),
-      }
+      },
     ]
 
     const onFlushMetrics = flatten(map(getMetric => getMetric(), this.onFlushMetrics)) as Metric[]

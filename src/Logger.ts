@@ -76,7 +76,7 @@ export interface ErrorLog {
   response?: {
     status: number
     data: string
-    headers: Record<string, string>
+    headers: Record<string, string>,
   }
   // You might add any other keys with extra information
   [key: string]: any

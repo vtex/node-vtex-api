@@ -53,5 +53,5 @@ export type LRUDiskCacheOptions = {
    * return `undefined` when you try to get a stale entry,
    * as if it had already been deleted.
    */
-  stale?: boolean
+  stale?: boolean,
 }
