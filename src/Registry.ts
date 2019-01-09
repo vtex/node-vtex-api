@@ -5,7 +5,7 @@ import {extract} from 'tar-fs'
 import {createGunzip, ZlibOptions} from 'zlib'
 
 import {DEFAULT_WORKSPACE} from './constants'
-import {HttpClientFactory, IODataSource} from './datasources/IODataSource'
+import {HttpClientFactory, IODataSource} from './datasources'
 import {HttpClient} from './HttpClient'
 import {AppBundlePublished, AppFilesList, AppManifest} from './responses'
 

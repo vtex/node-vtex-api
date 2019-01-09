@@ -1,4 +1,4 @@
-import { forWorkspace, IODataSource } from './datasources/IODataSource'
+import { forWorkspace, IODataSource } from './datasources'
 import { InstanceOptions, IOContext } from './HttpClient'
 import { BucketMetadata } from './responses'
 

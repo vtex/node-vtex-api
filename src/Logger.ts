@@ -2,7 +2,7 @@ import * as stringify from 'json-stringify-safe'
 import * as PQueue from 'p-queue'
 import {pick} from 'ramda'
 
-import {HttpClientFactory, IODataSource} from './datasources/IODataSource'
+import {HttpClientFactory, IODataSource} from './datasources'
 import {HttpClient, withoutRecorder} from './HttpClient'
 
 const DEFAULT_SUBJECT = '-'
