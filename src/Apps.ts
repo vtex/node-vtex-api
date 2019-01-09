@@ -5,7 +5,7 @@ import {Readable, Writable} from 'stream'
 import {extract} from 'tar-fs'
 import {createGunzip, ZlibOptions} from 'zlib'
 
-import {forWorkspace, IODataSource} from './datasources'
+import {forWorkspace, IODataSource} from './dataSources'
 import {AppBundleLinked, AppFilesList, AppManifest} from './responses'
 
 const routes = {

@@ -1,4 +1,4 @@
-import {HttpClientFactory, IODataSource} from './datasources'
+import {HttpClientFactory, IODataSource} from './dataSources'
 import {HttpClient, withoutRecorder} from './HttpClient'
 
 const eventRoute = (route: string) => `/events/${route}`

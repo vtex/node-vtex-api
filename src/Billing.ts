@@ -1,4 +1,4 @@
-import {forWorkspace, IODataSource} from './datasources'
+import {forWorkspace, IODataSource} from './dataSources'
 
 const metricRoute = `/metrics`
 

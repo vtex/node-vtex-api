@@ -4,7 +4,7 @@ import { basename } from 'path'
 import { Readable } from 'stream'
 import { createGzip } from 'zlib'
 
-import { forWorkspace, IODataSource } from './datasources'
+import { forWorkspace, IODataSource } from './dataSources'
 import { InstanceOptions, IOContext } from './HttpClient'
 import { IgnoreNotFoundRequestConfig } from './HttpClient/middlewares/notFound'
 import { BucketMetadata, FileListItem } from './responses'
