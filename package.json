@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -38,6 +38,7 @@
     "multipart-stream": "^2.0.1",
     "p-queue": "^3.0.0",
     "qs": "^6.5.1",
+    "querystring": "^0.2.0",
     "ramda": "^0.25.0",
     "rwlock": "^5.0.0",
     "semver": "^5.5.1",

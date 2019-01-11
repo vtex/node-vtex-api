@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.5.3] - 2019-01-11
+### Fixed
+- IOContext types mismatch with service-runtime-node
+
 ## [1.5.2] - 2018-11-27
 
 ## [1.5.1] - 2018-10-31
