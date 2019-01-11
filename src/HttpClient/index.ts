@@ -1,17 +1,17 @@
-import {AxiosResponse} from 'axios'
-import {IncomingMessage} from 'http'
-import {Context} from 'koa'
+import { AxiosResponse } from 'axios'
+import { IncomingMessage } from 'http'
+import { Context } from 'koa'
 import * as compose from 'koa-compose'
+import { ParsedUrlQuery } from 'querystring'
 
-import {MetricsAccumulator} from '../MetricsAccumulator'
-
-import {CacheLayer} from '../caches/CacheLayer'
-import {MiddlewareContext, RequestConfig} from './context'
-import {CacheableRequestConfig, Cached, cacheMiddleware} from './middlewares/cache'
-import {metricsMiddleware} from './middlewares/metrics'
-import {acceptNotFoundMiddleware, notFoundFallbackMiddleware} from './middlewares/notFound'
-import {Recorder, recorderMiddleware} from './middlewares/recorder'
-import {defaultsMiddleware, requestMiddleware} from './middlewares/request'
+import { CacheLayer } from '../caches/CacheLayer'
+import { MetricsAccumulator } from '../MetricsAccumulator'
+import { MiddlewareContext, RequestConfig } from './context'
+import { CacheableRequestConfig, Cached, cacheMiddleware } from './middlewares/cache'
+import { metricsMiddleware } from './middlewares/metrics'
+import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewares/notFound'
+import { Recorder, recorderMiddleware } from './middlewares/recorder'
+import { defaultsMiddleware, requestMiddleware } from './middlewares/request'
 
 const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
@@ -152,11 +152,9 @@ export interface IOContext {
   recorder?: Recorder,
   region: string,
   route: {
-    declarer: string
+    declarer?: string
     id: string
-    params: {
-      [param: string]: string,
-    },
+    params: ParsedUrlQuery,
   }
   userAgent: string,
   workspace: string,
