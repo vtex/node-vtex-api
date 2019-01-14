@@ -23,6 +23,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@types/graphql": "^14.0.4",
     "@types/lru-cache": "^4.1.1",
     "@types/p-queue": "^2.3.1",
     "@types/ramda": "^0.25.38",
@@ -31,6 +32,8 @@
     "axios": "^0.18.0",
     "axios-retry": "^3.0.3",
     "fs-extra": "^7.0.0",
+    "graphql": "^14.0.2",
+    "graphql-tools": "^4.0.3",
     "json-stringify-safe": "^5.0.1",
     "koa-compose": "^4.1.0",
     "lru-cache": "^4.1.3",
