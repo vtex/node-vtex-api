@@ -1,3 +1,4 @@
+import { DataSource } from 'apollo-datasource'
 import { AxiosResponse } from 'axios'
 import { IncomingMessage } from 'http'
 import { Context } from 'koa'
@@ -141,8 +142,13 @@ export type CacheStorage = CacheLayer<string, Cached>
 
 export type Recorder = Recorder
 
+export interface DataSources {
+  [name: string]: DataSource<ServiceContext>,
+}
+
 export interface ServiceContext extends Context {
   vtex: IOContext
+  dataSources?: DataSources
 }
 
 export interface IOContext {
