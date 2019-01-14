@@ -3,7 +3,7 @@ import {mean, median, percentile} from 'stats-lite'
 
 import {hrToMillis} from './utils/Time'
 
-interface Metric {
+export interface Metric {
   name: string
   [key: string]: number | boolean | string | undefined
 }
