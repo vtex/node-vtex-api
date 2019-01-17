@@ -16,7 +16,7 @@ export abstract class IODataSource extends DataSource<ServiceContext> {
   private initialized = false
 
   constructor (
-    private context?: IOContext,
+    protected context?: IOContext,
     private options: InstanceOptions = {},
   ) {
     super()
