@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.5.4] - 2019-01-17
+### Added
+- protected context in favor of private one in IODataSource
+
 ## [1.5.3] - 2019-01-11
 ### Fixed
 - IOContext types mismatch with service-runtime-node
