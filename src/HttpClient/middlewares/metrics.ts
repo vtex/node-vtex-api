@@ -1,5 +1,5 @@
-import {MetricsAccumulator} from '../../MetricsAccumulator'
-import {MiddlewareContext} from '../context'
+import { MetricsAccumulator } from '../../metrics/metricsAccumulator'
+import { MiddlewareContext } from '../context'
 
 const statusLabel = (status: number) =>
   `${Math.floor(status/100)}xx`

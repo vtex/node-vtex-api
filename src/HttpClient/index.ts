@@ -6,7 +6,8 @@ import * as compose from 'koa-compose'
 import { ParsedUrlQuery } from 'querystring'
 
 import { CacheLayer } from '../caches/CacheLayer'
-import { MetricsAccumulator } from '../MetricsAccumulator'
+import { MetricsAccumulator } from '../metrics/metricsAccumulator'
+import { MetricsLogger } from '../metrics/metricsLogger'
 import { MiddlewareContext, RequestConfig } from './context'
 import { CacheableRequestConfig, Cached, cacheMiddleware } from './middlewares/cache'
 import { metricsMiddleware } from './middlewares/metrics'
@@ -149,6 +150,7 @@ export interface DataSources {
 export interface ServiceContext extends Context {
   vtex: IOContext
   dataSources?: DataSources
+  metricsLogger?: MetricsLogger
 }
 
 export interface IOContext {
