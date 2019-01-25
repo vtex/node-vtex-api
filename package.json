@@ -10,7 +10,7 @@
     "build": "tsc",
     "lint": "tsc --noEmit && tslint src/*.ts",
     "prepublish": "run-s clean build",
-    "prereleasy": "run-s prepublish"
+    "prereleasy": "yarn prepublish"
   },
   "engines": {
     "node": ">=6"
