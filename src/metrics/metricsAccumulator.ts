@@ -1,11 +1,11 @@
-import {flatten, map, mapObjIndexed, values} from 'ramda'
-import {mean, median, percentile} from 'stats-lite'
+import { flatten, map, mapObjIndexed, values } from 'ramda'
+import { mean, median, percentile } from 'stats-lite'
 
-import {hrToMillis} from './utils/Time'
+import { hrToMillis } from '../utils/Time'
 
-interface Metric {
+export interface Metric {
   name: string
-  [key: string]: number | boolean | string | undefined
+  [key: string]: any
 }
 
 interface AggregateMetric extends Metric {

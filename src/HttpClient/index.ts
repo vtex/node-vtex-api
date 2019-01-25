@@ -1,3 +1,4 @@
+import { DataSource } from 'apollo-datasource'
 import { AxiosResponse } from 'axios'
 import { IncomingMessage } from 'http'
 import { Context } from 'koa'
@@ -5,7 +6,8 @@ import * as compose from 'koa-compose'
 import { ParsedUrlQuery } from 'querystring'
 
 import { CacheLayer } from '../caches/CacheLayer'
-import { MetricsAccumulator } from '../MetricsAccumulator'
+import { MetricsAccumulator } from '../metrics/metricsAccumulator'
+import { MetricsLogger } from '../metrics/metricsLogger'
 import { MiddlewareContext, RequestConfig } from './context'
 import { CacheableRequestConfig, Cached, cacheMiddleware } from './middlewares/cache'
 import { metricsMiddleware } from './middlewares/metrics'
@@ -141,8 +143,14 @@ export type CacheStorage = CacheLayer<string, Cached>
 
 export type Recorder = Recorder
 
+export interface DataSources {
+  [name: string]: DataSource<ServiceContext>,
+}
+
 export interface ServiceContext extends Context {
   vtex: IOContext
+  dataSources?: DataSources
+  metricsLogger?: MetricsLogger
 }
 
 export interface IOContext {
