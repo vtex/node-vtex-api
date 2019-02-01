@@ -1,7 +1,9 @@
 export interface Key {
-  name: string
+  key1: string
+  key2?: string
+  key3?: string
 }
 
 export interface MetricsLogger {
-  add: (key: Key, value: any) => void
+  add: (key: Key, value: number) => void
 }
