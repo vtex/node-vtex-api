@@ -42,14 +42,14 @@ const workspaceURL = (service: string, context: IOContext, opts: InstanceOptions
 export class HttpClient {
 
   public static forWorkspace (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent, recorder} = context
+    const {authToken, userAgent, recorder, segmentToken, sessionToken} = context
     const {timeout, cacheStorage} = opts
     const baseURL = workspaceURL(service, context, opts)
     return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken})
   }
 
   public static forRoot (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent, recorder} = context
+    const {authToken, userAgent, recorder, segmentToken, sessionToken} = context
     const {timeout, cacheStorage} = opts
     const baseURL = rootURL(service, context, opts)
     return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken})
@@ -57,7 +57,7 @@ export class HttpClient {
 
   public static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
     const {authToken, userAgent, timeout, cacheStorage} = opts
-    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage, segmentToken, sessionToken})
+    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage})
   }
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
