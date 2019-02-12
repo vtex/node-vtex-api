@@ -57,12 +57,12 @@ export class HttpClient {
 
   public static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
     const {authToken, userAgent, timeout, cacheStorage} = opts
-    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage})
+    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage, segmentToken: '', sessionToken: ''})
   }
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor (opts: ClientOptions) {
-    const {baseURL, authToken, authType, cacheStorage, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
+    const {baseURL, authToken, authType, cacheStorage, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS, segmentToken} = opts
     const headers: Record<string, string> = {
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
