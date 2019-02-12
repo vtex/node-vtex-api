@@ -81,7 +81,8 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
 
     if (maxAge || etag) {
       const currentAge = revalidated ? 0 : age
-      const varySegment = ctx.response.headers.get('vary').includes('x-vtex-segment')
+      debugger
+      const varySegment = ctx.response.headers.vary.includes('x-vtex-segment')
       const setKey = varySegment ? keyWithSegment : key
       await cacheStorage.set(setKey, {
         etag,
