@@ -45,19 +45,19 @@ export class HttpClient {
     const {authToken, userAgent, recorder} = context
     const {timeout, cacheStorage} = opts
     const baseURL = workspaceURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken})
   }
 
   public static forRoot (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
     const {authToken, userAgent, recorder} = context
     const {timeout, cacheStorage} = opts
     const baseURL = rootURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken})
   }
 
   public static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
     const {authToken, userAgent, timeout, cacheStorage} = opts
-    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage})
+    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage, segmentToken, sessionToken})
   }
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
@@ -76,7 +76,7 @@ export class HttpClient {
       defaultsMiddleware(baseURL, headers, timeout),
       ...recorder ? [recorderMiddleware(recorder)] : [],
       acceptNotFoundMiddleware,
-      ...cacheStorage ? [cacheMiddleware(cacheStorage)] : [],
+      ...cacheStorage ? [cacheMiddleware({cacheStorage, segmentToken})] : [],
       notFoundFallbackMiddleware,
       ...metrics ? [metricsMiddleware(metrics)] : [],
       requestMiddleware,
@@ -204,4 +204,6 @@ interface ClientOptions {
   recorder?: Recorder,
   metrics?: MetricsAccumulator,
   cacheStorage?: CacheLayer<string, Cached>,
+  segmentToken?: string
+  sessionToken?: string
 }

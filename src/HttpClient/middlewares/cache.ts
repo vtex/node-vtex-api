@@ -1,4 +1,5 @@
 import {AxiosRequestConfig, AxiosResponse} from 'axios'
+import {contains} from 'ramda'
 import {URL, URLSearchParams} from 'url'
 import {CacheLayer} from '../../caches/CacheLayer'
 import {MiddlewareContext} from '../context'
@@ -36,14 +37,17 @@ function isCacheable (arg: any): arg is CacheableRequestConfig {
 const addNotModified = (validateStatus: (status: number) => boolean) =>
   (status: number) => validateStatus(status) || status === 304
 
-export const cacheMiddleware = (cacheStorage: CacheLayer<string, Cached>) => {
+export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: CacheLayer<string, Cached>, segmentToken: string}) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     if (!isCacheable(ctx.config)) {
       return await next()
     }
 
     const key = cacheKey(ctx.config)
-    const cached = await cacheStorage.get(key)
+    const keyWithSegment = key + segmentToken
+
+    const cacheHasWithSegment = await cacheStorage.has(keyWithSegment)
+    const cached = cacheHasWithSegment ? await cacheStorage.get(keyWithSegment) : await cacheStorage.get(key)
 
     if (cached) {
       const {etag: cachedEtag, response, expiration} = cached as Cached
@@ -78,7 +82,9 @@ export const cacheMiddleware = (cacheStorage: CacheLayer<string, Cached>) => {
 
     if (maxAge || etag) {
       const currentAge = revalidated ? 0 : age
-      await cacheStorage.set(key, {
+      const varySegment = contains('x-vtex-segment', ctx.response.headers.get('vary'))
+      const setKey = varySegment ? keyWithSegment : key
+      await cacheStorage.set(setKey, {
         etag,
         expiration: Date.now() + (maxAge - currentAge) * 1000,
         response: {data, headers, status},
