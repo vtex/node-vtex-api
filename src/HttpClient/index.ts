@@ -166,6 +166,8 @@ export interface IOContext {
   }
   userAgent: string,
   workspace: string,
+  segmentToken?: string
+  sessionToken?: string
 }
 
 export interface InstanceOptions {

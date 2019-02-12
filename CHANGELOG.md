@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.7.0] - 2019-02-12
+### Added
+- segmentToken and sessionToken to IOContext type definition
+
+## [1.7.0-beta] - 2019-02-12
+
 ## [1.6.0] - 2019-01-25
 
 ## [1.5.4] - 2019-01-17
