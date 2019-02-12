@@ -57,7 +57,7 @@ export class HttpClient {
 
   public static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
     const {authToken, userAgent, timeout, cacheStorage} = opts
-    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage, segmentToken: '', sessionToken: ''})
+    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage})
   }
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
@@ -76,7 +76,7 @@ export class HttpClient {
       defaultsMiddleware(baseURL, headers, timeout),
       ...recorder ? [recorderMiddleware(recorder)] : [],
       acceptNotFoundMiddleware,
-      ...cacheStorage ? [cacheMiddleware({cacheStorage, segmentToken})] : [],
+      ...cacheStorage ? [cacheMiddleware({cacheStorage, segmentToken: segmentToken || ''})] : [],
       notFoundFallbackMiddleware,
       ...metrics ? [metricsMiddleware(metrics)] : [],
       requestMiddleware,
