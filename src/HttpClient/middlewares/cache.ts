@@ -1,5 +1,4 @@
 import {AxiosRequestConfig, AxiosResponse} from 'axios'
-import {match} from 'ramda'
 import {URL, URLSearchParams} from 'url'
 import {CacheLayer} from '../../caches/CacheLayer'
 import {MiddlewareContext} from '../context'
@@ -82,7 +81,7 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
 
     if (maxAge || etag) {
       const currentAge = revalidated ? 0 : age
-      const varySegment = match('x-vtex-segment', ctx.response.headers.get('vary'))
+      const varySegment = ctx.response.headers.get('vary').includes('x-vtex-segment')
       const setKey = varySegment ? keyWithSegment : key
       await cacheStorage.set(setKey, {
         etag,
