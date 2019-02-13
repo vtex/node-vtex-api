@@ -42,17 +42,17 @@ const workspaceURL = (service: string, context: IOContext, opts: InstanceOptions
 export class HttpClient {
 
   public static forWorkspace (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent, recorder} = context
+    const {authToken, userAgent, recorder, segmentToken, sessionToken} = context
     const {timeout, cacheStorage} = opts
     const baseURL = workspaceURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken})
   }
 
   public static forRoot (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent, recorder} = context
+    const {authToken, userAgent, recorder, segmentToken, sessionToken} = context
     const {timeout, cacheStorage} = opts
     const baseURL = rootURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage})
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken})
   }
 
   public static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
@@ -62,7 +62,7 @@ export class HttpClient {
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor (opts: ClientOptions) {
-    const {baseURL, authToken, authType, cacheStorage, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS} = opts
+    const {baseURL, authToken, authType, cacheStorage, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS, segmentToken} = opts
     const headers: Record<string, string> = {
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
@@ -76,7 +76,7 @@ export class HttpClient {
       defaultsMiddleware(baseURL, headers, timeout),
       ...recorder ? [recorderMiddleware(recorder)] : [],
       acceptNotFoundMiddleware,
-      ...cacheStorage ? [cacheMiddleware(cacheStorage)] : [],
+      ...cacheStorage ? [cacheMiddleware({cacheStorage, segmentToken: segmentToken || ''})] : [],
       notFoundFallbackMiddleware,
       ...metrics ? [metricsMiddleware(metrics)] : [],
       requestMiddleware,
@@ -204,4 +204,6 @@ interface ClientOptions {
   recorder?: Recorder,
   metrics?: MetricsAccumulator,
   cacheStorage?: CacheLayer<string, Cached>,
+  segmentToken?: string
+  sessionToken?: string
 }
