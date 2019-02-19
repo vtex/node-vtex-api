@@ -18,9 +18,9 @@ export interface AppManifest {
   },
   settingsSchema: any,
   registries: string[],
-  credentialType: string,
+  credentialType?: string,
   policies: Policy[],
-  billingOptions: BillingOptions,
+  billingOptions?: BillingOptions,
   _resolvedDependencies?: {
     [name: string]: string[],
   },
