@@ -230,7 +230,7 @@ export class Apps extends IODataSource {
   }
 
   public resolveDependenciesWithManifest = (manifest: AppManifest) => {
-    return this.http.post(routes.ResolveDependenciesWithManifest, manifest)
+    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest)
   }
     
 }
