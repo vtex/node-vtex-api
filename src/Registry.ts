@@ -19,6 +19,7 @@ const routes = {
   AppVersion: (app: string, version: string) => `${routes.App(app)}/${version}`,
   Publish: '/v2/registry',
   Registry: '/registry',
+  ResolveDependenciesWithManifest: '/v2/registry/_resolve',
 }
 
 const forWorkspaceMaster: HttpClientFactory = ({service, context, options}) => (service && context)
@@ -105,6 +106,10 @@ export class Registry extends IODataSource {
         .pipe(createGunzip())
         .pipe(extract(unpackPath)),
       )
+  }
+
+  public resolveDependenciesWithManifest = (manifest: AppManifest) => {
+    return this.http.post(routes.ResolveDependenciesWithManifest, manifest)
   }
 }
 
