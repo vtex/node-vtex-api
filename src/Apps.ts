@@ -226,12 +226,12 @@ export class Apps extends IODataSource {
 
   public resolveDependencies = (apps: string[], registries: string[], filter: string = '') => {
     const params = {apps, registries, filter}
+    console.error(paramsSerializer(params))
     return this.http.get(routes.ResolveDependencies, {params, paramsSerializer})
   }
 
-  public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {
-    const params = {filter}
-    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {params, paramsSerializer})
+  public resolveDependenciesWithManifest = (manifest: AppManifest) => {
+    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest)
   }
     
 }
