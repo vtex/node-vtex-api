@@ -45,7 +45,6 @@ export class HttpClient {
     const {authToken, userAgent, recorder, segmentToken, sessionToken} = context
     const {timeout, cacheStorage} = opts
     const baseURL = workspaceURL(service, context, opts)
-    console.error(`baseURL = ${baseURL}`)
     return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken})
   }
 
