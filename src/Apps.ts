@@ -226,7 +226,6 @@ export class Apps extends IODataSource {
 
   public resolveDependencies = (apps: string[], registries: string[], filter: string = '') => {
     const params = {apps, registries, filter}
-    console.error(paramsSerializer(params))
     return this.http.get(routes.ResolveDependencies, {params, paramsSerializer})
   }
 
