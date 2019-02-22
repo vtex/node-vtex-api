@@ -1,5 +1,8 @@
 export interface Policy {
   name: string,
+  attrs?: {
+    [name: string]: string,
+  }
 }
 
 export interface AppManifest {
@@ -7,20 +10,24 @@ export interface AppManifest {
   vendor: string,
   name: string,
   version: string,
-  title: string,
-  description: string,
-  categories: string[],
-  dependencies: {
+  title?: string,
+  description?: string,
+  mustUpdateAt?: string,
+  builders: {
+    [name: string]: string,
+  }
+  categories?: string[],
+  dependencies?: {
     [name: string]: string,
   },
-  peerDependencies: {
+  peerDependencies?: {
     [name: string]: string,
   },
-  settingsSchema: any,
-  registries: string[],
-  credentialType: string,
-  policies: Policy[],
-  billingOptions: BillingOptions,
+  settingsSchema?: any,
+  registries?: string[],
+  credentialType?: string,
+  policies?: Policy[],
+  billingOptions?: BillingOptions,
   _resolvedDependencies?: {
     [name: string]: string[],
   },
@@ -41,13 +48,21 @@ export interface BucketMetadata {
   hash: string,
 }
 
-export interface BillingOptions {
-  version?: string,
-  free?: boolean,
-  policies?: BillingPolicy[],
-  deactivationRoute?: string,
-  termsURL: string,
+interface RootBillingOptions {
+  termsURL: string
+  support: Support
 }
+
+export interface Support {
+  url: string
+  email: string
+}
+
+export type BillingOptions = RootBillingOptions & ({
+  free: boolean,
+} | {
+  policies: BillingPolicy[],
+})
 
 export interface BillingPolicy {
   currency: string,
@@ -59,17 +74,19 @@ export interface BillingChargeElements {
   items: CalculationItem[],
 }
 
-export interface CalculationItem {
+export type CalculationItem = {
   itemCurrency: string,
+} & ({
   fixed: number,
+} | {
   calculatedByMetricUnit: CalculatedByMetricUnit,
-}
+})
 
 export interface CalculatedByMetricUnit {
   metricId: string,
   metricName: string,
   ranges: Range[],
-  route: string,
+  route?: string,
 }
 
 export interface Range {
