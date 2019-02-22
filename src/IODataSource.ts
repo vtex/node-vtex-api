@@ -24,6 +24,7 @@ export abstract class IODataSource extends DataSource<ServiceContext> {
 
   public initialize(config: DataSourceConfig<ServiceContext>) {
     const {context: {vtex: context}, cache: cacheStorage} = config
+    this.context = context
     this.httpClient = this.httpClientFactory({
       context,
       options: {cacheStorage, ...this.options} as any,
