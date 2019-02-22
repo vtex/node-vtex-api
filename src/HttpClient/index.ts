@@ -12,6 +12,10 @@ const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
 
 const rootURL = (service: string, {region}: IOContext, {endpoint}: InstanceOptions): string => {
+  if (service === 'apps') {
+    return 'http://localhost:5000'
+  }
+  
   if (endpoint) {
     return 'http://' + endpoint
   }
