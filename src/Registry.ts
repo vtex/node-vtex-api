@@ -40,22 +40,25 @@ export class Registry {
     zip.on('error', (e) => {
       throw e
     })
-    const request = this.http.post<AppBundlePublished>(routes.Publish, zip, {
-      params: tag ? {tag} : EMPTY_OBJECT,
-      headers: {'Content-Type': 'application/zip'},
-    })
-
     files.forEach(({content, path}) => zip.append(content, {name: path}))
     const finalize = zip.finalize()
+    await finalize
+    console.error(zip)
+    return
+    // const request = this.http.post<AppBundlePublished>(routes.Publish, zip, {
+    //   params: tag ? {tag} : EMPTY_OBJECT,
+    //   headers: {'Content-Type': 'application/zip'},
+    // })
 
-    try {
-      const [response] = await Promise.all([request, finalize])
-      response.bundleSize = zip.pointer()
-      return response
-    } catch (e) {
-      e.bundleSize = zip.pointer()
-      throw e
-    }
+
+    // try {
+    //   const [response] = await Promise.all([request, finalize])
+    //   response.bundleSize = zip.pointer()
+    //   return response
+    // } catch (e) {
+    //   e.bundleSize = zip.pointer()
+    //   throw e
+    // }
   }
 
   listApps = () => {
