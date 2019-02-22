@@ -1,5 +1,6 @@
 import * as archiver from 'archiver'
 import {IncomingMessage} from 'http'
+import {stringify} from 'qs'
 import {Readable, Writable} from 'stream'
 import {extract} from 'tar-fs'
 import {createGunzip, ZlibOptions} from 'zlib'
@@ -25,6 +26,10 @@ const routes = {
 const forWorkspaceMaster: HttpClientFactory = ({service, context, options}) => (service && context)
   ? HttpClient.forWorkspace(service, {...context, workspace: DEFAULT_WORKSPACE}, options || {})
   : undefined
+
+const paramsSerializer = (params: any) => {
+  return stringify(params, {arrayFormat: 'repeat'})
+}
 
 export class Registry extends IODataSource {
   protected httpClientFactory = forWorkspaceMaster
@@ -108,8 +113,9 @@ export class Registry extends IODataSource {
       )
   }
 
-  public resolveDependenciesWithManifest = (manifest: AppManifest) => {
-    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest)
+  public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {
+    const params = {filter}
+    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {params, paramsSerializer})
   }
 }
 
