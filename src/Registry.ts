@@ -28,6 +28,7 @@ export class Registry {
   }
 
   publishApp = async (files: File[], tag?: string, {zlib}: zipOptions = {}) => {
+    console.error('called publishApp', Math.random())
     if (!(files[0] && files[0].path && files[0].content)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -40,25 +41,25 @@ export class Registry {
     zip.on('error', (e) => {
       throw e
     })
+    const request = this.http.post<AppBundlePublished>(routes.Publish, zip, {
+      params: tag ? {tag} : EMPTY_OBJECT,
+      headers: {'Content-Type': 'application/zip'},
+    })
+
     files.forEach(({content, path}) => zip.append(content, {name: path}))
     const finalize = zip.finalize()
-    await finalize
-    console.error(zip)
-    return
-    // const request = this.http.post<AppBundlePublished>(routes.Publish, zip, {
-    //   params: tag ? {tag} : EMPTY_OBJECT,
-    //   headers: {'Content-Type': 'application/zip'},
-    // })
 
-
-    // try {
-    //   const [response] = await Promise.all([request, finalize])
-    //   response.bundleSize = zip.pointer()
-    //   return response
-    // } catch (e) {
-    //   e.bundleSize = zip.pointer()
-    //   throw e
-    // }
+    try {
+      console.error('started try block in publishApp', Math.random())
+      const [response] = await Promise.all([request, finalize])
+      console.error('finished awaiting for response in publishApp', Math.random())
+      response.bundleSize = zip.pointer()
+      return response
+    } catch (e) {
+      console.error('fell in catch block in publishApp', Math.random())
+      e.bundleSize = zip.pointer()
+      throw e
+    }
   }
 
   listApps = () => {

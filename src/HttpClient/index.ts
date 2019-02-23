@@ -108,6 +108,7 @@ export class HttpClient {
   }
 
   post = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
+    console.error('started POST request', Math.random())
     const postConfig: AxiosRequestConfig = {...config, url, data, method: 'post'}
     return this.request(postConfig).then(response => response.data as T)
   }
