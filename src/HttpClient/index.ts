@@ -12,10 +12,6 @@ const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
 
 const rootURL = (service: string, {region}: IOContext, {endpoint}: InstanceOptions): string => {
-  if (service === 'apps') {
-    return 'http://localhost:5000'
-  }
-  
   if (endpoint) {
     return 'http://' + endpoint
   }
@@ -108,7 +104,6 @@ export class HttpClient {
   }
 
   post = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
-    console.error('started POST request', Math.random())
     const postConfig: AxiosRequestConfig = {...config, url, data, method: 'post'}
     return this.request(postConfig).then(response => response.data as T)
   }
