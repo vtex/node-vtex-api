@@ -104,7 +104,7 @@ export class HttpClient {
   }
 
   post = <T = void>(url: string, data?: any, config: AxiosRequestConfig = {}): Promise<T> => {
-    console.error(`POST request to ${url}`)
+    console.error(`POST request to ${url}`, data, config)
     const postConfig: AxiosRequestConfig = {...config, url, data, method: 'post'}
     return this.request(postConfig).then(response => response.data as T)
   }
