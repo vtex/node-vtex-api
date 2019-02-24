@@ -41,17 +41,17 @@ export class Registry {
     zip.on('error', (e) => {
       throw e
     })
+    files.forEach(({content, path}) => zip.append(content, {name: path}))
+    await zip.finalize()
+    
     const request = this.http.post<AppBundlePublished>(routes.Publish, zip, {
       params: tag ? {tag} : EMPTY_OBJECT,
       headers: {'Content-Type': 'application/zip'},
     })
 
-    files.forEach(({content, path}) => zip.append(content, {name: path}))
-    const finalize = zip.finalize()
-
     try {
       console.error('started try block in publishApp', Math.random())
-      const [response] = await Promise.all([request, finalize])
+      const response = await request
       console.error('finished awaiting for response in publishApp', Math.random())
       response.bundleSize = zip.pointer()
       return response
