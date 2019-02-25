@@ -1,5 +1,6 @@
 import * as archiver from 'archiver'
 import {IncomingMessage} from 'http'
+import {stringify} from 'qs'
 import {Readable, Writable} from 'stream'
 import {extract} from 'tar-fs'
 import {createGunzip, ZlibOptions} from 'zlib'
@@ -19,11 +20,16 @@ const routes = {
   AppVersion: (app: string, version: string) => `${routes.App(app)}/${version}`,
   Publish: '/v2/registry',
   Registry: '/registry',
+  ResolveDependenciesWithManifest: '/v2/registry/_resolve',
 }
 
 const forWorkspaceMaster: HttpClientFactory = ({service, context, options}) => (service && context)
   ? HttpClient.forWorkspace(service, {...context, workspace: DEFAULT_WORKSPACE}, options || {})
   : undefined
+
+const paramsSerializer = (params: any) => {
+  return stringify(params, {arrayFormat: 'repeat'})
+}
 
 export class Registry extends IODataSource {
   protected httpClientFactory = forWorkspaceMaster
@@ -105,6 +111,11 @@ export class Registry extends IODataSource {
         .pipe(createGunzip())
         .pipe(extract(unpackPath)),
       )
+  }
+
+  public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {
+    const params = {filter}
+    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {params, paramsSerializer})
   }
 }
 

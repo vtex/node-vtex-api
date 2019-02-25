@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.9.0] - 2019-02-25
+### Added
+- Functions that call new Apps API for dependency resolution.
+
 ## [1.8.3] - 2019-02-22
 ### Changed
 - Updated App Manifest types

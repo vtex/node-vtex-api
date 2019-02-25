@@ -19,6 +19,7 @@ const routes = {
   Link: (app: string) => `/v2/links/${app}`,
   Links: '/links',
   ResolveDependencies: 'dependencies/_resolve',
+  ResolveDependenciesWithManifest: '/v2/apps/_resolve',
   Settings: (app: string) => `${routes.App(app)}/settings`,
   Unlink: (app: string) => `${routes.Links}/${app}`,
 }
@@ -227,6 +228,12 @@ export class Apps extends IODataSource {
     const params = {apps, registries, filter}
     return this.http.get(routes.ResolveDependencies, {params, paramsSerializer})
   }
+
+  public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {
+    const params = {filter}
+    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {params, paramsSerializer})
+  }
+    
 }
 
 interface ZipOptions {
