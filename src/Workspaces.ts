@@ -23,8 +23,8 @@ export class Workspaces extends IODataSource {
     return this.http.put(routes.Workspace(account, workspace), metadata)
   }
 
-  public create = (account: string, workspace: string) => {
-    return this.http.post(routes.Account(account), {name: workspace})
+  public create = (account: string, workspace: string, production: boolean) => {
+    return this.http.post(routes.Account(account), {name: workspace, production})
   }
 
   public delete = (account: string, workspace: string) => {
