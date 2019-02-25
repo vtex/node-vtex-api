@@ -1,5 +1,5 @@
 import axios from 'axios'
-import * as retry from 'axios-retry'
+// import * as retry from 'axios-retry'
 import {Agent} from 'http'
 
 import {MiddlewareContext} from '../context'
@@ -11,7 +11,7 @@ const http = axios.create({
   }),
 })
 
-retry(http)
+// retry(http)
 http.interceptors.response.use(response => response, (err: any) => {
   try {
     delete err.response.request
