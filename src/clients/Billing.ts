@@ -7,7 +7,7 @@ const routes = {
   contractStatus: '/_v/contractStatus',
 }
 
-export class BillingService {
+export class Billing {
   private contracts: Contracts
   private metrics: Metrics
 
