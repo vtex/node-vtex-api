@@ -1,4 +1,5 @@
-import {forWorkspace, IODataSource} from '../IODataSource'
+import { InstanceOptions, IOContext } from './HttpClient'
+import { forWorkspace, IODataSource } from './IODataSource'
 
 const metricRoute = `/metrics`
 
@@ -6,17 +7,38 @@ const routes = {
   contractStatus: '/_v/contractStatus',
 }
 
-export class Billing extends IODataSource {
+export class BillingService {
+  private contracts: Contracts
+  private metrics: Metrics
+
+  constructor(context: IOContext, options: InstanceOptions) {
+    this.contracts = new Contracts(context, options)
+    this.metrics = new Metrics(context, options)
+  }
+
+  public status = () =>
+    this.contracts.status()
+
+  public sendMetric = (metric: BillingMetric) =>
+    this.metrics.sendMetric(metric)
+}
+
+// tslint:disable-next-line:max-classes-per-file
+class Contracts extends IODataSource {
   protected service = 'billing.vtex'
   protected httpClientFactory = forWorkspace
 
-  public contractStatus = () => {
-    return this.http.get<ContractStatus>(routes.contractStatus)
-  }
+  public status = () =>
+    this.http.get<ContractStatus>(routes.contractStatus)
+}
 
-  public sendMetric = (metric: BillingMetric) => {
-    return this.http.post(metricRoute, metric)
-  }
+// tslint:disable-next-line:max-classes-per-file
+class Metrics extends IODataSource {
+  protected service = 'colossus'
+  protected httpClientFactory = forWorkspace
+
+  public sendMetric = (metric: BillingMetric) =>
+    this.http.post<BillingMetric>(metricRoute, metric)
 }
 
 export enum ContractStatus {
