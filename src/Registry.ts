@@ -1,4 +1,4 @@
-import * as archiver from 'archiver'
+import archiver from 'archiver'
 import {IncomingMessage} from 'http'
 import {stringify} from 'qs'
 import {Readable, Writable} from 'stream'

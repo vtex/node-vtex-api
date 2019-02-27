@@ -1,5 +1,5 @@
 import { IncomingMessage } from 'http'
-import * as mime from 'mime-types'
+import mime from 'mime-types'
 import { basename } from 'path'
 import { Readable } from 'stream'
 import { createGzip } from 'zlib'

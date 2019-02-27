@@ -3,7 +3,7 @@ import { AxiosResponse } from 'axios'
 import { IAxiosRetryConfig } from 'axios-retry'
 import { IncomingMessage } from 'http'
 import { Context } from 'koa'
-import * as compose from 'koa-compose'
+import compose from 'koa-compose'
 import { ParsedUrlQuery } from 'querystring'
 
 import { CacheLayer } from '../caches/CacheLayer'

@@ -1,4 +1,4 @@
-import * as archiver from 'archiver'
+import archiver from 'archiver'
 import {IncomingMessage} from 'http'
 import {stringify} from 'qs'
 import {Readable, Writable} from 'stream'
@@ -233,7 +233,7 @@ export class Apps extends IODataSource {
     const params = {filter}
     return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {params, paramsSerializer})
   }
-    
+
 }
 
 interface ZipOptions {

@@ -1,4 +1,4 @@
-import * as LRU from 'lru-cache'
+import LRU from 'lru-cache'
 import { CacheLayer } from './CacheLayer'
 import { MultilayeredCache } from './MultilayeredCache'
 import { FetchResult, LRUStats } from './typings'
