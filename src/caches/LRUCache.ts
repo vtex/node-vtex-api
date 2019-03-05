@@ -36,6 +36,8 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
 
   public has = (key: K): boolean => this.storage.has(key)
 
+  public delete = (key: K) => this.storage.del(key)
+
   public getStats = (name='lru-cache'): LRUStats => {
     const stats = {
       disposedItems: this.disposed,
