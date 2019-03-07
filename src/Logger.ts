@@ -1,5 +1,5 @@
-import * as stringify from 'json-stringify-safe'
-import * as PQueue from 'p-queue'
+import stringify from 'json-stringify-safe'
+import PQueue from 'p-queue'
 import {pick} from 'ramda'
 
 import {HttpClient, withoutRecorder} from './HttpClient'

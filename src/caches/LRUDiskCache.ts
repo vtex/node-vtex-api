@@ -2,12 +2,12 @@ import { CacheLayer } from './CacheLayer'
 import { LRUDiskCacheOptions, LRUStats } from './typings'
 
 import { outputJSON, readJSON, remove } from 'fs-extra'
-import * as LRU from 'lru-cache'
+import LRU from 'lru-cache'
 import { join } from 'path'
-import * as ReadWriteLock from 'rwlock'
+import ReadWriteLock from 'rwlock'
 
 export class LRUDiskCache<V> implements CacheLayer<string, V>{
-  
+
   private lock: ReadWriteLock
   private disposed: number
   private hits = 0
@@ -66,7 +66,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     }
 
     const pathKey = this.getPathKey(key)
-    
+
     const data = await new Promise<V>(resolve => {
       this.lock.readLock(key, async (release: () => void) => {
         try {

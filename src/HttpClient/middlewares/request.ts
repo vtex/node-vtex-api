@@ -1,5 +1,5 @@
 import axios from 'axios'
-import * as retry from 'axios-retry'
+import retry, {exponentialDelay, IAxiosRetryConfig, isNetworkError} from 'axios-retry'
 import {Agent} from 'http'
 
 import {MiddlewareContext} from '../context'
@@ -11,7 +11,12 @@ const http = axios.create({
   }),
 })
 
-retry(http)
+retry(http, {
+  retries: 1,
+  retryCondition: isNetworkError,
+  retryDelay: exponentialDelay,
+})
+
 http.interceptors.response.use(response => response, (err: any) => {
   try {
     delete err.response.request
@@ -22,9 +27,10 @@ http.interceptors.response.use(response => response, (err: any) => {
   return Promise.reject(err)
 })
 
-export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<string, string>, timeout: number) => {
+export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<string, string>, timeout: number, retryConfig?: IAxiosRetryConfig) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     ctx.config = {
+      'axios-retry': retryConfig, // Allow overriding default retryConfig per-request
       baseURL,
       maxRedirects: 0,
       timeout,

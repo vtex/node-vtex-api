@@ -3,7 +3,7 @@ import { DiskStats } from './typings'
 
 import { outputJSON, pathExistsSync, readJSON } from 'fs-extra'
 import { join } from 'path'
-import * as ReadWriteLock from 'rwlock'
+import ReadWriteLock from 'rwlock'
 
 export class DiskCache<V> implements CacheLayer<string, V>{
 

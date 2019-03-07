@@ -1,4 +1,4 @@
-import * as semver from 'semver'
+import semver from 'semver'
 
 // Note: The name that composes the part of the appId that precedes the
 // character '@' includes the name given to the app and the vendor name.

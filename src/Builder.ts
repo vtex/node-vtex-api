@@ -1,4 +1,4 @@
-import * as archiver from 'archiver'
+import archiver from 'archiver'
 import {ZlibOptions} from 'zlib'
 
 import {Change} from './Apps'
