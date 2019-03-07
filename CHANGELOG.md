@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.1.0] - 2019-03-07
+
 ### Changed
 - Change default retry behaviour to only retry on network error once
 - Accept retryConfig on each HttpClient
