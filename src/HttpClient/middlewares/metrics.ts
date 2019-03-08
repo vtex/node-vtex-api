@@ -6,6 +6,7 @@ const statusLabel = (status: number) =>
 
 export const metricsMiddleware = (metrics: MetricsAccumulator) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+    console.error('metricsMiddleware')
     const start = ctx.config.metric && process.hrtime()
     const production = ctx.config.production || false
     let status

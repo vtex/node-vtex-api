@@ -24,6 +24,7 @@ http.interceptors.response.use(response => response, (err: any) => {
 
 export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<string, string>, timeout: number) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+    console.error('defaultsMiddleware')
     ctx.config = {
       baseURL,
       maxRedirects: 0,
@@ -41,5 +42,6 @@ export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<
 }
 
 export const requestMiddleware = async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+  console.error('requestMiddleware')
   ctx.response = await http.request(ctx.config)
 }

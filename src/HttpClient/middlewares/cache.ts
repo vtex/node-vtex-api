@@ -38,6 +38,7 @@ const addNotModified = (validateStatus: (status: number) => boolean) =>
 
 export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: CacheLayer<string, Cached>, segmentToken: string}) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+    console.error('cacheMiddleware')
     if (!isCacheable(ctx.config)) {
       return await next()
     }

@@ -131,6 +131,7 @@ export class HttpClient {
   private request = async (config: RequestConfig): Promise<AxiosResponse> => {
     const context: MiddlewareContext = {config}
     await this.runMiddlewares(context)
+    console.error('finished middlewares, returning response =', context.response)
     return context.response!
   }
 }
