@@ -12,32 +12,33 @@ export class Workspaces extends IODataSource {
   protected httpClientFactory = forRoot
 
   public list = (account: string) => {
-    return this.http.get<WorkspaceMetadata[]>(routes.Account(account))
+    return this.http.get<WorkspaceMetadata[]>(routes.Account(account), {metric: 'workspaces-list'})
   }
 
   public get = (account: string, workspace: string) => {
-    return this.http.get<WorkspaceMetadata>(routes.Workspace(account, workspace))
+    return this.http.get<WorkspaceMetadata>(routes.Workspace(account, workspace), {metric: 'workspaces-get'})
   }
 
   public set = (account: string, workspace: string, metadata: Partial<WorkspaceMetadata>) => {
-    return this.http.put(routes.Workspace(account, workspace), metadata)
+    return this.http.put(routes.Workspace(account, workspace), metadata, {metric: 'workspaces-set'})
   }
 
   public create = (account: string, workspace: string, production: boolean) => {
-    return this.http.post(routes.Account(account), {name: workspace, production})
+    return this.http.post(routes.Account(account), {name: workspace, production}, {metric: 'workspaces-create'})
   }
 
   public delete = (account: string, workspace: string) => {
-    return this.http.delete(routes.Workspace(account, workspace))
+    return this.http.delete(routes.Workspace(account, workspace), {metric: 'workspaces-delete'})
   }
 
   public reset = (account: string, workspace: string, metadata: Partial<WorkspaceMetadata> = {}) => {
     const params = {reset: true}
-    return this.http.put(routes.Workspace(account, workspace), metadata, {params})
+    const metric = 'workspaces-reset'
+    return this.http.put(routes.Workspace(account, workspace), metadata, {params, metric})
   }
 
   public promote = (account: string, workspace: string) => {
-    return this.http.put(routes.Promote(account), {workspace})
+    return this.http.put(routes.Promote(account), {workspace}, {metric: 'workspaces-promote'})
   }
 }
 
