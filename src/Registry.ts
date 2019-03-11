@@ -48,8 +48,10 @@ export class Registry extends IODataSource {
     zip.on('error', (e) => {
       throw e
     })
+    const metric = 'registry-publish'
     const request = this.http.post<AppBundlePublished>(routes.Publish, zip, {
       headers: {'Content-Type': 'application/zip'},
+      metric,
       params: tag ? {tag} : EMPTY_OBJECT,
     })
 
@@ -67,40 +69,42 @@ export class Registry extends IODataSource {
   }
 
   public listApps = () => {
-    return this.http.get<RegistryAppsList>(routes.Registry)
+    return this.http.get<RegistryAppsList>(routes.Registry, {metric: 'registry-list'})
   }
 
   public listVersionsByApp = (app: string) => {
-    return this.http.get<RegistryAppVersionsList>(routes.App(app))
+    return this.http.get<RegistryAppVersionsList>(routes.App(app), {metric: 'registry-list-versions'})
   }
 
   public deprecateApp = (app: string, version: string) => {
-    return this.http.patch(routes.AppVersion(app, version), {deprecated: true})
+    return this.http.patch(routes.AppVersion(app, version), {deprecated: true}, {metric: 'registry-deprecate'})
   }
 
   public getAppManifest = (app: string, version: string, opts?: AppsManifestOptions) => {
-    return this.http.get<AppManifest>(routes.AppVersion(app, version), {params: opts})
+    return this.http.get<AppManifest>(routes.AppVersion(app, version), {params: opts, metric: 'registry-manifest'})
   }
 
   public listAppFiles = (app: string, version: string, opts?: ListAppFilesOptions) => {
-    return this.http.get<AppFilesList>(routes.AppFiles(app, version), {params: opts})
+    return this.http.get<AppFilesList>(routes.AppFiles(app, version), {params: opts, metric: 'registry-list-files'})
   }
 
   public getAppFile = (app: string, version: string, path: string) => {
-    return this.http.getBuffer(routes.AppFile(app, version, path))
+    return this.http.getBuffer(routes.AppFile(app, version, path), {metric: 'registry-get-file'})
   }
 
   public getAppFileStream = (app: string, version: string, path: string): Promise<IncomingMessage> => {
-    return this.http.getStream(routes.AppFile(app, version, path))
+    return this.http.getStream(routes.AppFile(app, version, path), {metric: 'registry-get-file-s'})
   }
 
   public getAppBundle = (app: string, version: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
     const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
+    const metric = 'registry-get-bundle'
     return this.http.getStream(routes.AppBundle(app, version, bundlePath), {
       headers: {
         Accept: 'application/x-gzip',
         'Accept-Encoding': 'gzip',
       },
+      metric,
       params,
     })
   }
@@ -115,7 +119,8 @@ export class Registry extends IODataSource {
 
   public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {
     const params = {filter}
-    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {params, paramsSerializer})
+    const metric = 'registry-resolve-deps'
+    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {params, paramsSerializer, metric})
   }
 }
 
