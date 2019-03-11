@@ -4,6 +4,7 @@ import { IAxiosRetryConfig } from 'axios-retry'
 import { IncomingMessage } from 'http'
 import { Context } from 'koa'
 import compose from 'koa-compose'
+import pLimit from 'p-limit'
 import { ParsedUrlQuery } from 'querystring'
 
 import { CacheLayer } from '../caches/CacheLayer'
@@ -44,26 +45,27 @@ export class HttpClient {
 
   public static forWorkspace (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
     const {authToken, userAgent, recorder, segmentToken, sessionToken} = context
-    const {timeout, cacheStorage, retryConfig, metrics} = opts
+    const {timeout, cacheStorage, retryConfig, metrics, concurrency} = opts
     const baseURL = workspaceURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken, retryConfig, metrics})
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken, retryConfig, metrics, concurrency})
   }
 
   public static forRoot (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
     const {authToken, userAgent, recorder, segmentToken, sessionToken} = context
-    const {timeout, cacheStorage, retryConfig, metrics} = opts
+    const {timeout, cacheStorage, retryConfig, metrics, concurrency} = opts
     const baseURL = rootURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken, retryConfig, metrics})
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken, retryConfig, metrics, concurrency})
   }
 
   public static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
-    const {authToken, userAgent, timeout, cacheStorage, retryConfig, metrics} = opts
-    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage, retryConfig, metrics})
+    const {authToken, userAgent, timeout, cacheStorage, retryConfig, metrics, concurrency} = opts
+    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage, retryConfig, metrics, concurrency})
   }
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor (opts: ClientOptions) {
-    const {baseURL, authToken, authType, cacheStorage, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS, segmentToken, retryConfig} = opts
+    const {baseURL, authToken, authType, cacheStorage, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS, segmentToken, retryConfig, concurrency} = opts
+    const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
@@ -80,7 +82,7 @@ export class HttpClient {
       ...cacheStorage ? [cacheMiddleware({cacheStorage, segmentToken: segmentToken || ''})] : [],
       notFoundFallbackMiddleware,
       ...metrics ? [metricsMiddleware(metrics)] : [],
-      requestMiddleware,
+      requestMiddleware(limit),
     ])
   }
 
@@ -177,6 +179,7 @@ export interface InstanceOptions {
   endpoint?: string,
   retryConfig?: IAxiosRetryConfig,
   metrics?: MetricsAccumulator,
+  concurrency?: number,
 }
 
 export interface LegacyInstanceOptions {
@@ -187,6 +190,7 @@ export interface LegacyInstanceOptions {
   cacheStorage?: CacheLayer<string, Cached>,
   retryConfig?: IAxiosRetryConfig,
   metrics?: MetricsAccumulator,
+  concurrency?: number,
 }
 
 export interface IOResponse<T> {
@@ -212,4 +216,5 @@ interface ClientOptions {
   segmentToken?: string
   sessionToken?: string
   retryConfig?: IAxiosRetryConfig
+  concurrency?: number,
 }
