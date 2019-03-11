@@ -34,7 +34,7 @@ export class Metadata extends IODataSource{
   }
 
   public getBuckets = (bucket: string) => {
-    return this.http.get<BucketMetadata>(routes.Bucket(bucket))
+    return this.http.get<BucketMetadata>(routes.Bucket(bucket), {metric: 'meta-get-buckets'})
   }
 
   public list = (bucket: string, includeValue: boolean, limit?: number, nextMarker?: string) => {
@@ -45,32 +45,34 @@ export class Metadata extends IODataSource{
     if (nextMarker) {
       query._marker = nextMarker
     }
+    const metric = 'meta-list'
 
-    return this.http.get<MetadataEntryList>(routes.Metadata(bucket), {params: query})
+    return this.http.get<MetadataEntryList>(routes.Metadata(bucket), {params: query, metric})
   }
 
   public listAll = (bucket: string, includeValue: boolean) => {
     const query = {value: includeValue, _limit: 1000}
-    return this.http.get<MetadataEntryList>(routes.Metadata(bucket), {params: query})
+    const metric = 'meta-list-all'
+    return this.http.get<MetadataEntryList>(routes.Metadata(bucket), {params: query, metric})
   }
 
   public get = (bucket: string, key: string) => {
-    return this.http.get<any>(routes.MetadataKey(bucket, key))
+    return this.http.get<any>(routes.MetadataKey(bucket, key), {metric: 'meta-get'})
   }
 
   public save = (bucket: string, key: string, data: any) => {
-    return this.http.put(routes.MetadataKey(bucket, key), data)
+    return this.http.put(routes.MetadataKey(bucket, key), data, {metric: 'meta-save'})
   }
 
   public saveAll = (bucket: string, data: {[key: string]: any}) => {
-    return this.http.put(routes.Metadata(bucket), data)
+    return this.http.put(routes.Metadata(bucket), data, {metric: 'meta-save-all'})
   }
 
   public delete = (bucket: string, key: string) => {
-    return this.http.delete(routes.MetadataKey(bucket, key))
+    return this.http.delete(routes.MetadataKey(bucket, key), {metric: 'meta-delete'})
   }
 
   public deleteAll = (bucket: string) => {
-    return this.http.delete(routes.Metadata(bucket))
+    return this.http.delete(routes.Metadata(bucket), {metric: 'meta-delete-all'})
   }
 }
