@@ -1,5 +1,5 @@
 import axios from 'axios'
-import retry, {exponentialDelay, IAxiosRetryConfig, isNetworkError} from 'axios-retry'
+import retry, {exponentialDelay, IAxiosRetryConfig, isNetworkOrIdempotentRequestError} from 'axios-retry'
 import {Agent} from 'http'
 
 import {MiddlewareContext} from '../context'
@@ -13,7 +13,7 @@ const http = axios.create({
 
 retry(http, {
   retries: 1,
-  retryCondition: isNetworkError,
+  retryCondition: isNetworkOrIdempotentRequestError,
   retryDelay: exponentialDelay,
 })
 
