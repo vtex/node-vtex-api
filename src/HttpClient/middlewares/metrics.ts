@@ -1,4 +1,5 @@
 import { MetricsAccumulator } from '../../metrics/metricsAccumulator'
+import { TIMEOUT_CODE } from '../../utils/Retry'
 import { MiddlewareContext } from '../context'
 
 const statusLabel = (status: number) =>
@@ -12,21 +13,36 @@ export const metricsMiddleware = (metrics: MetricsAccumulator) => {
 
     try {
       await next()
-      if (ctx.response && ctx.response.status && ctx.config.metric) {
+      if (ctx.config.metric && ctx.response && ctx.response.status) {
         status = statusLabel(ctx.response.status)
       }
     } catch (err) {
-      if (err.response && err.response.status && ctx.config.metric) {
-        status = statusLabel(err.response.status)
-      } else if (err.code === 'ECONNABORTED') {
-        status = 'timeout'
-      } else {
-        status = 'error'
+      if (ctx.config.metric) {
+        if (err.code === 'ECONNABORTED') {
+          status = 'aborted'
+        }
+        else if (err.response && err.response.data && err.response.data.code === TIMEOUT_CODE) {
+          status = 'timeout'
+        }
+        else if (err.response && err.response.status) {
+          status = statusLabel(err.response.status)
+        } else {
+          status = 'error'
+        }
       }
       throw err
     } finally {
       if (ctx.config.metric) {
-        metrics.batchHrTimeMetric(`http-client-${ctx.config.metric}-${status}`, start as [number, number], production)
+        const label = `http-client-${status}-${ctx.config.metric}`
+        metrics.batchHrTimeMetric(label, start as [number, number], production)
+
+        if (ctx.config['axios-retry']) {
+          const {retryCount} = ctx.config['axios-retry'] as any
+
+          if (retryCount && retryCount > 0) {
+            metrics.batchHrTimeMetric(`${label}-retry-${retryCount}`, start as [number, number], production)
+          }
+        }
       }
     }
   }
