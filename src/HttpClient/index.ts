@@ -44,21 +44,21 @@ export class HttpClient {
 
   public static forWorkspace (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
     const {authToken, userAgent, recorder, segmentToken, sessionToken} = context
-    const {timeout, cacheStorage, retryConfig} = opts
+    const {timeout, cacheStorage, retryConfig, metrics} = opts
     const baseURL = workspaceURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken, retryConfig})
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken, retryConfig, metrics})
   }
 
   public static forRoot (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
     const {authToken, userAgent, recorder, segmentToken, sessionToken} = context
-    const {timeout, cacheStorage, retryConfig} = opts
+    const {timeout, cacheStorage, retryConfig, metrics} = opts
     const baseURL = rootURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken, retryConfig})
+    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken, retryConfig, metrics})
   }
 
   public static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
-    const {authToken, userAgent, timeout, cacheStorage, retryConfig} = opts
-    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage, retryConfig})
+    const {authToken, userAgent, timeout, cacheStorage, retryConfig, metrics} = opts
+    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage, retryConfig, metrics})
   }
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
@@ -176,6 +176,7 @@ export interface InstanceOptions {
   cacheStorage?: CacheLayer<string, Cached>,
   endpoint?: string,
   retryConfig?: IAxiosRetryConfig,
+  metrics?: MetricsAccumulator,
 }
 
 export interface LegacyInstanceOptions {
@@ -185,6 +186,7 @@ export interface LegacyInstanceOptions {
   accept?: string,
   cacheStorage?: CacheLayer<string, Cached>,
   retryConfig?: IAxiosRetryConfig,
+  metrics?: MetricsAccumulator,
 }
 
 export interface IOResponse<T> {
