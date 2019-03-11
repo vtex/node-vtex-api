@@ -63,7 +63,7 @@ export class Logger extends IODataSource {
   }
 
   public sendLog = (subject: string, message: any, level: string) : Promise<void> => {
-    return queue.add(() => this.http.put(routes.Log(level), message, {params: {subject}}))
+    return queue.add(() => this.http.put(routes.Log(level), message, {params: {subject}, metric: 'logger-send'}))
   }
 }
 
