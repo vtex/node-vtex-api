@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.2.0] - 2019-03-12
+
+## [2.2.0-beta.0] - 2019-03-11
+
+## [2.2.0-beta] - 2019-03-11
+
+### Changed
+- Only retry safe requests
+- Add metrics for proxy timeout and retries
+- Add `metric` config to clients requests
+- Add `concurrency` option to HttpClient to limit amount of parallel requests
+
 ## [2.1.0] - 2019-03-07
 
 ### Changed

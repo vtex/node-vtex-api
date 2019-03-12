@@ -34,11 +34,11 @@ export class VBase extends IODataSource {
   }
 
   public getBucket = (bucket: string) => {
-    return this.http.get<BucketMetadata>(routes.Bucket(bucket))
+    return this.http.get<BucketMetadata>(routes.Bucket(bucket), {metric: 'vbase-get-bucket'})
   }
 
   public resetBucket = (bucket: string) => {
-    return this.http.delete(routes.Files(bucket))
+    return this.http.delete(routes.Files(bucket), {metric: 'vbase-reset-bucket'})
   }
 
   public listFiles = (bucket: string, opts?: string | VBaseOptions) => {
@@ -48,19 +48,20 @@ export class VBase extends IODataSource {
     } else if (opts) {
       params = {prefix: opts}
     }
-    return this.http.get<BucketFileList>(routes.Files(bucket), {params})
+    const metric = 'vbase-list'
+    return this.http.get<BucketFileList>(routes.Files(bucket), {params, metric})
   }
 
   public getFile = (bucket: string, path: string) => {
-    return this.http.getBuffer(routes.File(bucket, path))
+    return this.http.getBuffer(routes.File(bucket, path), {metric: 'vbase-get-file'})
   }
 
   public getJSON = <T>(bucket: string, path: string, nullIfNotFound?: boolean) => {
-    return this.http.get<T>(routes.File(bucket, path), {nullIfNotFound} as IgnoreNotFoundRequestConfig)
+    return this.http.get<T>(routes.File(bucket, path), {nullIfNotFound, metric: 'vbase-get-json'} as IgnoreNotFoundRequestConfig)
   }
 
   public getFileStream = (bucket: string, path: string): Promise<IncomingMessage> => {
-    return this.http.getStream(routes.File(bucket, path))
+    return this.http.getStream(routes.File(bucket, path), {metric: 'vbase-get-file-s'})
   }
 
   public saveFile = (bucket: string, path: string, stream: Readable, gzip: boolean = true, ttl?: number) => {
@@ -69,7 +70,8 @@ export class VBase extends IODataSource {
 
   public saveJSON = <T>(bucket: string, path: string, data: T) => {
     const headers = {'Content-Type': 'application/json'}
-    return this.http.put(routes.File(bucket, path), data, {headers})
+    const metric = 'vbase-save-json'
+    return this.http.put(routes.File(bucket, path), data, {headers, metric})
   }
 
   public saveZippedContent = (bucket: string, path: string, stream: Readable) => {
@@ -77,7 +79,7 @@ export class VBase extends IODataSource {
   }
 
   public deleteFile = (bucket: string, path: string) => {
-    return this.http.delete(routes.File(bucket, path))
+    return this.http.delete(routes.File(bucket, path), {metric: 'vbase-delete-file'})
   }
 
   private saveContent = (bucket: string, path: string, stream: Readable, opts: VBaseSaveOptions = {}) => {
@@ -96,7 +98,8 @@ export class VBase extends IODataSource {
     if (opts.ttl && Number.isInteger(opts.ttl)) {
       headers['X-VTEX-TTL'] = opts.ttl
     }
-    return this.http.put(routes.File(bucket, path), finalStream, {headers, params})
+    const metric = 'vbase-save-blob'
+    return this.http.put(routes.File(bucket, path), finalStream, {headers, params, metric})
   }
 }
 

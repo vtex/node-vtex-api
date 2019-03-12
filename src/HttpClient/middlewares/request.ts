@@ -1,6 +1,7 @@
 import axios from 'axios'
-import retry, {exponentialDelay, IAxiosRetryConfig, isNetworkError} from 'axios-retry'
+import retry, {exponentialDelay, IAxiosRetryConfig, isNetworkOrIdempotentRequestError} from 'axios-retry'
 import {Agent} from 'http'
+import {Limit} from 'p-limit'
 
 import {MiddlewareContext} from '../context'
 
@@ -13,7 +14,7 @@ const http = axios.create({
 
 retry(http, {
   retries: 1,
-  retryCondition: isNetworkError,
+  retryCondition: isNetworkOrIdempotentRequestError,
   retryDelay: exponentialDelay,
 })
 
@@ -46,6 +47,6 @@ export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<
   }
 }
 
-export const requestMiddleware = async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-  ctx.response = await http.request(ctx.config)
+export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+  ctx.response = await (limit ? limit(() => http.request(ctx.config)) : http.request(ctx.config))
 }

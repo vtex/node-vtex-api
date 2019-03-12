@@ -36,9 +36,10 @@ export class Builder {
       'Content-Type': 'application/json',
       'x-vtex-sticky-host': stickyHint,
     }
+    const metric = 'bh-availability'
     const {data: {availability},
            headers: {'x-vtex-sticky-host': host},
-          } = await this.http.getRaw(routes.Availability(app), {headers})
+          } = await this.http.getRaw(routes.Availability(app), {headers, metric})
     const {hostname, score} = availability as AvailabilityResponse
     return {host, hostname, score}
   }
@@ -48,7 +49,8 @@ export class Builder {
       'Content-Type': 'application/json',
       ...this.stickyHost && {'x-vtex-sticky-host': this.stickyHost},
     }
-    return this.http.post<BuildResult>(routes.Clean(app), {headers})
+    const metric = 'bh-clean'
+    return this.http.post<BuildResult>(routes.Clean(app), {headers, metric})
   }
 
   public linkApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}) => {
@@ -64,7 +66,8 @@ export class Builder {
       'Content-Type': 'application/json',
       ...this.stickyHost && {'x-vtex-sticky-host': this.stickyHost},
     }
-    return this.http.put<BuildResult>(routes.Relink(app), changes, {headers})
+    const metric = 'bh-relink'
+    return this.http.put<BuildResult>(routes.Relink(app), changes, {headers, metric})
   }
 
   private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky, stickyHint, zlib}: ZipOptions = {}) => {
@@ -81,11 +84,13 @@ export class Builder {
       throw e
     })
     const hint = stickyHint || `request:${this.account}:${this.workspace}:${app}`
+    const metric = 'bh-zip-send'
     const request = this.http.postRaw<BuildResult>(route, zip, {
       headers: {
         'Content-Type': 'application/octet-stream',
         ...sticky && {'x-vtex-sticky-host': this.stickyHost || hint},
       },
+      metric,
       params: tag ? {tag} : EMPTY_OBJECT,
     })
 

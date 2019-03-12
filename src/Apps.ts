@@ -52,15 +52,15 @@ export class Apps extends IODataSource {
   protected service = 'apps'
 
   public installApp = (descriptor: string) => {
-    return this.http.post(routes.Apps, {id: descriptor})
+    return this.http.post(routes.Apps, {id: descriptor}, {metric: 'apps-install'})
   }
 
   public uninstallApp = (app: string) => {
-    return this.http.delete(routes.App(app))
+    return this.http.delete(routes.App(app), {metric: 'apps-uninstall'})
   }
 
   public acknowledgeApp = (app: string, service: string) => {
-    return this.http.put(routes.Acknowledge(app, service))
+    return this.http.put(routes.Acknowledge(app, service), null, {metric: 'apps-ack'})
   }
 
   public link = async (app: string, files: Change[], {zlib}: ZipOptions = {}) => {
@@ -84,6 +84,7 @@ export class Apps extends IODataSource {
     })
     const request = this.http.put<AppBundleLinked>(routes.Link(app), zip, {
       headers: {'Content-Type': 'application/zip'},
+      metric: 'apps-link',
     })
 
     files.forEach(({content, path}) => zip.append(content, {name: path}))
@@ -117,6 +118,7 @@ export class Apps extends IODataSource {
     })
     const request = this.http.patch(routes.Link(app), zip, {
       headers: {'Content-Type': 'application/zip'},
+      metric: 'apps-patch',
       params: {deletedFiles},
     })
 
@@ -137,7 +139,8 @@ export class Apps extends IODataSource {
 
   public saveAppSettings = (app: string, settings: any) => {
     const headers = {'Content-Type': 'application/json'}
-    return this.http.put(routes.Settings(app), settings, {headers})
+    const metric = 'apps-save'
+    return this.http.put(routes.Settings(app), settings, {headers, metric})
   }
 
   public listApps = ({oldVersion, context, since, service}: ListAppsOptions = {}) => {
@@ -147,7 +150,8 @@ export class Apps extends IODataSource {
       service,
       since,
     }
-    return this.http.get<AppsList>(routes.Apps, {params})
+    const metric = 'apps-list'
+    return this.http.get<AppsList>(routes.Apps, {params, metric})
   }
 
   public listAppFiles = (app: string, {prefix, context, nextMarker}: ListFilesOptions = {}) => {
@@ -156,30 +160,34 @@ export class Apps extends IODataSource {
       marker: nextMarker,
       prefix,
     }
-    return this.http.get<AppFilesList>(routes.Files(app), {params})
+    const metric = 'apps-list-files'
+    return this.http.get<AppFilesList>(routes.Files(app), {params, metric})
   }
 
   public listLinks = () => {
-    return this.http.get<string[]>(routes.Links)
+    return this.http.get<string[]>(routes.Links, {metric: 'apps-list-links'})
   }
 
   public getAppFile = (app: string, path: string, context: string[] = []) => {
     const params = {context: contextQuery(context)}
-    return this.http.getBuffer(routes.File(app, path), {params})
+    const metric = 'apps-get-file'
+    return this.http.getBuffer(routes.File(app, path), {params, metric})
   }
 
   public getAppFileStream = (app: string, path: string, context: string[] = []): Promise<IncomingMessage> => {
     const params = {context: contextQuery(context)}
-    return this.http.getStream(routes.File(app, path), {params})
+    const metric = 'apps-get-file-s'
+    return this.http.getStream(routes.File(app, path), {params, metric})
   }
 
   public getApp = (app: string, context: string[] = []) => {
     const params = {context: contextQuery(context)}
-    return this.http.get<AppManifest>(routes.App(app), {params})
+    const metric = 'apps-get-app'
+    return this.http.get<AppManifest>(routes.App(app), {params, metric})
   }
 
   public getAppSettings = (app: string) => {
-    return this.http.get<any>(routes.Settings(app))
+    return this.http.get<any>(routes.Settings(app), {metric: 'apps-get-settings'})
   }
 
   public getAllAppsSettings = (listAppsOptions: ListAppsOptions = {}): Promise<AppsSettings> => {
@@ -194,11 +202,13 @@ export class Apps extends IODataSource {
 
   public getAppBundle = (app: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
     const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
+    const metric = 'apps-get-bundle'
     return this.http.getStream(routes.AppBundle(app, bundlePath), {
       headers: {
         Accept: 'application/x-gzip',
         'Accept-Encoding': 'gzip',
       },
+      metric,
       params,
     })
   }
@@ -213,25 +223,28 @@ export class Apps extends IODataSource {
 
   public getDependencies = (filter: string = '') => {
     const params = {filter}
-    return this.http.get<Record<string, string[]>>(routes.Dependencies, {params})
+    const metric = 'apps-get-deps'
+    return this.http.get<Record<string, string[]>>(routes.Dependencies, {params, metric})
   }
 
   public updateDependencies = () => {
-    return this.http.put<Record<string, string[]>>(routes.Dependencies)
+    return this.http.put<Record<string, string[]>>(routes.Dependencies, null, {metric: 'apps-update-deps'})
   }
 
   public updateDependency = (name: string, version: string, registry: string) => {
-    return this.http.patch(routes.Apps, [{name, version, registry}])
+    return this.http.patch(routes.Apps, [{name, version, registry}], {metric: 'apps-update-dep'})
   }
 
   public resolveDependencies = (apps: string[], registries: string[], filter: string = '') => {
     const params = {apps, registries, filter}
-    return this.http.get(routes.ResolveDependencies, {params, paramsSerializer})
+    const metric = 'apps-resolve-deps'
+    return this.http.get(routes.ResolveDependencies, {params, paramsSerializer, metric})
   }
 
   public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {
     const params = {filter}
-    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {params, paramsSerializer})
+    const metric = 'apps-resolve-deps-m'
+    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {params, paramsSerializer, metric})
   }
 
 }

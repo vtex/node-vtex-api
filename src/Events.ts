@@ -12,6 +12,6 @@ export class Events extends IODataSource {
   protected httpClientFactory = forWorkspaceWithoutRecorder
 
   public sendEvent = (subject: string, route: string, message?: any) => {
-    return this.http.put(eventRoute(route), message, {params: {subject}})
+    return this.http.put(eventRoute(route), message, {params: {subject}, metric: 'events-send'})
   }
 }
