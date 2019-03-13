@@ -13,9 +13,9 @@ const http = axios.create({
 })
 
 retry(http, {
-  retries: 1,
+  retries: 0,
   retryCondition: isNetworkOrIdempotentRequestError,
-  retryDelay: exponentialDelay,
+  shouldResetTimeout: true, // There's a bug in the library that treats this in opposite.
 })
 
 http.interceptors.response.use(response => response, (err: any) => {
