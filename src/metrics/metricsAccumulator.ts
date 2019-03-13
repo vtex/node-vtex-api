@@ -146,6 +146,7 @@ export class MetricsAccumulator {
   private cacheToMetric = (value: GetStats, key: string): Metric => ({
     ...value.getStats(),
     name: `${key}-cache`,
+    production,
   })
 
   private flushMetrics = (): Metric[] => {
