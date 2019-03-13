@@ -107,7 +107,7 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
     }
 
     // Add false to cacheHits to indicate this _should_ be cached but was as miss.
-    if (!ctx.cacheHit) {
+    if (!ctx.cacheHit && !noStore) {
       ctx.cacheHit = false
     }
 
