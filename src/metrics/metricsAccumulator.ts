@@ -8,6 +8,9 @@ export interface Metric {
   [key: string]: any
 }
 
+// Production pods never handle development workspaces and vice-versa.
+const production = process.env.VTEX_PRODUCTION
+
 interface AggregateMetric extends Metric {
   count: number
   mean: number
@@ -15,7 +18,7 @@ interface AggregateMetric extends Metric {
   percentile95: number
   percentile99: number
   max: number
-  production: boolean
+  hits: number
 }
 
 interface GetStats {
@@ -35,60 +38,57 @@ function cpuUsage () {
   return diff
 }
 
-const createMetricToAggregateReducer = (production: boolean) => (value: any, key: string, obj: any): AggregateMetric => {
-  const aggregate: AggregateMetric = {
-    name: key,
-    count: value.length, // tslint:disable-line:object-literal-sort-keys
-    max: Math.max(...value),
-    mean: mean(value),
-    median: median(value),
-    percentile95: percentile(value, 0.95),
-    percentile99: percentile(value, 0.99),
-    production,
-  }
-  delete obj[key]
-  return aggregate
-}
-
 export class MetricsAccumulator {
-  // Metrics from production workspaces
   private metricsMillis: Record<string, number[]>
-  // Metrics from development workspaces
-  private devMetricsMillis: Record<string, number[]>
+  private metricsCacheHits: Record<string, number>
   // Tracked cache instances
   private cacheMap: Record<string, GetStats>
 
   private onFlushMetrics: Array<() => Metric | Metric[]>
 
-  private metricToAggregate = createMetricToAggregateReducer(true)
-  private devMetricToAggregate = createMetricToAggregateReducer(false)
-
   constructor() {
     this.metricsMillis = {}
-    this.devMetricsMillis = {}
+    this.metricsCacheHits = {}
     this.onFlushMetrics = []
     this.cacheMap = {}
   }
 
-  public batchHrTimeMetricFromEnd = (name: string, end: [number, number], production: boolean) => {
-    this.batchMetric(name, hrToMillis(end), production)
+  /**
+   * @deprecated in favor of MetricsAccumulator.batch(name, diffNs, isCacheHit)
+   * @see batch
+   */
+  public batchHrTimeMetricFromEnd = (name: string, end: [number, number]) => {
+    this.batchMetric(name, hrToMillis(end))
   }
 
-  public batchHrTimeMetric = (name: string, start: [number, number], production: boolean) => {
-    this.batchMetric(name, hrToMillis(process.hrtime(start)), production)
+  /**
+   * @deprecated in favor of MetricsAccumulator.batch(name, diffNs, isCacheHit)
+   * @see batch
+   */
+  public batchHrTimeMetric = (name: string, start: [number, number]) => {
+    this.batchMetric(name, hrToMillis(process.hrtime(start)))
   }
 
-  public batchMetric = (name: string, timeMillis: number, production: boolean) => {
-    if (production) {
-      if (!this.metricsMillis[name]) {
-        this.metricsMillis[name] = []
-      }
-      this.metricsMillis[name].push(timeMillis)
-    } else {
-      if (!this.devMetricsMillis[name]) {
-        this.devMetricsMillis[name] = []
-      }
-      this.devMetricsMillis[name].push(timeMillis)
+  public batchMetric = (name: string, timeMillis: number) => {
+    if (!this.metricsMillis[name]) {
+      this.metricsMillis[name] = []
+    }
+    this.metricsMillis[name].push(timeMillis)
+  }
+
+  /**
+   * Batches a named metric which took `diffNs`.
+   *
+   * @param name Metric label.
+   * @param diffNs The result of calling process.hrtime() passing a previous process.hrtime() value.
+   * @param isCacheHit If this metric can be considered a cache hit.
+   *
+   * @see https://nodejs.org/api/process.html#process_process_hrtime_time
+   */
+  public batch = (name: string, diffNs: [number, number], isCacheHit?: boolean) => {
+    this.batchMetric(name, hrToMillis(diffNs))
+    if (isCacheHit) {
+      this.metricsCacheHits[name] = this.metricsCacheHits[name] == null ? 1 : this.metricsCacheHits[name] + 1
     }
   }
 
@@ -104,6 +104,23 @@ export class MetricsAccumulator {
     return this.flushMetrics()
   }
 
+  private metricToAggregate = (value: any, key: string): AggregateMetric => {
+    const aggregate: AggregateMetric = {
+      name: key,
+      count: value.length, // tslint:disable-line:object-literal-sort-keys
+      max: Math.max(...value),
+      mean: mean(value),
+      median: median(value),
+      percentile95: percentile(value, 0.95),
+      percentile99: percentile(value, 0.99),
+      production,
+      hits: this.metricsCacheHits[key],
+    }
+    delete this.metricsMillis[key]
+    delete this.metricsCacheHits[key]
+    return aggregate
+  }
+
   private cacheToMetric = (value: GetStats, key: string): Metric => ({
     name: `${key}-cache`,
     ...value.getStats(),
@@ -113,11 +130,6 @@ export class MetricsAccumulator {
     const aggregateMetrics: Metric[] = values(mapObjIndexed(
       this.metricToAggregate,
       this.metricsMillis,
-    ))
-
-    const aggregateDevMetrics: Metric[] = values(mapObjIndexed(
-      this.devMetricToAggregate,
-      this.devMetricsMillis,
     ))
 
     const systemMetrics: Metric[] = [
@@ -138,6 +150,6 @@ export class MetricsAccumulator {
       this.cacheMap,
     ))
 
-    return [...systemMetrics, ...aggregateMetrics, ...aggregateDevMetrics, ...onFlushMetrics, ...cacheMetrics]
+    return [...systemMetrics, ...aggregateMetrics, ...onFlushMetrics, ...cacheMetrics]
   }
 }
