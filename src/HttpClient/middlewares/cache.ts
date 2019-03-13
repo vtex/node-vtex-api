@@ -88,20 +88,28 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
 
     const {data, headers, status} = ctx.response as AxiosResponse
     const {age, etag, maxAge, noStore} = parseCacheHeaders(headers)
+
+    if (headers[ROUTER_CACHE_KEY] === ROUTER_CACHE_HIT) {
+      if (ctx.cacheHit) {
+        ctx.cacheHit.router = true
+      }
+      else {
+        ctx.cacheHit = {
+          memory: false,
+          revalidated: false,
+          router: true,
+        }
+      }
+    }
+
     if (noStore && !etag) {
       return
     }
 
-    if (headers[ROUTER_CACHE_KEY] === ROUTER_CACHE_HIT) {
-      ctx.cacheHit = {
-        memory: false,
-        revalidated: false,
-        router: true,
-      }
-    }
-
     // Add false to cacheHits to indicate this _should_ be cached but was as miss.
-    ctx.cacheHit = false
+    if (!ctx.cacheHit) {
+      ctx.cacheHit = false
+    }
 
     if (maxAge || etag) {
       const currentAge = revalidated ? 0 : age

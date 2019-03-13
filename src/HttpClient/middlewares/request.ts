@@ -1,5 +1,5 @@
 import axios from 'axios'
-import retry, {exponentialDelay, IAxiosRetryConfig, isNetworkOrIdempotentRequestError} from 'axios-retry'
+import retry, {IAxiosRetryConfig, isNetworkOrIdempotentRequestError} from 'axios-retry'
 import {Agent} from 'http'
 import {Limit} from 'p-limit'
 
