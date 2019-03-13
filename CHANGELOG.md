@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.3.0] - 2019-03-13
+
+## [2.3.0-beta.3] - 2019-03-13
+
+## [2.3.0-beta.2] - 2019-03-13
+
+## [2.3.0-beta.1] - 2019-03-13
+
+## [2.3.0-beta.0] - 2019-03-13
+
+## [2.3.0-beta] - 2019-03-13
+
+### Changed 
+- Remove production from MetricsAccumulator methods and add cacheHits
+
 ## [2.2.0] - 2019-03-12
 
 ## [2.2.0-beta.0] - 2019-03-11

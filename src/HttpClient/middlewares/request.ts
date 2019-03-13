@@ -1,5 +1,5 @@
 import axios from 'axios'
-import retry, {exponentialDelay, IAxiosRetryConfig, isNetworkOrIdempotentRequestError} from 'axios-retry'
+import retry, {IAxiosRetryConfig, isNetworkOrIdempotentRequestError} from 'axios-retry'
 import {Agent} from 'http'
 import {Limit} from 'p-limit'
 
@@ -13,9 +13,8 @@ const http = axios.create({
 })
 
 retry(http, {
-  retries: 1,
+  retries: 0,
   retryCondition: isNetworkOrIdempotentRequestError,
-  retryDelay: exponentialDelay,
 })
 
 http.interceptors.response.use(response => response, (err: any) => {

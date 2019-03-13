@@ -1,6 +1,7 @@
 import { flatten, map, mapObjIndexed, values } from 'ramda'
 import { mean, median, percentile } from 'stats-lite'
 
+import { CacheHit } from '../HttpClient/context'
 import { hrToMillis } from '../utils/Time'
 
 export interface Metric {
@@ -8,14 +9,25 @@ export interface Metric {
   [key: string]: any
 }
 
-interface AggregateMetric extends Metric {
+// Production pods never handle development workspaces and vice-versa.
+const production = process.env.VTEX_PRODUCTION
+
+interface CacheHitMap {
+  disk: number | null
+  memory: number | null
+  revalidated: number | null
+  router: number | null
+}
+
+const CACHE_HIT_TYPES: Array<keyof CacheHit> = ['disk', 'memory', 'router', 'revalidated']
+
+interface AggregateMetric extends Metric, CacheHitMap {
   count: number
   mean: number
   median: number
   percentile95: number
   percentile99: number
   max: number
-  production: boolean
 }
 
 interface GetStats {
@@ -35,60 +47,67 @@ function cpuUsage () {
   return diff
 }
 
-const createMetricToAggregateReducer = (production: boolean) => (value: any, key: string, obj: any): AggregateMetric => {
-  const aggregate: AggregateMetric = {
-    name: key,
-    count: value.length, // tslint:disable-line:object-literal-sort-keys
-    max: Math.max(...value),
-    mean: mean(value),
-    median: median(value),
-    percentile95: percentile(value, 0.95),
-    percentile99: percentile(value, 0.99),
-    production,
-  }
-  delete obj[key]
-  return aggregate
-}
-
 export class MetricsAccumulator {
-  // Metrics from production workspaces
   private metricsMillis: Record<string, number[]>
-  // Metrics from development workspaces
-  private devMetricsMillis: Record<string, number[]>
+  private cacheHits: Record<string, CacheHitMap>
   // Tracked cache instances
   private cacheMap: Record<string, GetStats>
 
   private onFlushMetrics: Array<() => Metric | Metric[]>
 
-  private metricToAggregate = createMetricToAggregateReducer(true)
-  private devMetricToAggregate = createMetricToAggregateReducer(false)
-
   constructor() {
     this.metricsMillis = {}
-    this.devMetricsMillis = {}
+    this.cacheHits = {}
     this.onFlushMetrics = []
     this.cacheMap = {}
   }
 
-  public batchHrTimeMetricFromEnd = (name: string, end: [number, number], production: boolean) => {
-    this.batchMetric(name, hrToMillis(end), production)
+  /**
+   * @deprecated in favor of MetricsAccumulator.batch(name, diffNs, cacheHit)
+   * @see batch
+   */
+  public batchHrTimeMetricFromEnd = (name: string, end: [number, number]) => {
+    this.batchMetric(name, hrToMillis(end))
   }
 
-  public batchHrTimeMetric = (name: string, start: [number, number], production: boolean) => {
-    this.batchMetric(name, hrToMillis(process.hrtime(start)), production)
+  /**
+   * @deprecated in favor of MetricsAccumulator.batch(name, diffNs, cacheHit)
+   * @see batch
+   */
+  public batchHrTimeMetric = (name: string, start: [number, number]) => {
+    this.batchMetric(name, hrToMillis(process.hrtime(start)))
   }
 
-  public batchMetric = (name: string, timeMillis: number, production: boolean) => {
-    if (production) {
-      if (!this.metricsMillis[name]) {
-        this.metricsMillis[name] = []
+  public batchMetric = (name: string, timeMillis: number) => {
+    if (!this.metricsMillis[name]) {
+      this.metricsMillis[name] = []
+    }
+    this.metricsMillis[name].push(timeMillis)
+  }
+
+  /**
+   * Batches a named metric which took `diffNs`.
+   *
+   * @param name Metric label.
+   * @param diffNs The result of calling process.hrtime() passing a previous process.hrtime() value.
+   * @param cacheHit If this metric should be cached, an object indicating the nature of the cache hit, or false to indicate a miss.
+   *
+   * @see https://nodejs.org/api/process.html#process_process_hrtime_time
+   */
+  public batch = (name: string, diffNs: [number, number], cacheHit?: CacheHit | false) => {
+    this.batchMetric(name, hrToMillis(diffNs))
+    if (cacheHit || cacheHit === false) {
+      if (!this.cacheHits[name]) {
+        this.cacheHits[name] = { disk: 0, memory: 0, router: 0, revalidated: 0 }
       }
-      this.metricsMillis[name].push(timeMillis)
-    } else {
-      if (!this.devMetricsMillis[name]) {
-        this.devMetricsMillis[name] = []
+
+      if (cacheHit) {
+        for (const type of CACHE_HIT_TYPES) {
+          if (cacheHit[type]) {
+            this.cacheHits[name][type]!++
+          }
+        }
       }
-      this.devMetricsMillis[name].push(timeMillis)
     }
   }
 
@@ -104,20 +123,35 @@ export class MetricsAccumulator {
     return this.flushMetrics()
   }
 
+  private metricToAggregate = (value: any, key: string): AggregateMetric => {
+    const aggregate: AggregateMetric = {
+      name: key,
+      count: value.length, // tslint:disable-line:object-literal-sort-keys
+      max: Math.max(...value),
+      mean: mean(value),
+      median: median(value),
+      percentile95: percentile(value, 0.95),
+      percentile99: percentile(value, 0.99),
+      production,
+      disk: this.cacheHits[key] ? this.cacheHits[key].disk : null,
+      memory: this.cacheHits[key] ? this.cacheHits[key].memory : null,
+      revalidated: this.cacheHits[key] ? this.cacheHits[key].revalidated : null,
+      router: this.cacheHits[key] ? this.cacheHits[key].router : null,
+    }
+    delete this.metricsMillis[key]
+    delete this.cacheHits[key]
+    return aggregate
+  }
+
   private cacheToMetric = (value: GetStats, key: string): Metric => ({
-    name: `${key}-cache`,
     ...value.getStats(),
+    name: `${key}-cache`,
   })
 
   private flushMetrics = (): Metric[] => {
     const aggregateMetrics: Metric[] = values(mapObjIndexed(
       this.metricToAggregate,
       this.metricsMillis,
-    ))
-
-    const aggregateDevMetrics: Metric[] = values(mapObjIndexed(
-      this.devMetricToAggregate,
-      this.devMetricsMillis,
     ))
 
     const systemMetrics: Metric[] = [
@@ -138,6 +172,6 @@ export class MetricsAccumulator {
       this.cacheMap,
     ))
 
-    return [...systemMetrics, ...aggregateMetrics, ...aggregateDevMetrics, ...onFlushMetrics, ...cacheMetrics]
+    return [...systemMetrics, ...aggregateMetrics, ...onFlushMetrics, ...cacheMetrics]
   }
 }

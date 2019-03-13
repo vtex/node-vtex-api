@@ -79,9 +79,9 @@ export class HttpClient {
       defaultsMiddleware(baseURL, headers, timeout, retryConfig),
       ...recorder ? [recorderMiddleware(recorder)] : [],
       acceptNotFoundMiddleware,
+      ...metrics ? [metricsMiddleware(metrics)] : [],
       ...cacheStorage ? [cacheMiddleware({cacheStorage, segmentToken: segmentToken || ''})] : [],
       notFoundFallbackMiddleware,
-      ...metrics ? [metricsMiddleware(metrics)] : [],
       requestMiddleware(limit),
     ])
   }
