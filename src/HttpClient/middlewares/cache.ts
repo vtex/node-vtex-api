@@ -100,6 +100,9 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
       }
     }
 
+    // Add false to cacheHits to indicate this _should_ be cached but was as miss.
+    ctx.cacheHit = false
+
     if (maxAge || etag) {
       const currentAge = revalidated ? 0 : age
       const varySegment = ctx.response.headers.vary.includes('x-vtex-segment')

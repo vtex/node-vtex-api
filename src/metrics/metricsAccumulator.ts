@@ -13,10 +13,10 @@ export interface Metric {
 const production = process.env.VTEX_PRODUCTION
 
 interface CacheHitMap {
-  disk: number
-  memory: number
-  revalidated: number
-  router: number
+  disk: number | null
+  memory: number | null
+  revalidated: number | null
+  router: number | null
 }
 
 const CACHE_HIT_TYPES: Array<keyof CacheHit> = ['disk', 'memory', 'router', 'revalidated']
@@ -90,20 +90,22 @@ export class MetricsAccumulator {
    *
    * @param name Metric label.
    * @param diffNs The result of calling process.hrtime() passing a previous process.hrtime() value.
-   * @param cacheHit If this metric can be considered a cache hit.
+   * @param cacheHit If this metric should be cached, an object indicating the nature of the cache hit, or false to indicate a miss.
    *
    * @see https://nodejs.org/api/process.html#process_process_hrtime_time
    */
-  public batch = (name: string, diffNs: [number, number], cacheHit?: CacheHit) => {
+  public batch = (name: string, diffNs: [number, number], cacheHit?: CacheHit | false) => {
     this.batchMetric(name, hrToMillis(diffNs))
-    if (cacheHit) {
+    if (cacheHit || cacheHit === false) {
       if (!this.cacheHits[name]) {
         this.cacheHits[name] = { disk: 0, memory: 0, router: 0, revalidated: 0 }
       }
 
-      for (const type of CACHE_HIT_TYPES) {
-        if (cacheHit[type]) {
-          this.cacheHits[name][type]++
+      if (cacheHit) {
+        for (const type of CACHE_HIT_TYPES) {
+          if (cacheHit[type]) {
+            this.cacheHits[name][type]!++
+          }
         }
       }
     }
@@ -131,10 +133,10 @@ export class MetricsAccumulator {
       percentile95: percentile(value, 0.95),
       percentile99: percentile(value, 0.99),
       production,
-      disk: this.cacheHits[key].disk,
-      memory: this.cacheHits[key].memory,
-      revalidated: this.cacheHits[key].revalidated,
-      router: this.cacheHits[key].router,
+      disk: this.cacheHits[key] ? this.cacheHits[key].disk : null,
+      memory: this.cacheHits[key] ? this.cacheHits[key].memory : null,
+      revalidated: this.cacheHits[key] ? this.cacheHits[key].revalidated : null,
+      router: this.cacheHits[key] ? this.cacheHits[key].router : null,
     }
     delete this.metricsMillis[key]
     delete this.cacheHits[key]

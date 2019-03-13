@@ -17,5 +17,5 @@ export interface CacheHit {
 export interface MiddlewareContext {
   config: RequestConfig
   response?: AxiosResponse
-  cacheHit?: CacheHit
+  cacheHit?: CacheHit | false
 }
