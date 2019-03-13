@@ -39,7 +39,7 @@ export const metricsMiddleware = (metrics: MetricsAccumulator) => {
           const {retryCount} = ctx.config['axios-retry'] as any
 
           if (retryCount && retryCount > 0) {
-            metrics.batch(`${label}-retry-${retryCount}`, start as [number, number], ctx.cacheHit)
+            metrics.batch(`${label}-retry-${retryCount}`, process.hrtime(start as [number, number]), ctx.cacheHit)
           }
         }
       }
