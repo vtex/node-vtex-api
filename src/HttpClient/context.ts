@@ -7,7 +7,15 @@ export interface RequestConfig extends AxiosRequestConfig {
   production?: boolean
 }
 
+export interface CacheHit {
+  disk?: boolean
+  memory?: boolean
+  revalidated?: boolean
+  router?: boolean
+}
+
 export interface MiddlewareContext {
   config: RequestConfig
-  response?: AxiosResponse,
+  response?: AxiosResponse
+  cacheHit?: CacheHit
 }

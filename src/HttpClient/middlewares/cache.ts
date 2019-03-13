@@ -3,6 +3,9 @@ import {URL, URLSearchParams} from 'url'
 import {CacheLayer} from '../../caches/CacheLayer'
 import {MiddlewareContext} from '../context'
 
+const ROUTER_CACHE_KEY = 'x-router-cache'
+const ROUTER_CACHE_HIT = 'HIT'
+
 const cacheKey = (config: AxiosRequestConfig) => {
   const {baseURL = '', url = '', params} = config
   const fullURL = [baseURL, url].filter(str => str).join('/')
@@ -52,6 +55,11 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
       const {etag: cachedEtag, response, expiration} = cached as Cached
       if (expiration > Date.now() && response) {
         ctx.response = response as AxiosResponse
+        ctx.cacheHit = {
+          memory: true,
+          revalidated: false,
+          router: false,
+        }
         return
       }
 
@@ -71,12 +79,25 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
     const revalidated = ctx.response.status === 304
     if (revalidated && cached) {
       ctx.response = cached.response as AxiosResponse
+      ctx.cacheHit = {
+        memory: true,
+        revalidated: true,
+        router: false,
+      }
     }
 
     const {data, headers, status} = ctx.response as AxiosResponse
     const {age, etag, maxAge, noStore} = parseCacheHeaders(headers)
     if (noStore && !etag) {
       return
+    }
+
+    if (headers[ROUTER_CACHE_KEY] === ROUTER_CACHE_HIT) {
+      ctx.cacheHit = {
+        memory: false,
+        revalidated: false,
+        router: true,
+      }
     }
 
     if (maxAge || etag) {

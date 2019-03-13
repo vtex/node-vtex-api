@@ -7,8 +7,7 @@ const statusLabel = (status: number) =>
 
 export const metricsMiddleware = (metrics: MetricsAccumulator) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-    const start = ctx.config.metric && process.hrtime()
-    const production = ctx.config.production || false
+    const start = ctx.config.metric ? process.hrtime() : null
     let status
 
     try {
@@ -34,13 +33,13 @@ export const metricsMiddleware = (metrics: MetricsAccumulator) => {
     } finally {
       if (ctx.config.metric) {
         const label = `http-client-${status}-${ctx.config.metric}`
-        metrics.batchHrTimeMetric(label, start as [number, number], production)
+        metrics.batch(label, start as [number, number], ctx.cacheHit)
 
         if (ctx.config['axios-retry']) {
           const {retryCount} = ctx.config['axios-retry'] as any
 
           if (retryCount && retryCount > 0) {
-            metrics.batchHrTimeMetric(`${label}-retry-${retryCount}`, start as [number, number], production)
+            metrics.batch(`${label}-retry-${retryCount}`, start as [number, number], ctx.cacheHit)
           }
         }
       }

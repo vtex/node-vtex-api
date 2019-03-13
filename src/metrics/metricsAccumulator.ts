@@ -1,6 +1,7 @@
 import { flatten, map, mapObjIndexed, values } from 'ramda'
 import { mean, median, percentile } from 'stats-lite'
 
+import { CacheHit } from '../HttpClient/context'
 import { hrToMillis } from '../utils/Time'
 
 export interface Metric {
@@ -11,14 +12,22 @@ export interface Metric {
 // Production pods never handle development workspaces and vice-versa.
 const production = process.env.VTEX_PRODUCTION
 
-interface AggregateMetric extends Metric {
+interface CacheHitMap {
+  disk: number
+  memory: number
+  revalidated: number
+  router: number
+}
+
+const CACHE_HIT_TYPES: Array<keyof CacheHit> = ['disk', 'memory', 'router', 'revalidated']
+
+interface AggregateMetric extends Metric, CacheHitMap {
   count: number
   mean: number
   median: number
   percentile95: number
   percentile99: number
   max: number
-  hits: number
 }
 
 interface GetStats {
@@ -40,7 +49,7 @@ function cpuUsage () {
 
 export class MetricsAccumulator {
   private metricsMillis: Record<string, number[]>
-  private metricsCacheHits: Record<string, number>
+  private cacheHits: Record<string, CacheHitMap>
   // Tracked cache instances
   private cacheMap: Record<string, GetStats>
 
@@ -48,13 +57,13 @@ export class MetricsAccumulator {
 
   constructor() {
     this.metricsMillis = {}
-    this.metricsCacheHits = {}
+    this.cacheHits = {}
     this.onFlushMetrics = []
     this.cacheMap = {}
   }
 
   /**
-   * @deprecated in favor of MetricsAccumulator.batch(name, diffNs, isCacheHit)
+   * @deprecated in favor of MetricsAccumulator.batch(name, diffNs, cacheHit)
    * @see batch
    */
   public batchHrTimeMetricFromEnd = (name: string, end: [number, number]) => {
@@ -62,7 +71,7 @@ export class MetricsAccumulator {
   }
 
   /**
-   * @deprecated in favor of MetricsAccumulator.batch(name, diffNs, isCacheHit)
+   * @deprecated in favor of MetricsAccumulator.batch(name, diffNs, cacheHit)
    * @see batch
    */
   public batchHrTimeMetric = (name: string, start: [number, number]) => {
@@ -81,14 +90,22 @@ export class MetricsAccumulator {
    *
    * @param name Metric label.
    * @param diffNs The result of calling process.hrtime() passing a previous process.hrtime() value.
-   * @param isCacheHit If this metric can be considered a cache hit.
+   * @param cacheHit If this metric can be considered a cache hit.
    *
    * @see https://nodejs.org/api/process.html#process_process_hrtime_time
    */
-  public batch = (name: string, diffNs: [number, number], isCacheHit?: boolean) => {
+  public batch = (name: string, diffNs: [number, number], cacheHit?: CacheHit) => {
     this.batchMetric(name, hrToMillis(diffNs))
-    if (isCacheHit) {
-      this.metricsCacheHits[name] = this.metricsCacheHits[name] == null ? 1 : this.metricsCacheHits[name] + 1
+    if (cacheHit) {
+      if (!this.cacheHits[name]) {
+        this.cacheHits[name] = { disk: 0, memory: 0, router: 0, revalidated: 0 }
+      }
+
+      for (const type of CACHE_HIT_TYPES) {
+        if (cacheHit[type]) {
+          this.cacheHits[name][type]++
+        }
+      }
     }
   }
 
@@ -114,10 +131,13 @@ export class MetricsAccumulator {
       percentile95: percentile(value, 0.95),
       percentile99: percentile(value, 0.99),
       production,
-      hits: this.metricsCacheHits[key],
+      disk: this.cacheHits[key].disk,
+      memory: this.cacheHits[key].memory,
+      revalidated: this.cacheHits[key].revalidated,
+      router: this.cacheHits[key].router,
     }
     delete this.metricsMillis[key]
-    delete this.metricsCacheHits[key]
+    delete this.cacheHits[key]
     return aggregate
   }
 
