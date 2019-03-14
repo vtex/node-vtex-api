@@ -4,8 +4,9 @@ import { mean, median, percentile } from 'stats-lite'
 import { CacheHit } from '../HttpClient/context'
 import { hrToMillis } from '../utils/Time'
 
-export type Metric = Record<string, number | null> & {
-  name: string,
+export interface Metric {
+  name: string
+  [key: string]: number | string | null,
 }
 
 interface NamedMetric {
