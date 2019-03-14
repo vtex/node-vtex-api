@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.3.4] - 2019-03-14
+
+### Changed
+- Add production dimension to all metrics
+
 ## [2.3.3] - 2019-03-13
 
 ## [2.3.2] - 2019-03-13
