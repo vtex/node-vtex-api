@@ -87,7 +87,7 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
     }
 
     const {data, headers, status} = ctx.response as AxiosResponse
-    const {age, etag, maxAge, noStore} = parseCacheHeaders(headers)
+    const {age, etag, maxAge, noStore, noCache} = parseCacheHeaders(headers)
 
     if (headers[ROUTER_CACHE_KEY] === ROUTER_CACHE_HIT) {
       if (ctx.cacheHit) {
@@ -102,16 +102,19 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
       }
     }
 
-    if (noStore && !etag) {
+    // Indicates this should NOT be cached and this request will not be considered a miss.
+    if (noStore || (noCache && !etag)) {
       return
     }
 
+    const shouldCache = maxAge || etag
+
     // Add false to cacheHits to indicate this _should_ be cached but was as miss.
-    if (!ctx.cacheHit && !noStore) {
+    if (!ctx.cacheHit && shouldCache) {
       ctx.cacheHit = false
     }
 
-    if (maxAge || etag) {
+    if (shouldCache) {
       const currentAge = revalidated ? 0 : age
       const varySegment = ctx.response.headers.vary.includes('x-vtex-segment')
       const setKey = varySegment ? keyWithSegment : key
