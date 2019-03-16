@@ -102,12 +102,13 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
       }
     }
 
+    // Indicates this should NOT be cached, and this, cacheHit will not be considered
     if (noStore || (noCache && !etag)) {
       return
     }
 
     // Add false to cacheHits to indicate this _should_ be cached but was as miss.
-    if (!ctx.cacheHit && !noStore) {
+    if (!ctx.cacheHit) {
       ctx.cacheHit = false
     }
 
