@@ -102,17 +102,19 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
       }
     }
 
-    // Indicates this should NOT be cached, and this, cacheHit will not be considered
+    // Indicates this should NOT be cached and this request will not be considered a miss.
     if (noStore || (noCache && !etag)) {
       return
     }
 
+    const shouldCache = maxAge || etag
+
     // Add false to cacheHits to indicate this _should_ be cached but was as miss.
-    if (!ctx.cacheHit) {
+    if (!ctx.cacheHit && shouldCache) {
       ctx.cacheHit = false
     }
 
-    if (maxAge || etag) {
+    if (shouldCache) {
       const currentAge = revalidated ? 0 : age
       const varySegment = ctx.response.headers.vary.includes('x-vtex-segment')
       const setKey = varySegment ? keyWithSegment : key
