@@ -1,5 +1,4 @@
 import stringify from 'json-stringify-safe'
-import PQueue from 'p-queue'
 import {pick} from 'ramda'
 
 import {HttpClient, withoutRecorder} from '../HttpClient'
@@ -7,8 +6,6 @@ import {HttpClientFactory, IODataSource} from '../IODataSource'
 
 const DEFAULT_SUBJECT = '-'
 const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url']
-
-const queue = new PQueue({concurrency: 1})
 
 const routes = {
   Log: (level: string) => `/logs/${level}`,
@@ -25,7 +22,7 @@ const errorReplacer = (key: string, value: any) => {
 }
 
 const forWorkspaceWithoutRecorder: HttpClientFactory = ({service, context, options}) => (service && context)
-  ? HttpClient.forWorkspace(service, withoutRecorder(context), options || {})
+  ? HttpClient.forWorkspace(service, withoutRecorder(context), {...options, concurrency: 1})
   : undefined
 
 export class Logger extends IODataSource {
@@ -62,9 +59,8 @@ export class Logger extends IODataSource {
     return this.sendLog(subject, {code, message, stack, details: hasDetails ? pickedDetails : undefined}, 'error')
   }
 
-  public sendLog = (subject: string, message: any, level: string) : Promise<void> => {
-    return queue.add(() => this.http.put(routes.Log(level), message, {params: {subject}, metric: 'logger-send'}))
-  }
+  public sendLog = (subject: string, message: any, level: string) : Promise<void> =>
+    this.http.put(routes.Log(level), message, {params: {subject}, metric: 'logger-send'})
 }
 
 export interface ErrorLog {

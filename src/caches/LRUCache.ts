@@ -5,12 +5,12 @@ import { FetchResult, LRUStats } from './typings'
 
 export class LRUCache <K, V> implements CacheLayer<K, V>{
   private multilayer: MultilayeredCache<K, V>
-  private storage: LRU.Cache<K, V>
+  private storage: LRU<K, V>
   private hits: number
   private total: number
   private disposed: number
 
-  constructor (options: LRU.Options) {
+  constructor (options: LRU.Options<K, V>) {
     this.hits = 0
     this.total = 0
     this.disposed = 0
