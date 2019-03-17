@@ -1,4 +1,4 @@
-import { ComposedMiddleware } from 'koa-compose'
+import { Middleware } from 'koa-compose'
 import { forEach, keys, reduce } from 'ramda'
 
 import { IOClients } from '../clients/IOClients'
@@ -36,7 +36,7 @@ function recordTimings(start: [number, number], name: string, ctx: ServiceContex
   }
 }
 
-export function timer<T extends IOClients>(middleware: ComposedMiddleware<ServiceContext<T>>): ComposedMiddleware<ServiceContext<T>> {
+export function timer<T extends IOClients>(middleware: Middleware<ServiceContext<T>>): Middleware<ServiceContext<T>> {
   return async (ctx: ServiceContext<T>, next: (() => Promise<any>) | undefined) => {
     if (!ctx.timings) {
       ctx.timings = {}

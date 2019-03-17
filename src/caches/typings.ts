@@ -1,7 +1,7 @@
 // tslint:disable-next-line:interface-over-type-literal
 export type FetchResult<V> = {
   value: V,
-  maxAge?: number, 
+  maxAge?: number,
 }
 
 // tslint:disable-next-line:interface-over-type-literal

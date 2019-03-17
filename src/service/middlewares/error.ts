@@ -6,12 +6,11 @@ const CACHE_CONTROL_HEADER = 'cache-control'
 const TWO_SECONDS_S = 10
 const production = process.env.VTEX_PRODUCTION === 'true'
 
-export const error = async (ctx: ServiceContext, next: (() => Promise<any>) | undefined) => {
+export const error = async (ctx: ServiceContext, next: () => Promise<any>) => {
   try {
-    if (next) {
-      await next()
-    }
+    await next()
   } catch (e) {
+    console.error('[node-vtex-api error]', e)
     const err = cleanError(e)
     ctx.status = e && e.status >= 400 && e.status <= 599
       ? e.status

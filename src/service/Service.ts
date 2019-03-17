@@ -1,4 +1,4 @@
-import compose, { ComposedMiddleware } from 'koa-compose'
+import compose, { Middleware } from 'koa-compose'
 import { map } from 'ramda'
 
 import { ClientsImplementation, IOClients } from '../clients/IOClients'
@@ -19,12 +19,12 @@ export interface ClientsConfig<T extends IOClients> {
 }
 
 export interface ServiceConfig<T extends IOClients> {
-  routes: Record<string, ComposedMiddleware<ServiceContext<T>> | Array<ComposedMiddleware<ServiceContext<T>>>>
+  routes: Record<string, Middleware<ServiceContext<T>> | Array<Middleware<ServiceContext<T>>>>
   clients: ClientsConfig<T>
 }
 
 export class Service<T extends IOClients = IOClients> {
-  public routes: Record<string, ComposedMiddleware<ServiceContext<T>>>
+  public routes: Record<string, Middleware<ServiceContext<T>>>
   public statusTrack: () => EnvMetric[]
 
   constructor(config: ServiceConfig<T>) {
@@ -32,7 +32,7 @@ export class Service<T extends IOClients = IOClients> {
       global.metrics = new MetricsAccumulator()
     }
 
-    this.routes = map((handler: ComposedMiddleware<ServiceContext<T>> | Array<ComposedMiddleware<ServiceContext<T>>>) => {
+    this.routes = map((handler: Middleware<ServiceContext<T>> | Array<Middleware<ServiceContext<T>>>) => {
       const middlewares = Array.isArray(handler) ? handler : [handler]
       const Clients = config.clients.implementation || IOClients
       return compose([clients(Clients, config.clients.options), logger, error, ...middlewares].map(timer))

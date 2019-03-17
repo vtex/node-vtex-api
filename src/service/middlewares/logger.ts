@@ -20,14 +20,12 @@ const production = process.env.VTEX_PRODUCTION === 'true'
 // the logger available from the last request cycle. ¯\_(ツ)_/¯
 let lastLogger: Logger
 
-export const logger = async (ctx: ServiceContext, next: (() => Promise<any>) | undefined) => {
+export const logger = async (ctx: ServiceContext, next: () => Promise<any>) => {
   const start = process.hrtime()
 
   lastLogger = ctx.clients.logger
 
-  if (next) {
-    await next()
-  }
+  await next()
 
   const {
     __error: error,
