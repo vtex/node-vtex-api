@@ -10,7 +10,7 @@ interface ClientImplementation {
 export interface ClientsImplementation<T extends IOClients> {
   new(
     clientOptions: Record<string, InstanceOptions>,
-    ctx: ServiceContext<T>,
+    ctx: ServiceContext<T>
   ): T
 }
 
@@ -19,7 +19,7 @@ export class IOClients {
 
   constructor (
     private clientOptions: Record<string, InstanceOptions>,
-    private ctx: ServiceContext,
+    private ctx: ServiceContext
   ) {}
 
   public get apps(): Apps {

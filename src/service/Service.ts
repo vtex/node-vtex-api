@@ -23,7 +23,7 @@ export interface ServiceConfig<T extends IOClients> {
   clients: ClientsConfig<T>
 }
 
-export default class Service<T extends IOClients = IOClients> {
+export class Service<T extends IOClients = IOClients> {
   public routes: Record<string, ComposedMiddleware<ServiceContext<T>>>
   public statusTrack: () => EnvMetric[]
 

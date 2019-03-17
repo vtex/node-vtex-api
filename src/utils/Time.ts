@@ -25,7 +25,7 @@ function recordTimings(start: [number, number], name: string, ctx: ServiceContex
 
   // This middleware has added it's own metrics
   // Just add them to `timings` scoped by the middleware's name and batch them
-  const middlewareMetricsKeys: string[] = keys(ctx.metrics)
+  const middlewareMetricsKeys: string[] = keys(ctx.metrics) as string[]
   if (middlewareMetricsKeys.length > 0) {
     forEach((k: string) => {
       const metricEnd = ctx.metrics[k]
