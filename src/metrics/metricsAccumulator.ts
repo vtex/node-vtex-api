@@ -163,7 +163,7 @@ export class MetricsAccumulator {
   private flushMetrics = (): EnvMetric[] => {
     const aggregateMetrics: EnvMetric[] = values(mapObjIndexed(
       this.metricToAggregate,
-      this.metricsMillis,
+      this.metricsMillis
     ))
 
     const systemMetrics: EnvMetric[] = [
@@ -184,7 +184,7 @@ export class MetricsAccumulator {
 
     const cacheMetrics = values(mapObjIndexed(
       this.cacheToMetric,
-      this.cacheMap,
+      this.cacheMap
     ))
 
     return [...systemMetrics, ...aggregateMetrics, ...envFlushMetric, ...cacheMetrics]

@@ -3,16 +3,12 @@ import { IODataSource } from '../IODataSource'
 import { IOContext, ServiceContext } from '../service/typings'
 import { Apps, Billing, Builder, Events, ID, Logger, Metadata, Registry, Router, VBase, Workspaces } from './index'
 
-interface ClientImplementation {
-  new(context: IOContext, options: InstanceOptions): IODataSource | Builder | ID | Router
-}
+type IOClient = new(context: IOContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
 
-export interface ClientsImplementation<T extends IOClients> {
-  new(
+export type ClientsImplementation<T extends IOClients> = new(
     clientOptions: Record<string, InstanceOptions>,
     ctx: ServiceContext<T>
-  ): T
-}
+  ) => T
 
 export class IOClients {
   [client: string]: IODataSource | any
@@ -66,7 +62,7 @@ export class IOClients {
     return this.getOrSet('workspaces', Workspaces)
   }
 
-  protected getOrSet(key: string, Implementation: ClientImplementation) {
+  protected getOrSet(key: string, Implementation: IOClient) {
     const options = {
       ...this.clientOptions.default,
       ...this.clientOptions[key],

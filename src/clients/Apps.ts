@@ -217,7 +217,7 @@ export class Apps extends IODataSource {
     return this.getAppBundle(app, bundlePath, generatePackageJson)
       .then(stream => stream
         .pipe(createGunzip())
-        .pipe(extract(unpackPath)),
+        .pipe(extract(unpackPath))
       )
   }
 

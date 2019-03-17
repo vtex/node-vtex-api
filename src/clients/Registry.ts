@@ -113,7 +113,7 @@ export class Registry extends IODataSource {
     return this.getAppBundle(app, version, bundlePath, generatePackageJson)
       .then(stream => stream
         .pipe(createGunzip())
-        .pipe(extract(unpackPath)),
+        .pipe(extract(unpackPath))
       )
   }
 
