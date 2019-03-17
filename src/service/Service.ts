@@ -28,10 +28,6 @@ export class Service<T extends IOClients = IOClients> {
   public statusTrack: () => EnvMetric[]
 
   constructor(config: ServiceConfig<T>) {
-    if (!global.metrics) {
-      global.metrics = new MetricsAccumulator()
-    }
-
     this.routes = map((handler: Middleware<ServiceContext<T>> | Array<Middleware<ServiceContext<T>>>) => {
       const middlewares = Array.isArray(handler) ? handler : [handler]
       const Clients = config.clients.implementation || IOClients
@@ -40,6 +36,10 @@ export class Service<T extends IOClients = IOClients> {
 
     this.statusTrack = global.metrics.statusTrack
   }
+}
+
+if (!global.metrics) {
+  global.metrics = new MetricsAccumulator()
 }
 
 declare global {
