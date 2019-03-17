@@ -11,7 +11,7 @@ export type ClientsImplementation<T extends IOClients> = new(
   ) => T
 
 export class IOClients {
-  [client: string]: IODataSource | any
+  private clients: Record<string, IODataSource | any> = {}
 
   constructor (
     private clientOptions: Record<string, InstanceOptions>,
@@ -68,10 +68,10 @@ export class IOClients {
       ...this.clientOptions[key],
     }
 
-    if (!this[key]) {
-      this[key] = new Implementation(this.ctx.vtex, options)
+    if (!this.clients[key]) {
+      this.clients[key] = new Implementation(this.ctx.vtex, options)
     }
 
-    return this[key]
+    return this.clients[key]
   }
 }
