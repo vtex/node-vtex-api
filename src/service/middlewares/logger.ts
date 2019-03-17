@@ -1,9 +1,10 @@
 import { constants } from 'os'
 
 import { Logger } from '../../clients/Logger'
-import { ServiceContext } from '../../typings/service'
 import { cleanError } from '../../utils/error'
 import { hrToMillis } from './../../utils/time'
+
+import { ServiceContext } from '../typings'
 
 const statusLabel = (status: number) => `${Math.floor(status/100)}xx`
 

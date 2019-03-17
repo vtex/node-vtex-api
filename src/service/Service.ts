@@ -1,15 +1,15 @@
 import compose, { ComposedMiddleware } from 'koa-compose'
 import { map } from 'ramda'
 
+import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { InstanceOptions } from '../HttpClient'
 import { EnvMetric, MetricsAccumulator } from '../metrics/MetricsAccumulator'
-import { ServiceContext } from '../typings/service'
 import { timer } from '../utils/time'
 
-import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { clients } from './middlewares/clients'
 import { error } from './middlewares/error'
 import { logger } from './middlewares/logger'
+import { ServiceContext } from './typings'
 
 export type RouteHandler = (ctx: ServiceContext, next: () => Promise<void>) => Promise<void>
 

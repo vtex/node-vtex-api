@@ -3,7 +3,7 @@ import { forEach, keys, reduce } from 'ramda'
 
 import { IOClients } from '../clients/IOClients'
 import { MetricsAccumulator } from '../metrics/metricsAccumulator'
-import { ServiceContext } from '../typings/service'
+import { ServiceContext } from '../service/typings'
 
 export const hrToMillis = ([seconds, nanoseconds]: [number, number]) =>
   Math.round((seconds * 1e3) + (nanoseconds / 1e6))

@@ -1,5 +1,5 @@
 import {AuthType, HttpClient, InstanceOptions} from '../HttpClient'
-import { IOContext } from '../typings/service'
+import { IOContext } from '../service/typings'
 
 const routes = {
   SEND: '/accesskey/send',

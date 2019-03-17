@@ -1,6 +1,6 @@
 import { InstanceOptions } from '../HttpClient'
 import { IODataSource } from '../IODataSource'
-import { IOContext, ServiceContext } from '../typings/service'
+import { IOContext, ServiceContext } from '../service/typings'
 import { Apps, Billing, Builder, Events, ID, Logger, Metadata, Registry, Router, VBase, Workspaces } from './index'
 
 interface ClientImplementation {
@@ -66,7 +66,7 @@ export class IOClients {
     return this.getOrSet('workspaces', Workspaces)
   }
 
-  private getOrSet(key: string, Implementation: ClientImplementation) {
+  protected getOrSet(key: string, Implementation: ClientImplementation) {
     const options = {
       ...this.clientOptions.default,
       ...this.clientOptions[key],

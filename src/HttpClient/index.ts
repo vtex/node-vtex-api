@@ -7,7 +7,7 @@ import pLimit from 'p-limit'
 import { CacheLayer } from '../caches/CacheLayer'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
 
-import { IOContext } from '../typings/service'
+import { IOContext } from '../service/typings'
 import { MiddlewareContext, RequestConfig } from './context'
 import { CacheableRequestConfig, Cached, cacheMiddleware, CacheType } from './middlewares/cache'
 import { metricsMiddleware } from './middlewares/metrics'

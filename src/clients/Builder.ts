@@ -2,7 +2,7 @@ import archiver from 'archiver'
 import {ZlibOptions} from 'zlib'
 
 import {HttpClient, InstanceOptions} from '../HttpClient'
-import {IOContext} from '../typings/service'
+import {IOContext} from '../service/typings'
 
 import {Change} from './Apps'
 import {File} from './Registry'
