@@ -32,24 +32,39 @@ const parseCacheHeaders = (headers: Record<string, string>) => {
   }
 }
 
-function isCacheable (arg: any): arg is CacheableRequestConfig {
+function isCacheable (arg: any, type: CacheType): arg is CacheableRequestConfig {
   return arg && arg.cacheable
+    && arg.cacheable !== CacheType.None
+    && (arg.cacheable === type || arg.cacheable === CacheType.Any)
 }
 
 const addNotModified = (validateStatus: (status: number) => boolean) =>
   (status: number) => validateStatus(status) || status === 304
 
-export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: CacheLayer<string, Cached>, segmentToken: string}) => {
+export enum CacheType {
+  Memory,
+  Disk,
+  Any,
+  None,
+}
+
+interface CacheOptions {
+  type: CacheType
+  storage: CacheLayer<string, Cached>
+  segmentToken: string
+}
+
+export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-    if (!isCacheable(ctx.config)) {
+    if (!isCacheable(ctx.config, type)) {
       return await next()
     }
 
     const key = cacheKey(ctx.config)
     const keyWithSegment = key + segmentToken
 
-    const cacheHasWithSegment = await cacheStorage.has(keyWithSegment)
-    const cached = cacheHasWithSegment ? await cacheStorage.get(keyWithSegment) : await cacheStorage.get(key)
+    const cacheHasWithSegment = await storage.has(keyWithSegment)
+    const cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
 
     if (cached) {
       const {etag: cachedEtag, response, expiration} = cached as Cached
@@ -118,7 +133,7 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
       const currentAge = revalidated ? 0 : age
       const varySegment = ctx.response.headers.vary.includes('x-vtex-segment')
       const setKey = varySegment ? keyWithSegment : key
-      await cacheStorage.set(setKey, {
+      await storage.set(setKey, {
         etag,
         expiration: Date.now() + (maxAge - currentAge) * 1000,
         response: {data, headers, status},
@@ -136,5 +151,5 @@ export interface Cached {
 
 export type CacheableRequestConfig = AxiosRequestConfig & {
   url: string,
-  cacheable: boolean,
+  cacheable: CacheType,
 }

@@ -2,8 +2,8 @@ import { DataSource } from 'apollo-datasource'
 import { KeyValueCache } from 'apollo-server-caching'
 import { IDirectiveResolvers } from 'graphql-tools'
 
-import { ServiceContext } from './HttpClient'
-import { Metric } from './metrics/metricsAccumulator'
+import { Metric } from './metrics/MetricsAccumulator'
+import { ServiceContext } from './typings/service'
 
 export type StatusTrack = () => Metric[]
 

@@ -1,17 +1,15 @@
-import { DataSource } from 'apollo-datasource'
 import { AxiosResponse } from 'axios'
 import { IAxiosRetryConfig } from 'axios-retry'
 import { IncomingMessage } from 'http'
-import { Context } from 'koa'
 import compose from 'koa-compose'
 import pLimit from 'p-limit'
-import { ParsedUrlQuery } from 'querystring'
 
 import { CacheLayer } from '../caches/CacheLayer'
-import { MetricsAccumulator } from '../metrics/metricsAccumulator'
-import { MetricsLogger } from '../metrics/metricsLogger'
+import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
+
+import { IOContext } from '../typings/service'
 import { MiddlewareContext, RequestConfig } from './context'
-import { CacheableRequestConfig, Cached, cacheMiddleware } from './middlewares/cache'
+import { CacheableRequestConfig, Cached, cacheMiddleware, CacheType } from './middlewares/cache'
 import { metricsMiddleware } from './middlewares/metrics'
 import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewares/notFound'
 import { Recorder, recorderMiddleware } from './middlewares/recorder'
@@ -20,16 +18,16 @@ import { defaultsMiddleware, requestMiddleware } from './middlewares/request'
 const DEFAULT_TIMEOUT_MS = 10000
 const noTransforms = [(data: any) => data]
 
-const rootURL = (service: string, {region}: IOContext, {endpoint}: InstanceOptions): string => {
-  if (endpoint) {
-    return 'http://' + endpoint
+const rootURL = (service: string, {region}: IOContext, {baseURL}: InstanceOptions): string => {
+  if (baseURL) {
+    return 'http://' + baseURL
   }
 
   if (region) {
     return `http://${service}.${region}.vtex.io`
   }
 
-  throw new Error('Missing required: should specify either {region} or {endpoint}')
+  throw new Error('Missing required: should specify either {region} or {baseURL}')
 }
 
 const workspaceURL = (service: string, context: IOContext, opts: InstanceOptions): string => {
@@ -44,29 +42,40 @@ const workspaceURL = (service: string, context: IOContext, opts: InstanceOptions
 export class HttpClient {
 
   public static forWorkspace (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent, recorder, segmentToken, sessionToken} = context
-    const {timeout, cacheStorage, retryConfig, metrics, concurrency} = opts
     const baseURL = workspaceURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken, retryConfig, metrics, concurrency})
+    return new HttpClient({
+      ...context,
+      ...opts,
+      authType: AuthType.bearer,
+      baseURL,
+    })
   }
 
   public static forRoot (service: string, context: IOContext, opts: InstanceOptions): HttpClient {
-    const {authToken, userAgent, recorder, segmentToken, sessionToken} = context
-    const {timeout, cacheStorage, retryConfig, metrics, concurrency} = opts
     const baseURL = rootURL(service, context, opts)
-    return new HttpClient({baseURL, authType: AuthType.bearer, authToken, userAgent, timeout, recorder, cacheStorage, segmentToken, sessionToken, retryConfig, metrics, concurrency})
+    return new HttpClient({
+      ...context,
+      ...opts,
+      authType: AuthType.bearer,
+      baseURL,
+    })
   }
 
-  public static forLegacy (endpoint: string, opts: LegacyInstanceOptions): HttpClient {
-    const {authToken, userAgent, timeout, cacheStorage, retryConfig, metrics, concurrency} = opts
-    return new HttpClient({baseURL: endpoint, authType: AuthType.token, authToken, userAgent, timeout, cacheStorage, retryConfig, metrics, concurrency})
+  public static forExternal (baseURL: string, context: IOContext, opts: InstanceOptions): HttpClient {
+    return new HttpClient({
+      ...context,
+      ...opts,
+      baseURL,
+    })
   }
+
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor (opts: ClientOptions) {
-    const {baseURL, authToken, authType, cacheStorage, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS, segmentToken, retryConfig, concurrency} = opts
+    const {baseURL, authToken, authType, memoryCache, diskCache, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS, segmentToken, retryConfig, concurrency, headers: defaultHeaders} = opts
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
+      ...defaultHeaders,
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
     }
@@ -80,24 +89,25 @@ export class HttpClient {
       ...recorder ? [recorderMiddleware(recorder)] : [],
       acceptNotFoundMiddleware,
       ...metrics ? [metricsMiddleware(metrics)] : [],
-      ...cacheStorage ? [cacheMiddleware({cacheStorage, segmentToken: segmentToken || ''})] : [],
+      ...memoryCache ? [cacheMiddleware({type: CacheType.Memory, storage: memoryCache, segmentToken: segmentToken || ''})] : [],
+      ...diskCache ? [cacheMiddleware({type: CacheType.Disk, storage: diskCache, segmentToken: segmentToken || ''})] : [],
       notFoundFallbackMiddleware,
       requestMiddleware(limit),
     ])
   }
 
   public get = <T = any>(url: string, config: RequestConfig = {}): Promise<T> => {
-    const cacheableConfig = {...config, url, cacheable: true} as CacheableRequestConfig
+    const cacheableConfig = {cacheable: CacheType.Memory, ...config, url} as CacheableRequestConfig
     return this.request(cacheableConfig).then(response => response.data as T)
   }
 
   public getRaw = <T = any>(url: string, config: RequestConfig = {}): Promise<IOResponse<T>> => {
-    const cacheableConfig = {...config, url, cacheable: true} as CacheableRequestConfig
+    const cacheableConfig = {cacheable: CacheType.Memory, ...config, url} as CacheableRequestConfig
     return this.request(cacheableConfig) as Promise<IOResponse<T>>
   }
 
   public getBuffer = (url: string, config: RequestConfig = {}): Promise<{data: Buffer, headers: any}> => {
-    const bufferConfig = {...config, url, responseType: 'arraybuffer', transformResponse: noTransforms}
+    const bufferConfig = {cacheable: CacheType.Disk, ...config, url, responseType: 'arraybuffer', transformResponse: noTransforms}
     return this.request(bufferConfig)
   }
 
@@ -146,51 +156,28 @@ export type CacheStorage = CacheLayer<string, Cached>
 
 export type Recorder = Recorder
 
-export interface DataSources {
-  [name: string]: DataSource<ServiceContext>,
-}
-
-export interface ServiceContext extends Context {
-  vtex: IOContext
-  dataSources?: DataSources
-  metricsLogger?: MetricsLogger
-}
-
-export interface IOContext {
-  account: string,
-  authToken: string,
-  production: boolean,
-  recorder?: Recorder,
-  region: string,
-  route: {
-    declarer?: string
-    id: string
-    params: ParsedUrlQuery,
-  }
-  userAgent: string,
-  workspace: string,
-  segmentToken?: string
-  sessionToken?: string
-}
-
 export interface InstanceOptions {
+  authType?: AuthType
   timeout?: number,
-  cacheStorage?: CacheLayer<string, Cached>,
-  endpoint?: string,
+  memoryCache?: CacheLayer<string, Cached>,
+  diskCache?: CacheLayer<string, Cached>,
+  baseURL?: string,
   retryConfig?: IAxiosRetryConfig,
   metrics?: MetricsAccumulator,
+  /**
+   * Maximum number of concurrent requests
+   *
+   * @type {number}
+   * @memberof InstanceOptions
+   */
   concurrency?: number,
-}
-
-export interface LegacyInstanceOptions {
-  authToken: string,
-  userAgent: string,
-  timeout?: number,
-  accept?: string,
-  cacheStorage?: CacheLayer<string, Cached>,
-  retryConfig?: IAxiosRetryConfig,
-  metrics?: MetricsAccumulator,
-  concurrency?: number,
+  /**
+   * Default headers to be sent with every request
+   *
+   * @type {Record<string, string>}
+   * @memberof InstanceOptions
+   */
+  headers?: Record<string, string>,
 }
 
 export interface IOResponse<T> {
@@ -199,8 +186,12 @@ export interface IOResponse<T> {
   status: number
 }
 
-enum AuthType {
-  bearer = 'bearer',
+export enum AuthType {
+  basic = 'Basic',
+  bearer = 'Bearer',
+  /**
+   * Supported for legacy reasons - this is not spec compliant!
+   */
   token = 'token',
 }
 
@@ -212,9 +203,11 @@ interface ClientOptions {
   timeout?: number,
   recorder?: Recorder,
   metrics?: MetricsAccumulator,
-  cacheStorage?: CacheLayer<string, Cached>,
+  memoryCache?: CacheLayer<string, Cached>,
+  diskCache?: CacheLayer<string, Cached>,
   segmentToken?: string
   sessionToken?: string
   retryConfig?: IAxiosRetryConfig
   concurrency?: number,
+  headers?: Record<string, string>,
 }

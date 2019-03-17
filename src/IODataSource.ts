@@ -1,5 +1,6 @@
 import {DataSource, DataSourceConfig} from 'apollo-datasource'
-import {HttpClient, InstanceOptions, IOContext, LegacyInstanceOptions, ServiceContext} from './HttpClient'
+import {HttpClient, InstanceOptions, LegacyInstanceOptions} from './HttpClient'
+import { IOContext, ServiceContext } from './typings/service'
 
 interface HttpClientFactoryOptions {
   service: string | void

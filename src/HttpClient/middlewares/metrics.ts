@@ -1,5 +1,5 @@
-import { MetricsAccumulator } from '../../metrics/metricsAccumulator'
-import { TIMEOUT_CODE } from '../../utils/Retry'
+import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
+import { TIMEOUT_CODE } from '../../utils/retry'
 import { MiddlewareContext } from '../context'
 
 const statusLabel = (status: number) =>

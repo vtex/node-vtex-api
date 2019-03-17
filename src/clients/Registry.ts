@@ -5,10 +5,10 @@ import {Readable, Writable} from 'stream'
 import {extract} from 'tar-fs'
 import {createGunzip, ZlibOptions} from 'zlib'
 
-import {DEFAULT_WORKSPACE} from './constants'
-import {HttpClient} from './HttpClient'
-import {HttpClientFactory, IODataSource} from './IODataSource'
-import {AppBundlePublished, AppFilesList, AppManifest} from './responses'
+import {DEFAULT_WORKSPACE} from '../constants'
+import {HttpClient} from '../HttpClient'
+import {HttpClientFactory, IODataSource} from '../IODataSource'
+import {AppBundlePublished, AppFilesList, AppManifest} from '../responses'
 
 const EMPTY_OBJECT = {}
 

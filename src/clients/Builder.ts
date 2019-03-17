@@ -1,8 +1,10 @@
 import archiver from 'archiver'
 import {ZlibOptions} from 'zlib'
 
+import {HttpClient, InstanceOptions} from '../HttpClient'
+import {IOContext} from '../typings/service'
+
 import {Change} from './Apps'
-import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
 import {File} from './Registry'
 
 const EMPTY_OBJECT = {}

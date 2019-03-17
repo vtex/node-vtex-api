@@ -2,7 +2,7 @@ import { assoc, flatten, map, mapObjIndexed, values } from 'ramda'
 import { mean, median, percentile } from 'stats-lite'
 
 import { CacheHit } from '../HttpClient/context'
-import { hrToMillis } from '../utils/Time'
+import { hrToMillis } from '../utils/time'
 
 export interface Metric {
   name: string
@@ -14,7 +14,7 @@ interface NamedMetric {
   [key: string]: string | number | boolean | null
 }
 
-interface EnvMetric extends NamedMetric {
+export interface EnvMetric extends NamedMetric {
   production: boolean,
 }
 

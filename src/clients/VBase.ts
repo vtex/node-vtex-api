@@ -4,10 +4,11 @@ import { basename } from 'path'
 import { Readable } from 'stream'
 import { createGzip } from 'zlib'
 
-import { InstanceOptions, IOContext } from './HttpClient'
-import { IgnoreNotFoundRequestConfig } from './HttpClient/middlewares/notFound'
-import { forWorkspace, IODataSource } from './IODataSource'
-import { BucketMetadata, FileListItem } from './responses'
+import { InstanceOptions } from '../HttpClient'
+import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
+import { forWorkspace, IODataSource } from '../IODataSource'
+import { BucketMetadata, FileListItem } from '../responses'
+import { IOContext } from '../typings/service'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']
