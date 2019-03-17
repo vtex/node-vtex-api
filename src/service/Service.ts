@@ -13,8 +13,8 @@ import { logger } from './middlewares/logger'
 
 export type RouteHandler = (ctx: ServiceContext, next: () => Promise<void>) => Promise<void>
 
-interface ClientsConfig<T extends IOClients> {
-  implementation: ClientsImplementation<T>
+export interface ClientsConfig<T extends IOClients> {
+  implementation?: ClientsImplementation<T>
   options: Record<string, InstanceOptions>
 }
 

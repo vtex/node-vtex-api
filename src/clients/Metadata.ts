@@ -23,7 +23,7 @@ export interface MetadataEntryList {
   Next: string,
 }
 
-export class Metadata extends IODataSource{
+export class Metadata extends IODataSource {
   protected service = 'router'
   protected httpClientFactory = forWorkspace
 
