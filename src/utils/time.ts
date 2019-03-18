@@ -2,7 +2,7 @@ import { Middleware } from 'koa-compose'
 import { forEach, keys, reduce } from 'ramda'
 
 import { IOClients } from '../clients/IOClients'
-import { MetricsAccumulator } from '../metrics/metricsAccumulator'
+import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { ServiceContext } from '../service/typings'
 
 export const hrToMillis = ([seconds, nanoseconds]: [number, number]) =>
