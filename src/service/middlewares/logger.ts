@@ -2,7 +2,7 @@ import { constants } from 'os'
 
 import { Logger } from '../../clients/Logger'
 import { cleanError } from '../../utils/error'
-import { hrToMillis } from './../../utils/time'
+import { hrToMillis } from '../../utils/time'
 
 import { ServiceContext } from '../typings'
 
