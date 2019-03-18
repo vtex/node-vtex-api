@@ -19,7 +19,9 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
         ? ctx.status
         : 500
     ctx.body = ctx.body || err
-    ctx.__error = err
     ctx.set(CACHE_CONTROL_HEADER, production ? `public, max-age=${TWO_SECONDS_S}` : `no-cache, no-store`)
+
+    // Rethrows to be caught by logger middleware
+    throw err
   }
 }

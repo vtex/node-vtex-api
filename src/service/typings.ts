@@ -17,7 +17,11 @@ export interface Context<T extends IOClients> {
   metrics: Record<string, [number, number]>
 }
 
-export type ServiceContext<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = ParameterizedContext<StateT, Context<ClientsT> & CustomT>
+type KnownKeys<T> = {
+  [K in keyof T]: string extends K ? never : number extends K ? never : K
+} extends { [_ in keyof T]: infer U } ? U : never
+
+export type ServiceContext<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Pick<ParameterizedContext<StateT, Context<ClientsT>>, KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>> & CustomT
 
 export type RouteHandler<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>
 

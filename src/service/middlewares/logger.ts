@@ -25,11 +25,15 @@ export async function logger<T extends IOClients, U, V> (ctx: ServiceContext<T, 
   const start = process.hrtime()
 
   lastLogger = ctx.clients.logger
+  let error
 
-  await next()
+  try {
+    await next()
+  } catch (e) {
+    error = e
+  }
 
   const {
-    __error: error,
     method,
     status,
     vtex: {
