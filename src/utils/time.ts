@@ -24,7 +24,7 @@ function recordTimings(start: [number, number], name: string, timings: Record<st
 
   // This middleware has added it's own metrics
   // Just add them to `timings` scoped by the middleware's name and batch them
-  const middlewareMetricsKeys: string[] = keys(metrics) as string[]
+  const middlewareMetricsKeys: string[] = keys(middlewareMetrics) as string[]
   if (middlewareMetricsKeys.length > 0) {
     forEach((k: string) => {
       const metricEnd = middlewareMetrics[k]
