@@ -1,5 +1,6 @@
 import { constants } from 'os'
 
+import { IOClients } from '../../clients/IOClients'
 import { Logger } from '../../clients/Logger'
 import { cleanError } from '../../utils/error'
 import { hrToMillis } from '../../utils/time'
@@ -8,8 +9,8 @@ import { ServiceContext } from '../typings'
 
 const statusLabel = (status: number) => `${Math.floor(status/100)}xx`
 
-const log = (
-  {vtex: {account, workspace, route: {id}}, url, method, status}: ServiceContext,
+const log = <T extends IOClients, U, V>(
+  {vtex: {account, workspace, route: {id}}, url, method, status}: ServiceContext<T, U, V>,
   millis: number
 ) =>
   `${new Date().toISOString()}\t${account}/${workspace}:${id}\t${status}\t${method}\t${url}\t${millis}ms`
@@ -20,7 +21,7 @@ const production = process.env.VTEX_PRODUCTION === 'true'
 // the logger available from the last request cycle. ¯\_(ツ)_/¯
 let lastLogger: Logger
 
-export const logger = async (ctx: ServiceContext, next: () => Promise<any>) => {
+export async function logger<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
   const start = process.hrtime()
 
   lastLogger = ctx.clients.logger

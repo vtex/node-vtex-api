@@ -1,9 +1,8 @@
-import { Middleware } from 'koa-compose'
 import { forEach, keys, reduce } from 'ramda'
 
 import { IOClients } from '../clients/IOClients'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
-import { ServiceContext } from '../service/typings'
+import { RouteHandler, ServiceContext } from '../service/typings'
 
 export const hrToMillis = ([seconds, nanoseconds]: [number, number]) =>
   Math.round((seconds * 1e3) + (nanoseconds / 1e6))
@@ -17,27 +16,27 @@ export const formatNano = (nanoseconds: number): string =>
 export const reduceHrToNano =
   reduce((acc: number, hr: [number, number]) => acc + hrToNano(hr), 0 as number)
 
-function recordTimings(start: [number, number], name: string, ctx: ServiceContext) {
+function recordTimings(start: [number, number], name: string, timings: Record<string, [number, number]>, middlewareMetrics: Record<string, [number, number]>) {
   // Capture the total amount of time spent in this middleware
   const end = process.hrtime(start)
-  ctx.timings[name] = end
+  timings[name] = end
   metrics.batch(name, end)
 
   // This middleware has added it's own metrics
   // Just add them to `timings` scoped by the middleware's name and batch them
-  const middlewareMetricsKeys: string[] = keys(ctx.metrics) as string[]
+  const middlewareMetricsKeys: string[] = keys(metrics) as string[]
   if (middlewareMetricsKeys.length > 0) {
     forEach((k: string) => {
-      const metricEnd = ctx.metrics[k]
+      const metricEnd = middlewareMetrics[k]
       const metricName = `${name}-${k}`
-      ctx.timings[metricName] = metricEnd
+      timings[metricName] = metricEnd
       metrics.batch(metricName, metricEnd)
     }, middlewareMetricsKeys)
   }
 }
 
-export function timer<T extends IOClients>(middleware: Middleware<ServiceContext<T>>): Middleware<ServiceContext<T>> {
-  return async (ctx: ServiceContext<T>, next: (() => Promise<any>) | undefined) => {
+export function timer<T extends IOClients, U, V>(middleware: RouteHandler<T, U, V>): RouteHandler<T, U, V> {
+  return async (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) => {
     if (!ctx.timings) {
       ctx.timings = {}
     }
@@ -47,14 +46,14 @@ export function timer<T extends IOClients>(middleware: Middleware<ServiceContext
     const start = process.hrtime()
     try {
       await middleware(ctx, async () => {
-        recordTimings(start, middleware.name, ctx)
+        recordTimings(start, middleware.name, ctx.timings, ctx.metrics)
         ctx.metrics = {}
         if (next) {
           await next()
         }
       })
     } catch (e) {
-      recordTimings(start, middleware.name, ctx)
+      recordTimings(start, middleware.name, ctx.timings, ctx.metrics)
       throw e
     }
   }

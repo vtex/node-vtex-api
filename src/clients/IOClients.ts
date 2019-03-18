@@ -1,13 +1,13 @@
 import { InstanceOptions } from '../HttpClient'
 import { IODataSource } from '../IODataSource'
-import { IOContext, ServiceContext } from '../service/typings'
+import { IOContext } from '../service/typings'
 import { Apps, Billing, Builder, Events, ID, Logger, Metadata, Registry, Router, VBase, Workspaces } from './index'
 
 type IOClient = new(context: IOContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
 
 export type ClientsImplementation<T extends IOClients> = new(
     clientOptions: Record<string, InstanceOptions>,
-    ctx: ServiceContext<T>
+    ctx: IOContext
   ) => T
 
 export class IOClients {
@@ -15,7 +15,7 @@ export class IOClients {
 
   constructor (
     private clientOptions: Record<string, InstanceOptions>,
-    private ctx: ServiceContext
+    private ctx: IOContext
   ) {}
 
   public get apps(): Apps {
@@ -69,7 +69,7 @@ export class IOClients {
     }
 
     if (!this.clients[key]) {
-      this.clients[key] = new Implementation(this.ctx.vtex, options)
+      this.clients[key] = new Implementation(this.ctx, options)
     }
 
     return this.clients[key]
