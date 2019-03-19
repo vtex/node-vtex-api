@@ -211,3 +211,5 @@ interface ClientOptions {
   concurrency?: number,
   headers?: Record<string, string>,
 }
+
+export { CacheType } from './middlewares/cache'
