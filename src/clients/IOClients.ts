@@ -66,6 +66,7 @@ export class IOClients {
     const options = {
       ...this.clientOptions.default,
       ...this.clientOptions[key],
+      metrics,
     }
 
     if (!this.clients[key]) {
