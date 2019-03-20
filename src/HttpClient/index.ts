@@ -89,10 +89,10 @@ export class HttpClient {
 
     this.runMiddlewares = compose([
       defaultsMiddleware(baseURL, headers, timeout, retryConfig),
+      ...metrics ? [metricsMiddleware(metrics)] : [],
       memoizationMiddleware({type: CacheType.Any, memoizedCache}),
       ...recorder ? [recorderMiddleware(recorder)] : [],
       acceptNotFoundMiddleware,
-      ...metrics ? [metricsMiddleware(metrics)] : [],
       ...memoryCache ? [cacheMiddleware({type: CacheType.Memory, storage: memoryCache, segmentToken: segmentToken || ''})] : [],
       ...diskCache ? [cacheMiddleware({type: CacheType.Disk, storage: diskCache, segmentToken: segmentToken || ''})] : [],
       notFoundFallbackMiddleware,
