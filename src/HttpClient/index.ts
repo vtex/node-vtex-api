@@ -90,7 +90,7 @@ export class HttpClient {
     this.runMiddlewares = compose([
       defaultsMiddleware(baseURL, headers, timeout, retryConfig),
       ...metrics ? [metricsMiddleware(metrics)] : [],
-      memoizationMiddleware({type: CacheType.Any, memoizedCache}),
+      memoizationMiddleware({memoizedCache}),
       ...recorder ? [recorderMiddleware(recorder)] : [],
       acceptNotFoundMiddleware,
       ...memoryCache ? [cacheMiddleware({type: CacheType.Memory, storage: memoryCache, segmentToken: segmentToken || ''})] : [],
@@ -101,12 +101,12 @@ export class HttpClient {
   }
 
   public get = <T = any>(url: string, config: RequestConfig = {}): Promise<T> => {
-    const cacheableConfig = {cacheable: CacheType.Memory, ...config, url} as CacheableRequestConfig
+    const cacheableConfig = {memoizable: true, cacheable: CacheType.Memory, ...config, url} as CacheableRequestConfig
     return this.request(cacheableConfig).then(response => response.data as T)
   }
 
   public getRaw = <T = any>(url: string, config: RequestConfig = {}): Promise<IOResponse<T>> => {
-    const cacheableConfig = {cacheable: CacheType.Memory, ...config, url} as CacheableRequestConfig
+    const cacheableConfig = {memoizable: true, cacheable: CacheType.Memory, ...config, url} as CacheableRequestConfig
     return this.request(cacheableConfig) as Promise<IOResponse<T>>
   }
 

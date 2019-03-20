@@ -5,12 +5,11 @@ export type Memoized = Required<Pick<MiddlewareContext, 'cacheHit' | 'response'>
 
 interface MemoizationOptions {
   memoizedCache: Map<string, Promise<Memoized>>
-  type: CacheType
 }
 
-export const memoizationMiddleware = ({type, memoizedCache}: MemoizationOptions) => {
+export const memoizationMiddleware = ({memoizedCache}: MemoizationOptions) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-    if (!isCacheable(ctx.config, type)) {
+    if (!isCacheable(ctx.config, CacheType.Any) || !ctx.config.memoizable) {
       return await next()
     }
 
@@ -19,8 +18,10 @@ export const memoizationMiddleware = ({type, memoizedCache}: MemoizationOptions)
     if (memoizedCache.has(key)) {
       const memoized = await memoizedCache.get(key)!
       ctx.cacheHit = {
-        ...memoized.cacheHit,
         memoized: true,
+        memory: false,
+        revalidated: false,
+        router: false,
       }
       ctx.response = memoized.response
       return
@@ -29,10 +30,7 @@ export const memoizationMiddleware = ({type, memoizedCache}: MemoizationOptions)
         try {
           await next()
           resolve({
-            cacheHit: {
-              ...ctx.cacheHit,
-              memoized: false,
-            },
+            cacheHit: ctx.cacheHit!,
             response: ctx.response!,
           })
         }
