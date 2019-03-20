@@ -6,7 +6,7 @@ import {MiddlewareContext} from '../context'
 const ROUTER_CACHE_KEY = 'x-router-cache'
 const ROUTER_CACHE_HIT = 'HIT'
 
-const cacheKey = (config: AxiosRequestConfig) => {
+export const cacheKey = (config: AxiosRequestConfig) => {
   const {baseURL = '', url = '', params} = config
   const fullURL = [baseURL, url].filter(str => str).join('/')
   const urlObject = new URL(fullURL)
