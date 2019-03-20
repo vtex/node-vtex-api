@@ -85,7 +85,7 @@ export class HttpClient {
       headers['Authorization'] = `${authType} ${authToken}` // tslint:disable-line
     }
 
-    const memoizedCache = new Map<string, Memoized>()
+    const memoizedCache = new Map<string, Promise<Memoized>>()
 
     this.runMiddlewares = compose([
       defaultsMiddleware(baseURL, headers, timeout, retryConfig),
