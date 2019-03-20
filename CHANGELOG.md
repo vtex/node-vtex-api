@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Typings for Free and Paid Billing Options
+- Typings for Fixed and Metric-Based Calculation Items
+- Type guards for Billing Options
 
 ## [3.21.3] - 2019-06-04
 
