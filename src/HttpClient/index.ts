@@ -10,6 +10,7 @@ import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { IOContext } from '../service/typings'
 import { MiddlewareContext, RequestConfig } from './context'
 import { CacheableRequestConfig, Cached, cacheMiddleware, CacheType } from './middlewares/cache'
+import { memoizationMiddleware, Memoized } from './middlewares/memoization'
 import { metricsMiddleware } from './middlewares/metrics'
 import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewares/notFound'
 import { Recorder, recorderMiddleware } from './middlewares/recorder'
@@ -84,8 +85,11 @@ export class HttpClient {
       headers['Authorization'] = `${authType} ${authToken}` // tslint:disable-line
     }
 
+    const memoizedCache = new Map<string, Memoized>()
+
     this.runMiddlewares = compose([
       defaultsMiddleware(baseURL, headers, timeout, retryConfig),
+      memoizationMiddleware({memoizedCache}),
       ...recorder ? [recorderMiddleware(recorder)] : [],
       acceptNotFoundMiddleware,
       ...metrics ? [metricsMiddleware(metrics)] : [],
