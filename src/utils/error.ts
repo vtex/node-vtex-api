@@ -1,36 +1,90 @@
-import stringify from 'json-stringify-safe'
-import {pick} from 'ramda'
+// Inspired by https://github.com/sindresorhus/serialize-error
+import { pick } from 'ramda'
 
 export const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url']
 
-const errorReplacer = (key: string, value: any) => {
-  if (key.startsWith('_')) {
-    return undefined
+const MAX_ERROR_STRING_LENGTH = process.env.MAX_ERROR_STRING_LENGTH ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10) : 8 * 1024
+
+const destroyCircular = (from: any, seen: string[]) => {
+  const to: {[key: string]: any} = Array.isArray(from) ? [] : {}
+
+  seen.push(from)
+
+  for (const [key, value] of Object.entries(from)) {
+    // Skip functions
+    if (typeof value === 'function') {
+      continue
+    }
+
+    // Skip "private" properties
+    if (key.startsWith('_')) {
+      continue
+    }
+
+    if (!value || typeof value !== 'object') {
+      // Truncate very large strings
+      if (typeof value === 'string' && value.length > MAX_ERROR_STRING_LENGTH) {
+        to[key] = value.substr(0, MAX_ERROR_STRING_LENGTH) + '[...TRUNCATED]'
+      } else {
+        to[key] = value
+      }
+
+      continue
+    }
+
+    if (!seen.includes(from[key])) {
+      to[key] = destroyCircular(from[key], seen.slice())
+      continue
+    }
+
+    to[key] = '[Circular]'
   }
-  if (value && typeof value === 'string' && value.length > 1024) {
-    return value.substr(0, 256) + '[...TRUNCATED]'
+
+  const commonProperties = [
+    'name',
+    'message',
+    'stack',
+    'code',
+  ]
+
+  for (const property of commonProperties) {
+    if (typeof from[property] === 'string') {
+      to[property] = from[property]
+    }
   }
-  return value
+
+  const axiosProperties = [
+    'config',
+    'request',
+    'response',
+  ]
+
+  for (const property of axiosProperties) {
+    to[property] = pick(PICKED_AXIOS_PROPS, from[property])
+  }
+
+  if (!to.code && to.response) {
+    to.code = to.response.status && `E_HTTP_${to.response.status}` || 'E_UNKNOWN'
+  }
+
+  return to
 }
 
-export const cleanError = (err: any) => {
-  if (!err) {
-    return {}
+/**
+ * Cleans errors by removing circular properties, truncating large strings and picking axios properties
+ *
+ * @param value an Error instance
+ */
+export const cleanError = (value: any) => {
+  if (typeof value === 'object') {
+    return destroyCircular(value, [])
   }
 
-  const {code: errorCode, name, message, stack, config, request, response, captured, queryErrors, ...rest} = err
-  const code = errorCode || response && response.status && `E_HTTP_${response.status}` || 'E_UNKNOWN'
-
-  return {
-    ... rest ? JSON.parse(stringify(rest, errorReplacer)) : null,
-    captured,
-    code,
-    message,
-    name,
-    queryErrors,
-    stack,
-    ... config ? {config: pick(PICKED_AXIOS_PROPS, config)} : undefined,
-    ... request ? {request: pick(PICKED_AXIOS_PROPS, request)} : undefined,
-    ... response ? {response: pick(PICKED_AXIOS_PROPS, response)} : undefined,
+  // People sometimes throw things besides Error objects…
+  if (typeof value === 'function') {
+    // `JSON.stringify()` discards functions. We do too, unless a function is thrown directly.
+    return `[Function: ${(value.name || 'anonymous')}]`
   }
+
+  return value
 }

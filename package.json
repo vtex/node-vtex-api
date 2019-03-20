@@ -13,7 +13,7 @@
     "prereleasy": "yarn prepublish"
   },
   "engines": {
-    "node": ">=6"
+    "node": ">=8"
   },
   "keywords": [
     "vtex"
@@ -33,7 +33,6 @@
     "fs-extra": "^7.0.0",
     "graphql": "^14.0.2",
     "graphql-tools": "^4.0.3",
-    "json-stringify-safe": "^5.0.1",
     "koa-compose": "^4.1.0",
     "lru-cache": "^5.1.1",
     "mime-types": "^2.1.12",
@@ -51,7 +50,6 @@
     "@types/archiver": "^2.0.1",
     "@types/fs-extra": "^5.0.0",
     "@types/graphql": "^14.0.4",
-    "@types/json-stringify-safe": "^5.0.0",
     "@types/lru-cache": "^5.1.0",
     "@types/mime-types": "^2.1.0",
     "@types/node": "^8.0.14",
