@@ -78,6 +78,7 @@ export class HttpClient {
       ...defaultHeaders,
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
+      ... segmentToken ? {'x-vtex-segment': segmentToken} : null,
     }
 
     if (authType && authToken) {
