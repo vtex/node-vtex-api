@@ -18,15 +18,20 @@ export const memoizationMiddleware = ({type, memoizedCache}: MemoizationOptions)
 
     if (memoizedCache.has(key)) {
       const memoized = await memoizedCache.get(key)!
-      console.log('memoizedCacheHIT')
-      ctx.cacheHit = memoized.cacheHit
+      ctx.cacheHit = {
+        ...memoized.cacheHit,
+        memoized: true,
+      }
       ctx.response = memoized.response
     } else {
       const promise = new Promise<Memoized>(async (resolve, reject) => {
         try {
           await next()
           resolve({
-            cacheHit: ctx.cacheHit!,
+            cacheHit: {
+              ...ctx.cacheHit,
+              memoized: false,
+            },
             response: ctx.response!,
           })
         }
@@ -34,7 +39,6 @@ export const memoizationMiddleware = ({type, memoizedCache}: MemoizationOptions)
           reject(err)
         }
       })
-      console.log('memoizedCacheMISS')
       memoizedCache.set(key, promise)
       await promise
     }
