@@ -50,5 +50,8 @@ export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<
 }
 
 export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+
+  console.log('making request to', ctx.config.url)
+
   ctx.response = await (limit ? limit(() => http.request(ctx.config)) : http.request(ctx.config))
 }

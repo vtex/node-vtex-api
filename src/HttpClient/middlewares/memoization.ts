@@ -17,15 +17,14 @@ export const memoizationMiddleware = ({type, memoizedCache}: MemoizationOptions)
     const key = cacheKey(ctx.config)
 
     if (memoizedCache.has(key)) {
-      console.log('memoizedHIT', ctx.config.url)
       const memoized = await memoizedCache.get(key)!
       ctx.cacheHit = {
         ...memoized.cacheHit,
         memoized: true,
       }
       ctx.response = memoized.response
+      return
     } else {
-      console.log('memoizedMISS', ctx.config.url)
       const promise = new Promise<Memoized>(async (resolve, reject) => {
         try {
           await next()
