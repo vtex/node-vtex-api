@@ -1,7 +1,7 @@
 import {AxiosRequestConfig, AxiosResponse} from 'axios'
 import {URL, URLSearchParams} from 'url'
 import {CacheLayer} from '../../caches/CacheLayer'
-import {MiddlewareContext} from '../context'
+import {MiddlewareContext, RequestConfig} from '../context'
 
 const ROUTER_CACHE_KEY = 'x-router-cache'
 const ROUTER_CACHE_HIT = 'HIT'
@@ -35,9 +35,8 @@ const parseCacheHeaders = (headers: Record<string, string>) => {
   }
 }
 
-function isCacheable (arg: any, type: CacheType): arg is CacheableRequestConfig {
-  return arg && arg.cacheable
-    && arg.cacheable !== CacheType.None
+function isCacheable (arg: RequestConfig, type: CacheType): arg is CacheableRequestConfig {
+  return arg && !!arg.cacheable
     && (arg.cacheable === type || arg.cacheable === CacheType.Any)
 }
 
@@ -45,10 +44,10 @@ const addNotModified = (validateStatus: (status: number) => boolean) =>
   (status: number) => validateStatus(status) || status === 304
 
 export enum CacheType {
+  None,
   Memory,
   Disk,
   Any,
-  None,
 }
 
 interface CacheOptions {

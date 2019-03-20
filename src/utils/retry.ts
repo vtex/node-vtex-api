@@ -16,4 +16,12 @@ export const isNetworkErrorOrRouterTimeout = (e: any) => {
   return false
 }
 
-export {exponentialDelay} from 'axios-retry'
+// Retry on timeout from our end
+export const isAbortedOrNetworkErrorOrRouterTimeout = (e: any) => {
+  if (e && e.code === 'ECONNABORTED') {
+    return true
+  }
+  return isNetworkErrorOrRouterTimeout(e)
+}
+
+export {isNetworkOrIdempotentRequestError, exponentialDelay} from 'axios-retry'
