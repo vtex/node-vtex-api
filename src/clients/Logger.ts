@@ -6,6 +6,7 @@ import {HttpClientFactory, IODataSource} from '../IODataSource'
 
 const DEFAULT_SUBJECT = '-'
 const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url']
+const production = process.env.VTEX_PRODUCTION === 'true'
 
 const routes = {
   Log: (level: string) => `/logs/${level}`,
@@ -59,8 +60,12 @@ export class Logger extends IODataSource {
     return this.sendLog(subject, {code, message, stack, details: hasDetails ? pickedDetails : undefined}, 'error')
   }
 
-  public sendLog = (subject: string, message: any, level: string) : Promise<void> =>
-    this.http.put(routes.Log(level), message, {params: {subject}, metric: 'logger-send'})
+  public sendLog = (subject: string, message: any, level: string) : Promise<void> => {
+    if (message && typeof message === 'object') {
+      message.production = production
+    }
+    return this.http.put(routes.Log(level), message, {params: {subject}, metric: 'logger-send'})
+  }
 }
 
 export interface ErrorLog {
