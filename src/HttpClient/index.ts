@@ -212,4 +212,5 @@ interface ClientOptions {
   headers?: Record<string, string>,
 }
 
+export { RequestConfig } from './context'
 export { CacheType } from './middlewares/cache'

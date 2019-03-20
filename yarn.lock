@@ -78,10 +78,6 @@
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/@types/http-assert/-/http-assert-1.3.0.tgz#5e932606153da28e1d04f9043f4912cf61fd55dd"
 
-"@types/json-stringify-safe@^5.0.0":
-  version "5.0.0"
-  resolved "https://registry.yarnpkg.com/@types/json-stringify-safe/-/json-stringify-safe-5.0.0.tgz#df34d054419d39323a3730966bacba02ac5e474e"
-
 "@types/keygrip@*":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@types/keygrip/-/keygrip-1.0.1.tgz#ff540462d2fb4d0a88441ceaf27d287b01c3d878"
@@ -670,10 +666,6 @@ js-yaml@^3.7.0:
 json-parse-better-errors@^1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/json-parse-better-errors/-/json-parse-better-errors-1.0.2.tgz#bb867cfb3450e69107c131d1c514bab3dc8bcaa9"
-
-json-stringify-safe@^5.0.1:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/json-stringify-safe/-/json-stringify-safe-5.0.1.tgz#1296a2d58fd45f19a0f6ce01d65701e2c735b6eb"
 
 jsonfile@^4.0.0:
   version "4.0.0"
