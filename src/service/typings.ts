@@ -40,18 +40,18 @@ export interface DataSources {
 }
 
 export interface IOContext {
-  account: string,
-  authToken: string,
-  production: boolean,
-  recorder?: Recorder,
-  region: string,
+  account: string
+  authToken: string
+  production: boolean
+  recorder?: Recorder
+  region: string
   route: {
     declarer?: string
     id: string
-    params: ParsedUrlQuery,
+    params: ParsedUrlQuery
   }
-  userAgent: string,
-  workspace: string,
+  userAgent: string
+  workspace: string
   segmentToken?: string
   sessionToken?: string
 }
