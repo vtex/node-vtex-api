@@ -11,6 +11,9 @@ interface MemoizationOptions {
 export const memoizationMiddleware = ({type, memoizedCache}: MemoizationOptions) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     console.log(ctx, type, memoizedCache)
+
+    await next()
+
     // if (!isCacheable(ctx.config, type)) {
     //   return await next()
     // }
