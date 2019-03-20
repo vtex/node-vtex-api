@@ -89,7 +89,7 @@ export class HttpClient {
 
     this.runMiddlewares = compose([
       defaultsMiddleware(baseURL, headers, timeout, retryConfig),
-      memoizationMiddleware({memoizedCache}),
+      memoizationMiddleware({type: CacheType.Any, memoizedCache}),
       ...recorder ? [recorderMiddleware(recorder)] : [],
       acceptNotFoundMiddleware,
       ...metrics ? [metricsMiddleware(metrics)] : [],
