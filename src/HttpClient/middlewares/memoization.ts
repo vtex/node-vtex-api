@@ -1,42 +1,40 @@
 import { MiddlewareContext } from '../context'
 import { cacheKey, CacheType, isCacheable } from './cache'
 
-export type Memoized = Promise<Required<Pick<MiddlewareContext, 'cacheHit' | 'response'>>>
+export type Memoized = Required<Pick<MiddlewareContext, 'cacheHit' | 'response'>>
 
 interface MemoizationOptions {
-  memoizedCache: Map<string, Memoized>
+  memoizedCache: Map<string, Promise<Memoized>>
   type: CacheType
 }
 
 export const memoizationMiddleware = ({type, memoizedCache}: MemoizationOptions) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-    console.log(ctx, type, memoizedCache)
+    if (!isCacheable(ctx.config, type)) {
+      return await next()
+    }
 
-    await next()
+    const key = cacheKey(ctx.config)
 
-    // if (!isCacheable(ctx.config, type)) {
-    //   return await next()
-    // }
-
-    // const key = cacheKey(ctx.config)
-
-    // if (memoizedCache.has(key)) {
-    //   const memoized = await memoizedCache.get(key)!
-    //   ctx.cacheHit = memoized.cacheHit
-    //   ctx.response = memoized.response
-    // } else {
-    //   memoizedCache.set(key, new Promise(async (resolve, reject) => {
-    //     try {
-    //       await next()
-    //       resolve({
-    //         cacheHit: ctx.cacheHit!,
-    //         response: ctx.response!,
-    //       })
-    //     }
-    //     catch (err) {
-    //       reject(err)
-    //     }
-    //   }))
-    // }
+    if (memoizedCache.has(key)) {
+      const memoized = await memoizedCache.get(key)!
+      ctx.cacheHit = memoized.cacheHit
+      ctx.response = memoized.response
+    } else {
+      const promise = new Promise<Memoized>(async (resolve, reject) => {
+        try {
+          await next()
+          resolve({
+            cacheHit: ctx.cacheHit!,
+            response: ctx.response!,
+          })
+        }
+        catch (err) {
+          reject(err)
+        }
+      })
+      memoizedCache.set(key, promise)
+      await promise
+    }
   }
 }
