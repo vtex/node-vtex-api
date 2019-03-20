@@ -70,22 +70,21 @@ export async function logger<T extends IOClients, U, V> (ctx: ServiceContext<T, 
   }
 }
 
-process.on('uncaughtException', async (err: Error) => {
+process.on('uncaughtException', async (err: any) => {
   console.error('uncaughtException', err)
-  await lastLogger.error(err, {
-    type: 'uncaughtException',
-    ...cleanError(err),
-  })
+  if (err && lastLogger) {
+    err.type = 'uncaughtException'
+    await lastLogger.error(err).catch(() => null)
+  }
   process.exit(420)
 })
 
 process.on('unhandledRejection', (reason: Error | any, promise: Promise<void>)  => {
   console.error('unhandledRejection', reason, promise)
-  lastLogger.error(reason, {
-    promise,
-    type: 'unhandledRejection',
-    ...cleanError(reason),
-  }).catch(() => null)
+  if (reason && lastLogger) {
+    reason.type = 'unhandledRejection'
+    lastLogger.error(reason).catch(() => null)
+  }
 })
 
 process.on('warning', (warning) => {
@@ -95,9 +94,11 @@ process.on('warning', (warning) => {
 // Remove the any typings once we move to nodejs 10.x
 const handleSignal: any = async (signal: string) => {
   console.warn('Received signal', signal)
-  await lastLogger.warn({
-    signal,
-  })
+  if (lastLogger) {
+    await lastLogger.warn({
+      signal,
+    })
+  }
   // Default node behaviour
   process.exit(128 + (constants.signals as any)[signal])
 }
