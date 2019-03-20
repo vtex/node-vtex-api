@@ -73,6 +73,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
       if (expiration > Date.now() && response) {
         ctx.response = response as AxiosResponse
         ctx.cacheHit = {
+          memoized: false,
           memory: true,
           revalidated: false,
           router: false,
@@ -97,6 +98,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     if (revalidated && cached) {
       ctx.response = cached.response as AxiosResponse
       ctx.cacheHit = {
+        memoized: false,
         memory: true,
         revalidated: true,
         router: false,
@@ -112,6 +114,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
       }
       else {
         ctx.cacheHit = {
+          memoized: false,
           memory: false,
           revalidated: false,
           router: true,
@@ -154,4 +157,5 @@ export interface Cached {
 export type CacheableRequestConfig = AxiosRequestConfig & {
   url: string,
   cacheable: CacheType,
+  memoizable: boolean
 }
