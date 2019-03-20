@@ -60,7 +60,9 @@ const destroyCircular = (from: any, seen: string[]) => {
   ]
 
   for (const property of axiosProperties) {
-    to[property] = pick(PICKED_AXIOS_PROPS, from[property])
+    if (from[property]) {
+      to[property] = pick(PICKED_AXIOS_PROPS, from[property])
+    }
   }
 
   if (!to.code && to.response) {
