@@ -1,25 +1,12 @@
-import stringify from 'json-stringify-safe'
-import {pick} from 'ramda'
-
 import {HttpClient, withoutRecorder} from '../HttpClient'
 import {HttpClientFactory, IODataSource} from '../IODataSource'
+import {cleanError} from '../utils/error'
 
 const DEFAULT_SUBJECT = '-'
-const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url']
 const production = process.env.VTEX_PRODUCTION === 'true'
 
 const routes = {
   Log: (level: string) => `/logs/${level}`,
-}
-
-const errorReplacer = (key: string, value: any) => {
-  if (key.startsWith('_')) {
-    return undefined
-  }
-  if (value && typeof value === 'string' && value.length > 1024) {
-    return value.substr(0, 256) + '[...TRUNCATED]'
-  }
-  return value
 }
 
 const forWorkspaceWithoutRecorder: HttpClientFactory = ({service, context, options}) => (service && context)
@@ -39,25 +26,14 @@ export class Logger extends IODataSource {
   public warn = (message: any, subject: string = DEFAULT_SUBJECT) =>
     this.sendLog(subject, message, 'warn')
 
-  public error = (error: any, details?: Record<string, any>, subject: string = DEFAULT_SUBJECT) => {
+  public error = (error: any, subject: string = DEFAULT_SUBJECT) => {
     if (!error) {
       error = new Error('Colossus.error was called with null or undefined error')
       error.code = 'ERR_NIL_ERR'
       console.error(error)
     }
 
-    const {code: errorCode, message, stack, config, request, response, ...rest} = error
-    const code = errorCode || response && `http-${response.status}`
-    const pickedDetails = {
-      ... config ? {config: pick(PICKED_AXIOS_PROPS, config)} : undefined,
-      ... request ? {request: pick(PICKED_AXIOS_PROPS, request)} : undefined,
-      ... response ? {response: pick(PICKED_AXIOS_PROPS, response)} : undefined,
-      ...JSON.parse(stringify(rest, errorReplacer)),
-      ...details,
-    }
-    const hasDetails = Object.keys(pickedDetails).length > 0
-
-    return this.sendLog(subject, {code, message, stack, details: hasDetails ? pickedDetails : undefined}, 'error')
+    return this.sendLog(subject, cleanError(error), 'error')
   }
 
   public sendLog = (subject: string, message: any, level: string) : Promise<void> => {

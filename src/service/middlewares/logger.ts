@@ -15,8 +15,6 @@ const log = <T extends IOClients, U, V>(
 ) =>
   `${new Date().toISOString()}\t${account}/${workspace}:${id}\t${status}\t${method}\t${url}\t${millis}ms`
 
-const production = process.env.VTEX_PRODUCTION === 'true'
-
 // We can't log to Splunk without a token, so we are hacking our way into using
 // the logger available from the last request cycle. ¯\_(ツ)_/¯
 let lastLogger: Logger
@@ -31,46 +29,45 @@ export async function logger<T extends IOClients, U, V> (ctx: ServiceContext<T, 
     await next()
   } catch (e) {
     error = e
-  }
-
-  const {
-    method,
-    status,
-    vtex: {
-      route: {
-        id,
+  } finally {
+    const {
+      method,
+      status,
+      vtex: {
+        route: {
+          id,
+        },
       },
-    },
-    headers: {
-      'x-request-id': requestId,
-      'x-operation-id': operationId,
-      'x-forwarded-path': forwardedPath,
-      'x-forwarded-host': forwardedHost,
-      'x-forwarded-proto': forwardedProto,
-      'x-vtex-platform': platform,
-    },
-  } = ctx
-  const end = process.hrtime(start)
-  const millis = hrToMillis(end)
-  const logType = error ? 'error' : 'info'
+      headers: {
+        'x-request-id': requestId,
+        'x-operation-id': operationId,
+        'x-forwarded-path': forwardedPath,
+        'x-forwarded-host': forwardedHost,
+        'x-forwarded-proto': forwardedProto,
+        'x-vtex-platform': platform,
+      },
+    } = ctx
+    const end = process.hrtime(start)
+    const millis = hrToMillis(end)
+    const logType = error ? 'error' : 'info'
 
-  ctx.clients.logger.sendLog('-', {
-    error,
-    forwardedHost,
-    forwardedPath,
-    forwardedProto,
-    method,
-    millis,
-    operationId,
-    platform,
-    production,
-    requestId,
-    routeId: id,
-    status,
-  }, logType)
+    ctx.clients.logger.sendLog('-', {
+      ... error ? error : null,
+      forwardedHost,
+      forwardedPath,
+      forwardedProto,
+      method,
+      millis,
+      operationId,
+      platform,
+      requestId,
+      routeId: id,
+      status,
+    }, logType)
 
-  metrics.batch(`http-handler-${statusLabel(status)}-${id}`, end)
-  console.log(log(ctx, millis))
+    metrics.batch(`http-handler-${statusLabel(status)}-${id}`, end)
+    console.log(log(ctx, millis))
+  }
 }
 
 process.on('uncaughtException', async (err: Error) => {
