@@ -35,10 +35,10 @@ const parseCacheHeaders = (headers: Record<string, string>) => {
   }
 }
 
-function isCacheable (arg: any, type: CacheType): arg is CacheableRequestConfig {
+export function isCacheable (arg: any, type: CacheType): arg is CacheableRequestConfig {
   return arg && arg.cacheable
     && arg.cacheable !== CacheType.None
-    && (arg.cacheable === type || arg.cacheable === CacheType.Any)
+    && (arg.cacheable === type || arg.cacheable === CacheType.Any || type === CacheType.Any)
 }
 
 const addNotModified = (validateStatus: (status: number) => boolean) =>
