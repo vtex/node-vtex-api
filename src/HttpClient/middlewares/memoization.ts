@@ -10,29 +10,30 @@ interface MemoizationOptions {
 
 export const memoizationMiddleware = ({type, memoizedCache}: MemoizationOptions) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-    if (!isCacheable(ctx.config, type)) {
-      return await next()
-    }
+    console.log(ctx, type, memoizedCache)
+    // if (!isCacheable(ctx.config, type)) {
+    //   return await next()
+    // }
 
-    const key = cacheKey(ctx.config)
+    // const key = cacheKey(ctx.config)
 
-    if (memoizedCache.has(key)) {
-      const memoized = await memoizedCache.get(key)!
-      ctx.cacheHit = memoized.cacheHit
-      ctx.response = memoized.response
-    } else {
-      memoizedCache.set(key, new Promise(async (resolve, reject) => {
-        try {
-          await next()
-          resolve({
-            cacheHit: ctx.cacheHit!,
-            response: ctx.response!,
-          })
-        }
-        catch (err) {
-          reject(err)
-        }
-      }))
-    }
+    // if (memoizedCache.has(key)) {
+    //   const memoized = await memoizedCache.get(key)!
+    //   ctx.cacheHit = memoized.cacheHit
+    //   ctx.response = memoized.response
+    // } else {
+    //   memoizedCache.set(key, new Promise(async (resolve, reject) => {
+    //     try {
+    //       await next()
+    //       resolve({
+    //         cacheHit: ctx.cacheHit!,
+    //         response: ctx.response!,
+    //       })
+    //     }
+    //     catch (err) {
+    //       reject(err)
+    //     }
+    //   }))
+    // }
   }
 }
