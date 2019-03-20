@@ -15,6 +15,7 @@ export interface CacheHit {
   memory?: boolean
   revalidated?: boolean
   router?: boolean
+  memoized?: boolean
 }
 
 export interface MiddlewareContext {
