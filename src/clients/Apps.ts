@@ -152,7 +152,8 @@ export class Apps extends IODataSource {
       since,
     }
     const metric = 'apps-list'
-    return this.http.get<AppsList>(routes.Apps, {params, metric})
+    const inflightKey = inflightURL
+    return this.http.get<AppsList>(routes.Apps, {params, metric, inflightKey})
   }
 
   public listAppFiles = (app: string, {prefix, context, nextMarker}: ListFilesOptions = {}) => {
@@ -162,17 +163,20 @@ export class Apps extends IODataSource {
       prefix,
     }
     const metric = 'apps-list-files'
-    return this.http.get<AppFilesList>(routes.Files(app), {params, metric})
+    const inflightKey = inflightURL
+    return this.http.get<AppFilesList>(routes.Files(app), {params, metric, inflightKey})
   }
 
   public listLinks = () => {
-    return this.http.get<string[]>(routes.Links, {metric: 'apps-list-links'})
+    const inflightKey = inflightURL
+    return this.http.get<string[]>(routes.Links, {metric: 'apps-list-links', inflightKey})
   }
 
   public getAppFile = (app: string, path: string, context: string[] = []) => {
     const params = {context: contextQuery(context)}
     const metric = 'apps-get-file'
-    return this.http.getBuffer(routes.File(app, path), {params, metric})
+    const inflightKey = inflightURL
+    return this.http.getBuffer(routes.File(app, path), {params, metric, inflightKey})
   }
 
   public getAppFileStream = (app: string, path: string, context: string[] = []): Promise<IncomingMessage> => {
@@ -184,7 +188,8 @@ export class Apps extends IODataSource {
   public getApp = (app: string, context: string[] = []) => {
     const params = {context: contextQuery(context)}
     const metric = 'apps-get-app'
-    return this.http.get<AppManifest>(routes.App(app), {params, metric})
+    const inflightKey = inflightURL
+    return this.http.get<AppManifest>(routes.App(app), {params, metric, inflightKey})
   }
 
   public getAppSettings = (app: string) => {
@@ -242,7 +247,8 @@ export class Apps extends IODataSource {
   public resolveDependencies = (apps: string[], registries: string[], filter: string = '') => {
     const params = {apps, registries, filter}
     const metric = 'apps-resolve-deps'
-    return this.http.get(routes.ResolveDependencies, {params, paramsSerializer, metric})
+    const inflightKey = inflightURL
+    return this.http.get(routes.ResolveDependencies, {params, paramsSerializer, metric, inflightKey})
   }
 
   public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {

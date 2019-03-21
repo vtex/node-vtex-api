@@ -39,6 +39,7 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
     })
     inflight.set(key, promise)
     await promise
+    inflight.delete(key)
   }
 }
 
