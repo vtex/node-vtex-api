@@ -73,12 +73,13 @@ export class HttpClient {
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor (opts: ClientOptions) {
-    const {baseURL, authToken, authType, memoryCache, diskCache, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS, segmentToken, retryConfig, concurrency, headers: defaultHeaders} = opts
+    const {baseURL, authToken, authType, memoryCache, diskCache, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS, segmentToken, retryConfig, concurrency, headers: defaultHeaders, operationId} = opts
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
       ...defaultHeaders,
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
+      'x-vtex-operation-id': operationId,
       ... segmentToken ? {'x-vtex-segment': segmentToken} : null,
     }
 
@@ -201,20 +202,21 @@ export enum AuthType {
 }
 
 interface ClientOptions {
-  authType?: AuthType,
-  authToken?: string,
+  authType?: AuthType
+  authToken?: string
   userAgent: string
-  baseURL?: string,
-  timeout?: number,
-  recorder?: Recorder,
-  metrics?: MetricsAccumulator,
-  memoryCache?: CacheLayer<string, Cached>,
-  diskCache?: CacheLayer<string, Cached>,
+  baseURL?: string
+  timeout?: number
+  recorder?: Recorder
+  metrics?: MetricsAccumulator
+  memoryCache?: CacheLayer<string, Cached>
+  diskCache?: CacheLayer<string, Cached>
   segmentToken?: string
   sessionToken?: string
   retryConfig?: IAxiosRetryConfig
-  concurrency?: number,
-  headers?: Record<string, string>,
+  concurrency?: number
+  headers?: Record<string, string>
+  operationId: string
 }
 
 export { RequestConfig } from './context'

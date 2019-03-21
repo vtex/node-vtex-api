@@ -28,13 +28,13 @@ export async function logger<T extends IOClients, U, V> (ctx: ServiceContext<T, 
       method,
       status,
       vtex: {
+        operationId,
+        requestId,
         route: {
           id,
         },
       },
       headers: {
-        'x-request-id': requestId,
-        'x-operation-id': operationId,
         'x-forwarded-path': forwardedPath,
         'x-forwarded-host': forwardedHost,
         'x-forwarded-proto': forwardedProto,

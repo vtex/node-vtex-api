@@ -54,4 +54,6 @@ export interface IOContext {
   workspace: string
   segmentToken?: string
   sessionToken?: string
+  requestId: string
+  operationId: string
 }
