@@ -6,7 +6,7 @@ import {MiddlewareContext, RequestConfig} from '../context'
 const ROUTER_CACHE_KEY = 'x-router-cache'
 const ROUTER_CACHE_HIT = 'HIT'
 
-const cacheKey = (config: AxiosRequestConfig) => {
+export const cacheKey = (config: AxiosRequestConfig) => {
   const {baseURL = '', url = '', params} = config
   const fullURL = [baseURL, url].filter(str => str).join('/')
   const urlObject = new URL(fullURL)
@@ -35,9 +35,9 @@ const parseCacheHeaders = (headers: Record<string, string>) => {
   }
 }
 
-function isCacheable (arg: RequestConfig, type: CacheType): arg is CacheableRequestConfig {
+export function isCacheable (arg: RequestConfig, type: CacheType): arg is CacheableRequestConfig {
   return arg && !!arg.cacheable
-    && (arg.cacheable === type || arg.cacheable === CacheType.Any)
+    && (arg.cacheable === type || arg.cacheable === CacheType.Any || type === CacheType.Any)
 }
 
 const addNotModified = (validateStatus: (status: number) => boolean) =>
@@ -73,6 +73,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
       if (expiration > Date.now() && response) {
         ctx.response = response as AxiosResponse
         ctx.cacheHit = {
+          memoized: false,
           memory: true,
           revalidated: false,
           router: false,
@@ -97,6 +98,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     if (revalidated && cached) {
       ctx.response = cached.response as AxiosResponse
       ctx.cacheHit = {
+        memoized: false,
         memory: true,
         revalidated: true,
         router: false,
@@ -112,6 +114,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
       }
       else {
         ctx.cacheHit = {
+          memoized: false,
           memory: false,
           revalidated: false,
           router: true,
@@ -154,4 +157,5 @@ export interface Cached {
 export type CacheableRequestConfig = AxiosRequestConfig & {
   url: string,
   cacheable: CacheType,
+  memoizable: boolean
 }

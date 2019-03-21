@@ -8,6 +8,7 @@ export interface RequestConfig extends AxiosRequestConfig {
   metric?: string
   production?: boolean
   cacheable?: CacheType
+  memoizeable?: boolean
 }
 
 export interface CacheHit {
@@ -15,6 +16,7 @@ export interface CacheHit {
   memory?: boolean
   revalidated?: boolean
   router?: boolean
+  memoized?: boolean
 }
 
 export interface MiddlewareContext {

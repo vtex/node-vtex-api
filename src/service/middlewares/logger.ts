@@ -7,10 +7,10 @@ import { ServiceContext } from '../typings'
 const statusLabel = (status: number) => `${Math.floor(status/100)}xx`
 
 const log = <T extends IOClients, U, V>(
-  {vtex: {account, workspace, route: {id}}, url, method, status}: ServiceContext<T, U, V>,
+  {vtex: {account, workspace, route: {id}}, path, method, status}: ServiceContext<T, U, V>,
   millis: number
 ) =>
-  `${new Date().toISOString()}\t${account}/${workspace}:${id}\t${status}\t${method}\t${url}\t${millis}ms`
+  `${new Date().toISOString()}\t${account}/${workspace}:${id}\t${status}\t${method}\t${path}\t${millis}ms`
 
 
 export async function logger<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
