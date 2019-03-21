@@ -21,13 +21,7 @@ export interface EnvMetric extends NamedMetric {
 // Production pods never handle development workspaces and vice-versa.
 const production: boolean = process.env.VTEX_PRODUCTION === 'true'
 
-interface CacheHitMap {
-  disk: number | null
-  memory: number | null
-  revalidated: number | null
-  router: number | null
-  memoized: number | null
-}
+type CacheHitMap = Record<keyof CacheHit, number | null>
 
 interface Aggregate {
   count: number
@@ -112,7 +106,6 @@ export class MetricsAccumulator {
       if (!this.cacheHits[name]) {
         this.cacheHits[name] = { disk: 0, memory: 0, router: 0, revalidated: 0, memoized: 0 }
       }
-
       if (cacheHit) {
         for (const type of CACHE_HIT_TYPES) {
           if (cacheHit[type]) {
@@ -145,12 +138,11 @@ export class MetricsAccumulator {
       percentile95: percentile(value, 0.95),
       percentile99: percentile(value, 0.99),
       production,
-      disk: this.cacheHits[key] ? this.cacheHits[key].disk : null,
-      memory: this.cacheHits[key] ? this.cacheHits[key].memory : null,
-      memoized: this.cacheHits[key] ? this.cacheHits[key].memoized: null,
-      revalidated: this.cacheHits[key] ? this.cacheHits[key].revalidated : null,
-      router: this.cacheHits[key] ? this.cacheHits[key].router : null,
+      ...this.cacheHits[key],
     }
+
+    console.log('aggregating metrics', this.cacheHits[key])
+
     delete this.metricsMillis[key]
     delete this.cacheHits[key]
     return aggregate
