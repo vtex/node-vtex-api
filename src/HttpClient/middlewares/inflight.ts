@@ -4,6 +4,11 @@ export type Inflight = Required<Pick<MiddlewareContext, 'cacheHit' | 'response'>
 
 const inflight = new Map<string, Promise<Inflight>>()
 
+metrics.addOnFlushMetric(() => ({
+  name: 'node-vtex-api-inflight-map-size',
+  size: inflight.entries.length,
+}))
+
 export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () => Promise<void>) => {
   const { inflightKey } = ctx.config
 
@@ -36,10 +41,12 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
       catch (err) {
         reject(err)
       }
+      finally {
+        inflight.delete(key)
+      }
     })
     inflight.set(key, promise)
     await promise
-    inflight.delete(key)
   }
 }
 
