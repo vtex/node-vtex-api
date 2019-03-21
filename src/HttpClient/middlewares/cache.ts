@@ -10,8 +10,13 @@ export const cacheKey = (config: AxiosRequestConfig) => {
   const {baseURL = '', url = '', params} = config
   const fullURL = [baseURL, url].filter(str => str).join('/')
   const urlObject = new URL(fullURL)
-  const searchParams = new URLSearchParams(params)
-  urlObject.search = searchParams.toString()
+
+  if (params) {
+    for (const [key, value] of Object.entries<string>(params)) {
+      urlObject.searchParams.append(key, value)
+    }
+  }
+
   // Replace forward slashes with backwards slashes for disk cache legibility
   const encodedPath = `${urlObject.pathname}${urlObject.search}`.replace(/\//g, '\\\\')
   // Add hostname as top level directory on disk cache
