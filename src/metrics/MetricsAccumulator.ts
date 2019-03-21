@@ -21,13 +21,7 @@ export interface EnvMetric extends NamedMetric {
 // Production pods never handle development workspaces and vice-versa.
 const production: boolean = process.env.VTEX_PRODUCTION === 'true'
 
-interface CacheHitMap {
-  disk: number | null
-  memory: number | null
-  revalidated: number | null
-  router: number | null
-  memoized: number | null
-}
+type CacheHitMap = Record<keyof CacheHit, number | null>
 
 interface Aggregate {
   count: number
@@ -38,7 +32,7 @@ interface Aggregate {
   max: number
 }
 
-const CACHE_HIT_TYPES: Array<keyof CacheHit> = ['disk', 'memory', 'router', 'revalidated', 'memoized']
+const CACHE_HIT_TYPES: Array<keyof CacheHit> = ['disk', 'memory', 'router', 'revalidated', 'memoized', 'inflight']
 
 type AggregateMetric = EnvMetric & CacheHitMap & Aggregate
 
@@ -110,7 +104,7 @@ export class MetricsAccumulator {
     this.batchMetric(name, hrToMillis(diffNs))
     if (cacheHit || cacheHit === false) {
       if (!this.cacheHits[name]) {
-        this.cacheHits[name] = { disk: 0, memory: 0, router: 0, revalidated: 0, memoized: 0 }
+        this.cacheHits[name] = { disk: 0, memory: 0, router: 0, revalidated: 0, memoized: 0, inflight: 0 }
       }
 
       if (cacheHit) {
@@ -145,11 +139,7 @@ export class MetricsAccumulator {
       percentile95: percentile(value, 0.95),
       percentile99: percentile(value, 0.99),
       production,
-      disk: this.cacheHits[key] ? this.cacheHits[key].disk : null,
-      memory: this.cacheHits[key] ? this.cacheHits[key].memory : null,
-      memoized: this.cacheHits[key] ? this.cacheHits[key].memoized: null,
-      revalidated: this.cacheHits[key] ? this.cacheHits[key].revalidated : null,
-      router: this.cacheHits[key] ? this.cacheHits[key].router : null,
+      ...this.cacheHits[key],
     }
     delete this.metricsMillis[key]
     delete this.cacheHits[key]

@@ -73,6 +73,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
       if (expiration > Date.now() && response) {
         ctx.response = response as AxiosResponse
         ctx.cacheHit = {
+          inflight: false,
           memoized: false,
           memory: true,
           revalidated: false,
@@ -98,6 +99,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     if (revalidated && cached) {
       ctx.response = cached.response as AxiosResponse
       ctx.cacheHit = {
+        inflight: false,
         memoized: false,
         memory: true,
         revalidated: true,
@@ -114,6 +116,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
       }
       else {
         ctx.cacheHit = {
+          inflight: false,
           memoized: false,
           memory: false,
           revalidated: false,
