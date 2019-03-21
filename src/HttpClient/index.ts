@@ -13,7 +13,7 @@ import { singleFlightMiddleware } from './middlewares/inflight'
 import { memoizationMiddleware, Memoized } from './middlewares/memoization'
 import { metricsMiddleware } from './middlewares/metrics'
 import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewares/notFound'
-import { recorderMiddleware } from './middlewares/recorder'
+import { Recorder as MRecorder, recorderMiddleware } from './middlewares/recorder'
 import { defaultsMiddleware, requestMiddleware } from './middlewares/request'
 
 const DEFAULT_TIMEOUT_MS = 3 * 1000
@@ -161,7 +161,7 @@ export const withoutRecorder = (ioContext: IOContext): IOContext => {
 
 export type CacheStorage = CacheLayer<string, Cached>
 
-export type Recorder = Recorder
+export type Recorder = MRecorder
 
 export interface InstanceOptions {
   authType?: AuthType
