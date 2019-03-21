@@ -1,9 +1,6 @@
-import { constants } from 'os'
-
 import { IOClients } from '../../clients/IOClients'
-import { Logger } from '../../clients/Logger'
-import { cleanError } from '../../utils/error'
 import { hrToMillis } from '../../utils/time'
+import { updateLastLogger } from '../../utils/unhandled'
 
 import { ServiceContext } from '../typings'
 
@@ -15,15 +12,12 @@ const log = <T extends IOClients, U, V>(
 ) =>
   `${new Date().toISOString()}\t${account}/${workspace}:${id}\t${status}\t${method}\t${url}\t${millis}ms`
 
-// We can't log to Splunk without a token, so we are hacking our way into using
-// the logger available from the last request cycle. ¯\_(ツ)_/¯
-let lastLogger: Logger
 
 export async function logger<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
   const start = process.hrtime()
-
-  lastLogger = ctx.clients.logger
   let error
+
+  updateLastLogger(ctx.clients.logger)
 
   try {
     await next()
@@ -69,39 +63,3 @@ export async function logger<T extends IOClients, U, V> (ctx: ServiceContext<T, 
     console.log(log(ctx, millis))
   }
 }
-
-process.on('uncaughtException', async (err: any) => {
-  console.error('uncaughtException', err)
-  if (err && lastLogger) {
-    err.type = 'uncaughtException'
-    await lastLogger.error(err).catch(() => null)
-  }
-  process.exit(420)
-})
-
-process.on('unhandledRejection', (reason: Error | any, promise: Promise<void>)  => {
-  console.error('unhandledRejection', reason, promise)
-  if (reason && lastLogger) {
-    reason.type = 'unhandledRejection'
-    lastLogger.error(reason).catch(() => null)
-  }
-})
-
-process.on('warning', (warning) => {
-  console.warn(warning)
-})
-
-// Remove the any typings once we move to nodejs 10.x
-const handleSignal: any = async (signal: string) => {
-  console.warn('Received signal', signal)
-  if (lastLogger) {
-    await lastLogger.warn({
-      signal,
-    })
-  }
-  // Default node behaviour
-  process.exit(128 + (constants.signals as any)[signal])
-}
-
-process.on('SIGINT', handleSignal)
-process.on('SIGTERM', handleSignal)

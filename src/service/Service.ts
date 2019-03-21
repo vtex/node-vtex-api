@@ -4,6 +4,7 @@ import { map } from 'ramda'
 import { IOClients } from '../clients/IOClients'
 import { EnvMetric, MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { timer } from '../utils/time'
+import { addProcessListeners } from '../utils/unhandled'
 
 import { clients } from './middlewares/clients'
 import { error } from './middlewares/error'
@@ -22,6 +23,7 @@ export class Service<ClientsT extends IOClients = IOClients, StateT = void, Cust
     }, config.routes)
 
     this.statusTrack = global.metrics.statusTrack
+    addProcessListeners()
   }
 }
 
