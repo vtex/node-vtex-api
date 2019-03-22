@@ -16,7 +16,7 @@ import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewa
 import { Recorder, recorderMiddleware } from './middlewares/recorder'
 import { defaultsMiddleware, requestMiddleware } from './middlewares/request'
 
-const DEFAULT_TIMEOUT_MS = 10000
+const DEFAULT_TIMEOUT_MS = 3 * 1000
 const noTransforms = [(data: any) => data]
 
 const rootURL = (service: string, {region}: IOContext, {baseURL}: InstanceOptions): string => {

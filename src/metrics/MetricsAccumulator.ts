@@ -11,7 +11,7 @@ export interface Metric {
 
 interface NamedMetric {
   name: string,
-  [key: string]: string | number | boolean | null
+  [key: string]: any
 }
 
 export interface EnvMetric extends NamedMetric {
@@ -58,6 +58,8 @@ function cpuUsage () {
   }
   return diff
 }
+
+export type StatusTrack = () => EnvMetric[]
 
 export class MetricsAccumulator {
   private metricsMillis: Record<string, number[]>

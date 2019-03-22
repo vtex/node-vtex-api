@@ -1,4 +1,6 @@
 import { DataSource } from 'apollo-datasource'
+import { GraphQLFieldResolver } from 'graphql'
+import { IDirectiveResolvers } from 'graphql-tools'
 import { ParameterizedContext } from 'koa'
 import { Middleware } from 'koa-compose'
 import { ParsedUrlQuery } from 'querystring'
@@ -6,13 +8,12 @@ import { ParsedUrlQuery } from 'querystring'
 import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { InstanceOptions } from '../HttpClient'
 import { Recorder } from '../HttpClient/middlewares/recorder'
-import { MetricsLogger } from '../metrics/logger'
+import { StatusTrack } from '../metrics/MetricsAccumulator'
 
 export interface Context<T extends IOClients> {
   clients: T
   vtex: IOContext
   dataSources?: DataSources
-  metricsLogger?: MetricsLogger
   timings: Record<string, [number, number]>
   metrics: Record<string, [number, number]>
 }
@@ -25,14 +26,35 @@ export type ServiceContext<ClientsT extends IOClients = IOClients, StateT = void
 
 export type RouteHandler<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>
 
+export type Resolver<ClientsT extends IOClients = IOClients> = GraphQLFieldResolver<any, ServiceContext<ClientsT>, {[key: string]: any}>
+
 export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
   implementation?: ClientsImplementation<ClientsT>
   options: Record<string, InstanceOptions>
 }
 
+export type DataSourcesGenerator = () => {
+  [name: string]: DataSource<ServiceContext>,
+}
+
+export interface GraphQLOptions<ClientsT extends IOClients = IOClients> {
+  resolvers: Record<string, Resolver<ClientsT>>
+  dataSources?: DataSourcesGenerator
+  schemaDirectives?: IDirectiveResolvers<any, ServiceContext>
+}
+
 export interface ServiceConfig<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
-  routes: Record<string, RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>>
   clients: ClientsConfig<ClientsT>
+  events?: any,
+  graphql?: GraphQLOptions<ClientsT>,
+  routes: Record<string, RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>>
+}
+
+export interface RuntimeConfig<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
+  events?: any,
+  routes: Record<string, RouteHandler<ClientsT, StateT, CustomT>>
+  statusTrack?: StatusTrack,
+  __is_service: true
 }
 
 export interface DataSources {

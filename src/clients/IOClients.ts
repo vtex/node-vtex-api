@@ -1,7 +1,7 @@
 import { InstanceOptions } from '../HttpClient'
 import { IODataSource } from '../IODataSource'
 import { IOContext } from '../service/typings'
-import { Apps, Billing, Builder, Events, ID, Logger, Metadata, Registry, Router, VBase, Workspaces } from './index'
+import { Apps, Billing, Builder, Events, ID, Logger, Metadata, Registry, Router, Segment, VBase, Workspaces } from './index'
 
 type IOClient = new(context: IOContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
 
@@ -52,6 +52,10 @@ export class IOClients {
 
   public get router(): Router {
     return this.getOrSet('router', Router)
+  }
+
+  public get segment(): Segment {
+    return this.getOrSet('segment', Segment)
   }
 
   public get vbase(): VBase {
