@@ -6,14 +6,14 @@ import pLimit from 'p-limit'
 
 import { CacheLayer } from '../caches/CacheLayer'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
-
 import { IOContext } from '../service/typings'
 import { MiddlewareContext, RequestConfig } from './context'
 import { CacheableRequestConfig, Cached, cacheMiddleware, CacheType } from './middlewares/cache'
+import { singleFlightMiddleware } from './middlewares/inflight'
 import { memoizationMiddleware, Memoized } from './middlewares/memoization'
 import { metricsMiddleware } from './middlewares/metrics'
 import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewares/notFound'
-import { Recorder, recorderMiddleware } from './middlewares/recorder'
+import { Recorder as MRecorder, recorderMiddleware } from './middlewares/recorder'
 import { defaultsMiddleware, requestMiddleware } from './middlewares/request'
 
 const DEFAULT_TIMEOUT_MS = 3 * 1000
@@ -93,6 +93,7 @@ export class HttpClient {
       defaultsMiddleware(baseURL, headers, timeout, retryConfig),
       ...metrics ? [metricsMiddleware(metrics)] : [],
       memoizationMiddleware({memoizedCache}),
+      singleFlightMiddleware,
       ...recorder ? [recorderMiddleware(recorder)] : [],
       acceptNotFoundMiddleware,
       ...memoryCache ? [cacheMiddleware({type: CacheType.Memory, storage: memoryCache, segmentToken: segmentToken || ''})] : [],
@@ -160,7 +161,7 @@ export const withoutRecorder = (ioContext: IOContext): IOContext => {
 
 export type CacheStorage = CacheLayer<string, Cached>
 
-export type Recorder = Recorder
+export type Recorder = MRecorder
 
 export interface InstanceOptions {
   authType?: AuthType
