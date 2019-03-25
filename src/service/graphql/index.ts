@@ -15,12 +15,12 @@ import { GraphQLContext, GraphQLServiceContext } from './typings'
 export const GRAPHQL_ROUTE = '__graphql'
 
 export const createGraphQLRoute = <ClientsT extends IOClients, StateT, CustomT>(
-    graphql: GraphQLOptions<ClientsT>,
+    graphql: GraphQLOptions<ClientsT, StateT, CustomT>,
     Clients: ClientsImplementation<ClientsT>,
     options: Record<string, InstanceOptions>
   ): RouteHandler<ClientsT, StateT, CustomT> => {
     const injectGraphql = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
-      ctx.graphql = graphql as GraphQLOptions<IOClients>
+      ctx.graphql = graphql as GraphQLOptions<IOClients, StateT, CustomT>
       await next()
       delete ctx.graphql
     }

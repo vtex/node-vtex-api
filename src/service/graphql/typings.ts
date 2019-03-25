@@ -8,7 +8,7 @@ import { IOClients } from '../../clients/IOClients'
 import { GraphQLOptions, ServiceContext } from '../typings'
 
 export interface GraphQLContext {
-  graphql: GraphQLOptions & {
+  graphql: GraphQLOptions<IOClients, any, any> & {
     schema?: GraphQLSchema
     query?: HttpQueryRequest['query']
     graphqlResponse?: GraphQLResponse
@@ -17,5 +17,3 @@ export interface GraphQLContext {
 }
 
 export type GraphQLServiceContext = ServiceContext<IOClients, any, GraphQLContext>
-
-export type GraphQLRouteHandler = Middleware<GraphQLServiceContext>

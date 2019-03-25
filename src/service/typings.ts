@@ -26,7 +26,7 @@ export type ServiceContext<ClientsT extends IOClients = IOClients, StateT = void
 
 export type RouteHandler<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>
 
-export type Resolver<ClientsT extends IOClients = IOClients> = GraphQLFieldResolver<any, ServiceContext<ClientsT>, {[key: string]: any}>
+export type Resolver<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = GraphQLFieldResolver<any, ServiceContext<ClientsT, StateT, CustomT>, {[key: string]: any}>
 
 export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
   implementation?: ClientsImplementation<ClientsT>
@@ -37,8 +37,8 @@ export type DataSourcesGenerator = () => {
   [name: string]: DataSource<ServiceContext>,
 }
 
-export interface GraphQLOptions<ClientsT extends IOClients = IOClients> {
-  resolvers: Record<string, Resolver<ClientsT>>
+export interface GraphQLOptions<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
+  resolvers: Record<string, Resolver<ClientsT, StateT, CustomT>>
   dataSources?: DataSourcesGenerator
   schemaDirectives?: IDirectiveResolvers<any, ServiceContext>
 }
@@ -46,7 +46,7 @@ export interface GraphQLOptions<ClientsT extends IOClients = IOClients> {
 export interface ServiceConfig<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
   clients: ClientsConfig<ClientsT>
   events?: any,
-  graphql?: GraphQLOptions<ClientsT>,
+  graphql?: GraphQLOptions<ClientsT, StateT, CustomT>,
   routes: Record<string, RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>>
 }
 
