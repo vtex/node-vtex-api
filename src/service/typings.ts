@@ -1,6 +1,6 @@
 import { DataSource } from 'apollo-datasource'
 import { GraphQLFieldConfig, GraphQLFieldResolver } from 'graphql'
-import { IDirectiveResolvers } from 'graphql-tools'
+import { SchemaDirectiveVisitor } from 'graphql-tools'
 import { ParameterizedContext } from 'koa'
 import { Middleware } from 'koa-compose'
 import { ParsedUrlQuery } from 'querystring'
@@ -42,7 +42,7 @@ export type DataSourcesGenerator = () => {
 export interface GraphQLOptions<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
   resolvers: Record<string, Record<string, Resolver<ClientsT, StateT, CustomT>>>
   dataSources?: DataSourcesGenerator
-  schemaDirectives?: IDirectiveResolvers<any, ServiceContext>
+  schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>
 }
 
 export interface ServiceConfig<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
