@@ -1,5 +1,5 @@
 import { DataSource } from 'apollo-datasource'
-import { GraphQLFieldResolver } from 'graphql'
+import { GraphQLFieldConfig, GraphQLFieldResolver } from 'graphql'
 import { IDirectiveResolvers } from 'graphql-tools'
 import { ParameterizedContext } from 'koa'
 import { Middleware } from 'koa-compose'
@@ -26,7 +26,9 @@ export type ServiceContext<ClientsT extends IOClients = IOClients, StateT = void
 
 export type RouteHandler<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>
 
-export type Resolver<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = GraphQLFieldResolver<any, ServiceContext<ClientsT, StateT, CustomT>, {[key: string]: any}>
+export type Resolver<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> =
+  GraphQLFieldResolver<any, ServiceContext<ClientsT, StateT, CustomT>, {[key: string]: any}>
+  | GraphQLFieldConfig<any, ServiceContext<ClientsT, StateT, CustomT>, {[key: string]: any}>
 
 export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
   implementation?: ClientsImplementation<ClientsT>
@@ -38,7 +40,7 @@ export type DataSourcesGenerator = () => {
 }
 
 export interface GraphQLOptions<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
-  resolvers: Record<string, Resolver<ClientsT, StateT, CustomT>>
+  resolvers: Record<string, Record<string, Resolver<ClientsT, StateT, CustomT>>>
   dataSources?: DataSourcesGenerator
   schemaDirectives?: IDirectiveResolvers<any, ServiceContext>
 }
