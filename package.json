@@ -41,7 +41,6 @@
     "koa-compose": "^4.1.0",
     "lru-cache": "^5.1.1",
     "mime-types": "^2.1.12",
-    "multipart-stream": "^2.0.1",
     "p-limit": "^2.2.0",
     "qs": "^6.5.1",
     "querystring": "^0.2.0",
