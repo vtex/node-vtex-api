@@ -27,8 +27,8 @@ export type ServiceContext<ClientsT extends IOClients = IOClients, StateT = void
 export type RouteHandler<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>
 
 export type Resolver<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> =
-  GraphQLFieldResolver<any, ServiceContext<ClientsT, StateT, CustomT>, {[key: string]: any}>
-  | GraphQLFieldConfig<any, ServiceContext<ClientsT, StateT, CustomT>, {[key: string]: any}>
+  GraphQLFieldResolver<any, ServiceContext<ClientsT, StateT, CustomT>, any>
+  | GraphQLFieldConfig<any, ServiceContext<ClientsT, StateT, CustomT>, any>
 
 export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
   implementation?: ClientsImplementation<ClientsT>
