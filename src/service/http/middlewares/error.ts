@@ -1,7 +1,6 @@
-import { IOClients } from '../../clients/IOClients'
-import { cleanError } from '../../utils/error'
-
-import { ServiceContext } from '../typings'
+import { IOClients } from '../../../clients/IOClients'
+import { cleanError } from '../../../utils/error'
+import { ServiceContext } from '../../typings'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
 const TWO_SECONDS_S = 10

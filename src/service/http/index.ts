@@ -3,10 +3,10 @@ import compose from 'koa-compose'
 import { ClientsImplementation, IOClients } from '../../clients/IOClients'
 import { InstanceOptions } from '../../HttpClient'
 import { timer } from '../../utils/time'
-import { clients } from './../middlewares/clients'
-import { error } from './../middlewares/error'
-import { logger } from './../middlewares/logger'
-import { RouteHandler } from './../typings'
+import { RouteHandler } from '../typings'
+import { clients } from './middlewares/clients'
+import { error } from './middlewares/error'
+import { logger } from './middlewares/logger'
 
 export const createHttpRoute = <ClientsT extends IOClients, StateT, CustomT>(
   Clients: ClientsImplementation<ClientsT>,
