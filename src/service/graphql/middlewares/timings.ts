@@ -35,5 +35,9 @@ export const timings = async (ctx: GraphQLServiceContext, next: () => Promise<vo
   const {graphql: {graphqlResponse}} = ctx
   await next()
   const resolverTimings = path(['extensions', 'tracing', 'execution', 'resolvers'], graphqlResponse!) as ResolverTracing[]
-  batchResolversTracing(resolverTimings)
+  if (resolverTimings) {
+    batchResolversTracing(resolverTimings)
+  } else {
+    console.error(graphqlResponse, ctx.graphql.query)
+  }
 }
