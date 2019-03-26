@@ -79,7 +79,7 @@ export class HttpClient {
       ...defaultHeaders,
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
-      'x-vtex-operation-id': operationId,
+      ... operationId ? {'x-vtex-operation-id': operationId} : null,
       ... segmentToken ? {'x-vtex-segment': segmentToken} : null,
     }
 
