@@ -10,15 +10,15 @@ export interface IOMessage {
 }
 
 export interface NativeResolverContext {
-  lazyGetLocaleTo: () => Promise<string>
+  getLocaleTo: () => Promise<string>
   translationsLoader: DataLoader<IOMessage, string>
 }
 
 const serialize = (ctx: NativeResolverContext) => async (inputArgs: IOMessage | string) => {
   const args = typeof(inputArgs) === 'string' ? {content: inputArgs, description: ''} : inputArgs
   const {content, from} = args
-  const {translationsLoader, lazyGetLocaleTo} = ctx
-  const to = await lazyGetLocaleTo()
+  const {translationsLoader, getLocaleTo} = ctx
+  const to = await getLocaleTo()
 
   // If the message has no content, or no target locale,
   // or if it's already in the target locale, return the content.

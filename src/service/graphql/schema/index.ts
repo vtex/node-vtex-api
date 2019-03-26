@@ -49,22 +49,14 @@ export const makeSchema = (ctx: GraphQLServiceContext) => {
   const schemaMetaData = extractSchemaMetaData(appTypeDefs!)
 
   // The target translation locale is only necessary if this GraphQL app uses the `IOMessage` resolver.
-  // Therefore, we send down to messagesLoader a lazy getter to call the segment API when needed.
-  let localeTo: string
-  const lazyGetLocaleTo = async () => {
-    if (!localeTo) {
-      const {cultureInfo} = await ctx.clients.segment.segment()
-      localeTo = cultureInfo
-    }
-    return localeTo
+  const getLocaleTo = async () => {
+    const {cultureInfo} = await ctx.clients.segment.segment()
+    return cultureInfo
   }
 
   const resolverContext = {
-    lazyGetLocaleTo,
-    translationsLoader: messagesLoader({
-      logger: ctx.clients.logger,
-      messagesAPI: new MessagesAPI(ctx.vtex, messagesOptions, ctx.clients.logger),
-    }),
+    getLocaleTo,
+    translationsLoader: messagesLoader(new MessagesAPI(ctx.vtex, messagesOptions, ctx.clients.logger)),
   }
 
   const executableSchema = makeExecutableSchema({
