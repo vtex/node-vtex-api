@@ -17,7 +17,7 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
   }
 
   const key = inflightKey(ctx.config)
-  const isInflight = inflight.has(key)
+  const isInflight = inflight.has(key) ? 1 : 0
   ctx.cacheHit = {
     inflight: isInflight,
   }
@@ -26,7 +26,7 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
     const memoized = await inflight.get(key)!
     ctx.cacheHit = {
       ...memoized.cacheHit,
-      inflight: true,
+      inflight: 1,
     }
     ctx.response = memoized.response
     return

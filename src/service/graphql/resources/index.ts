@@ -1,6 +1,9 @@
-import { Cached, isNetworkErrorOrRouterTimeout, LRUCache, ServiceContext } from '@vtex/api'
 import * as DataLoader from 'dataloader'
 
+import { LRUCache } from '../../../caches/LRUCache'
+import { Cached } from '../../../HttpClient/middlewares/cache'
+import { isNetworkErrorOrRouterTimeout } from '../../../utils/retry'
+import { ServiceContext } from '../../typings'
 import { IOMessage } from '../schema/typeDefs/ioMessage'
 import { MessagesAPI, messagesLoader } from './messages'
 import { SegmentAPI } from './segment'
@@ -40,6 +43,6 @@ export class Resources {
 
     this.segmentAPI = new SegmentAPI(vtex, {memoryCache: cacheStorage, timeout: TWO_SECONDS_MS, retryConfig, metrics}, ctx.clients.logger)
     this.messagesAPI = new MessagesAPI(vtex, {timeout: TEN_SECONDS_MS, retryConfig, metrics}, ctx.clients.logger)
-    this.translationsLoader = messagesLoader({messagesAPI: this.messagesAPI, segmentAPI: this.segmentAPI, logger: ctx.clients.logger})
+    this.translationsLoader = messagesLoader(this.messagesAPI)
   }
 }

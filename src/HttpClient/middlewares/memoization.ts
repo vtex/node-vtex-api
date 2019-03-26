@@ -14,7 +14,7 @@ export const memoizationMiddleware = ({memoizedCache}: MemoizationOptions) => {
     }
 
     const key = cacheKey(ctx.config)
-    const isMemoized = memoizedCache.has(key)
+    const isMemoized = memoizedCache.has(key) ? 1 : 0
     ctx.cacheHit = {
       inflight: isMemoized,
     }

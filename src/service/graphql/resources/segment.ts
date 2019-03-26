@@ -1,14 +1,9 @@
-import {
-  HttpClient,
-  HttpClientFactory,
-  InstanceOptions,
-  IOContext,
-  IODataSource,
-  Logger,
-} from '@vtex/api'
 import { prop } from 'ramda'
 
-const factory: HttpClientFactory = ({context, options}) => context && 
+import { HttpClient, HttpClientFactory, InstanceOptions, IOContext, IODataSource, Logger } from '../../..'
+
+
+const factory: HttpClientFactory = ({context, options}) => context &&
   HttpClient.forExternal(`http://portal.vtexcommercestable.com.br`, context, options || {})
 
 interface Segment {
@@ -27,7 +22,7 @@ const routes = {
 }
 
 export class SegmentAPI extends IODataSource{
-  protected memoizedResults: Record<string, Promise<Segment | null>> 
+  protected memoizedResults: Record<string, Promise<Segment | null>>
   protected httpClientFactory = factory
 
   constructor(ctx: IOContext, opts: InstanceOptions, protected logger: Logger) {
@@ -58,5 +53,5 @@ export class SegmentAPI extends IODataSource{
     return this.memoizedResults[key]
   }
 
-  public getTo = () => this.segment().then(res => res && prop('cultureInfo', res)) 
+  public getTo = () => this.segment().then(res => res && prop('cultureInfo', res))
 }
