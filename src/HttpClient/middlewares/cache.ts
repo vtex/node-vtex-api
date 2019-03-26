@@ -78,10 +78,10 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
       if (expiration > Date.now() && response) {
         ctx.response = response as AxiosResponse
         ctx.cacheHit = {
-          memoized: false,
-          memory: true,
-          revalidated: false,
-          router: false,
+          memoized: 0,
+          memory: 1,
+          revalidated: 0,
+          router: 0,
         }
         return
       }
@@ -103,10 +103,10 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     if (revalidated && cached) {
       ctx.response = cached.response as AxiosResponse
       ctx.cacheHit = {
-        memoized: false,
-        memory: true,
-        revalidated: true,
-        router: false,
+        memoized: 0,
+        memory: 1,
+        revalidated: 1,
+        router: 0,
       }
     }
 
@@ -115,14 +115,14 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
 
     if (headers[ROUTER_CACHE_KEY] === ROUTER_CACHE_HIT) {
       if (ctx.cacheHit) {
-        ctx.cacheHit.router = true
+        ctx.cacheHit.router = 1
       }
       else {
         ctx.cacheHit = {
-          memoized: false,
-          memory: false,
-          revalidated: false,
-          router: true,
+          memoized: 0,
+          memory: 0,
+          revalidated: 0,
+          router: 1,
         }
       }
     }
@@ -136,7 +136,12 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
 
     // Add false to cacheHits to indicate this _should_ be cached but was as miss.
     if (!ctx.cacheHit && shouldCache) {
-      ctx.cacheHit = false
+      ctx.cacheHit = {
+        memoized: 0,
+        memory: 0,
+        revalidated: 0,
+        router: 0,
+      }
     }
 
     if (shouldCache) {

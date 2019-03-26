@@ -1,7 +1,6 @@
 import { assoc, flatten, map, mapObjIndexed, values } from 'ramda'
 import { mean, median, percentile } from 'stats-lite'
 
-import { CacheHit } from '../HttpClient/context'
 import { hrToMillis } from '../utils/time'
 
 export interface Metric {
@@ -21,14 +20,6 @@ export interface EnvMetric extends NamedMetric {
 // Production pods never handle development workspaces and vice-versa.
 const production: boolean = process.env.VTEX_PRODUCTION === 'true'
 
-interface CacheHitMap {
-  disk: number | null
-  memory: number | null
-  revalidated: number | null
-  router: number | null
-  memoized: number | null
-}
-
 interface Aggregate {
   count: number
   mean: number
@@ -38,9 +29,7 @@ interface Aggregate {
   max: number
 }
 
-const CACHE_HIT_TYPES: Array<keyof CacheHit> = ['disk', 'memory', 'router', 'revalidated', 'memoized']
-
-type AggregateMetric = EnvMetric & CacheHitMap & Aggregate
+type AggregateMetric = EnvMetric & Aggregate
 
 interface GetStats {
   getStats(): {
@@ -63,7 +52,7 @@ export type StatusTrack = () => EnvMetric[]
 
 export class MetricsAccumulator {
   private metricsMillis: Record<string, number[]>
-  private cacheHits: Record<string, CacheHitMap>
+  private extensions: Record<string, Record<string, string | number>>
   // Tracked cache instances
   private cacheMap: Record<string, GetStats>
 
@@ -71,7 +60,7 @@ export class MetricsAccumulator {
 
   constructor() {
     this.metricsMillis = {}
-    this.cacheHits = {}
+    this.extensions = {}
     this.onFlushMetrics = []
     this.cacheMap = {}
   }
@@ -92,11 +81,27 @@ export class MetricsAccumulator {
     this.batchMetric(name, hrToMillis(process.hrtime(start)))
   }
 
-  public batchMetric = (name: string, timeMillis: number) => {
+  public batchMetric = (name: string, timeMillis: number, extensions?: Record<string, string | number>) => {
     if (!this.metricsMillis[name]) {
       this.metricsMillis[name] = []
     }
+
     this.metricsMillis[name].push(timeMillis)
+
+    if (extensions) {
+      if (!this.extensions[name]) {
+        this.extensions[name] = {}
+      }
+
+      for (const [key, value] of Object.entries(extensions)) {
+        const existing = this.extensions[name][key]
+        if (typeof value === 'string' || typeof existing === 'string') {
+          this.extensions[name][key] = value
+        } else if (typeof value === 'number') {
+          this.extensions[name][key] = (existing || 0) + value
+        }
+      }
+    }
   }
 
   /**
@@ -104,25 +109,12 @@ export class MetricsAccumulator {
    *
    * @param name Metric label.
    * @param diffNs The result of calling process.hrtime() passing a previous process.hrtime() value.
-   * @param cacheHit If this metric should be cached, an object indicating the nature of the cache hit, or false to indicate a miss.
+   * @param extensions Any other relevant properties of this metric.
    *
    * @see https://nodejs.org/api/process.html#process_process_hrtime_time
    */
-  public batch = (name: string, diffNs: [number, number], cacheHit?: CacheHit | false) => {
-    this.batchMetric(name, hrToMillis(diffNs))
-    if (cacheHit || cacheHit === false) {
-      if (!this.cacheHits[name]) {
-        this.cacheHits[name] = { disk: 0, memory: 0, router: 0, revalidated: 0, memoized: 0 }
-      }
-
-      if (cacheHit) {
-        for (const type of CACHE_HIT_TYPES) {
-          if (cacheHit[type]) {
-            this.cacheHits[name][type]!++
-          }
-        }
-      }
-    }
+  public batch = (name: string, diffNs: [number, number], extensions?: Record<string, string | number>) => {
+    this.batchMetric(name, hrToMillis(diffNs), extensions)
   }
 
   public addOnFlushMetric = (metricFn: () => Metric | Metric[]) => {
@@ -147,14 +139,10 @@ export class MetricsAccumulator {
       percentile95: percentile(value, 0.95),
       percentile99: percentile(value, 0.99),
       production,
-      disk: this.cacheHits[key] ? this.cacheHits[key].disk : null,
-      memory: this.cacheHits[key] ? this.cacheHits[key].memory : null,
-      memoized: this.cacheHits[key] ? this.cacheHits[key].memoized: null,
-      revalidated: this.cacheHits[key] ? this.cacheHits[key].revalidated : null,
-      router: this.cacheHits[key] ? this.cacheHits[key].router : null,
+      ...this.extensions[key],
     }
     delete this.metricsMillis[key]
-    delete this.cacheHits[key]
+    delete this.extensions[key]
     return aggregate
   }
 

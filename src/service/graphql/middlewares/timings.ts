@@ -21,23 +21,19 @@ const generatePathName = (rpath: [string | number]) => {
 const batchResolversTracing = (resolvers: ResolverTracing[]) => {
   resolvers.forEach(resolver => {
     const pathName = generatePathName(resolver.path)
-    metrics.batchMetric(`graphql-resolver-${pathName}`, nanoToMillis(resolver.duration))
+    const extensions = {
+      fieldName: resolver.fieldName,
+      parentType: resolver.parentType,
+      pathName,
+      returnType: resolver.returnType,
+    }
+    metrics.batchMetric(`graphql-resolver-${pathName}`, nanoToMillis(resolver.duration), extensions)
   })
 }
 
-const batchGraphQLHrTimeMetric = (query: any, start: any) => {
-  if (query && query.query) {
-    metrics.batch(query.query, process.hrtime(start))
-  }
-}
-
 export const timings = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
-  const {graphql: {query, graphqlResponse}} = ctx
-
-  const startGraphQL = process.hrtime()
+  const {graphql: {graphqlResponse}} = ctx
   await next()
-  batchGraphQLHrTimeMetric(query, startGraphQL)
-
   const resolverTimings = path(['extensions', 'tracing', 'execution', 'resolvers'], graphqlResponse!) as ResolverTracing[]
   batchResolversTracing(resolverTimings)
 }

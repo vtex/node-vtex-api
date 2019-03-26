@@ -18,10 +18,10 @@ export const memoizationMiddleware = ({memoizedCache}: MemoizationOptions) => {
     if (memoizedCache.has(key)) {
       const memoized = await memoizedCache.get(key)!
       ctx.cacheHit = {
-        memoized: true,
-        memory: false,
-        revalidated: false,
-        router: false,
+        memoized: 1,
+        memory: 0,
+        revalidated: 0,
+        router: 0,
       }
       ctx.response = memoized.response
       return

@@ -12,15 +12,15 @@ export interface RequestConfig extends AxiosRequestConfig {
 }
 
 export interface CacheHit {
-  disk?: boolean
-  memory?: boolean
-  revalidated?: boolean
-  router?: boolean
-  memoized?: boolean
+  disk?: 0 | 1
+  memory?: 0 | 1
+  revalidated?: 0 | 1
+  router?: 0 | 1
+  memoized?: 0 | 1
 }
 
 export interface MiddlewareContext {
   config: RequestConfig
   response?: AxiosResponse
-  cacheHit?: CacheHit | false
+  cacheHit?: CacheHit
 }
