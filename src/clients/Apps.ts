@@ -1,12 +1,13 @@
 import archiver from 'archiver'
-import {IncomingMessage} from 'http'
-import {stringify} from 'qs'
-import {Readable, Writable} from 'stream'
-import {extract} from 'tar-fs'
-import {createGunzip, ZlibOptions} from 'zlib'
+import { IncomingMessage } from 'http'
+import { stringify } from 'qs'
+import { Readable, Writable } from 'stream'
+import { extract } from 'tar-fs'
+import { createGunzip, ZlibOptions } from 'zlib'
 
-import {forWorkspace, IODataSource} from '../IODataSource'
-import {AppBundleLinked, AppFilesList, AppManifest} from '../responses'
+import { inflightURL } from '../HttpClient/middlewares/inflight'
+import { forWorkspace, IODataSource } from '../IODataSource'
+import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
 
 const routes = {
   Acknowledge: (app: string, service: string) => `${routes.App(app)}/acknowledge/${service}`,
@@ -151,7 +152,8 @@ export class Apps extends IODataSource {
       since,
     }
     const metric = 'apps-list'
-    return this.http.get<AppsList>(routes.Apps, {params, metric})
+    const inflightKey = inflightURL
+    return this.http.get<AppsList>(routes.Apps, {params, metric, inflightKey})
   }
 
   public listAppFiles = (app: string, {prefix, context, nextMarker}: ListFilesOptions = {}) => {
@@ -161,17 +163,20 @@ export class Apps extends IODataSource {
       prefix,
     }
     const metric = 'apps-list-files'
-    return this.http.get<AppFilesList>(routes.Files(app), {params, metric})
+    const inflightKey = inflightURL
+    return this.http.get<AppFilesList>(routes.Files(app), {params, metric, inflightKey})
   }
 
   public listLinks = () => {
-    return this.http.get<string[]>(routes.Links, {metric: 'apps-list-links'})
+    const inflightKey = inflightURL
+    return this.http.get<string[]>(routes.Links, {metric: 'apps-list-links', inflightKey})
   }
 
   public getAppFile = (app: string, path: string, context: string[] = []) => {
     const params = {context: contextQuery(context)}
     const metric = 'apps-get-file'
-    return this.http.getBuffer(routes.File(app, path), {params, metric})
+    const inflightKey = inflightURL
+    return this.http.getBuffer(routes.File(app, path), {params, metric, inflightKey})
   }
 
   public getAppFileStream = (app: string, path: string, context: string[] = []): Promise<IncomingMessage> => {
@@ -183,11 +188,14 @@ export class Apps extends IODataSource {
   public getApp = (app: string, context: string[] = []) => {
     const params = {context: contextQuery(context)}
     const metric = 'apps-get-app'
-    return this.http.get<AppManifest>(routes.App(app), {params, metric})
+    const inflightKey = inflightURL
+    return this.http.get<AppManifest>(routes.App(app), {params, metric, inflightKey})
   }
 
   public getAppSettings = (app: string) => {
-    return this.http.get<any>(routes.Settings(app), {metric: 'apps-get-settings'})
+    const inflightKey = inflightURL
+    const metric = 'apps-get-settings'
+    return this.http.get<any>(routes.Settings(app), {inflightKey, metric})
   }
 
   public getAllAppsSettings = (listAppsOptions: ListAppsOptions = {}): Promise<AppsSettings> => {
@@ -224,7 +232,8 @@ export class Apps extends IODataSource {
   public getDependencies = (filter: string = '') => {
     const params = {filter}
     const metric = 'apps-get-deps'
-    return this.http.get<Record<string, string[]>>(routes.Dependencies, {params, metric})
+    const inflightKey = inflightURL
+    return this.http.get<Record<string, string[]>>(routes.Dependencies, {params, metric, inflightKey})
   }
 
   public updateDependencies = () => {
@@ -238,7 +247,8 @@ export class Apps extends IODataSource {
   public resolveDependencies = (apps: string[], registries: string[], filter: string = '') => {
     const params = {apps, registries, filter}
     const metric = 'apps-resolve-deps'
-    return this.http.get(routes.ResolveDependencies, {params, paramsSerializer, metric})
+    const inflightKey = inflightURL
+    return this.http.get(routes.ResolveDependencies, {params, paramsSerializer, metric, inflightKey})
   }
 
   public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {

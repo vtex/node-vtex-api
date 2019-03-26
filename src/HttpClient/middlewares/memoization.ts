@@ -14,14 +14,16 @@ export const memoizationMiddleware = ({memoizedCache}: MemoizationOptions) => {
     }
 
     const key = cacheKey(ctx.config)
+    const isMemoized = memoizedCache.has(key) ? 1 : 0
+    ctx.cacheHit = {
+      inflight: isMemoized,
+    }
 
-    if (memoizedCache.has(key)) {
+    if (isMemoized) {
       const memoized = await memoizedCache.get(key)!
       ctx.cacheHit = {
+        ...memoized.cacheHit,
         memoized: 1,
-        memory: 0,
-        revalidated: 0,
-        router: 0,
       }
       ctx.response = memoized.response
       return
