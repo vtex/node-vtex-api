@@ -52,13 +52,6 @@ export interface ServiceConfig<ClientsT extends IOClients = IOClients, StateT = 
   routes: Record<string, RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>>
 }
 
-export interface RuntimeConfig<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
-  events?: any,
-  routes: Record<string, RouteHandler<ClientsT, StateT, CustomT>>
-  statusTrack?: StatusTrack,
-  __is_service: true
-}
-
 export interface DataSources {
   [name: string]: DataSource<ServiceContext>,
 }
@@ -80,4 +73,27 @@ export interface IOContext {
   sessionToken?: string
   requestId: string
   operationId: string
+}
+
+export interface ServiceRoute {
+  path: string,
+  method?: string[],
+  public?: boolean,
+  smartcache?: boolean,
+}
+
+export interface ServiceDescriptor {
+  stack: 'nodejs',
+  memory: number,
+  ttl?: number,
+  timeout?: number,
+  runtimeArgs?: string[],
+  routes?: Record<string, ServiceRoute>,
+  events: {
+    [handler: string]: {
+      keys?: string[],
+      sender?: string,
+      subject?: string,
+    },
+  },
 }
