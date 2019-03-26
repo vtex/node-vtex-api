@@ -22,10 +22,6 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
   ) {
     const {config} = service
 
-    if (!global.metrics) {
-      global.metrics = new MetricsAccumulator()
-    }
-
     const Clients = (config.clients.implementation || IOClients) as ClientsImplementation<ClientsT>
 
     this.routes = map(createHttpRoute<ClientsT, StateT, CustomT>(Clients, config.clients.options), config.routes)
@@ -39,6 +35,10 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
 
     addProcessListeners()
   }
+}
+
+if (!global.metrics) {
+  global.metrics = new MetricsAccumulator()
 }
 
 declare global {
