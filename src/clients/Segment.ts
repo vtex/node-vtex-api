@@ -28,10 +28,11 @@ export class Segment extends IODataSource {
     super(ctx, opts)
   }
 
-  public segment = () => {
+  public segment = (query?: Record<string, string>, token?: string) => {
     const {segmentToken, authToken, account} = this.context!
+    const selectedToken = token || segmentToken
 
-    return this.http.get<SegmentData>(routes.segments(segmentToken), {
+    return this.http.get<SegmentData>(routes.segments(selectedToken), {
       headers: {
         'Content-Type': 'application/json',
         'Proxy-Authorization': authToken,
@@ -39,6 +40,7 @@ export class Segment extends IODataSource {
       metric: 'segment-get',
       params: {
         an: account,
+        ...query,
       },
     })
   }
