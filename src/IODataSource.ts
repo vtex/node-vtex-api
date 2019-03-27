@@ -1,10 +1,11 @@
-import {DataSource, DataSourceConfig} from 'apollo-datasource'
-import {HttpClient, InstanceOptions, IOContext, LegacyInstanceOptions, ServiceContext} from './HttpClient'
+import { DataSource, DataSourceConfig } from 'apollo-datasource'
+import { HttpClient, InstanceOptions } from './HttpClient'
+import { IOContext, ServiceContext } from './service/typings'
 
 interface HttpClientFactoryOptions {
   service: string | void
   context: IOContext | void
-  options: InstanceOptions | LegacyInstanceOptions | void
+  options: InstanceOptions | void
 }
 
 export type HttpClientFactory = (opts: HttpClientFactoryOptions) => HttpClient | void
@@ -17,7 +18,7 @@ export abstract class IODataSource extends DataSource<ServiceContext> {
 
   constructor (
     protected context?: IOContext,
-    private options: InstanceOptions = {},
+    private options: InstanceOptions = {}
   ) {
     super()
   }
@@ -52,6 +53,6 @@ export const forRoot: HttpClientFactory = ({context, service, options}) => (cont
   ? HttpClient.forRoot(service, context, options || {})
   : undefined
 
-export const forLegacy: HttpClientFactory = ({service, options}) => service
-  ? HttpClient.forLegacy(service, options || {} as any)
+export const forExternal: HttpClientFactory = ({context, service, options}) => (context && service)
+  ? HttpClient.forExternal(service, context, options || {} as any)
   : undefined

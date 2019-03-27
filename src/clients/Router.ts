@@ -1,4 +1,5 @@
-import {HttpClient, InstanceOptions, IOContext} from './HttpClient'
+import {HttpClient, InstanceOptions} from '../HttpClient'
+import {IOContext} from '../service/typings'
 
 const routes = {
   AvailableIoVersions: '/_io',

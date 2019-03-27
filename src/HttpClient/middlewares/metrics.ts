@@ -1,5 +1,5 @@
-import { MetricsAccumulator } from '../../metrics/metricsAccumulator'
-import { TIMEOUT_CODE } from '../../utils/Retry'
+import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
+import { TIMEOUT_CODE } from '../../utils/retry'
 import { MiddlewareContext } from '../context'
 
 const statusLabel = (status: number) =>
@@ -34,15 +34,22 @@ export const metricsMiddleware = (metrics: MetricsAccumulator) => {
       if (ctx.config.metric) {
         const end = process.hrtime(start as [number, number])
         const label = `http-client-${status}-${ctx.config.metric}`
-        metrics.batch(label, end, ctx.cacheHit)
+        const extensions: Record<string, string | number> = {
+        }
+
+        if (ctx.cacheHit) {
+          Object.assign(extensions, ctx.cacheHit)
+        }
 
         if (ctx.config['axios-retry']) {
           const {retryCount} = ctx.config['axios-retry'] as any
 
           if (retryCount && retryCount > 0) {
-            metrics.batch(`${label}-retry-${retryCount}`, end, ctx.cacheHit)
+            extensions[`retry-${retryCount}`] = 1
           }
         }
+
+        metrics.batch(label, end, extensions)
       }
     }
   }

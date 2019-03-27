@@ -1,6 +1,7 @@
-import { InstanceOptions, IOContext } from './HttpClient'
-import { forWorkspace, IODataSource } from './IODataSource'
-import { BucketMetadata } from './responses'
+import { InstanceOptions } from '../HttpClient'
+import { forWorkspace, IODataSource } from '../IODataSource'
+import { BucketMetadata } from '../responses'
+import { IOContext } from '../service/typings'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']
@@ -22,7 +23,7 @@ export interface MetadataEntryList {
   Next: string,
 }
 
-export class Metadata extends IODataSource{
+export class Metadata extends IODataSource {
   protected service = 'router'
   protected httpClientFactory = forWorkspace
 

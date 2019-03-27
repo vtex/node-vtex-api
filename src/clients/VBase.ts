@@ -4,10 +4,12 @@ import { basename } from 'path'
 import { Readable } from 'stream'
 import { createGzip } from 'zlib'
 
-import { InstanceOptions, IOContext } from './HttpClient'
-import { IgnoreNotFoundRequestConfig } from './HttpClient/middlewares/notFound'
-import { forWorkspace, IODataSource } from './IODataSource'
-import { BucketMetadata, FileListItem } from './responses'
+import { InstanceOptions } from '../HttpClient'
+import { inflightURL } from '../HttpClient/middlewares/inflight'
+import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
+import { forWorkspace, IODataSource } from '../IODataSource'
+import { BucketMetadata, FileListItem } from '../responses'
+import { IOContext } from '../service/typings'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']
@@ -34,7 +36,9 @@ export class VBase extends IODataSource {
   }
 
   public getBucket = (bucket: string) => {
-    return this.http.get<BucketMetadata>(routes.Bucket(bucket), {metric: 'vbase-get-bucket'})
+    const inflightKey = inflightURL
+    const metric = 'vbase-get-bucket'
+    return this.http.get<BucketMetadata>(routes.Bucket(bucket), {metric, inflightKey})
   }
 
   public resetBucket = (bucket: string) => {
@@ -49,15 +53,20 @@ export class VBase extends IODataSource {
       params = {prefix: opts}
     }
     const metric = 'vbase-list'
-    return this.http.get<BucketFileList>(routes.Files(bucket), {params, metric})
+    const inflightKey = inflightURL
+    return this.http.get<BucketFileList>(routes.Files(bucket), {params, metric, inflightKey})
   }
 
   public getFile = (bucket: string, path: string) => {
-    return this.http.getBuffer(routes.File(bucket, path), {metric: 'vbase-get-file'})
+    const inflightKey = inflightURL
+    const metric = 'vbase-get-file'
+    return this.http.getBuffer(routes.File(bucket, path), {metric, inflightKey})
   }
 
   public getJSON = <T>(bucket: string, path: string, nullIfNotFound?: boolean) => {
-    return this.http.get<T>(routes.File(bucket, path), {nullIfNotFound, metric: 'vbase-get-json'} as IgnoreNotFoundRequestConfig)
+    const inflightKey = inflightURL
+    const metric = 'vbase-get-json'
+    return this.http.get<T>(routes.File(bucket, path), {nullIfNotFound, metric, inflightKey} as IgnoreNotFoundRequestConfig)
   }
 
   public getFileStream = (bucket: string, path: string): Promise<IncomingMessage> => {

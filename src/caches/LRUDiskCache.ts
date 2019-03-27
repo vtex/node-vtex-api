@@ -12,7 +12,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   private disposed: number
   private hits = 0
   private total = 0
-  private lruStorage: LRU.Cache<string, number>
+  private lruStorage: LRU<string, number>
   private keyToBeDeleted: string
 
   constructor(private cachePath: string, options: LRUDiskCacheOptions, private readFile=readJSON, private writeFile=outputJSON) {
@@ -27,10 +27,12 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
       this.disposed += 1
     }
 
-    this.lruStorage = new LRU<string, number>({
+    const lruOptions = {
       ...options,
       dispose,
-    })
+    }
+
+    this.lruStorage = new LRU<string, number>(lruOptions)
 
   }
 

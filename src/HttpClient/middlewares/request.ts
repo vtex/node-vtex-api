@@ -1,7 +1,9 @@
 import axios from 'axios'
-import retry, {IAxiosRetryConfig, isNetworkOrIdempotentRequestError} from 'axios-retry'
+import retry, {IAxiosRetryConfig} from 'axios-retry'
 import {Agent} from 'http'
 import {Limit} from 'p-limit'
+
+import {isAbortedOrNetworkErrorOrRouterTimeout} from '../../utils/retry'
 
 import {MiddlewareContext} from '../context'
 
@@ -14,7 +16,8 @@ const http = axios.create({
 
 retry(http, {
   retries: 0,
-  retryCondition: isNetworkOrIdempotentRequestError,
+  retryCondition: isAbortedOrNetworkErrorOrRouterTimeout,
+  shouldResetTimeout: true,
 })
 
 http.interceptors.response.use(response => response, (err: any) => {

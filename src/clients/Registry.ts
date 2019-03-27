@@ -1,14 +1,15 @@
 import archiver from 'archiver'
-import {IncomingMessage} from 'http'
-import {stringify} from 'qs'
-import {Readable, Writable} from 'stream'
-import {extract} from 'tar-fs'
-import {createGunzip, ZlibOptions} from 'zlib'
+import { IncomingMessage } from 'http'
+import { stringify } from 'qs'
+import { Readable, Writable } from 'stream'
+import { extract } from 'tar-fs'
+import { createGunzip, ZlibOptions } from 'zlib'
 
-import {DEFAULT_WORKSPACE} from './constants'
-import {HttpClient} from './HttpClient'
-import {HttpClientFactory, IODataSource} from './IODataSource'
-import {AppBundlePublished, AppFilesList, AppManifest} from './responses'
+import { DEFAULT_WORKSPACE } from '../constants'
+import { HttpClient } from '../HttpClient'
+import { inflightURL } from '../HttpClient/middlewares/inflight'
+import { HttpClientFactory, IODataSource } from '../IODataSource'
+import { AppBundlePublished, AppFilesList, AppManifest } from '../responses'
 
 const EMPTY_OBJECT = {}
 
@@ -69,27 +70,40 @@ export class Registry extends IODataSource {
   }
 
   public listApps = () => {
-    return this.http.get<RegistryAppsList>(routes.Registry, {metric: 'registry-list'})
+    const inflightKey = inflightURL
+    const metric = 'registry-list'
+    return this.http.get<RegistryAppsList>(routes.Registry, {metric, inflightKey})
   }
 
   public listVersionsByApp = (app: string) => {
-    return this.http.get<RegistryAppVersionsList>(routes.App(app), {metric: 'registry-list-versions'})
+    const inflightKey = inflightURL
+    const metric = 'registry-list-versions'
+    return this.http.get<RegistryAppVersionsList>(routes.App(app), {metric, inflightKey})
   }
 
   public deprecateApp = (app: string, version: string) => {
-    return this.http.patch(routes.AppVersion(app, version), {deprecated: true}, {metric: 'registry-deprecate'})
+    const metric = 'registry-deprecate'
+    return this.http.patch(routes.AppVersion(app, version), {deprecated: true}, {metric})
   }
 
   public getAppManifest = (app: string, version: string, opts?: AppsManifestOptions) => {
-    return this.http.get<AppManifest>(routes.AppVersion(app, version), {params: opts, metric: 'registry-manifest'})
+    const inflightKey = inflightURL
+    const params = opts
+    const metric = 'registry-manifest'
+    return this.http.get<AppManifest>(routes.AppVersion(app, version), {params, metric, inflightKey})
   }
 
   public listAppFiles = (app: string, version: string, opts?: ListAppFilesOptions) => {
-    return this.http.get<AppFilesList>(routes.AppFiles(app, version), {params: opts, metric: 'registry-list-files'})
+    const inflightKey = inflightURL
+    const params = opts
+    const metric = 'registry-list-files'
+    return this.http.get<AppFilesList>(routes.AppFiles(app, version), {params, metric, inflightKey})
   }
 
   public getAppFile = (app: string, version: string, path: string) => {
-    return this.http.getBuffer(routes.AppFile(app, version, path), {metric: 'registry-get-file'})
+    const inflightKey = inflightURL
+    const metric = 'registry-get-file'
+    return this.http.getBuffer(routes.AppFile(app, version, path), {metric, inflightKey})
   }
 
   public getAppFileStream = (app: string, version: string, path: string): Promise<IncomingMessage> => {
@@ -113,7 +127,7 @@ export class Registry extends IODataSource {
     return this.getAppBundle(app, version, bundlePath, generatePackageJson)
       .then(stream => stream
         .pipe(createGunzip())
-        .pipe(extract(unpackPath)),
+        .pipe(extract(unpackPath))
       )
   }
 

@@ -1,18 +1,26 @@
 import {AxiosRequestConfig, AxiosResponse} from 'axios'
 import {URL, URLSearchParams} from 'url'
 import {CacheLayer} from '../../caches/CacheLayer'
-import {MiddlewareContext} from '../context'
+import {MiddlewareContext, RequestConfig} from '../context'
 
 const ROUTER_CACHE_KEY = 'x-router-cache'
 const ROUTER_CACHE_HIT = 'HIT'
 
-const cacheKey = (config: AxiosRequestConfig) => {
+export const cacheKey = (config: AxiosRequestConfig) => {
   const {baseURL = '', url = '', params} = config
   const fullURL = [baseURL, url].filter(str => str).join('/')
   const urlObject = new URL(fullURL)
-  const searchParams = new URLSearchParams(params)
-  urlObject.search = searchParams.toString()
-  return urlObject.toString()
+
+  if (params) {
+    for (const [key, value] of Object.entries<string>(params)) {
+      urlObject.searchParams.append(key, value)
+    }
+  }
+
+  // Replace forward slashes with backwards slashes for disk cache legibility
+  const encodedPath = `${urlObject.pathname}${urlObject.search}`.replace(/\//g, '\\\\')
+  // Add hostname as top level directory on disk cache
+  return `${urlObject.hostname}/${encodedPath}`
 }
 
 const parseCacheHeaders = (headers: Record<string, string>) => {
@@ -32,33 +40,49 @@ const parseCacheHeaders = (headers: Record<string, string>) => {
   }
 }
 
-function isCacheable (arg: any): arg is CacheableRequestConfig {
-  return arg && arg.cacheable
+export function isCacheable (arg: RequestConfig, type: CacheType): arg is CacheableRequestConfig {
+  return arg && !!arg.cacheable
+    && (arg.cacheable === type || arg.cacheable === CacheType.Any || type === CacheType.Any)
 }
 
 const addNotModified = (validateStatus: (status: number) => boolean) =>
   (status: number) => validateStatus(status) || status === 304
 
-export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: CacheLayer<string, Cached>, segmentToken: string}) => {
+export enum CacheType {
+  None,
+  Memory,
+  Disk,
+  Any,
+}
+
+interface CacheOptions {
+  type: CacheType
+  storage: CacheLayer<string, Cached>
+  segmentToken: string
+}
+
+export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-    if (!isCacheable(ctx.config)) {
+    if (!isCacheable(ctx.config, type)) {
       return await next()
     }
 
     const key = cacheKey(ctx.config)
     const keyWithSegment = key + segmentToken
 
-    const cacheHasWithSegment = await cacheStorage.has(keyWithSegment)
-    const cached = cacheHasWithSegment ? await cacheStorage.get(keyWithSegment) : await cacheStorage.get(key)
+    const cacheHasWithSegment = await storage.has(keyWithSegment)
+    const cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
 
     if (cached) {
       const {etag: cachedEtag, response, expiration} = cached as Cached
       if (expiration > Date.now() && response) {
         ctx.response = response as AxiosResponse
         ctx.cacheHit = {
-          memory: true,
-          revalidated: false,
-          router: false,
+          inflight: 0,
+          memoized: 0,
+          memory: 1,
+          revalidated: 0,
+          router: 0,
         }
         return
       }
@@ -80,9 +104,11 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
     if (revalidated && cached) {
       ctx.response = cached.response as AxiosResponse
       ctx.cacheHit = {
-        memory: true,
-        revalidated: true,
-        router: false,
+        inflight: 0,
+        memoized: 0,
+        memory: 1,
+        revalidated: 1,
+        router: 0,
       }
     }
 
@@ -91,13 +117,15 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
 
     if (headers[ROUTER_CACHE_KEY] === ROUTER_CACHE_HIT) {
       if (ctx.cacheHit) {
-        ctx.cacheHit.router = true
+        ctx.cacheHit.router = 1
       }
       else {
         ctx.cacheHit = {
-          memory: false,
-          revalidated: false,
-          router: true,
+          inflight: 0,
+          memoized: 0,
+          memory: 0,
+          revalidated: 0,
+          router: 1,
         }
       }
     }
@@ -111,14 +139,19 @@ export const cacheMiddleware = ({cacheStorage, segmentToken}: {cacheStorage: Cac
 
     // Add false to cacheHits to indicate this _should_ be cached but was as miss.
     if (!ctx.cacheHit && shouldCache) {
-      ctx.cacheHit = false
+      ctx.cacheHit = {
+        memoized: 0,
+        memory: 0,
+        revalidated: 0,
+        router: 0,
+      }
     }
 
     if (shouldCache) {
       const currentAge = revalidated ? 0 : age
       const varySegment = ctx.response.headers.vary.includes('x-vtex-segment')
       const setKey = varySegment ? keyWithSegment : key
-      await cacheStorage.set(setKey, {
+      await storage.set(setKey, {
         etag,
         expiration: Date.now() + (maxAge - currentAge) * 1000,
         response: {data, headers, status},
@@ -136,5 +169,6 @@ export interface Cached {
 
 export type CacheableRequestConfig = AxiosRequestConfig & {
   url: string,
-  cacheable: boolean,
+  cacheable: CacheType,
+  memoizable: boolean
 }

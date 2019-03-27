@@ -1,4 +1,5 @@
-import {HttpClient, LegacyInstanceOptions} from './HttpClient'
+import {AuthType, HttpClient, InstanceOptions} from '../HttpClient'
+import { IOContext } from '../service/typings'
 
 const routes = {
   SEND: '/accesskey/send',
@@ -8,7 +9,6 @@ const routes = {
 }
 
 const VTEXID_ENDPOINTS: Record<string, string> = {
-  BETA: 'https://vtexid.vtex.com.br/api/vtexid/pub/authentication',
   STABLE: 'https://vtexid.vtex.com.br/api/vtexid/pub/authentication',
 }
 
@@ -18,20 +18,20 @@ const endpoint = (env: string) => {
 
 export class ID {
   private http: HttpClient
-  private defaultHeaders: Record<string, string>
 
-  constructor (endpointUrl: string = 'STABLE', opts: LegacyInstanceOptions) {
-    this.http = HttpClient.forLegacy(endpoint(endpointUrl), opts)
-    this.defaultHeaders = opts.accept ? {accept: opts.accept} : {}
+  constructor (context: IOContext, opts: InstanceOptions) {
+    this.http = HttpClient.forExternal(endpoint(VTEXID_ENDPOINTS.STABLE), context, {...opts, authType: AuthType.token})
   }
 
   public getTemporaryToken = () => {
-    return this.http.get<TemporaryToken>(routes.START).then(({authenticationToken}) => authenticationToken)
+    const metric = 'vtexid-temp-token'
+    return this.http.get<TemporaryToken>(routes.START, {metric}).then(({authenticationToken}) => authenticationToken)
   }
 
   public sendCodeToEmail = (token: string, email: string) => {
     const params = {authenticationToken: token, email}
-    return this.http.get(routes.SEND, {params, headers: this.defaultHeaders})
+    const metric = 'vtexid-send-code'
+    return this.http.get(routes.SEND, {params, metric})
   }
 
   public getEmailCodeAuthenticationToken = (token: string, email: string, code: string) => {
@@ -40,7 +40,8 @@ export class ID {
       authenticationToken: token,
       login: email,
     }
-    return this.http.get<AuthenticationResponse>(routes.VALIDATE, {params, headers: this.defaultHeaders})
+    const metric = 'vtexid-email-token'
+    return this.http.get<AuthenticationResponse>(routes.VALIDATE, {params, metric})
   }
 
   public getPasswordAuthenticationToken = (token: string, email: string, password: string) => {
@@ -49,7 +50,8 @@ export class ID {
       login: email,
       password,
     }
-    return this.http.get<AuthenticationResponse>(routes.VALIDATE_CLASSIC, {params, headers: this.defaultHeaders})
+    const metric = 'vtexid-pass-token'
+    return this.http.get<AuthenticationResponse>(routes.VALIDATE_CLASSIC, {params, metric})
   }
 }
 

@@ -3,16 +3,17 @@
     "esModuleInterop": true,
     "types": ["node"],
     "typeRoots": ["node_modules/@types"],
-    "target": "es2015",
+    "target": "es2017",
     "lib": [
-      "es2015",
+      "es2017",
       "esnext.asynciterable"
     ],
     "module": "commonjs",
     "strict": true,
     "declaration": true,
     "outDir": "lib",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]
