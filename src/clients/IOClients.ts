@@ -1,7 +1,7 @@
 import { InstanceOptions } from '../HttpClient'
 import { IODataSource } from '../IODataSource'
 import { IOContext } from '../service/typings'
-import { Apps, Billing, Builder, Events, ID, Logger, Metadata, Registry, Router, Segment, VBase, Workspaces } from './index'
+import { Apps, Billing, Builder, Events, ID, Logger, Messages, Metadata, Registry, Router, Segment, VBase, Workspaces } from './index'
 
 type IOClient = new(context: IOContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
 
@@ -40,6 +40,10 @@ export class IOClients {
 
   public get logger(): Logger {
     return this.getOrSet('logger', Logger)
+  }
+
+  public get messages(): Messages {
+    return this.getOrSet('messages', Messages)
   }
 
   public get metadata(): Metadata {

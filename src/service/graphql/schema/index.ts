@@ -3,8 +3,8 @@ import { GraphQLSchema } from 'graphql'
 import { makeExecutableSchema } from 'graphql-tools'
 import { any, keys, map, zipObj } from 'ramda'
 
-import { MessagesAPI, messagesLoader } from '../resources/messages'
 import { GraphQLServiceContext } from '../typings'
+import { messagesLoader } from './messagesLoader'
 import { nativeSchemaDirectives } from './schemaDirectives'
 import { nativeResolvers, nativeTypeDefs, scalarResolversMap, shouldNotCacheWhenSchemaHas } from './typeDefs'
 
@@ -29,13 +29,6 @@ try{
 // tslint:disable-next-line:no-empty
 } catch (err) {}
 
-const messagesOptions = {
-  retryConfig: {
-    retries: 1,
-  },
-  timeout: 5000,
-}
-
 export const makeSchema = (ctx: GraphQLServiceContext) => {
   const {
     resolvers: appResolvers,
@@ -56,7 +49,7 @@ export const makeSchema = (ctx: GraphQLServiceContext) => {
 
   const resolverContext = {
     getLocaleTo,
-    translationsLoader: messagesLoader(new MessagesAPI(ctx.vtex, messagesOptions, ctx.clients.logger)),
+    translationsLoader: messagesLoader(ctx.clients.messages),
   }
 
   const executableSchema = makeExecutableSchema({

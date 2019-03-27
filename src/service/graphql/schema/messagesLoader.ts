@@ -1,37 +1,10 @@
 import DataLoader from 'dataloader'
 import { append, flatten, map, pluck, prop, sortBy, toPairs, zip } from 'ramda'
 
-import { Logger } from '../../../clients'
-import { InstanceOptions } from '../../../HttpClient'
-import { forWorkspace, IODataSource } from '../../../IODataSource'
-import { IOContext } from '../../typings'
+import { Messages } from '../../../clients'
 import { IOMessage } from '../schema/typeDefs/ioMessage'
 
 const MAX_QUERYSTRING_LENGTH = 2048
-
-export class MessagesAPI extends IODataSource {
-  protected httpClientFactory = forWorkspace
-  protected service = 'messages.vtex'
-
-  constructor(vtex: IOContext, options: InstanceOptions, protected logger: Logger) {
-    super(vtex, options)
-  }
-
-  public translate = (to: string, data: IOMessage[]): Promise<string[]> => this.http.get('/_v/translations', {
-    headers: {
-      Authorization: this.context!.authToken,
-    },
-    metric: 'runtime-translate',
-    params: {
-      __p: process.env.VTEX_APP_ID,
-      data: JSON.stringify(data),
-      to,
-    },
-  }).catch(err => {
-    this.logger.error(err).catch(console.error)
-    return pluck('content', data)
-  })
-}
 
 const batchData = (lengths: number[], indexedData: IOMessage[]) => {
   let batchedData: IOMessage[][] = []
@@ -57,7 +30,7 @@ const sortByContent = (indexedData: Array<[string, IOMessage]>) => sortBy(([_, d
 
 const sortByOriginalIndex = (indexedTraslations: Array<[string, string]>) => sortBy(([index, _]) => Number(index), indexedTraslations)
 
-export const messagesLoader = (messagesAPI: MessagesAPI) => new DataLoader<IOMessage, string>(
+export const messagesLoader = (messagesAPI: Messages) => new DataLoader<IOMessage, string>(
   async (data: IOMessage[]) => {
     const to = data[0].to // Should be consistent across batches
     const indexedData = toPairs(data) as Array<[string, IOMessage]>
