@@ -7,7 +7,12 @@ import { addProcessListeners } from '../utils/unhandled'
 import { createGraphQLRoute, GRAPHQL_ROUTE } from './graphql'
 import { createHttpRoute } from './http'
 import { Service } from './Service'
-import { RouteHandler, ServiceDescriptor } from './typings'
+import { ClientsConfig, RouteHandler, ServiceDescriptor } from './typings'
+
+const defaultClients: ClientsConfig = {
+  implementation: IOClients,
+  options: {},
+}
 
 export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
   public routes: Record<string, RouteHandler<ClientsT, StateT, CustomT>>
@@ -21,13 +26,19 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
     descriptor: ServiceDescriptor,
   ) {
     const {config} = service
+    const clients = {
+      ...defaultClients,
+      ...config.clients,
+    }
 
-    const Clients = (config.clients.implementation || IOClients) as ClientsImplementation<ClientsT>
+    const Clients = clients.implementation as ClientsImplementation<ClientsT>
 
-    this.routes = map(createHttpRoute<ClientsT, StateT, CustomT>(Clients, config.clients.options), config.routes)
+    this.routes = config.routes
+      ? map(createHttpRoute<ClientsT, StateT, CustomT>(Clients, clients.options), config.routes)
+      : {}
 
     if (config.graphql) {
-      this.routes[GRAPHQL_ROUTE] = createGraphQLRoute<ClientsT, StateT, CustomT>(config.graphql, Clients, config.clients.options)
+      this.routes[GRAPHQL_ROUTE] = createGraphQLRoute<ClientsT, StateT, CustomT>(config.graphql, Clients, clients.options)
     }
 
     this.events = config.events

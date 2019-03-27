@@ -46,10 +46,10 @@ export interface GraphQLOptions<ClientsT extends IOClients = IOClients, StateT =
 }
 
 export interface ServiceConfig<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
-  clients: ClientsConfig<ClientsT>
+  clients?: ClientsConfig<ClientsT>
   events?: any,
   graphql?: GraphQLOptions<ClientsT, StateT, CustomT>,
-  routes: Record<string, RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>>
+  routes?: Record<string, RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>>
 }
 
 export interface DataSources {
