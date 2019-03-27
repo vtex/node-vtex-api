@@ -14,6 +14,8 @@ const defaultClients: ClientsConfig = {
   options: {},
 }
 
+console.log('require @vtex/api 3.0.3-beta.3 Runtime')
+
 export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
   public routes: Record<string, RouteHandler<ClientsT, StateT, CustomT>>
   public events: any
@@ -25,6 +27,8 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
     // tslint:disable-next-line
     descriptor: ServiceDescriptor,
   ) {
+
+    console.log('@vtex/api 3.0.3-beta.3 Runtime', service, descriptor)
     const {config} = service
     const clients = {
       ...defaultClients,
