@@ -33,7 +33,7 @@ const messagesOptions = {
   retryConfig: {
     retries: 1,
   },
-  timeout: 1000,
+  timeout: 5000,
 }
 
 export const makeSchema = (ctx: GraphQLServiceContext) => {
