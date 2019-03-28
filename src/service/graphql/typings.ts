@@ -14,6 +14,7 @@ export interface GraphQLContext {
     graphqlResponse?: GraphQLResponse
     responseInit?: HttpQueryResponse['responseInit']
     status?: 'success' | 'error'
+    graphqlErrors?: any[]
   }
 }
 

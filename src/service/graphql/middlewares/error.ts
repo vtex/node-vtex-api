@@ -3,6 +3,7 @@ import { any, chain, compose, filter, forEach, has, pluck, prop } from 'ramda'
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
 import { formatError } from '../utils/formatError'
+import { generatePathName } from '../utils/pathname'
 
 const sender = process.env.VTEX_APP_ID
 
@@ -77,6 +78,11 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
 
       // Log each error to splunk individually
       forEach((err: any) => {
+        // Add pathName to each error
+        if (err.path) {
+          err.pathName = generatePathName(err.path)
+        }
+
         const log = {
           ...err,
           forwardedHost,
@@ -92,6 +98,9 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
           ctx.clients.logger.sendLog('-', log, 'error').catch()
         })
       }, graphqlErrors)
+
+      // Expose graphqlErrors with pathNames to timings middleware
+      ctx.graphql.graphqlErrors = graphqlErrors
 
       // Show message in development environment
       if (!production) {
