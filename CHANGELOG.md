@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- tsErrorsAsWarnings parameter for the `link` and `relink` methods of the `Builder` class
 
 ## [3.0.6] - 2019-03-28
 
@@ -128,7 +130,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [2.3.0-beta] - 2019-03-13
 
-### Changed 
+### Changed
 - Remove production from MetricsAccumulator methods and add cacheHits
 
 ## [2.2.0] - 2019-03-12
