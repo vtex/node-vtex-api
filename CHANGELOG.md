@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
-- tsErrorsAsWarnings parameter for the `link` and `relink` methods of the `Builder` class
+- tsErrorsAsWarnings parameter for the `linkApp` and `relinkApp` methods of the `Builder` class
 
 ## [3.0.6] - 2019-03-28
 
