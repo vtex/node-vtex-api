@@ -14,5 +14,8 @@ import { ServiceConfig } from './typings'
  */
 export class Service<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void>{
   constructor(public config: ServiceConfig<ClientsT, StateT, CustomT>) {
+    if (config.routes && config.routes.graphql) {
+      throw new Error('Route id "graphql" is reserved. To create a GraphQL app, export a "graphql" key with {resolvers}.')
+    }
   }
 }
