@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.0.9] - 2019-03-28
+
 ### Changed
 - Expose more details on all errors (e.g. operationId, requestId, query source, variables).
 
