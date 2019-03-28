@@ -1,4 +1,4 @@
-import { any, chain, compose, filter, has, pathEq, pluck, prop } from 'ramda'
+import { any, chain, compose, filter, forEach, has, pluck, prop } from 'ramda'
 
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
@@ -28,50 +28,79 @@ const parseErrorResponse = (response: any) => {
   return null
 }
 
-const isErrorWhitelisted = (errors: any) => Array.isArray(errors) && any(
-  pathEq(['extensions', 'code'], 'PERSISTED_QUERY_NOT_FOUND'),
-  errors
-)
+export async function error (ctx: GraphQLServiceContext, next: () => Promise<void>) {
+  const {
+    headers: {
+      'x-forwarded-host': forwardedHost,
+      'x-forwarded-proto': forwardedProto,
+      'x-vtex-platform': platform,
+    },
+    vtex: {
+      account,
+      workspace,
+      production,
+      operationId,
+      requestId,
+      route: {
+        id,
+      },
+    },
+  } = ctx
 
-export const error = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
-  const {vtex: { account, workspace }} = ctx
-  let parsedError: any
+  let graphqlErrors: any[] | null = null
 
   try {
     await next()
 
-    parsedError = parseErrorResponse(ctx.graphql.graphqlResponse || {})
+    graphqlErrors = parseErrorResponse(ctx.graphql.graphqlResponse || {})
   }
   catch (e) {
     if (e.isGraphQLError) {
       const response = JSON.parse(e.message)
-      parsedError = parseError(response)
+      graphqlErrors = parseError(response)
       ctx.body = response
     } else {
-      parsedError = [formatError(e)]
-      ctx.body = {errors: parsedError}
+      graphqlErrors = [formatError(e)]
+      ctx.body = {errors: graphqlErrors}
     }
 
+    // Add response
     ctx.status = e.statusCode || 500
     if (e.headers) {
-      Object.keys(e.headers).forEach(header => {
-        ctx.set(header, e.headers[header])
-      })
+      ctx.set(e.headers)
     }
   }
   finally {
-    if (parsedError) {
+    if (graphqlErrors) {
+      ctx.graphql.status = 'error'
       ctx.set('Cache-Control', 'no-cache, no-store')
-      if (!isErrorWhitelisted(parsedError)) {
-        try {
-          ctx.clients.logger.error(parsedError)
-        } catch (e) {
-          console.error(e)
+
+      // Log each error to splunk individually
+      forEach((err: any) => {
+        const log = {
+          ...err,
+          forwardedHost,
+          forwardedProto,
+          operationId,
+          platform,
+          requestId,
+          routeId: id,
         }
-        const message = parseMessage(parsedError)
+
+        ctx.clients.logger.sendLog('-', log, 'error').catch((reason) => {
+          console.error('Error logging error 🙄 retrying once...', reason ? reason.response : '')
+          ctx.clients.logger.sendLog('-', log, 'error').catch()
+        })
+      }, graphqlErrors)
+
+      // Show message in development environment
+      if (!production) {
+        const message = parseMessage(graphqlErrors)
         console.error(message.join('\n'))
         console.log(getSplunkQuery(account, workspace))
       }
+    } else {
+      ctx.graphql.status = 'success'
     }
   }
 }
