@@ -23,6 +23,6 @@ export async function timings<T extends IOClients, U, V> (ctx: ServiceContext<T,
   const end = process.hrtime(start)
   const millis = hrToMillis(end)
 
-  metrics.batch(`http-handler-${statusLabel(status)}-${id}`, end)
+  metrics.batch(`http-handler-${id}`, end, { [statusLabel(status)]: 1 })
   console.log(log(ctx, millis))
 }
