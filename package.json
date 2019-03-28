@@ -1,6 +1,10 @@
 {
   "name": "@vtex/api",
+<<<<<<< HEAD
   "version": "3.0.7",
+=======
+  "version": "3.0.7-beta",
+>>>>>>> Release v3.0.7-beta
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
