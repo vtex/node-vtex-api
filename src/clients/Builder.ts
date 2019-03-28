@@ -55,7 +55,7 @@ export class Builder {
     return this.http.post<BuildResult>(routes.Clean(app), {headers, metric})
   }
 
-  public linkApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params = {}) => {
+  public linkApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}) => {
     return this.zipAndSend(routes.Link(app), app, files, zipOptions, params)
   }
 
@@ -63,7 +63,7 @@ export class Builder {
     return this.zipAndSend(routes.Publish(app), app, files, zipOptions)
   }
 
-  public relinkApp = (app: string, changes: Change[], params = {}) => {
+  public relinkApp = (app: string, changes: Change[], params: RequestParams = {}) => {
     const headers = {
       'Content-Type': 'application/json',
       ...this.stickyHost && {'x-vtex-sticky-host': this.stickyHost},
@@ -72,7 +72,7 @@ export class Builder {
     return this.http.put<BuildResult>(routes.Relink(app), changes, {headers, metric, params})
   }
 
-  private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky, stickyHint, zlib}: ZipOptions = {}, requestParams = {}) => {
+  private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky, stickyHint, zlib}: ZipOptions = {}, requestParams: RequestParams = {}) => {
     if (!(files[0] && files[0].path && files[0].content)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -105,6 +105,10 @@ export class Builder {
     this.stickyHost = host
     return data
   }
+}
+
+interface RequestParams {
+  tsErrorsAsWarnings?: boolean,
 }
 
 interface ZipOptions {
