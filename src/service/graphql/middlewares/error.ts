@@ -89,6 +89,7 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
           forwardedProto,
           operationId,
           platform,
+          query: ctx.graphql.query,
           requestId,
           routeId: id,
         }
