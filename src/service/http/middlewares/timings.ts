@@ -1,7 +1,6 @@
 import { IOClients } from '../../../clients/IOClients'
 import { hrToMillis } from '../../../utils/time'
 import { updateLastLogger } from '../../../utils/unhandled'
-import { GRAPHQL_ROUTE } from '../../graphql'
 import { ServiceContext } from '../../typings'
 
 const statusLabel = (status: number) => `${Math.floor(status/100)}xx`
@@ -13,7 +12,7 @@ const log = <T extends IOClients, U, V>(
   `${new Date().toISOString()}\t${account}/${workspace}:${id}\t${status}\t${method}\t${path}\t${millis}ms`
 
 
-export async function logger<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
+export async function timings<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
   const start = process.hrtime()
   let error
 
@@ -59,7 +58,7 @@ export async function logger<T extends IOClients, U, V> (ctx: ServiceContext<T, 
       status,
     }, logType)
 
-    metrics.batch(`http-handler-${statusLabel(status)}-${id.replace(GRAPHQL_ROUTE, 'graphql')}`, end)
+    metrics.batch(`http-handler-${statusLabel(status)}-${id}`, end)
     console.log(log(ctx, millis))
   }
 }
