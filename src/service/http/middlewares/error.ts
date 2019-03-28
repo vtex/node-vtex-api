@@ -43,7 +43,7 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
 
     // Use sendLog directly to avoid cleaning error twice.
     const log = {
-      ...error,
+      ...err,
       forwardedHost,
       forwardedPath,
       forwardedProto,
