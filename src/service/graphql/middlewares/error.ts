@@ -34,13 +34,13 @@ const isErrorWhitelisted = (errors: any) => Array.isArray(errors) && any(
 )
 
 export const error = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
-  const {vtex: { account, workspace }, graphql: { graphqlResponse }} = ctx
+  const {vtex: { account, workspace }} = ctx
   let parsedError: any
 
   try {
     await next()
 
-    parsedError = parseErrorResponse(graphqlResponse || {})
+    parsedError = parseErrorResponse(ctx.graphql.graphqlResponse || {})
   }
   catch (e) {
     if (e.isGraphQLError) {
