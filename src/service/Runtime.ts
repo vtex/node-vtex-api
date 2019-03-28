@@ -4,7 +4,7 @@ import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { EnvMetric, MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { addProcessListeners } from '../utils/unhandled'
 
-import { createGraphQLRoute, GRAPHQL_ROUTE } from './graphql'
+import { createGraphQLRoute, GRAPHQL_ROUTE, GRAPHQL_ROUTE_LEGACY } from './graphql'
 import { createHttpRoute } from './http'
 import { Service } from './Service'
 import { ClientsConfig, RouteHandler, ServiceDescriptor } from './typings'
@@ -38,7 +38,12 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
       : {}
 
     if (config.graphql) {
-      this.routes[GRAPHQL_ROUTE] = createGraphQLRoute<ClientsT, StateT, CustomT>(config.graphql, Clients, clients.options)
+      let graphqlRoute = GRAPHQL_ROUTE
+      if (descriptor.routes && descriptor.routes[GRAPHQL_ROUTE_LEGACY]) {
+        console.warn('Using legacy graphql route id', GRAPHQL_ROUTE_LEGACY)
+        graphqlRoute = GRAPHQL_ROUTE_LEGACY
+      }
+      this.routes[graphqlRoute] = createGraphQLRoute<ClientsT, StateT, CustomT>(config.graphql, Clients, clients.options)
     }
 
     this.events = config.events
