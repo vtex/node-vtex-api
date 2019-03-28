@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.0.7-beta.0] - 2019-03-28
+
 ### Changed
 - Conflate 2xx and 5xx status labels to success and error respectively.
 - Moves metrics status from name to dimension (`http-handler-2xx-render` becomes `http-handler-render` with `2xx` count)
