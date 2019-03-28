@@ -2,7 +2,6 @@ import { HttpQueryRequest } from 'apollo-server-core'
 import { HttpQueryResponse } from 'apollo-server-core/dist/runHttpQuery'
 import { GraphQLSchema } from 'graphql'
 import { GraphQLResponse } from 'graphql-extensions'
-import { Middleware } from 'koa-compose'
 
 import { IOClients } from '../../clients/IOClients'
 import { GraphQLOptions, ServiceContext } from '../typings'
@@ -15,6 +14,10 @@ export interface GraphQLContext {
     responseInit?: HttpQueryResponse['responseInit']
     status?: 'success' | 'error'
     graphqlErrors?: any[]
+    formatters?: {
+      formatError: <T>(e: T) => T
+      formatResponse: <T>(r: T) => T
+    }
   }
 }
 
