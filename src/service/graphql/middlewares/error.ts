@@ -2,13 +2,12 @@ import { any, chain, compose, filter, forEach, has, pluck, prop } from 'ramda'
 
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
-import { formatError } from '../utils/formatError'
 import { generatePathName } from '../utils/pathname'
 
 const sender = process.env.VTEX_APP_ID
 
 const getSplunkQuery = (account: string, workspace: string) =>
-  `Try this query at Splunk to retrieve error log: 'index=colossus key=log_error sender="${sender}" account=${account} workspace=${workspace}`
+  `Try this query at Splunk to retrieve error log: 'index=colossus key=log_error sender="${sender}" account=${account} workspace=${workspace}'`
 
 const parseMessage = pluck('message')
 
@@ -31,17 +30,10 @@ const parseErrorResponse = (response: any) => {
 
 export async function error (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {
-    headers: {
-      'x-forwarded-host': forwardedHost,
-      'x-forwarded-proto': forwardedProto,
-      'x-vtex-platform': platform,
-    },
     vtex: {
       account,
       workspace,
       production,
-      operationId,
-      requestId,
       route: {
         id,
       },
@@ -56,6 +48,8 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
     graphqlErrors = parseErrorResponse(ctx.graphql.graphqlResponse || {})
   }
   catch (e) {
+    const formatError = ctx.graphql.formatters!.formatError
+
     if (e.isGraphQLError) {
       const response = JSON.parse(e.message)
       graphqlErrors = parseError(response)
@@ -85,11 +79,6 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
 
         const log = {
           ...err,
-          forwardedHost,
-          forwardedProto,
-          operationId,
-          platform,
-          requestId,
           routeId: id,
         }
 

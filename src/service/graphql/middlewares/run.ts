@@ -2,8 +2,6 @@ import { runHttpQuery } from 'apollo-server-core'
 
 import { LRUCache } from '../../../caches'
 import { GraphQLServiceContext } from '../typings'
-import { formatError } from '../utils/formatError'
-import { formatResponse } from '../utils/formatResponse'
 import { defaultMaxAgeFromCtx } from '../utils/maxAgeEnum'
 
 const ONE_HOUR_MS = 60 * 60 * 1e3
@@ -25,9 +23,15 @@ export const run = async (ctx: GraphQLServiceContext, next: () => Promise<void>)
 
   const {
     dataSources,
-    schema,
+    formatters,
     query,
+    schema,
   } = graphql
+
+  const {
+    formatError,
+    formatResponse,
+  } = formatters!
 
   // We don't want resolvers to have access to the GraphQL context,
   // so we delete it here and restore it after execution.

@@ -4,6 +4,7 @@ import { createHttpRoute } from '../http'
 import { GraphQLOptions, RouteHandler } from '../typings'
 
 import { error } from './middlewares/error'
+import { createFormatters } from './middlewares/formatters'
 import { parseQuery } from './middlewares/query'
 import { response } from './middlewares/response'
 import { run } from './middlewares/run'
@@ -32,6 +33,7 @@ export const createGraphQLRoute = <ClientsT extends IOClients, StateT, CustomT>(
       error,
       upload,
       parseQuery,
+      createFormatters,
       injectSchema,
       run,
       response,
