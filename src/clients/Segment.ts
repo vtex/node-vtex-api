@@ -31,17 +31,28 @@ export class Segment extends IODataSource {
   public segment = (query?: Record<string, string>, token?: string) => {
     const {segmentToken, authToken, account} = this.context!
     const selectedToken = token || segmentToken
+    const config = this.segmentConfig({authToken, query, account})
 
-    return this.http.get<SegmentData>(routes.segments(selectedToken), {
-      headers: {
-        'Content-Type': 'application/json',
-        'Proxy-Authorization': authToken,
-      },
-      metric: 'segment-get',
-      params: {
-        an: account,
-        ...query,
-      },
-    })
+    return this.http.get<SegmentData>(routes.segments(selectedToken), config)
   }
+
+  public rawSegment = (query?: Record<string, string>, token?: string) => {
+    const {segmentToken, authToken, account} = this.context!
+    const selectedToken = token || segmentToken
+    const config = this.segmentConfig({authToken, query, account})
+
+    return this.http.getRaw<SegmentData>(routes.segments(selectedToken), config)
+  }
+
+  private segmentConfig = ({authToken, query, account}: {authToken: string, query?: Record<string, string>, account: string}) => ({
+    headers: {
+      'Content-Type': 'application/json',
+      'Proxy-Authorization': authToken,
+    },
+    metric: 'segment-get',
+    params: {
+      an: account,
+      ...query,
+    },
+  })
 }
