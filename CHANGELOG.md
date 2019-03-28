@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.0.7] - 2019-03-28
+### Added
+- tsErrorsAsWarnings parameter for the `linkApp` and `relinkApp` methods of the `Builder` class
+
 ## [3.0.6] - 2019-03-28
 
 ## [3.0.5] - 2019-03-27
@@ -128,7 +132,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [2.3.0-beta] - 2019-03-13
 
-### Changed 
+### Changed
 - Remove production from MetricsAccumulator methods and add cacheHits
 
 ## [2.2.0] - 2019-03-12
