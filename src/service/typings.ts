@@ -8,7 +8,6 @@ import { ParsedUrlQuery } from 'querystring'
 import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { InstanceOptions } from '../HttpClient'
 import { Recorder } from '../HttpClient/middlewares/recorder'
-import { StatusTrack } from '../metrics/MetricsAccumulator'
 
 export interface Context<T extends IOClients> {
   clients: T

@@ -12,6 +12,8 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
   } catch (e) {
     console.error('[node-vtex-api error]', e)
     const err = cleanError(e)
+
+    // Add response
     ctx.status = e && e.status >= 400 && e.status <= 599
       ? e.status
       : ctx.status >= 500 && ctx.status <= 599
@@ -20,7 +22,42 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
     ctx.body = ctx.body || err
     ctx.set(CACHE_CONTROL_HEADER, production ? `public, max-age=${TWO_SECONDS_S}` : `no-cache, no-store`)
 
-    // Rethrows to be caught by logger middleware
-    throw err
+    // Log error
+    const {
+      method,
+      status,
+      vtex: {
+        operationId,
+        requestId,
+        route: {
+          id,
+        },
+      },
+      headers: {
+        'x-forwarded-path': forwardedPath,
+        'x-forwarded-host': forwardedHost,
+        'x-forwarded-proto': forwardedProto,
+        'x-vtex-platform': platform,
+      },
+    } = ctx
+
+    const log = {
+      ...err,
+      forwardedHost,
+      forwardedPath,
+      forwardedProto,
+      method,
+      operationId,
+      platform,
+      requestId,
+      routeId: id,
+      status,
+    }
+
+    // Use sendLog directly to avoid cleaning error twice.
+    ctx.clients.logger.sendLog('-', log, 'error').catch((reason) => {
+      console.error('Error logging error 🙄 retrying once...', reason ? reason.response : '')
+      ctx.clients.logger.sendLog('-', log, 'error').catch()
+    })
   }
 }

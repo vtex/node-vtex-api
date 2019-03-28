@@ -20,7 +20,8 @@ function recordTimings(start: [number, number], name: string, timings: Record<st
   // Capture the total amount of time spent in this middleware
   const end = process.hrtime(start)
   timings[name] = end
-  metrics.batch(name, end)
+  const label = `middleware-${name}`
+  metrics.batch(label, end)
 
   // This middleware has added it's own metrics
   // Just add them to `timings` scoped by the middleware's name and batch them
@@ -28,7 +29,7 @@ function recordTimings(start: [number, number], name: string, timings: Record<st
   if (middlewareMetricsKeys.length > 0) {
     forEach((k: string) => {
       const metricEnd = middlewareMetrics[k]
-      const metricName = `${name}-${k}`
+      const metricName = `${label}-${k}`
       timings[metricName] = metricEnd
       metrics.batch(metricName, metricEnd)
     }, middlewareMetricsKeys)

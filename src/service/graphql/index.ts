@@ -12,7 +12,8 @@ import { timings } from './middlewares/timings'
 import { upload } from './middlewares/upload'
 import { GraphQLContext, GraphQLServiceContext } from './typings'
 
-export const GRAPHQL_ROUTE = '__graphql'
+export const GRAPHQL_ROUTE_LEGACY = '__graphql'
+export const GRAPHQL_ROUTE = 'graphql'
 
 export const createGraphQLRoute = <ClientsT extends IOClients, StateT, CustomT>(
     graphql: GraphQLOptions<ClientsT, StateT, CustomT>,
@@ -27,8 +28,8 @@ export const createGraphQLRoute = <ClientsT extends IOClients, StateT, CustomT>(
 
     return createHttpRoute<ClientsT, StateT, CustomT & GraphQLContext>(Clients, options)([
       injectGraphql,
-      error,
       timings,
+      error,
       upload,
       parseQuery,
       injectSchema,
