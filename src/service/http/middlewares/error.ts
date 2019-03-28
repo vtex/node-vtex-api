@@ -41,7 +41,6 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
       },
     } = ctx
 
-    // Use sendLog directly to avoid cleaning error twice.
     const log = {
       ...err,
       forwardedHost,
@@ -55,6 +54,7 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
       status,
     }
 
+    // Use sendLog directly to avoid cleaning error twice.
     ctx.clients.logger.sendLog('-', log, 'error').catch((reason) => {
       console.error('Error logging error 🙄 retrying once...', reason ? reason.response : '')
       ctx.clients.logger.sendLog('-', log, 'error').catch()

@@ -8,7 +8,7 @@ const statusLabel = (status: number) =>
 export const metricsMiddleware = (metrics: MetricsAccumulator) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     const start = ctx.config.metric ? process.hrtime() : null
-    let status
+    let status: string = 'unknown'
 
     try {
       await next()
@@ -33,8 +33,9 @@ export const metricsMiddleware = (metrics: MetricsAccumulator) => {
     } finally {
       if (ctx.config.metric) {
         const end = process.hrtime(start as [number, number])
-        const label = `http-client-${status}-${ctx.config.metric}`
+        const label = `http-client-${ctx.config.metric}`
         const extensions: Record<string, string | number> = {
+          [status]: 1,
         }
 
         if (ctx.cacheHit) {
