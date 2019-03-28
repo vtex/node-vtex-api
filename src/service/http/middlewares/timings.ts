@@ -1,9 +1,8 @@
 import { IOClients } from '../../../clients/IOClients'
+import { statusLabel } from '../../../utils/status'
 import { hrToMillis } from '../../../utils/time'
 import { updateLastLogger } from '../../../utils/unhandled'
 import { ServiceContext } from '../../typings'
-
-const statusLabel = (status: number) => `${Math.floor(status/100)}xx`
 
 const log = <T extends IOClients, U, V>(
   {vtex: {account, workspace, route: {id}}, path, method, status}: ServiceContext<T, U, V>,
@@ -23,6 +22,6 @@ export async function timings<T extends IOClients, U, V> (ctx: ServiceContext<T,
   const end = process.hrtime(start)
   const millis = hrToMillis(end)
 
-  metrics.batch(`http-handler-${id}`, end, { [statusLabel(status)]: 1 })
+  metrics.batch(`http-handler-${statusLabel(status)}-${id}`, end, { [status]: 1 })
   console.log(log(ctx, millis))
 }

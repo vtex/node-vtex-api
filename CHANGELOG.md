@@ -7,20 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [3.0.7] - 2019-03-28
-### Added
-- tsErrorsAsWarnings parameter for the `linkApp` and `relinkApp` methods of the `Builder` class
-## [3.0.7-beta] - 2019-03-28
-
 ### Changed
+- Conflate 2xx and 5xx status labels to success and error respectively.
 - Moves metrics status from name to dimension (`http-handler-2xx-render` becomes `http-handler-render` with `2xx` count)
 - Adds `graphql-operation` metric that considers if _any_ resolver had errors, with two dimensions: success and error
-- Adds success and error dimensions to individual resolver metrics
 - Logs each resolver error individually and add request information
 - Stop logging successful route handlers
 - Add single hardcoded retry for sending error logs
 - Prepare for `graphql` route id (deprecating `__graphql`)
 - Disallow declaration of `graphql` as http route handler
+
+## [3.0.7] - 2019-03-28
+### Added
+- tsErrorsAsWarnings parameter for the `linkApp` and `relinkApp` methods of the `Builder` class
+
+## [3.0.7-beta] - 2019-03-28
 
 ## [3.0.6] - 2019-03-28
 

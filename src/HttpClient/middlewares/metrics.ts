@@ -1,9 +1,7 @@
 import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
 import { TIMEOUT_CODE } from '../../utils/retry'
+import { statusLabel } from '../../utils/status'
 import { MiddlewareContext } from '../context'
-
-const statusLabel = (status: number) =>
-  `${Math.floor(status/100)}xx`
 
 export const metricsMiddleware = (metrics: MetricsAccumulator) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
@@ -33,10 +31,8 @@ export const metricsMiddleware = (metrics: MetricsAccumulator) => {
     } finally {
       if (ctx.config.metric) {
         const end = process.hrtime(start as [number, number])
-        const label = `http-client-${ctx.config.metric}`
-        const extensions: Record<string, string | number> = {
-          [status]: 1,
-        }
+        const label = `http-client-${status}-${ctx.config.metric}`
+        const extensions: Record<string, string | number> = {}
 
         if (ctx.cacheHit) {
           Object.assign(extensions, ctx.cacheHit)
