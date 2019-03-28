@@ -83,13 +83,23 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
           err.pathName = generatePathName(err.path)
         }
 
+        // Do not log variables for file uploads
+        const variables = ctx.request.is('multipart/form-data')
+          ? '[GraphQL Upload]'
+          : ctx.graphql.query && (ctx.graphql.query as any).variables
+
+        const query = {
+          ...ctx.graphql.query,
+          variables,
+        }
+
         const log = {
           ...err,
           forwardedHost,
           forwardedProto,
           operationId,
           platform,
-          query: ctx.graphql.query,
+          query,
           requestId,
           routeId: id,
         }
