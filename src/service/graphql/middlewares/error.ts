@@ -86,12 +86,16 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
         variables,
       }
 
-      if (!ctx.vtex.production) {
-        // Add error details to body
-        ctx.body.query = query
+      if (!ctx.body.extensions) {
+        ctx.body.extensions = {}
       }
 
-      ctx.body.operationId = operationId
+      // Add error details to body
+      if (!ctx.vtex.production) {
+        ctx.body.extensions.query = query
+      }
+
+      ctx.body.extensions.operationId = operationId
 
       // Log each error to splunk individually
       forEach((err: any) => {
