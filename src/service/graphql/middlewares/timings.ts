@@ -32,7 +32,15 @@ const batchResolversTracing = (resolvers: ResolverTracing[]) => {
 }
 
 export const timings = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
+  const start = process.hrtime()
+
+  // Errors will be caught by the next middleware so we don't have to catch.
   await next()
+
+  // Batch success or error metric for entire operation
+  metrics.batch(`graphql-operation`, process.hrtime(start), { [ctx.graphql.status as string]: 1 })
+
+  // Batch timings for individual resolvers
   const resolverTimings = path(['extensions', 'tracing', 'execution', 'resolvers'], ctx.graphql.graphqlResponse!) as ResolverTracing[]
   batchResolversTracing(resolverTimings)
 }

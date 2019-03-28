@@ -13,6 +13,7 @@ export interface GraphQLContext {
     query?: HttpQueryRequest['query']
     graphqlResponse?: GraphQLResponse
     responseInit?: HttpQueryResponse['responseInit']
+    status?: 'success' | 'error'
   }
 }
 
