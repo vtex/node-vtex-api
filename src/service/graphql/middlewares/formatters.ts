@@ -15,10 +15,16 @@ const createFormatError = (details: any) => (error: any) => {
 
   if (formattedError.extensions && formattedError.extensions.exception) {
     formattedError.extensions.exception = cleanError(formattedError.extensions.exception)
+    if (formattedError.stack === formattedError.extensions.exception.stack) {
+      delete formattedError.extensions.exception.stack
+    }
   }
 
   if (formattedError.originalError) {
     formattedError.originalError = cleanError(formattedError.originalError)
+    if (formattedError.stack === formattedError.originalError.stack) {
+      delete formattedError.originalError.stack
+    }
   }
 
   Object.assign(formattedError, details)
