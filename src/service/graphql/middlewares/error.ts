@@ -76,21 +76,28 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
       ctx.graphql.status = 'error'
       ctx.set('Cache-Control', 'no-cache, no-store')
 
+      // Do not log variables for file uploads
+      const variables = ctx.request.is('multipart/form-data')
+      ? '[GraphQL Upload]'
+      : ctx.graphql.query && (ctx.graphql.query as any).variables
+
+      const query = {
+        ...ctx.graphql.query,
+        variables,
+      }
+
+      if (!ctx.vtex.production) {
+        // Add error details to body
+        ctx.body.query = query
+      }
+
+      ctx.body.operationId = operationId
+
       // Log each error to splunk individually
       forEach((err: any) => {
         // Add pathName to each error
         if (err.path) {
           err.pathName = generatePathName(err.path)
-        }
-
-        // Do not log variables for file uploads
-        const variables = ctx.request.is('multipart/form-data')
-          ? '[GraphQL Upload]'
-          : ctx.graphql.query && (ctx.graphql.query as any).variables
-
-        const query = {
-          ...ctx.graphql.query,
-          variables,
         }
 
         const log = {
