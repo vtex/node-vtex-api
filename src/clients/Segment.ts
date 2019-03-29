@@ -4,8 +4,11 @@ import { pickBy, prop } from 'ramda'
 import { forExternal, IODataSource } from '../IODataSource'
 
 export interface SegmentData {
+  campaigns?: any
   channel: number
+  priceTables?: any
   utm_campaign: string
+  regionId?: string
   utm_source: string
   utmi_campaign: string
   currencyCode: string
