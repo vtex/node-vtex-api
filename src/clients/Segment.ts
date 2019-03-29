@@ -3,7 +3,7 @@ import { pickBy, prop } from 'ramda'
 
 import { forExternal, IODataSource } from '../IODataSource'
 
-interface SegmentData {
+export interface SegmentData {
   channel: number
   utm_campaign: string
   utm_source: string
