@@ -1,6 +1,7 @@
-import { HttpClient, InstanceOptions } from '../HttpClient'
-import { HttpClientFactory, IODataSource } from '../IODataSource'
-import { IOContext } from '../service/typings'
+import parseCookie from 'cookie'
+import { pickBy, prop } from 'ramda'
+
+import { forExternal, IODataSource } from '../IODataSource'
 
 interface SegmentData {
   channel: number
@@ -14,25 +15,43 @@ interface SegmentData {
   [key: string]: any
 }
 
-const factory: HttpClientFactory = ({context, options}) => context &&
-  HttpClient.forExternal(`http://portal.vtexcommercestable.com.br`, context, options || {})
+const SEGMENT_COOKIE = 'vtex_segment'
+
+const sanitizeParams = (params?: Record<string, string>) => {
+  return pickBy((_, key) => !!key, params || {})
+}
 
 const routes = {
-  segments: (token: string | undefined) => token ? `/api/segments/${token}` : '/api/segments',
+  base: '/api/segments',
+  segments: (token: string | void) => token ? `${routes.base}/${token}` : routes.base,
 }
 
 export class Segment extends IODataSource {
-  protected httpClientFactory = factory
+  protected httpClientFactory = forExternal
+  protected service = 'http://portal.vtexcommercestable.com.br'
 
-  constructor(ctx: IOContext, opts: InstanceOptions) {
-    super(ctx, opts)
+  public segment = (query?: Record<string, string>, token?: string) =>
+    this.rawSegment(query, token).then(prop('data'))
+
+  public getOrCreateSegment = async (query?: Record<string, string>, token?: string) => {
+    const {
+      data: segmentData,
+      headers: {
+        'set-cookie': [setCookies],
+      },
+    } = await this.rawSegment(query, token)
+    const parsedCookie = parseCookie.parse(setCookies)
+    const segmentToken = prop(SEGMENT_COOKIE, parsedCookie)
+    return {
+      segmentData,
+      segmentToken,
+    }
   }
 
-  public segment = (query?: Record<string, string>, token?: string) => {
+  private rawSegment = (query?: Record<string, string>, token?: string) => {
     const {segmentToken, authToken, account} = this.context!
     const selectedToken = token || segmentToken
-
-    return this.http.get<SegmentData>(routes.segments(selectedToken), {
+    return this.http.getRaw<SegmentData>(routes.segments(selectedToken), ({
       headers: {
         'Content-Type': 'application/json',
         'Proxy-Authorization': authToken,
@@ -40,8 +59,8 @@ export class Segment extends IODataSource {
       metric: 'segment-get',
       params: {
         an: account,
-        ...query,
+        ...sanitizeParams(query),
       },
-    })
+    }))
   }
 }
