@@ -21,11 +21,13 @@ type Options<
   ClientsT extends IOClients = IOClients,
   StateT = void,
   CustomT = void
-> = Partial<Record<
-  HTTPMethods,
-  | RouteHandler<ClientsT, StateT, CustomT>
-  | Array<RouteHandler<ClientsT, StateT, CustomT>>
->>
+> = Partial<
+  Record<
+    HTTPMethods,
+    | RouteHandler<ClientsT, StateT, CustomT>
+    | Array<RouteHandler<ClientsT, StateT, CustomT>>
+  >
+>
 
 export function method<
   ClientsT extends IOClients = IOClients,
@@ -38,11 +40,13 @@ export function method<
   ) => {
     const verb = ctx.method.toUpperCase()
     const handler =
-      (options as Partial<Record<
-        string,
-        | RouteHandler<ClientsT, StateT, CustomT>
-        | Array<RouteHandler<ClientsT, StateT, CustomT>>
-      >>)[verb] || options.DEFAULT
+      (options as Partial<
+        Record<
+          string,
+          | RouteHandler<ClientsT, StateT, CustomT>
+          | Array<RouteHandler<ClientsT, StateT, CustomT>>
+        >
+      >)[verb] || options.DEFAULT
 
     if (Array.isArray(handler)) {
       await compose(handler)(ctx)
