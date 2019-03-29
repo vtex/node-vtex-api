@@ -12,19 +12,7 @@ type HTTPMethods =
   | 'OPTIONS'
   | 'TRACE'
   | 'PATCH'
-
-const TEN_SECONDS_S = 10
-
-const defaultHandler = <
-  ClientsT extends IOClients = IOClients,
-  StateT = void,
-  CustomT = void
->(
-  ctx: ServiceContext<ClientsT, StateT, CustomT>
-) => {
-  ctx.status = 405
-  ctx.set('cache-control', `public, max-age=${TEN_SECONDS_S}`)
-}
+  | 'DEFAULT'
 
 // tslint:disable-next-line:no-empty
 const emptyNext = async () => {}
@@ -33,11 +21,11 @@ type Options<
   ClientsT extends IOClients = IOClients,
   StateT = void,
   CustomT = void
-> = Record<
+> = Partial<Record<
   HTTPMethods,
   | RouteHandler<ClientsT, StateT, CustomT>
   | Array<RouteHandler<ClientsT, StateT, CustomT>>
->
+>>
 
 export function switcher<
   ClientsT extends IOClients = IOClients,
@@ -51,11 +39,11 @@ export function switcher<
     const { method } = ctx
     const verb = method.toUpperCase()
     const handler =
-      (options as Record<
+      (options as Partial<Record<
         string,
         | RouteHandler<ClientsT, StateT, CustomT>
         | Array<RouteHandler<ClientsT, StateT, CustomT>>
-      >)[verb] || defaultHandler
+      >>)[verb] || options.DEFAULT
 
     if (Array.isArray(handler)) {
       await compose(handler)(ctx)
