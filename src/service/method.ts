@@ -27,7 +27,7 @@ type Options<
   | Array<RouteHandler<ClientsT, StateT, CustomT>>
 >>
 
-export function switcher<
+export function method<
   ClientsT extends IOClients = IOClients,
   StateT = void,
   CustomT = void
@@ -36,8 +36,7 @@ export function switcher<
     ctx: ServiceContext<ClientsT, StateT, CustomT>,
     next: () => Promise<any>
   ) => {
-    const { method } = ctx
-    const verb = method.toUpperCase()
+    const verb = ctx.method.toUpperCase()
     const handler =
       (options as Partial<Record<
         string,
@@ -48,7 +47,6 @@ export function switcher<
     if (Array.isArray(handler)) {
       await compose(handler)(ctx)
     } else if (handler) {
-      // tslint:disable-next-line:no-empty
       await handler(ctx, emptyNext)
     }
 
