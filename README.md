@@ -1,89 +1,52 @@
 # VTEX IO API Client for Node
 
-This client enables Node developers to quickly integrate with the VTEX IO APIs.
+This library enables developers to quickly integrate with the VTEX IO APIs and create full fledged node services using VTEX IO.
 
 [![Build Status](https://travis-ci.org/vtex/node-vtex-api.svg?branch=master)](https://travis-ci.org/vtex/node-vtex-api)
 
 ## Getting started
 
-Usage:
+For a complete example on using `@vtex/api`, check out this app: https://github.com/vtex-apps/service-example
 
-We generally create a `Resources` class that groups all relevant clients and initialize them with the current request's `ctx.vtex` context, which includes `authToken`, `account`, `workspace`, etc.
+The most basic usage is to export a new `Service()` with your route handlers:
 
 ```
-import {Apps, LRUCache, Registry, VBase, ServiceContext} from '@vtex/api'
+// Import global types
+import './globals'
 
-const MAX_ELEMS = 1000
-const RESPONSE_CACHE_TTL_MS = 60 * 60 * 1000
-const LONG_TIMEOUT = 20 * 1000
+import { Service } from '@vtex/api'
 
-const cacheStorage = new LRUCache<string, any>({
-  max: MAX_ELEMS,
-  maxAge: RESPONSE_CACHE_TTL_MS,
+import { clients } from './clients'
+import example from './handlers/example'
+
+// Export a service that defines route handlers and client options.
+export default new Service({
+  clients,
+  routes: {
+    example,
+  },
 })
+```
 
-// `cacheStorage` has a `getStats` method.
-metrics.addOnFlushMeter(() => ({...cacheStorage.getStats(), name: 'example-cache-stats'}))
+This allows you to define middlewares that receive a `Context` param which contains all IO Clients in the `clients` property:
 
-export default class Resources {
-  public apps: Apps
-  public registry: Registry
-  public vbase: VBase
+```
+export const example = async (ctx: Context, next: () => Promise<any>) => {
+  const {state: {code}, clients: {apps}} = ctx
+  console.log('Received code:', code)
+
+  const apps = await apps.listApps()
   
-  constructor (ctx: ColossusContext) {
-    const opts = {cacheStorage}
-    const withLongTimeout = {...opts, timeout: LONG_TIMEOUT}
+  ctx.status = 200
+  ctx.body = apps
+  ctx.set('Cache-Control', 'private')
 
-    this.apps = new Apps(ctx.vtex, withLongTimeout)
-    this.registry = new Registry(ctx.vtex, withLongTimeout)
-    this.vbase = new VBase(ctx.vtex, opts)
-  }
+  await next()
 }
 ```
+
+`ctx.clients.apps` is an instance of `Apps`.
 
 ## Development
 
 Install the dependencies (`yarn`) and run `yarn watch`.
-
-### Using VBaseClient.sendFile
-
-An example usage of the three supported methods of sending a file to VBase:
-
-```js
-import {VBase} from '@vtex/api'
-import {createReadStream} from 'fs'
-
-const client = new VBase({
-  account: 'account',
-  workspace: 'workspace',
-  authToken: 'test',
-  userAgent: 'test send',
-  region: 'aws-us-east-1',
-})
-
-client.saveFile(
-  'bucket',
-  'test-send-stream-gzip.txt',
-  createReadStream('./test-send.txt'),
-  {gzip: true, gzipOptions: {level: 9}}
-).then((res) => {
-  console.log('gz:', res)
-})
-
-client.saveFile(
-  'bucket',
-  'test-send-stream.txt',
-  createReadStream('./test-send.txt'),
-  {gzip: false}
-).then((res) => {
-  console.log('stream:', res)
-})
-
-client.saveFile(
-  'bucket',
-  'test-send-file.txt',
-  './test-send.txt'
-).then((res) => {
-  console.log('file:', res)
-})
-```
