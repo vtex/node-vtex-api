@@ -1,3 +1,5 @@
+import { mapObjIndexed } from 'ramda'
+
 import { IOClients } from '../clients/IOClients'
 import { RouteHandler, ServiceContext } from './typings'
 import { compose } from './utils/compose'
@@ -14,10 +16,7 @@ type HTTPMethods =
   | 'PATCH'
   | 'DEFAULT'
 
-// tslint:disable-next-line:no-empty
-const emptyNext = async () => {}
-
-type Options<
+type MethodOptions<
   ClientsT extends IOClients = IOClients,
   StateT = void,
   CustomT = void
@@ -33,25 +32,25 @@ export function method<
   ClientsT extends IOClients = IOClients,
   StateT = void,
   CustomT = void
->(options: Options<ClientsT, StateT, CustomT>) {
+>(options: MethodOptions<ClientsT, StateT, CustomT>) {
+  const handlers = mapObjIndexed(
+    handler => compose(Array.isArray(handler) ? handler : [handler]),
+    options as Record<
+      string,
+      | RouteHandler<ClientsT, StateT, CustomT>
+      | Array<RouteHandler<ClientsT, StateT, CustomT>>
+    >
+  )
+
   return async (
     ctx: ServiceContext<ClientsT, StateT, CustomT>,
     next: () => Promise<any>
   ) => {
     const verb = ctx.method.toUpperCase()
-    const handler =
-      (options as Partial<
-        Record<
-          string,
-          | RouteHandler<ClientsT, StateT, CustomT>
-          | Array<RouteHandler<ClientsT, StateT, CustomT>>
-        >
-      >)[verb] || options.DEFAULT
+    const handler = handlers[verb] || handlers.DEFAULT
 
-    if (Array.isArray(handler)) {
-      await compose(handler)(ctx)
-    } else if (handler) {
-      await handler(ctx, emptyNext)
+    if (handler) {
+      await handler(ctx)
     }
 
     await next()
