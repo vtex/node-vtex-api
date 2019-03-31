@@ -5,7 +5,7 @@ import { ParameterizedContext } from 'koa'
 import { Middleware } from 'koa-compose'
 import { ParsedUrlQuery } from 'querystring'
 
-import { ClientsImplementation, IOClients } from '../clients/IOClients'
+import { ClientsImplementation, IOClient, IOClients } from '../clients/IOClients'
 import { InstanceOptions } from '../HttpClient'
 import { Recorder } from '../HttpClient/middlewares/recorder'
 
@@ -21,6 +21,11 @@ type KnownKeys<T> = {
   [K in keyof T]: string extends K ? never : number extends K ? never : K
 } extends { [_ in keyof T]: infer U } ? U : never
 
+type PickByValue<T, ValueType> = Pick<
+  T,
+  { [Key in keyof T]: T[Key] extends ValueType ? Key : never }[keyof T]>
+
+
 export type ServiceContext<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Pick<ParameterizedContext<StateT, Context<ClientsT>>, KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>> & CustomT
 
 export type RouteHandler<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>
@@ -29,9 +34,13 @@ export type Resolver<ClientsT extends IOClients = IOClients, StateT = void, Cust
   GraphQLFieldResolver<any, ServiceContext<ClientsT, StateT, CustomT>, any>
   | GraphQLFieldConfig<any, ServiceContext<ClientsT, StateT, CustomT>, any>
 
+export type ClientsConfigOptions<ClientsT extends IOClients = IOClients> = {
+  [key in keyof PickByValue<ClientsT, InstanceType<IOClient>> | 'default']?: InstanceOptions
+}
+
 export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
   implementation?: ClientsImplementation<ClientsT>
-  options: Record<string, InstanceOptions>
+  options: ClientsConfigOptions<ClientsT>
 }
 
 export type DataSourcesGenerator = () => {

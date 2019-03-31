@@ -1,22 +1,21 @@
 import { InstanceOptions } from '../HttpClient'
 import { IODataSource } from '../IODataSource'
-import { IOContext } from '../service/typings'
+import { ClientsConfigOptions, IOContext, } from '../service/typings'
 import { Apps, Billing, Builder, Events, ID, Logger, Messages, Metadata, Registry, Router, Segment, VBase, Workspaces } from './index'
 
-type IOClient = new(context: IOContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
-
-export type ClientsImplementation<T extends IOClients> = new(
-    clientOptions: Record<string, InstanceOptions>,
-    ctx: IOContext
-  ) => T
+export type IOClient = new (context: IOContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
+export type ClientsImplementation<T extends IOClients> = new (
+  clientOptions: ClientsConfigOptions<T>,
+  ctx: IOContext
+) => T
 
 export class IOClients {
   private clients: Record<string, IODataSource | any> = {}
 
-  constructor (
-    private clientOptions: Record<string, InstanceOptions>,
+  constructor(
+    private clientOptions: ClientsConfigOptions<IOClients>,
     private ctx: IOContext
-  ) {}
+  ) { }
 
   public get apps(): Apps {
     return this.getOrSet('apps', Apps)
@@ -70,7 +69,7 @@ export class IOClients {
     return this.getOrSet('workspaces', Workspaces)
   }
 
-  protected getOrSet(key: string, Implementation: IOClient) {
+  protected getOrSet(key: keyof ClientsConfigOptions<IOClients>, Implementation: IOClient) {
     const options = {
       ...this.clientOptions.default,
       ...this.clientOptions[key],

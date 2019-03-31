@@ -9,7 +9,7 @@ import { createHttpRoute } from './http'
 import { Service } from './Service'
 import { ClientsConfig, RouteHandler, ServiceDescriptor } from './typings'
 
-const defaultClients: ClientsConfig = {
+const defaultClients: ClientsConfig<IOClients> = {
   implementation: IOClients,
   options: {},
 }
@@ -29,7 +29,7 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
     const clients = {
       ...defaultClients,
       ...config.clients,
-    }
+    } as ClientsConfig<ClientsT>
 
     const Clients = clients.implementation as ClientsImplementation<ClientsT>
 

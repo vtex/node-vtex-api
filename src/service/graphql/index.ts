@@ -1,7 +1,6 @@
 import { ClientsImplementation, IOClients } from '../../clients/IOClients'
-import { InstanceOptions } from '../../HttpClient'
 import { createHttpRoute } from '../http'
-import { GraphQLOptions, RouteHandler } from '../typings'
+import { ClientsConfigOptions,GraphQLOptions, RouteHandler,  } from '../typings'
 
 import { error } from './middlewares/error'
 import { createFormatters } from './middlewares/formatters'
@@ -19,7 +18,7 @@ export const GRAPHQL_ROUTE = 'graphql'
 export const createGraphQLRoute = <ClientsT extends IOClients, StateT, CustomT>(
     graphql: GraphQLOptions<ClientsT, StateT, CustomT>,
     Clients: ClientsImplementation<ClientsT>,
-    options: Record<string, InstanceOptions>
+    options: ClientsConfigOptions<ClientsT>
   ): RouteHandler<ClientsT, StateT, CustomT> => {
     const injectGraphql = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
       ctx.graphql = graphql as GraphQLOptions<IOClients, StateT, CustomT>
