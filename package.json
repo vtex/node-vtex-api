@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "3.0.10",
+  "version": "3.0.11",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -32,6 +32,7 @@
     "axios": "^0.18.0",
     "axios-retry": "^3.1.2",
     "co-body": "^6.0.0",
+    "cookie": "^0.3.1",
     "dataloader": "^1.4.0",
     "fs-extra": "^7.0.0",
     "graphql": "^0.13.2",
@@ -53,6 +54,7 @@
   "devDependencies": {
     "@types/archiver": "^2.0.1",
     "@types/co-body": "^0.0.3",
+    "@types/cookie": "^0.3.2",
     "@types/fs-extra": "^5.0.0",
     "@types/graphql": "^14.0.4",
     "@types/lru-cache": "^5.1.0",
