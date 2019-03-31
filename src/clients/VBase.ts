@@ -17,7 +17,6 @@ const [runningAppName] = appId ? appId.split('@') : ['']
 const routes = {
   Bucket: (bucket: string) => `/buckets/${runningAppName}/${bucket}`,
   File: (bucket: string, path: string) => `${routes.Bucket(bucket)}/files/${path}`,
-  Files: (bucket: string) => `${routes.Bucket(bucket)}/files`,
 }
 
 const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
@@ -41,20 +40,12 @@ export class VBase extends IODataSource {
     return this.http.get<BucketMetadata>(routes.Bucket(bucket), {metric, inflightKey})
   }
 
-  public resetBucket = (bucket: string) => {
-    return this.http.delete(routes.Files(bucket), {metric: 'vbase-reset-bucket'})
+  public resetBucket = () => {
+    throw new Error('resetBucket is deprecated in Vbase client due to lack of listing files support in Vbase API. This function will be removed in future versions')
   }
 
-  public listFiles = (bucket: string, opts?: string | VBaseOptions) => {
-    let params: VBaseOptions = {}
-    if (isVBaseOptions(opts)) {
-      params = opts
-    } else if (opts) {
-      params = {prefix: opts}
-    }
-    const metric = 'vbase-list'
-    const inflightKey = inflightURL
-    return this.http.get<BucketFileList>(routes.Files(bucket), {params, metric, inflightKey})
+  public listFiles = () => {
+    throw new Error('listFiles is deprecated in Vbase client due to lack of listing files support in Vbase API. This function will be removed in future versions')
   }
 
   public getFile = (bucket: string, path: string) => {
