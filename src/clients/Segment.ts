@@ -31,7 +31,7 @@ const routes = {
 
 export class Segment extends IODataSource {
   protected httpClientFactory = forExternal
-  protected service = 'http://portal.vtexcommercestable.com.br'
+  protected service = 'http://portal.vtexcommercebeta.com.br'
 
   public segment = (query?: Record<string, string>, token?: string) =>
     this.rawSegment(query, token).then(prop('data'))
