@@ -1,9 +1,12 @@
-import { map, pickAll } from 'ramda'
+import { pickAll } from 'ramda'
 import { InstanceOptions } from '../HttpClient'
 import { IODataSource } from '../IODataSource'
-import { ClientContext, ClientsConfigOptions, hasInjections, IOContext, } from '../service/typings'
+import { ClientContext, ClientInjections, ClientInstanceOptions, ClientsConfigOptions, IOContext, } from '../service/typings'
 import { Apps, Billing, Builder, Events, ID, Logger, Messages, Metadata, Registry, Router, Segment, VBase, Workspaces } from './index'
 
+function hasInjections<T extends IOClients>(instanceOptions: ClientInstanceOptions<T>): instanceOptions is ClientInstanceOptions<T> {
+  return typeof (instanceOptions as ClientInjections<T>).injections !== 'undefined'
+}
 export type IOClient = new (context: ClientContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: ClientsConfigOptions<T>,
@@ -77,11 +80,11 @@ export class IOClients {
       metrics,
     }
     const injections = hasInjections(options)
-                        && options.injections
-                        && pickAll(options.injections, this) || {}
+      && options.injections
+      && pickAll(options.injections, this) || {} // deal with circular dependency
 
     if (!this.clients[key]) {
-      this.clients[key] = new Implementation({... this.ctx, injections}, options)
+      this.clients[key] = new Implementation({ ... this.ctx, injections }, options)
     }
 
     return this.clients[key]

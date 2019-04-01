@@ -36,13 +36,10 @@ export type Resolver<ClientsT extends IOClients = IOClients, StateT = void, Cust
 
 type Clients<ClientsT extends IOClients = IOClients> = keyof PickByValue<ClientsT, InstanceType<IOClient>>
 
-interface ClientInjections<ClientsT extends IOClients = IOClients> { injections?: Array<Clients<ClientsT>> }
+export interface ClientInjections<ClientsT extends IOClients = IOClients> { injections?: Array<Clients<ClientsT>> }
 
 export type ClientInstanceOptions<ClientsT extends IOClients = IOClients> = InstanceOptions & ClientInjections<ClientsT>
 
-export function hasInjections<T extends IOClients>(instanceOptions: ClientInstanceOptions<T>): instanceOptions is ClientInstanceOptions<T> {
-  return typeof (instanceOptions as ClientInjections<T>).injections !== 'undefined'
-}
 export type ClientsConfigOptions<ClientsT extends IOClients = IOClients> = {
   [key in Clients<ClientsT> | 'default']?: ClientInstanceOptions<ClientsT>
 }
@@ -52,7 +49,7 @@ export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
   options: ClientsConfigOptions<ClientsT>
 }
 
-export type ClientContext = IOContext & { injections: { [k in Clients<IOClients>]?: IOClient } }
+export type ClientContext = IOContext & { injections: { [k in Clients<IOClients>]?: IOClients[k] } }
 
 export type DataSourcesGenerator = () => {
   [name: string]: DataSource<ServiceContext>,
