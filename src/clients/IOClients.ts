@@ -1,9 +1,11 @@
+import { map } from 'ramda'
 import { InstanceOptions } from '../HttpClient'
 import { IODataSource } from '../IODataSource'
-import { ClientsConfigOptions, IOContext, } from '../service/typings'
+import { ClientsConfigOptions, hasInjections, IOContext, } from '../service/typings'
 import { Apps, Billing, Builder, Events, ID, Logger, Messages, Metadata, Registry, Router, Segment, VBase, Workspaces } from './index'
 
-export type IOClient = new (context: IOContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
+type ClientsContext = IOContext & {injections: IOClient[]}
+export type IOClient = new (context: ClientsContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: ClientsConfigOptions<T>,
   ctx: IOContext
@@ -14,7 +16,7 @@ export class IOClients {
 
   constructor(
     private clientOptions: ClientsConfigOptions<IOClients>,
-    private ctx: IOContext
+    private ctx: ClientsContext
   ) { }
 
   public get apps(): Apps {
@@ -75,7 +77,10 @@ export class IOClients {
       ...this.clientOptions[key],
       metrics,
     }
-
+    const injections = hasInjections(options)
+                        && options.injections
+                        && map(injection => this[injection], options.injections) || []
+    // this.ctx.injections = injections
     if (!this.clients[key]) {
       this.clients[key] = new Implementation(this.ctx, options)
     }
