@@ -1,4 +1,5 @@
 import {AuthType, HttpClient, InstanceOptions} from '../HttpClient'
+import { forExternal, IOClient } from '../IOClient'
 import { IOContext } from '../service/typings'
 
 const routes = {
@@ -16,11 +17,12 @@ const endpoint = (env: string) => {
   return VTEXID_ENDPOINTS[env] || env
 }
 
-export class ID {
-  private http: HttpClient
+export class ID extends IOClient {
+  protected httpClientFactory = forExternal
+  protected service = endpoint(VTEXID_ENDPOINTS.STABLE)
 
   constructor (context: IOContext, opts: InstanceOptions) {
-    this.http = HttpClient.forExternal(endpoint(VTEXID_ENDPOINTS.STABLE), context, {...opts, authType: AuthType.token})
+    super(context, { ...opts, authType: AuthType.token })
   }
 
   public getTemporaryToken = () => {

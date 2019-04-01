@@ -1,9 +1,9 @@
 import { InstanceOptions } from '../HttpClient'
-import { forWorkspace, IODataSource } from '../IODataSource'
+import { forWorkspace, IOClient } from '../IOClient'
 import { IOMessage } from '../service/graphql/schema/typeDefs/ioMessage'
 import { IOContext } from '../service/typings'
 
-export class Messages extends IODataSource {
+export class Messages extends IOClient {
   protected httpClientFactory = forWorkspace
   protected service = 'messages.vtex'
 
@@ -13,7 +13,7 @@ export class Messages extends IODataSource {
 
   public translate = (to: string, data: IOMessage[]): Promise<string[]> => this.http.get('/_v/translations', {
     headers: {
-      Authorization: this.context!.authToken,
+      Authorization: this.context.authToken,
     },
     metric: 'messages-translate',
     params: {

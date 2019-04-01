@@ -1,6 +1,6 @@
-import {HttpClient, withoutRecorder} from '../HttpClient'
-import {HttpClientFactory, IODataSource} from '../IODataSource'
-import {cleanError} from '../utils/error'
+import { HttpClient, withoutRecorder } from '../HttpClient'
+import { HttpClientFactory, IOClient } from '../IOClient'
+import { cleanError } from '../utils/error'
 
 const DEFAULT_SUBJECT = '-'
 const production = process.env.VTEX_PRODUCTION === 'true'
@@ -13,7 +13,7 @@ const forWorkspaceWithoutRecorder: HttpClientFactory = ({service, context, optio
   ? HttpClient.forWorkspace(service, withoutRecorder(context), {...options, concurrency: 1})
   : undefined
 
-export class Logger extends IODataSource {
+export class Logger extends IOClient {
   protected service = 'colossus'
   protected httpClientFactory = forWorkspaceWithoutRecorder
 

@@ -1,4 +1,4 @@
-import {forWorkspace, IODataSource} from '../IODataSource'
+import { forWorkspace, IOClient } from '../IOClient'
 
 const metricRoute = `/metrics`
 
@@ -6,7 +6,7 @@ const routes = {
   contractStatus: '/_v/contractStatus',
 }
 
-export class Billing extends IODataSource {
+export class Billing extends IOClient {
   protected service = 'billing.vtex'
   protected httpClientFactory = forWorkspace
 

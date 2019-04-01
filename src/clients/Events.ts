@@ -1,5 +1,5 @@
-import {HttpClient, withoutRecorder} from '../HttpClient'
-import {HttpClientFactory, IODataSource} from '../IODataSource'
+import { HttpClient, withoutRecorder } from '../HttpClient'
+import { HttpClientFactory, IOClient } from '../IOClient'
 
 const eventRoute = (route: string) => `/events/${route}`
 
@@ -7,7 +7,7 @@ const forWorkspaceWithoutRecorder: HttpClientFactory = ({service, context, optio
   ? HttpClient.forWorkspace(service, withoutRecorder(context), options || {})
   : undefined
 
-export class Events extends IODataSource {
+export class Events extends IOClient {
   protected service = 'colossus'
   protected httpClientFactory = forWorkspaceWithoutRecorder
 

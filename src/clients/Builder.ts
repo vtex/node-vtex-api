@@ -1,7 +1,8 @@
 import archiver from 'archiver'
 import {ZlibOptions} from 'zlib'
 
-import {HttpClient, InstanceOptions} from '../HttpClient'
+import { InstanceOptions} from '../HttpClient'
+import { forWorkspace, IOClient } from '../IOClient'
 import {IOContext} from '../service/typings'
 
 import {Change} from './Apps'
@@ -18,14 +19,15 @@ const routes = {
   Relink: (app: string) => `${routes.Builder}/relink/${app}`,
 }
 
-export class Builder {
+export class Builder extends IOClient {
+  protected httpClientFactory = forWorkspace
+  protected service = 'builder-hub.vtex'
   private account: string
   private workspace: string
-  private http: HttpClient
   private stickyHost!: string
 
   constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
-    this.http = HttpClient.forWorkspace('builder-hub.vtex', ioContext, opts)
+    super(ioContext, opts)
     this.account = ioContext.account
     this.workspace = ioContext.workspace
   }

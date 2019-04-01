@@ -6,7 +6,7 @@ import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
 
 import { inflightURL } from '../HttpClient/middlewares/inflight'
-import { forWorkspace, IODataSource } from '../IODataSource'
+import { forWorkspace, IOClient } from '../IOClient'
 import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
 
 const routes = {
@@ -48,7 +48,7 @@ const paramsSerializer = (params: any) => {
   return stringify(params, {arrayFormat: 'repeat'})
 }
 
-export class Apps extends IODataSource {
+export class Apps extends IOClient {
   protected httpClientFactory = forWorkspace
   protected service = 'apps'
 

@@ -1,4 +1,3 @@
-import { DataSource, DataSourceConfig } from 'apollo-datasource'
 import { HttpClient, InstanceOptions } from './HttpClient'
 import { IOContext, ServiceContext } from './service/typings'
 
@@ -10,25 +9,19 @@ interface HttpClientFactoryOptions {
 
 export type HttpClientFactory = (opts: HttpClientFactoryOptions) => HttpClient | void
 
-export abstract class IODataSource extends DataSource<ServiceContext> {
+export abstract class IOClient {
   protected abstract httpClientFactory: HttpClientFactory
   protected service: string | void = undefined
   private httpClient: HttpClient | void = undefined
   private initialized = false
 
-  constructor (
-    protected context?: IOContext,
-    private options: InstanceOptions = {}
-  ) {
-    super()
-  }
+  constructor ( protected context: IOContext, private options: InstanceOptions = {}
+  ) {}
 
-  public initialize(config: DataSourceConfig<ServiceContext>) {
-    const {context: {vtex: context}, cache: cacheStorage} = config
-    this.context = context
+  private initialize() {
     this.httpClient = this.httpClientFactory({
-      context,
-      options: {cacheStorage, ...this.options} as any,
+      context: this.context,
+      options: this.options,
       service: this.service,
     })
     this.initialized = true
@@ -36,12 +29,12 @@ export abstract class IODataSource extends DataSource<ServiceContext> {
 
   get http(): HttpClient {
     if (!this.initialized) {
-      this.initialize({context: {vtex: this.context}} as any)
+      this.initialize()
     }
     if (this.httpClient) {
       return this.httpClient
     }
-    throw new Error('IO Datasource was not initialized nor constructed with a context')
+    throw new Error('IO Client was not constructed with a context')
   }
 }
 
@@ -56,3 +49,4 @@ export const forRoot: HttpClientFactory = ({context, service, options}) => (cont
 export const forExternal: HttpClientFactory = ({context, service, options}) => (context && service)
   ? HttpClient.forExternal(service, context, options || {} as any)
   : undefined
+

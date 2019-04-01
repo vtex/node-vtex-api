@@ -1,5 +1,5 @@
 import {DEFAULT_WORKSPACE} from '../constants'
-import {forRoot, IODataSource} from '../IODataSource'
+import {forRoot, IOClient} from '../IOClient'
 
 const routes = {
   Account: (account: string) => `/${account}`,
@@ -7,7 +7,7 @@ const routes = {
   Workspace: (account: string, workspace: string) => `${routes.Account(account)}/${workspace}`,
 }
 
-export class Workspaces extends IODataSource {
+export class Workspaces extends IOClient {
   protected service = 'router'
   protected httpClientFactory = forRoot
 

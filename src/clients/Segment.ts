@@ -1,7 +1,7 @@
 import parseCookie from 'cookie'
 import { pickBy, prop } from 'ramda'
 
-import { forExternal, IODataSource } from '../IODataSource'
+import { forExternal, IOClient } from '../IOClient'
 
 export interface SegmentData {
   campaigns?: any
@@ -29,7 +29,7 @@ const routes = {
   segments: (token: string | void) => token ? `${routes.base}/${token}` : routes.base,
 }
 
-export class Segment extends IODataSource {
+export class Segment extends IOClient {
   protected httpClientFactory = forExternal
   protected service = 'http://portal.vtexcommercestable.com.br'
 
