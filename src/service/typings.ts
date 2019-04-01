@@ -49,7 +49,7 @@ export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
   options: ClientsConfigOptions<ClientsT>
 }
 
-export type ClientContext = IOContext & { injections: { [k in Clients<IOClients>]?: IOClients[k] } }
+export type ClientContext<ClientsT extends IOClients = IOClients> = IOContext & { injections: { [k in Clients<ClientsT>]?: ClientsT[k] } }
 
 export type DataSourcesGenerator = () => {
   [name: string]: DataSource<ServiceContext>,
