@@ -1,11 +1,10 @@
-import { map } from 'ramda'
+import { map, pickAll } from 'ramda'
 import { InstanceOptions } from '../HttpClient'
 import { IODataSource } from '../IODataSource'
-import { ClientsConfigOptions, hasInjections, IOContext, } from '../service/typings'
+import { ClientContext, ClientsConfigOptions, hasInjections, IOContext, } from '../service/typings'
 import { Apps, Billing, Builder, Events, ID, Logger, Messages, Metadata, Registry, Router, Segment, VBase, Workspaces } from './index'
 
-type ClientsContext = IOContext & {injections: IOClient[]}
-export type IOClient = new (context: ClientsContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
+export type IOClient = new (context: ClientContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: ClientsConfigOptions<T>,
   ctx: IOContext
@@ -16,7 +15,7 @@ export class IOClients {
 
   constructor(
     private clientOptions: ClientsConfigOptions<IOClients>,
-    private ctx: ClientsContext
+    private ctx: IOContext
   ) { }
 
   public get apps(): Apps {
@@ -79,10 +78,10 @@ export class IOClients {
     }
     const injections = hasInjections(options)
                         && options.injections
-                        && map(injection => this[injection], options.injections) || []
-    // this.ctx.injections = injections
+                        && pickAll(options.injections, this) || {}
+
     if (!this.clients[key]) {
-      this.clients[key] = new Implementation(this.ctx, options)
+      this.clients[key] = new Implementation({... this.ctx, injections}, options)
     }
 
     return this.clients[key]
