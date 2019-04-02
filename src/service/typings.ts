@@ -5,7 +5,7 @@ import { ParameterizedContext } from 'koa'
 import { Middleware } from 'koa-compose'
 import { ParsedUrlQuery } from 'querystring'
 
-import { ClientsImplementation, IOClients } from '../clients/IOClients'
+import { ClientsImplementation, IOClient, IOClients, } from '../clients/IOClients'
 import { InstanceOptions } from '../HttpClient'
 import { Recorder } from '../HttpClient/middlewares/recorder'
 
@@ -20,6 +20,9 @@ export interface Context<T extends IOClients> {
 type KnownKeys<T> = {
   [K in keyof T]: string extends K ? never : number extends K ? never : K
 } extends { [_ in keyof T]: infer U } ? U : never
+type PickByValue<T, ValueType> = Pick<
+  T,
+  { [Key in keyof T]: T[Key] extends ValueType ? Key : never }[keyof T]>
 
 export type ServiceContext<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Pick<ParameterizedContext<StateT, Context<ClientsT>>, KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>> & CustomT
 
@@ -31,12 +34,20 @@ export type Resolver<ClientsT extends IOClients = IOClients, StateT = void, Cust
 
 export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
   implementation?: ClientsImplementation<ClientsT>
-  options: Record<string, InstanceOptions>
+  options: Record<string, ClientInstanceOptions<ClientsT>>
 }
 
 export type DataSourcesGenerator = () => {
   [name: string]: DataSource<ServiceContext>,
 }
+
+type IOClientInstances<ClientsT extends IOClients = IOClients> = keyof PickByValue<ClientsT, InstanceType<IOClient>>
+
+export interface ClientDependencies<ClientsT extends IOClients = IOClients> { depends?: { clients: Array<IOClientInstances<ClientsT>> } }
+
+export type ClientInstanceOptions<ClientsT extends IOClients = IOClients> = InstanceOptions & ClientDependencies<ClientsT>
+
+export type ClientContext<ClientsT extends IOClients = IOClients> = IOContext & { clients: { [k in IOClientInstances<ClientsT>]?: ClientsT[k] } }
 
 export interface GraphQLOptions<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
   resolvers: Record<string, Record<string, Resolver<ClientsT, StateT, CustomT>>>

@@ -1,22 +1,27 @@
+import { pickAll, } from 'ramda'
 import { InstanceOptions } from '../HttpClient'
 import { IODataSource } from '../IODataSource'
-import { IOContext } from '../service/typings'
+import { ClientContext, ClientDependencies, ClientInstanceOptions, IOContext, } from '../service/typings'
 import { Apps, Billing, Builder, Events, ID, Logger, Messages, Metadata, Registry, Router, Segment, VBase, Workspaces } from './index'
 
-type IOClient = new(context: IOContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
+export type IOClient = new (context: ClientContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
 
-export type ClientsImplementation<T extends IOClients> = new(
-    clientOptions: Record<string, InstanceOptions>,
-    ctx: IOContext
-  ) => T
+function hasDependencies<T extends IOClients>(instanceOptions: ClientInstanceOptions<T>): instanceOptions is ClientInstanceOptions<T> {
+  return typeof (instanceOptions as ClientDependencies<T>).depends !== 'undefined'
+}
+
+export type ClientsImplementation<T extends IOClients> = new (
+  clientOptions: Record<string, ClientInstanceOptions>,
+  ctx: IOContext
+) => T
 
 export class IOClients {
   private clients: Record<string, IODataSource | any> = {}
 
-  constructor (
-    private clientOptions: Record<string, InstanceOptions>,
+  constructor(
+    private clientOptions: Record<string, ClientInstanceOptions>,
     private ctx: IOContext
-  ) {}
+  ) { }
 
   public get apps(): Apps {
     return this.getOrSet('apps', Apps)
@@ -77,9 +82,15 @@ export class IOClients {
       metrics,
     }
 
+    const clients =
+      hasDependencies(options)
+      && options.depends
+      && pickAll(options.depends.clients, this) || {} // deal with circular dependency
+
     if (!this.clients[key]) {
-      this.clients[key] = new Implementation(this.ctx, options)
+      this.clients[key] = new Implementation({ ... this.ctx, clients }, options)
     }
+
 
     return this.clients[key]
   }
