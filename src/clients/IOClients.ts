@@ -1,12 +1,15 @@
-import { pickAll } from 'ramda'
+import { isNil, mapObjIndexed, pickAll, when, } from 'ramda'
 import { InstanceOptions } from '../HttpClient'
 import { IODataSource } from '../IODataSource'
-import { ClientContext, ClientInjections, ClientInstanceOptions, ClientsConfigOptions, IOContext, } from '../service/typings'
+import { ClientContext, ClientDependencies, ClientInstanceOptions, ClientsConfigOptions, IOContext, } from '../service/typings'
 import { Apps, Billing, Builder, Events, ID, Logger, Messages, Metadata, Registry, Router, Segment, VBase, Workspaces } from './index'
 
-function hasInjections<T extends IOClients>(instanceOptions: ClientInstanceOptions<T>): instanceOptions is ClientInstanceOptions<T> {
-  return typeof (instanceOptions as ClientInjections<T>).injections !== 'undefined'
+function hasDependencies<T extends IOClients>(instanceOptions: ClientInstanceOptions<T>): instanceOptions is ClientInstanceOptions<T> {
+  return typeof (instanceOptions as ClientDependencies<T>).depends !== 'undefined'
 }
+
+const checkDependencies = (client: IOClient | undefined, clientKey: string) => when(isNil, () => { throw new Error(`Dependency not specified, please configure options as { dependencies: { clients: [${clientKey}]} }`) }, client)
+
 export type IOClient = new (context: ClientContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: ClientsConfigOptions<T>,
@@ -79,12 +82,12 @@ export class IOClients {
       ...this.clientOptions[key],
       metrics,
     }
-    const injections = hasInjections(options)
-      && options.injections
-      && pickAll(options.injections, this) || {} // deal with circular dependency
+    const clients = hasDependencies(options)
+      && options.depends
+      && pickAll(options.depends.clients, this) || {}// deal with circular dependency
 
     if (!this.clients[key]) {
-      this.clients[key] = new Implementation({ ... this.ctx, injections }, options)
+      this.clients[key] = new Implementation({ ... this.ctx, clients: mapObjIndexed(checkDependencies, clients) }, options)
     }
 
     return this.clients[key]
