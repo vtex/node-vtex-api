@@ -20,7 +20,7 @@ export class IOClients {
   private clients: Record<string, IODataSource | any> = {}
 
   constructor(
-    private clientOptions: ClientsConfigOptions<IOClients>,
+    private clientOptions: ClientsConfigOptions,
     private ctx: IOContext
   ) { }
 

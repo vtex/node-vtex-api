@@ -34,14 +34,14 @@ export type Resolver<ClientsT extends IOClients = IOClients, StateT = void, Cust
   GraphQLFieldResolver<any, ServiceContext<ClientsT, StateT, CustomT>, any>
   | GraphQLFieldConfig<any, ServiceContext<ClientsT, StateT, CustomT>, any>
 
-type Clients<ClientsT extends IOClients = IOClients> = keyof PickByValue<ClientsT, InstanceType<IOClient>>
+type IOClientInstances<ClientsT extends IOClients = IOClients> = keyof PickByValue<ClientsT, InstanceType<IOClient>>
 
-export interface ClientDependencies<ClientsT extends IOClients = IOClients> { depends?: { clients: Array<Clients<ClientsT>> } }
+export interface ClientDependencies<ClientsT extends IOClients = IOClients> { depends?: { clients: Array<IOClientInstances<ClientsT>> } }
 
 export type ClientInstanceOptions<ClientsT extends IOClients = IOClients> = InstanceOptions & ClientDependencies<ClientsT>
 
 export type ClientsConfigOptions<ClientsT extends IOClients = IOClients> = {
-  [key in Clients<ClientsT> | 'default']?: ClientInstanceOptions<ClientsT>
+  [key in IOClientInstances<ClientsT> | 'default']?: ClientInstanceOptions<ClientsT>
 }
 
 export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
@@ -49,7 +49,7 @@ export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
   options: ClientsConfigOptions<ClientsT>
 }
 
-export type ClientContext<ClientsT extends IOClients = IOClients> = IOContext & { clients: { [k in Clients<ClientsT>]?: ClientsT[k] } }
+export type ClientContext<ClientsT extends IOClients = IOClients> = IOContext & { clients: { [k in IOClientInstances<ClientsT>]?: ClientsT[k] } }
 
 export type DataSourcesGenerator = () => {
   [name: string]: DataSource<ServiceContext>,
