@@ -1,7 +1,7 @@
-import { pickAll, } from 'ramda'
+import { pickAll } from 'ramda'
 import { InstanceOptions } from '../HttpClient'
 import { IODataSource } from '../IODataSource'
-import { ClientContext, ClientDependencies, ClientInstanceOptions, IOContext, } from '../service/typings'
+import { ClientContext, ClientDependencies, ClientInstanceOptions, IOContext } from '../service/typings'
 import { Apps, Billing, Builder, Events, ID, Logger, Messages, Metadata, Registry, Router, Segment, VBase, Workspaces } from './index'
 
 export type IOClient = new (context: ClientContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
@@ -12,7 +12,7 @@ function hasDependencies<T extends IOClients>(instanceOptions: ClientInstanceOpt
 
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: Record<string, ClientInstanceOptions>,
-  ctx: IOContext
+  ctx: IOContext,
 ) => T
 
 export class IOClients {
@@ -20,62 +20,62 @@ export class IOClients {
 
   constructor(
     private clientOptions: Record<string, ClientInstanceOptions>,
-    private ctx: IOContext
+    private ctx: IOContext,
   ) { }
 
-  public get apps(): Apps {
+  public get apps() {
     return this.getOrSet('apps', Apps)
   }
 
-  public get billing(): Billing {
+  public get billing() {
     return this.getOrSet('billing', Billing)
   }
 
-  public get builder(): Builder {
+  public get builder() {
     return this.getOrSet('builder', Builder)
   }
 
-  public get events(): Events {
+  public get events() {
     return this.getOrSet('events', Events)
   }
 
-  public get id(): ID {
+  public get id() {
     return this.getOrSet('id', ID)
   }
 
-  public get logger(): Logger {
+  public get logger() {
     return this.getOrSet('logger', Logger)
   }
 
-  public get messages(): Messages {
+  public get messages() {
     return this.getOrSet('messages', Messages)
   }
 
-  public get metadata(): Metadata {
+  public get metadata() {
     return this.getOrSet('metadata', Metadata)
   }
 
-  public get registry(): Registry {
+  public get registry() {
     return this.getOrSet('registry', Registry)
   }
 
-  public get router(): Router {
+  public get router() {
     return this.getOrSet('router', Router)
   }
 
-  public get segment(): Segment {
+  public get segment() {
     return this.getOrSet('segment', Segment)
   }
 
-  public get vbase(): VBase {
+  public get vbase() {
     return this.getOrSet('vbase', VBase)
   }
 
-  public get workspaces(): Workspaces {
+  public get workspaces() {
     return this.getOrSet('workspaces', Workspaces)
   }
 
-  protected getOrSet(key: string, Implementation: IOClient) {
+  protected getOrSet<TClient extends IOClient>(key: string, Implementation: TClient): InstanceType<TClient> {
     const options = {
       ...this.clientOptions.default,
       ...this.clientOptions[key],
