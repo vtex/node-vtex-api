@@ -1,5 +1,7 @@
 // Inspired by https://github.com/sindresorhus/serialize-error
 import { find, keys, pick } from 'ramda'
+import { IOClients } from '../clients/IOClients'
+import { ServiceContext } from '../service/typings'
 
 export const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url']
 
@@ -110,4 +112,52 @@ export const cleanError = (value: any) => {
   }
 
   return value
+}
+
+/**
+ * Send error through the logger.
+ *
+ * @param ctx service context related to the error
+ * @param error an object representing the error
+ */
+export function logError<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, error: any) {
+  console.error('[node-vtex-api error]', error)
+  const cleanedError = cleanError(error)
+
+  const {
+    method,
+    status,
+    vtex: {
+      operationId,
+      requestId,
+      route: {
+        id,
+      },
+    },
+    headers: {
+      'x-forwarded-path': forwardedPath,
+      'x-forwarded-host': forwardedHost,
+      'x-forwarded-proto': forwardedProto,
+      'x-vtex-platform': platform,
+    },
+  } = ctx
+
+  const log = {
+    ...cleanedError,
+    forwardedHost,
+    forwardedPath,
+    forwardedProto,
+    method,
+    operationId,
+    platform,
+    requestId,
+    routeId: id,
+    status,
+  }
+
+  // Use sendLog directly to avoid cleaning error twice.
+  ctx.clients.logger.sendLog('-', log, 'error').catch((reason) => {
+    console.error('Error logging error 🙄 retrying once...', reason ? reason.response : '')
+    ctx.clients.logger.sendLog('-', log, 'error').catch()
+  })
 }
