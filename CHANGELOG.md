@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.0.15] - 2019-04-03
+
 ### Changed
 
 - Added type inference for `IOClients.getOrSet` method. No need to type instantiations like
