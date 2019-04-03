@@ -1,7 +1,7 @@
 import { AxiosResponse } from 'axios'
 import { IAxiosRetryConfig } from 'axios-retry'
 import { IncomingMessage } from 'http'
-import compose from 'koa-compose'
+import compose, { ComposedMiddleware } from 'koa-compose'
 import pLimit from 'p-limit'
 
 import { CacheLayer } from '../caches/CacheLayer'
@@ -89,7 +89,7 @@ export class HttpClient {
 
     const memoizedCache = new Map<string, Promise<Memoized>>()
 
-    this.runMiddlewares = compose([
+    this.runMiddlewares = compose([...opts.middlewares || [],
       defaultsMiddleware(baseURL, headers, timeout, retryConfig),
       ...metrics ? [metricsMiddleware(metrics)] : [],
       memoizationMiddleware({memoizedCache}),
@@ -185,6 +185,7 @@ export interface InstanceOptions {
    * @memberof InstanceOptions
    */
   headers?: Record<string, string>,
+  middlewares?: Array<ComposedMiddleware<MiddlewareContext>>
 }
 
 export interface IOResponse<T> {
@@ -217,6 +218,7 @@ interface ClientOptions {
   retryConfig?: IAxiosRetryConfig
   concurrency?: number
   headers?: Record<string, string>
+  middlewares?: Array<ComposedMiddleware<MiddlewareContext>>
   operationId: string
 }
 
