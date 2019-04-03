@@ -21,22 +21,16 @@ const serialize = (ctx: NativeResolverContext) => async (inputArgs: IOMessage | 
   const {translationsLoader, getLocaleTo} = ctx
   const to = await getLocaleTo()
 
-  if (!to) {
-    throw new Error('Messages need a target language to translate to')
-  }
-
   // If the message is already in the target locale, return the content.
-  if (from === to) {
+  if (!to || from === to) {
     return content
   }
 
-  const obj =  {
+  return await translationsLoader.load({
     ...args,
     from,
     to,
-  }
-
-  return await translationsLoader.load(obj)
+  })
 }
 
 const parseValue = (_: string) => {
