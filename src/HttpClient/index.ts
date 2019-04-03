@@ -1,7 +1,7 @@
 import { AxiosResponse } from 'axios'
 import { IAxiosRetryConfig } from 'axios-retry'
 import { IncomingMessage } from 'http'
-import compose, { ComposedMiddleware } from 'koa-compose'
+import compose, { Middleware } from 'koa-compose'
 import pLimit from 'p-limit'
 
 import { CacheLayer } from '../caches/CacheLayer'
@@ -185,7 +185,7 @@ export interface InstanceOptions {
    * @memberof InstanceOptions
    */
   headers?: Record<string, string>,
-  middlewares?: Array<ComposedMiddleware<MiddlewareContext>>
+  middlewares?: Array<Middleware<MiddlewareContext>>
 }
 
 export interface IOResponse<T> {
@@ -218,7 +218,7 @@ interface ClientOptions {
   retryConfig?: IAxiosRetryConfig
   concurrency?: number
   headers?: Record<string, string>
-  middlewares?: Array<ComposedMiddleware<MiddlewareContext>>
+  middlewares?: Array<Middleware<MiddlewareContext>>
   operationId: string
 }
 
