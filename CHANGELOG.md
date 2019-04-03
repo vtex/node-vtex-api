@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- Added type inference for `IOClients.getOrSet` method. No need to type instantiations like
+
+```ts
+export class IOClients {
+  public get logger(): Logger {
+    return this.getOrSet('logger', Logger)
+  }
+}
+```
+
+You can just do
+
+```ts
+export class IOClients {
+  public get logger() {
+    return this.getOrSet('logger', Logger)
+  }
+}
+```
+
+instead
+
 ## [3.0.14] - 2019-04-03
 
 ## [3.0.14-beta.0] - 2019-04-03
