@@ -3,6 +3,7 @@ import DataLoader from 'dataloader'
 import { ASTNode, GraphQLScalarType, Kind } from 'graphql'
 
 export interface IOMessage {
+  id: string
   content: string
   description: string
   from?: string
@@ -15,14 +16,17 @@ export interface NativeResolverContext {
 }
 
 const serialize = (ctx: NativeResolverContext) => async (inputArgs: IOMessage | string) => {
-  const args = typeof(inputArgs) === 'string' ? {content: inputArgs, description: ''} : inputArgs
+  const args = typeof inputArgs === 'string' ? {content: inputArgs, description: '', from: undefined, id: inputArgs} : inputArgs
   const {content, from} = args
   const {translationsLoader, getLocaleTo} = ctx
   const to = await getLocaleTo()
 
-  // If the message has no content, or no target locale,
-  // or if it's already in the target locale, return the content.
-  if (!content || !to || from === to) {
+  if (!to) {
+    throw new Error('Messages need a target language to translate to')
+  }
+
+  // If the message is already in the target locale, return the content.
+  if (from === to) {
     return content
   }
 
