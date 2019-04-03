@@ -48,8 +48,7 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
     await next()
 
     graphQLErrors = parseErrorResponse(ctx.graphql.graphqlResponse || {})
-  }
-  catch (e) {
+  } catch (e) {
     const formatError = ctx.graphql.formatters!.formatError
 
     if (e.isGraphQLError) {
@@ -66,8 +65,7 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
     if (e.headers) {
       ctx.set(e.headers)
     }
-  }
-  finally {
+  } finally {
     if (graphQLErrors) {
       ctx.graphql.status = 'error'
       ctx.set(CACHE_CONTROL_HEADER, production ? `public, max-age=${TWO_SECONDS_S}` : `no-cache, no-store`)
