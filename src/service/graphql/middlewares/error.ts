@@ -4,6 +4,8 @@ import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
 import { generatePathName } from '../utils/pathname'
 
+const CACHE_CONTROL_HEADER = 'cache-control'
+const TWO_SECONDS_S = 2
 const sender = process.env.VTEX_APP_ID
 
 const getSplunkQuery = (account: string, workspace: string) =>
@@ -68,7 +70,7 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
   finally {
     if (graphqlErrors) {
       ctx.graphql.status = 'error'
-      ctx.set('Cache-Control', 'no-cache, no-store')
+      ctx.set(CACHE_CONTROL_HEADER, production ? `public, max-age=${TWO_SECONDS_S}` : `no-cache, no-store`)
 
       // Log each error to splunk individually
       forEach((err: any) => {
