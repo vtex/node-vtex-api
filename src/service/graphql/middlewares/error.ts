@@ -42,23 +42,23 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
     },
   } = ctx
 
-  let graphqlErrors: any[] | null = null
+  let graphQLErrors: any[] | null = null
 
   try {
     await next()
 
-    graphqlErrors = parseErrorResponse(ctx.graphql.graphqlResponse || {})
+    graphQLErrors = parseErrorResponse(ctx.graphql.graphqlResponse || {})
   }
   catch (e) {
     const formatError = ctx.graphql.formatters!.formatError
 
     if (e.isGraphQLError) {
       const response = JSON.parse(e.message)
-      graphqlErrors = parseError(response)
+      graphQLErrors = parseError(response)
       ctx.body = response
     } else {
-      graphqlErrors = [formatError(e)]
-      ctx.body = {errors: graphqlErrors}
+      graphQLErrors = [formatError(e)]
+      ctx.body = {errors: graphQLErrors}
     }
 
     // Add response
@@ -68,7 +68,7 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
     }
   }
   finally {
-    if (graphqlErrors) {
+    if (graphQLErrors) {
       ctx.graphql.status = 'error'
       ctx.set(CACHE_CONTROL_HEADER, production ? `public, max-age=${TWO_SECONDS_S}` : `no-cache, no-store`)
 
@@ -88,14 +88,14 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
           console.error('Error logging error 🙄 retrying once...', reason ? reason.response : '')
           ctx.clients.logger.sendLog('-', log, 'error').catch()
         })
-      }, graphqlErrors)
+      }, graphQLErrors)
 
-      // Expose graphqlErrors with pathNames to timings middleware
-      ctx.graphql.graphqlErrors = graphqlErrors
+      // Expose graphQLErrors with pathNames to timings middleware
+      ctx.graphql.graphQLErrors = graphQLErrors
 
       // Show message in development environment
       if (!production) {
-        const message = parseMessage(graphqlErrors)
+        const message = parseMessage(graphQLErrors)
         console.error(message.join('\n'))
         console.log(getSplunkQuery(account, workspace))
       }

@@ -13,7 +13,7 @@ export interface GraphQLContext {
     graphqlResponse?: GraphQLResponse
     responseInit?: HttpQueryResponse['responseInit']
     status?: 'success' | 'error'
-    graphqlErrors?: any[]
+    graphQLErrors?: any[]
     formatters?: {
       formatError: <T>(e: T) => T
       formatResponse: <T>(r: T) => T

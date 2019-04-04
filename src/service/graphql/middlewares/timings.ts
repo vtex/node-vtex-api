@@ -14,14 +14,14 @@ interface ResolverTracing {
 
 const nanoToMillis = (nanoseconds: number) => Math.round((nanoseconds / 1e6))
 
-const hasErrorForPathName = (pathName: string, graphqlErrors?: any[]) => {
-  return graphqlErrors && any(propEq('pathName', pathName), graphqlErrors) || false
+const hasErrorForPathName = (pathName: string, graphQLErrors?: any[]) => {
+  return graphQLErrors && any(propEq('pathName', pathName), graphQLErrors) || false
 }
 
-const batchResolversTracing = (resolvers: ResolverTracing[], graphqlErrors?: any[]) => {
+const batchResolversTracing = (resolvers: ResolverTracing[], graphQLErrors?: any[]) => {
   resolvers.forEach(resolver => {
     const pathName = generatePathName(resolver.path)
-    const status = hasErrorForPathName(pathName, graphqlErrors)
+    const status = hasErrorForPathName(pathName, graphQLErrors)
       ? 'error'
       : 'success'
     const extensions = {
@@ -46,6 +46,6 @@ export const timings = async (ctx: GraphQLServiceContext, next: () => Promise<vo
   // Batch timings for individual resolvers
   const resolverTimings = path<ResolverTracing[] | undefined>(['extensions', 'tracing', 'execution', 'resolvers'], ctx.graphql.graphqlResponse!)
   if (resolverTimings) {
-    batchResolversTracing(resolverTimings, ctx.graphql.graphqlErrors)
+    batchResolversTracing(resolverTimings, ctx.graphql.graphQLErrors)
   }
 }
