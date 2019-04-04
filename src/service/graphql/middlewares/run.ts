@@ -64,6 +64,7 @@ export const run = async (ctx: GraphQLServiceContext, next: () => Promise<void>)
     ctx.graphql.graphqlResponse = JSON.parse(graphqlResponse)
   } catch (err) {
     ctx.graphql = graphql
+    console.log('reseting graphql', graphql)
     throw err
   }
 
