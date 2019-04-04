@@ -37,30 +37,35 @@ export const run = async (ctx: GraphQLServiceContext, next: () => Promise<void>)
   // so we delete it here and restore it after execution.
   delete ctx.graphql
 
-  const {graphqlResponse, responseInit} = await runHttpQuery([], {
-    method,
-    options: {
-      cacheControl: {
-        calculateHttpHeaders: true,
-        defaultMaxAge: defaultMaxAgeFromCtx(ctx),
-        stripFormattedExtensions: false,
-      },
-      context: ctx,
-      dataSources,
-      debug: !production,
-      formatError,
-      formatResponse,
-      persistedQueries,
-      schema,
-      tracing: true,
-    } as any,
-    query: query!,
-    request,
-  })
+  try {
+    const {graphqlResponse, responseInit} = await runHttpQuery([], {
+      method,
+      options: {
+        cacheControl: {
+          calculateHttpHeaders: true,
+          defaultMaxAge: defaultMaxAgeFromCtx(ctx),
+          stripFormattedExtensions: false,
+        },
+        context: ctx,
+        dataSources,
+        debug: !production,
+        formatError,
+        formatResponse,
+        persistedQueries,
+        schema,
+        tracing: true,
+      } as any,
+      query: query!,
+      request,
+    })
 
-  ctx.graphql = graphql
-  ctx.graphql.responseInit = responseInit
-  ctx.graphql.graphqlResponse = JSON.parse(graphqlResponse)
+    ctx.graphql = graphql
+    ctx.graphql.responseInit = responseInit
+    ctx.graphql.graphqlResponse = JSON.parse(graphqlResponse)
+  } catch (err) {
+    ctx.graphql = graphql
+    throw err
+  }
 
   await next()
 }
