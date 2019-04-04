@@ -67,7 +67,6 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
   }
   finally {
     if (graphqlErrors) {
-      console.log('settings error to graphql status')
       ctx.graphql.status = 'error'
       ctx.set('Cache-Control', 'no-cache, no-store')
 
@@ -99,7 +98,6 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
         console.log(getSplunkQuery(account, workspace))
       }
     } else {
-      console.log('settings success to graphql status')
       ctx.graphql.status = 'success'
     }
   }

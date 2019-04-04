@@ -44,6 +44,8 @@ export const timings = async (ctx: GraphQLServiceContext, next: () => Promise<vo
   metrics.batch(`graphql-operation-${ctx.graphql.status}`, process.hrtime(start))
 
   // Batch timings for individual resolvers
-  const resolverTimings = path(['extensions', 'tracing', 'execution', 'resolvers'], ctx.graphql.graphqlResponse!) as ResolverTracing[]
-  batchResolversTracing(resolverTimings, ctx.graphql.graphqlErrors)
+  const resolverTimings = path<ResolverTracing[] | undefined>(['extensions', 'tracing', 'execution', 'resolvers'], ctx.graphql.graphqlResponse!)
+  if (resolverTimings) {
+    batchResolversTracing(resolverTimings, ctx.graphql.graphqlErrors)
+  }
 }
