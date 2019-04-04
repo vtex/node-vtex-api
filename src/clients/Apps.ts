@@ -1,11 +1,12 @@
 import archiver from 'archiver'
 import { IncomingMessage } from 'http'
 import { stringify } from 'qs'
+import { filter as ramdaFilter, path as ramdaPath, prop } from 'ramda'
 import { Readable, Writable } from 'stream'
 import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
 
-import { inflightURL } from '../HttpClient/middlewares/inflight'
+import { inflightParams, inflightURL } from '../HttpClient/middlewares/inflight'
 import { forWorkspace, IODataSource } from '../IODataSource'
 import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
 
@@ -19,6 +20,7 @@ const routes = {
   Files: (app: string) => `${routes.App(app)}/files`,
   Link: (app: string) => `/v2/links/${app}`,
   Links: '/links',
+  Meta: '/v2/apps',
   ResolveDependencies: 'dependencies/_resolve',
   ResolveDependenciesWithManifest: '/v2/apps/_resolve',
   Settings: (app: string) => `${routes.App(app)}/settings`,
@@ -47,6 +49,12 @@ const zipObj = (keys: string[], values: any[]) => {
 const paramsSerializer = (params: any) => {
   return stringify(params, {arrayFormat: 'repeat'})
 }
+
+const workspaceFields = [
+  '_resolvedDependencies',
+  'settingsSchema',
+  '_isRoot',
+].join(',')
 
 export class Apps extends IODataSource {
   protected httpClientFactory = forWorkspace
@@ -229,6 +237,16 @@ export class Apps extends IODataSource {
       )
   }
 
+  public getAppsMetaInfos = async (filter?: string) => {
+    const metric = 'get-apps-meta'
+    const inflightKey = inflightParams
+    const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(routes.Meta, {params: {fields: workspaceFields}, metric, inflightKey}).then(prop('apps'))
+    if (filter) {
+      return ramdaFilter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfos)
+    }
+    return appsMetaInfos
+  }
+
   public getDependencies = (filter: string = '') => {
     const params = {filter}
     const metric = 'apps-get-deps'
@@ -261,6 +279,17 @@ export class Apps extends IODataSource {
 
 interface ZipOptions {
   zlib?: ZlibOptions,
+}
+
+export interface AppMetaInfo {
+  id: string
+  settingsSchema?: Record<string, any>
+  _resolvedDependencies: Record<string, string>
+  _isRoot: boolean
+}
+
+export interface WorkspaceMetaInfo {
+  apps: AppMetaInfo[]
 }
 
 export interface AppsListItem {

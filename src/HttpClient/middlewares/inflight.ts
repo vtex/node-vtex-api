@@ -56,3 +56,4 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
 }
 
 export const inflightURL: InflightKeyGenerator = ({baseURL, url}: RequestConfig) => baseURL! + url!
+export const inflightParams: InflightKeyGenerator = ({baseURL, url, params}: RequestConfig) => baseURL! + url! + params ? JSON.stringify(params) : ''
