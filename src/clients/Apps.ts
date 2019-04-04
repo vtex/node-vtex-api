@@ -6,7 +6,7 @@ import { Readable, Writable } from 'stream'
 import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
 
-import { inflightParams, inflightURL } from '../HttpClient/middlewares/inflight'
+import { inflightURL } from '../HttpClient/middlewares/inflight'
 import { forWorkspace, IODataSource } from '../IODataSource'
 import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
 
@@ -239,7 +239,7 @@ export class Apps extends IODataSource {
 
   public getAppsMetaInfos = async (filter?: string) => {
     const metric = 'get-apps-meta'
-    const inflightKey = inflightParams
+    const inflightKey = inflightURL
     const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(routes.Meta, {params: {fields: workspaceFields}, metric, inflightKey}).then(prop('apps'))
     if (filter) {
       return ramdaFilter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfos)
