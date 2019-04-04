@@ -3,7 +3,7 @@ import { cleanError } from '../../../utils/error'
 import { ServiceContext } from '../../typings'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
-const TWO_SECONDS_S = 10
+const TWO_SECONDS_S = 2
 const production = process.env.VTEX_PRODUCTION === 'true'
 
 export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
