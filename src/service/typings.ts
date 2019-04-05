@@ -1,5 +1,5 @@
 import { DataSource } from 'apollo-datasource'
-import { GraphQLFieldConfig, GraphQLFieldResolver } from 'graphql'
+import { GraphQLFieldConfig, GraphQLFieldResolver, GraphQLScalarType } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 import { ParameterizedContext } from 'koa'
 import { Middleware } from 'koa-compose'
@@ -50,7 +50,7 @@ export type ClientInstanceOptions<ClientsT extends IOClients = IOClients> = Inst
 export type ClientContext<ClientsT extends IOClients = IOClients> = IOContext & { clients: { [k in IOClientInstances<ClientsT>]?: ClientsT[k] } }
 
 export interface GraphQLOptions<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
-  resolvers: Record<string, Record<string, Resolver<ClientsT, StateT, CustomT>>>
+  resolvers: Record<string, Record<string, Resolver<ClientsT, StateT, CustomT>> | GraphQLScalarType>
   dataSources?: DataSourcesGenerator
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>
 }
