@@ -1,6 +1,7 @@
 import parseCookie from 'cookie'
 import { pickBy, prop } from 'ramda'
 
+import { inflightUrlWithQuery } from '../HttpClient/middlewares/inflight'
 import { forExternal, IODataSource } from '../IODataSource'
 
 export interface SegmentData {
@@ -69,6 +70,7 @@ export class Segment extends IODataSource {
         'Content-Type': 'application/json',
         'Proxy-Authorization': authToken,
       },
+      inflightKey: inflightUrlWithQuery,
       metric: 'segment-get',
       params: {
         ...sanitizeParams(query),
