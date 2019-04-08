@@ -15,7 +15,7 @@ import { ServiceConfig } from './typings'
 export class Service<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void>{
   constructor(public config: ServiceConfig<ClientsT, StateT, CustomT>) {
     if (config.routes && config.routes.graphql) {
-      console.error('Route id "graphql" is reserved and apps containing this routes will stop building in the near future. To create a GraphQL app, export a "graphql" key with {resolvers}.')
+      console.warn('Route id "graphql" is reserved and apps containing this routes will stop building in the near future. To create a GraphQL app, export a "graphql" key with {resolvers}.')
     }
   }
 }
