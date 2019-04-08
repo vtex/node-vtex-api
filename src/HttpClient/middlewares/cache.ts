@@ -5,11 +5,17 @@ import {MiddlewareContext, RequestConfig} from '../context'
 
 const ROUTER_CACHE_KEY = 'x-router-cache'
 const ROUTER_CACHE_HIT = 'HIT'
+const RANGE_HEADER_QS_KEY = '__range_header'
+const cacheableStatusCodes = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501] // https://tools.ietf.org/html/rfc7231#section-6.1
 
 export const cacheKey = (config: AxiosRequestConfig) => {
-  const {baseURL = '', url = '', params} = config
+  const {baseURL = '', url = '', params, headers} = config
   const fullURL = [baseURL, url].filter(str => str).join('/')
   const urlObject = new URL(fullURL)
+
+  if (headers && headers.range) {
+    urlObject.searchParams.append(RANGE_HEADER_QS_KEY, headers.range)
+  }
 
   if (params) {
     for (const [key, value] of Object.entries<string>(params)) {
@@ -115,7 +121,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     const {data, headers, status} = ctx.response as AxiosResponse
     const {age, etag, maxAge: headerMaxAge, noStore, noCache} = parseCacheHeaders(headers)
     const {forceMaxAge} = ctx.config
-    const maxAge = forceMaxAge && status === 200 && !noStore ? Math.max(forceMaxAge, headerMaxAge) : headerMaxAge
+    const maxAge = forceMaxAge && !noStore && cacheableStatusCodes.includes(status) ? Math.max(forceMaxAge, headerMaxAge) : headerMaxAge
 
     if (headers[ROUTER_CACHE_KEY] === ROUTER_CACHE_HIT) {
       if (ctx.cacheHit) {
