@@ -19,6 +19,7 @@ export interface SegmentData {
 }
 
 const SEGMENT_COOKIE = 'vtex_segment'
+const SEGMENT_MAX_AGE_S = 10 * 60 // 10 minutes - segment is actually immutable
 
 const sanitizeParams = (params?: Record<string, string>) => {
   return pickBy((_, key) => !!key, params || {})
@@ -55,6 +56,7 @@ export class Segment extends IODataSource {
     const {segmentToken, authToken, account} = this.context!
     const selectedToken = token || segmentToken
     return this.http.getRaw<SegmentData>(routes.segments(selectedToken), ({
+      forceMaxAge: SEGMENT_MAX_AGE_S,
       headers: {
         'Content-Type': 'application/json',
         'Proxy-Authorization': authToken,

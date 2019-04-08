@@ -1,5 +1,5 @@
 import {AxiosRequestConfig, AxiosResponse} from 'axios'
-import {URL, URLSearchParams} from 'url'
+import {URL} from 'url'
 import {CacheLayer} from '../../caches/CacheLayer'
 import {MiddlewareContext, RequestConfig} from '../context'
 
@@ -113,7 +113,9 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     }
 
     const {data, headers, status} = ctx.response as AxiosResponse
-    const {age, etag, maxAge, noStore, noCache} = parseCacheHeaders(headers)
+    const {age, etag, maxAge: headerMaxAge, noStore, noCache} = parseCacheHeaders(headers)
+    const {forceMaxAge} = ctx.config
+    const maxAge = forceMaxAge && status === 200 ? Math.max(forceMaxAge, headerMaxAge) : headerMaxAge
 
     if (headers[ROUTER_CACHE_KEY] === ROUTER_CACHE_HIT) {
       if (ctx.cacheHit) {
@@ -167,7 +169,7 @@ export interface Cached {
   response: Partial<AxiosResponse>
 }
 
-export type CacheableRequestConfig = AxiosRequestConfig & {
+export type CacheableRequestConfig = RequestConfig & {
   url: string,
   cacheable: CacheType,
   memoizable: boolean

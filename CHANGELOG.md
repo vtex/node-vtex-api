@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Option `forceMaxAge` option to `HttpClient` request config. This allows certain requests to forceably be cached for `forceMaxAge` seconds, regardless of the responses' `Cache-control` header, as long as status is 200.
+
 ## [3.1.2] - 2019-04-09
 ### Changed
 - Makes errors compliant to [apollo's specification](https://www.apollographql.com/docs/apollo-server/features/errors)
