@@ -4,6 +4,14 @@ import { forWorkspace, IODataSource } from '../IODataSource'
 import { IOMessage } from '../service/graphql/schema/typeDefs/ioMessage'
 import { IOContext } from '../service/typings'
 
+interface Locale {
+  [token: string]: string
+}
+
+interface Locales {
+  [lang: string]: Locale
+}
+
 export class Messages extends IODataSource {
   protected httpClientFactory = forWorkspace
   protected service = 'messages.vtex'
@@ -22,6 +30,16 @@ export class Messages extends IODataSource {
       __p: process.env.VTEX_APP_ID,
       data: JSON.stringify(data),
       to,
+    },
+  })
+
+  public saveTranslation = (data: Locales): Promise<void> => this.http.post('/_v/translations/save', data, {
+    headers: {
+      Authorization: this.context!.authToken,
+    },
+    metric: 'messages-save-translation',
+    params: {
+      __p: process.env.VTEX_APP_ID,
     },
   })
 }
