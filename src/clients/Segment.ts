@@ -31,10 +31,18 @@ const routes = {
 }
 
 export class Segment extends IODataSource {
+  public segment: (query?: Record<string, string>, token?: string) => Promise<SegmentData>
   protected httpClientFactory = forExternal
   protected service = 'http://portal.vtexcommercestable.com.br'
 
-  public segment = (query?: Record<string, string>, token?: string) =>
+  constructor() {
+    super()
+
+    // Backwards compatibility
+    this.segment = this.getSegment.bind(this)
+  }
+
+  public getSegment = (query?: Record<string, string>, token?: string) =>
     this.rawSegment(query, token).then(prop('data'))
 
   public getOrCreateSegment = async (query?: Record<string, string>, token?: string) => {
@@ -63,8 +71,8 @@ export class Segment extends IODataSource {
       },
       metric: 'segment-get',
       params: {
-        an: account,
         ...sanitizeParams(query),
+        an: account,
       },
     }))
   }

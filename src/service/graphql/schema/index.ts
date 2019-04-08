@@ -43,7 +43,7 @@ export const makeSchema = (ctx: GraphQLServiceContext) => {
 
   // The target translation locale is only necessary if this GraphQL app uses the `IOMessage` resolver.
   const getLocaleTo = async () => {
-    const {cultureInfo} = await ctx.clients.segment.segment()
+    const {cultureInfo} = await ctx.clients.segment.getSegment()
     return cultureInfo
   }
 
