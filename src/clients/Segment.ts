@@ -41,7 +41,7 @@ export class Segment extends IODataSource {
    * @memberof Segment
    */
   public segment = (query?: Record<string, string>, token?: string) =>
-    this.rawSegment(token, query).then(prop('data'))
+    this.rawSegment(token || this.context!.segmentToken, query).then(prop('data'))
 
   /**
    * Get the segment data using the current `ctx.vtex.segmentToken`
