@@ -157,7 +157,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
 
     if (shouldCache) {
       const currentAge = revalidated ? 0 : age
-      const varySegment = ctx.response.headers.vary.includes('x-vtex-segment')
+      const varySegment = ctx.response.headers.vary && ctx.response.headers.vary.includes('x-vtex-segment')
       const setKey = varySegment ? keyWithSegment : key
       await storage.set(setKey, {
         etag,
