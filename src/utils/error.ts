@@ -78,6 +78,10 @@ const destroyCircular = (from: any, seen: string[]) => {
         if (!!proxyAuth) {
           delete headers[proxyAuth]
         }
+        const vtexIdClientAutCookie = findCaseInsensitive('vtexidclientautcookie', headerNames)
+        if (!!vtexIdClientAutCookie) {
+          delete headers[vtexIdClientAutCookie]
+        }
       }
     }
   }
