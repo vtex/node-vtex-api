@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.1.2] - 2019-04-09
 ### Changed
 - Makes errors compliant to [apollo's specification](https://www.apollographql.com/docs/apollo-server/features/errors)
 - Makes it possible to use graphql handler with a scary warning
