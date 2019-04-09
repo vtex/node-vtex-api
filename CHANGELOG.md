@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.2.2] - 2019-04-09
+
 ## [3.2.1] - 2019-04-09
 ### Fixed
 - Security hole as `Authorization`, `Proxy-Authorization` and `vtexIdClientAutCookie` headers were being sent to graphql errors
