@@ -1,4 +1,5 @@
 import { InstanceOptions } from '../HttpClient'
+import { inflightUrlWithQuery } from '../HttpClient/middlewares/inflight'
 import { forWorkspace, IODataSource } from '../IODataSource'
 import { IOMessage } from '../service/graphql/schema/typeDefs/ioMessage'
 import { IOContext } from '../service/typings'
@@ -15,6 +16,7 @@ export class Messages extends IODataSource {
     headers: {
       Authorization: this.context!.authToken,
     },
+    inflightKey: inflightUrlWithQuery,
     metric: 'messages-translate',
     params: {
       __p: process.env.VTEX_APP_ID,

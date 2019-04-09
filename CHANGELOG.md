@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.2.0] - 2019-04-09
+
+## [3.2.0-beta.7] - 2019-04-09
+
+## [3.2.0-beta.6] - 2019-04-09
+
+## [3.2.0-beta.5] - 2019-04-09
+
+## [3.2.0-beta.4] - 2019-04-08
+
+## [3.2.0-beta.3] - 2019-04-08
+
+### Added
+- `segment.getSegment` and `segment.getSegmentByToken`
+
+## [3.2.0-beta.2] - 2019-04-08
+
+## [3.2.0-beta.1] - 2019-04-08
+
+## [3.2.0-beta.0] - 2019-04-08
+
+## [3.2.0-beta] - 2019-04-08
+
+### Added
+- Option `forceMaxAge` option to `HttpClient` request config. This allows certain requests to forceably be cached for `forceMaxAge` seconds, regardless of the responses' `Cache-control` header, as long as status is 200.
+
 ## [3.1.2] - 2019-04-09
 ### Changed
 - Makes errors compliant to [apollo's specification](https://www.apollographql.com/docs/apollo-server/features/errors)

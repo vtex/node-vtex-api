@@ -1,3 +1,4 @@
+import { stringify } from 'qs'
 import { InflightKeyGenerator, MiddlewareContext, RequestConfig } from '../context'
 
 export type Inflight = Required<Pick<MiddlewareContext, 'cacheHit' | 'response'>>
@@ -56,3 +57,5 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
 }
 
 export const inflightURL: InflightKeyGenerator = ({baseURL, url}: RequestConfig) => baseURL! + url!
+
+export const inflightUrlWithQuery: InflightKeyGenerator = ({baseURL, url, params}: RequestConfig) => baseURL! + url! + stringify(params, {arrayFormat: 'repeat', addQueryPrefix: true})

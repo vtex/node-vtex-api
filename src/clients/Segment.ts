@@ -1,6 +1,7 @@
 import parseCookie from 'cookie'
 import { pickBy, prop } from 'ramda'
 
+import { inflightUrlWithQuery } from '../HttpClient/middlewares/inflight'
 import { forExternal, IODataSource } from '../IODataSource'
 
 export interface SegmentData {
@@ -19,6 +20,7 @@ export interface SegmentData {
 }
 
 const SEGMENT_COOKIE = 'vtex_segment'
+const SEGMENT_MAX_AGE_S = 10 * 60 // 10 minutes - segment is actually immutable
 
 const sanitizeParams = (params?: Record<string, string>) => {
   return pickBy((_, key) => !!key, params || {})
@@ -26,15 +28,36 @@ const sanitizeParams = (params?: Record<string, string>) => {
 
 const routes = {
   base: '/api/segments',
-  segments: (token: string | void) => token ? `${routes.base}/${token}` : routes.base,
+  segments: (token?: string | null) => token ? `${routes.base}/${token}` : routes.base,
 }
 
 export class Segment extends IODataSource {
   protected httpClientFactory = forExternal
   protected service = 'http://portal.vtexcommercestable.com.br'
 
+  /**
+   * @deprecated Please use `getSegment` or `getSegmentByToken` instead.
+   *
+   * @memberof Segment
+   */
   public segment = (query?: Record<string, string>, token?: string) =>
-    this.rawSegment(query, token).then(prop('data'))
+    this.rawSegment(token || this.context!.segmentToken, query).then(prop('data'))
+
+  /**
+   * Get the segment data using the current `ctx.vtex.segmentToken`
+   *
+   * @memberof Segment
+   */
+  public getSegment = () =>
+    this.rawSegment(this.context!.segmentToken).then(prop('data'))
+
+  /**
+   * Get the segment data from this specific segment token
+   *
+   * @memberof Segment
+   */
+  public getSegmentByToken = (token: string | null) =>
+    this.rawSegment(token).then(prop('data'))
 
   public getOrCreateSegment = async (query?: Record<string, string>, token?: string) => {
     const {
@@ -42,7 +65,7 @@ export class Segment extends IODataSource {
       headers: {
         'set-cookie': [setCookies],
       },
-    } = await this.rawSegment(query, token)
+    } = await this.rawSegment(token, query)
     const parsedCookie = parseCookie.parse(setCookies)
     const segmentToken = prop(SEGMENT_COOKIE, parsedCookie)
     return {
@@ -51,18 +74,20 @@ export class Segment extends IODataSource {
     }
   }
 
-  private rawSegment = (query?: Record<string, string>, token?: string) => {
-    const {segmentToken, authToken, account} = this.context!
-    const selectedToken = token || segmentToken
-    return this.http.getRaw<SegmentData>(routes.segments(selectedToken), ({
+  private rawSegment = (token?: string | null, query?: Record<string, string>) => {
+    const {authToken, account} = this.context!
+
+    return this.http.getRaw<SegmentData>(routes.segments(token), ({
+      forceMaxAge: SEGMENT_MAX_AGE_S,
       headers: {
         'Content-Type': 'application/json',
         'Proxy-Authorization': authToken,
       },
+      inflightKey: inflightUrlWithQuery,
       metric: 'segment-get',
       params: {
-        an: account,
         ...sanitizeParams(query),
+        an: account,
       },
     }))
   }

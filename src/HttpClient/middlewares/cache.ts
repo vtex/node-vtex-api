@@ -1,15 +1,21 @@
 import {AxiosRequestConfig, AxiosResponse} from 'axios'
-import {URL, URLSearchParams} from 'url'
+import {URL} from 'url'
 import {CacheLayer} from '../../caches/CacheLayer'
 import {MiddlewareContext, RequestConfig} from '../context'
 
 const ROUTER_CACHE_KEY = 'x-router-cache'
 const ROUTER_CACHE_HIT = 'HIT'
+const RANGE_HEADER_QS_KEY = '__range_header'
+const cacheableStatusCodes = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501] // https://tools.ietf.org/html/rfc7231#section-6.1
 
 export const cacheKey = (config: AxiosRequestConfig) => {
-  const {baseURL = '', url = '', params} = config
+  const {baseURL = '', url = '', params, headers} = config
   const fullURL = [baseURL, url].filter(str => str).join('/')
   const urlObject = new URL(fullURL)
+
+  if (headers && headers.range) {
+    urlObject.searchParams.append(RANGE_HEADER_QS_KEY, headers.range)
+  }
 
   if (params) {
     for (const [key, value] of Object.entries<string>(params)) {
@@ -113,7 +119,9 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     }
 
     const {data, headers, status} = ctx.response as AxiosResponse
-    const {age, etag, maxAge, noStore, noCache} = parseCacheHeaders(headers)
+    const {age, etag, maxAge: headerMaxAge, noStore, noCache} = parseCacheHeaders(headers)
+    const {forceMaxAge} = ctx.config
+    const maxAge = forceMaxAge && cacheableStatusCodes.includes(status) ? Math.max(forceMaxAge, headerMaxAge) : headerMaxAge
 
     if (headers[ROUTER_CACHE_KEY] === ROUTER_CACHE_HIT) {
       if (ctx.cacheHit) {
@@ -131,7 +139,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     }
 
     // Indicates this should NOT be cached and this request will not be considered a miss.
-    if (noStore || (noCache && !etag)) {
+    if (!forceMaxAge && (noStore || (noCache && !etag))) {
       return
     }
 
@@ -149,7 +157,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
 
     if (shouldCache) {
       const currentAge = revalidated ? 0 : age
-      const varySegment = ctx.response.headers.vary.includes('x-vtex-segment')
+      const varySegment = ctx.response.headers.vary && ctx.response.headers.vary.includes('x-vtex-segment')
       const setKey = varySegment ? keyWithSegment : key
       await storage.set(setKey, {
         etag,
@@ -167,7 +175,7 @@ export interface Cached {
   response: Partial<AxiosResponse>
 }
 
-export type CacheableRequestConfig = AxiosRequestConfig & {
+export type CacheableRequestConfig = RequestConfig & {
   url: string,
   cacheable: CacheType,
   memoizable: boolean
