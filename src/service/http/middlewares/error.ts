@@ -3,6 +3,8 @@ import { cleanError } from '../../../utils/error'
 import { ServiceContext } from '../../typings'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
+const ETAG_CONTROL_HEADER = 'x-vtex-etag-control'
+const ONE_SECONDS_S = 1
 const TWO_SECONDS_S = 2
 const production = process.env.VTEX_PRODUCTION === 'true'
 
@@ -20,7 +22,14 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
         ? ctx.status
         : 500
     ctx.body = ctx.body || err
-    ctx.set(CACHE_CONTROL_HEADER, production ? `public, max-age=${TWO_SECONDS_S}` : `no-cache, no-store`)
+
+    // In production errors, add two second cache
+    if (production) {
+      ctx.set(CACHE_CONTROL_HEADER, `public, max-age=${TWO_SECONDS_S}`)
+      ctx.set(ETAG_CONTROL_HEADER, `max-age=${ONE_SECONDS_S}`)
+    } else {
+      ctx.set(CACHE_CONTROL_HEADER, `no-cache, no-store`)
+    }
 
     // Log error
     const {

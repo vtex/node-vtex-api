@@ -5,6 +5,8 @@ import { toArray } from '../utils/array'
 import { generatePathName } from '../utils/pathname'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
+const ETAG_CONTROL_HEADER = 'x-vtex-etag-control'
+const ONE_SECONDS_S = 1
 const TWO_SECONDS_S = 2
 const sender = process.env.VTEX_APP_ID
 
@@ -70,7 +72,14 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
   finally {
     if (graphQLErrors) {
       ctx.graphql.status = 'error'
-      ctx.set(CACHE_CONTROL_HEADER, production ? `public, max-age=${TWO_SECONDS_S}` : `no-cache, no-store`)
+
+      // In production errors, add two second cache
+      if (production) {
+        ctx.set(CACHE_CONTROL_HEADER, `public, max-age=${TWO_SECONDS_S}`)
+        ctx.set(ETAG_CONTROL_HEADER, `max-age=${ONE_SECONDS_S}`)
+      } else {
+        ctx.set(CACHE_CONTROL_HEADER, `no-cache, no-store`)
+      }
 
       // Log each error to splunk individually
       forEach((err: any) => {
