@@ -1,8 +1,8 @@
-import { map } from 'ramda'
-import { GraphQLServiceContext } from '../typings'
-
+import { formatApolloErrors } from 'apollo-server-errors'
 import { pick } from 'ramda'
+
 import { cleanError } from '../../../utils/error'
+import { GraphQLServiceContext } from '../typings'
 
 const ERROR_FIELD_WHITELIST = ['message', 'path', 'stack', 'extensions', 'statusCode', 'name', 'headers', 'originalError', 'code']
 
@@ -32,12 +32,12 @@ const createFormatError = (details: any) => (error: any) => {
   return formattedError as any
 }
 
-const createFormatResponse = (formatError: (e: any) => any) => (response: any) => {
+const createFormatResponse = (formatter: (e: any) => any) => (response: any) => {
   const {errors = null} = response || {}
 
   return {
     ...response,
-    errors: Array.isArray(errors) ? map(formatError, errors) : undefined,
+    errors: Array.isArray(errors) ? formatApolloErrors(errors, {formatter}) : undefined,
   }
 }
 

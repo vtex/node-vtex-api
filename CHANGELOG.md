@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.1.2] - 2019-04-09
+### Changed
+- Makes errors compliant to [apollo's specification](https://www.apollographql.com/docs/apollo-server/features/errors)
+- Makes it possible to use graphql handler with a scary warning
+
+## [3.1.2-beta.0] - 2019-04-08
+
+## [3.1.2-beta] - 2019-04-08
+
 ## [3.1.0] - 2019-04-04
 
 ## [3.1.0-beta.0] - 2019-04-04
