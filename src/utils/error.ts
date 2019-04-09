@@ -1,9 +1,14 @@
 // Inspired by https://github.com/sindresorhus/serialize-error
-import { pick } from 'ramda'
+import { find, keys, pick } from 'ramda'
 
 export const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url']
 
 const MAX_ERROR_STRING_LENGTH = process.env.MAX_ERROR_STRING_LENGTH ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10) : 8 * 1024
+
+const findCaseInsensitive = (target: string, set: string[]) => find(
+  t => t.toLocaleLowerCase() === target,
+  set
+)
 
 const destroyCircular = (from: any, seen: string[]) => {
   const to: {[key: string]: any} = Array.isArray(from) ? [] : {}
@@ -62,6 +67,18 @@ const destroyCircular = (from: any, seen: string[]) => {
   for (const property of axiosProperties) {
     if (from[property]) {
       to[property] = pick(PICKED_AXIOS_PROPS, from[property])
+      const headers = to[property] && to[property].headers
+      if (headers) {
+        const headerNames = keys(headers)
+        const authorization = findCaseInsensitive('authorization', headerNames)
+        if (!!authorization) {
+          delete headers[authorization]
+        }
+        const proxyAuth = findCaseInsensitive('proxy-authorization', headerNames)
+        if (!!proxyAuth) {
+          delete headers[proxyAuth]
+        }
+      }
     }
   }
 
