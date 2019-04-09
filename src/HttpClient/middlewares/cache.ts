@@ -121,7 +121,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     const {data, headers, status} = ctx.response as AxiosResponse
     const {age, etag, maxAge: headerMaxAge, noStore, noCache} = parseCacheHeaders(headers)
     const {forceMaxAge} = ctx.config
-    const maxAge = forceMaxAge && !noStore && cacheableStatusCodes.includes(status) ? Math.max(forceMaxAge, headerMaxAge) : headerMaxAge
+    const maxAge = forceMaxAge && cacheableStatusCodes.includes(status) ? Math.max(forceMaxAge, headerMaxAge) : headerMaxAge
 
     if (headers[ROUTER_CACHE_KEY] === ROUTER_CACHE_HIT) {
       if (ctx.cacheHit) {
@@ -139,7 +139,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     }
 
     // Indicates this should NOT be cached and this request will not be considered a miss.
-    if (noStore || (noCache && !etag)) {
+    if (!forceMaxAge && (noStore || (noCache && !etag))) {
       return
     }
 
