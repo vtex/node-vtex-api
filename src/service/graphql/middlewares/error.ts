@@ -5,8 +5,8 @@ import { toArray } from '../utils/array'
 import { generatePathName } from '../utils/pathname'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
-const ETAG_CONTROL_HEADER = 'x-vtex-etag-control'
-const ONE_SECONDS_S = 1
+const META_HEADER = 'x-vtex-meta'
+const ETAG_HEADER = 'etag'
 const TWO_SECONDS_S = 2
 const sender = process.env.VTEX_APP_ID
 
@@ -32,12 +32,13 @@ const parseErrorResponse = (response: any) => {
   return null
 }
 
+const production = process.env.VTEX_PRODUCTION === 'true'
+
 export async function error (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {
     vtex: {
       account,
       workspace,
-      production,
       route: {
         id,
       },
@@ -71,12 +72,16 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
   }
   finally {
     if (graphQLErrors) {
+      console.error('[node-vtex-api graphql errors]', graphQLErrors)
       ctx.graphql.status = 'error'
+
+      // Do not generate etag for errors
+      ctx.remove(META_HEADER)
+      ctx.remove(ETAG_HEADER)
 
       // In production errors, add two second cache
       if (production) {
         ctx.set(CACHE_CONTROL_HEADER, `public, max-age=${TWO_SECONDS_S}`)
-        ctx.set(ETAG_CONTROL_HEADER, `max-age=${ONE_SECONDS_S}`)
       } else {
         ctx.set(CACHE_CONTROL_HEADER, `no-cache, no-store`)
       }
