@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.3.0] - 2019-04-11
+### Added
+- Messages `saveTransalation` method
+
 ## [3.2.4] - 2019-04-10
 
 ## [3.2.3] - 2019-04-10
