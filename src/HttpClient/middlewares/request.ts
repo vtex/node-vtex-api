@@ -8,11 +8,13 @@ import {hrToMillis} from '../../utils/time'
 
 import {MiddlewareContext} from '../context'
 
+export const httpAgent = new Agent({
+  keepAlive: true,
+  maxFreeSockets: 50,
+})
+
 const http = axios.create({
-  httpAgent: new Agent({
-    keepAlive: true,
-    maxFreeSockets: 50,
-  }),
+  httpAgent,
 })
 
 retry(http, {
