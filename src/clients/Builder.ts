@@ -2,6 +2,7 @@ import archiver from 'archiver'
 import {ZlibOptions} from 'zlib'
 
 import {HttpClient, InstanceOptions} from '../HttpClient'
+import {CacheType} from '../HttpClient/middlewares/cache'
 import {IOContext} from '../service/typings'
 
 import {Change} from './Apps'
@@ -41,7 +42,7 @@ export class Builder {
     const metric = 'bh-availability'
     const {data: {availability},
            headers: {'x-vtex-sticky-host': host},
-          } = await this.http.getRaw(routes.Availability(app), {headers, metric})
+          } = await this.http.getRaw(routes.Availability(app), {headers, metric, cacheable: CacheType.None})
     const {hostname, score} = availability as AvailabilityResponse
     return {host, hostname, score}
   }
