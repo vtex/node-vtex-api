@@ -49,7 +49,7 @@ function cpuUsage () {
   return diff
 }
 
-function cntPerOrigin (obj: { [key: string]: any[] }) {
+function countPerOrigin (obj: { [key: string]: any[] }) {
   try {
     return mapObjIndexed(val => val.length, obj)
   } catch (_) {
@@ -58,16 +58,16 @@ function cntPerOrigin (obj: { [key: string]: any[] }) {
 }
 
 export function socketStats () {
-  const cntSocketsPerOrigin = cntPerOrigin(httpAgent.sockets)
-  const cntSockets = sum(values(cntSocketsPerOrigin))
-  const cntPendingRequestsPerOrigin = cntPerOrigin(httpAgent.requests)
-  const cntPendingRequests = sum(values(cntPendingRequestsPerOrigin))
+  const socketsPerOrigin = countPerOrigin(httpAgent.sockets)
+  const sockets = sum(values(socketsPerOrigin))
+  const pendingRequestsPerOrigin = countPerOrigin(httpAgent.requests)
+  const pendingRequests = sum(values(pendingRequestsPerOrigin))
 
   return {
-    cntPendingRequests,
-    cntPendingRequestsPerOrigin,
-    cntSockets,
-    cntSocketsPerOrigin,
+    pendingRequests,
+    pendingRequestsPerOrigin,
+    sockets,
+    socketsPerOrigin,
   }
 }
 
