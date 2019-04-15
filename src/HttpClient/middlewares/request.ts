@@ -7,11 +7,13 @@ import {isAbortedOrNetworkErrorOrRouterTimeout} from '../../utils/retry'
 
 import {MiddlewareContext} from '../context'
 
+export const httpAgent = new Agent({
+  keepAlive: true,
+  maxFreeSockets: 50,
+})
+
 const http = axios.create({
-  httpAgent: new Agent({
-    keepAlive: true,
-    maxFreeSockets: 50,
-  }),
+  httpAgent,
 })
 
 retry(http, {

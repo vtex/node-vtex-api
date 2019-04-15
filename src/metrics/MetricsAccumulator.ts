@@ -1,6 +1,7 @@
-import { assoc, flatten, map, mapObjIndexed, values } from 'ramda'
+import { assoc, flatten, map, mapObjIndexed, sum, values } from 'ramda'
 import { mean, median, percentile } from 'stats-lite'
 
+import { httpAgent } from '../HttpClient/middlewares/request'
 import { hrToMillis } from '../utils/time'
 
 export interface Metric {
@@ -46,6 +47,28 @@ function cpuUsage () {
     user: lastCpu.user + diff.user,
   }
   return diff
+}
+
+function cntPerOrigin (obj: { [key: string]: any[] }) {
+  try {
+    return mapObjIndexed(val => val.length, obj)
+  } catch (_) {
+    return {}
+  }
+}
+
+export function socketStats () {
+  const cntSocketsPerOrigin = cntPerOrigin(httpAgent.sockets)
+  const cntSockets = sum(values(cntSocketsPerOrigin))
+  const cntPendingRequestsPerOrigin = cntPerOrigin(httpAgent.requests)
+  const cntPendingRequests = sum(values(cntPendingRequestsPerOrigin))
+
+  return {
+    cntPendingRequests,
+    cntPendingRequestsPerOrigin,
+    cntSockets,
+    cntSocketsPerOrigin,
+  }
 }
 
 export type StatusTrack = () => EnvMetric[]
@@ -167,6 +190,11 @@ export class MetricsAccumulator {
       {
         ...process.memoryUsage(),
         name: 'memory',
+        production,
+      },
+      {
+        ...socketStats(),
+        name: 'socket',
         production,
       },
     ]
