@@ -62,11 +62,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [3.1.0-beta] - 2019-04-04
 
-||||||| merged common ancestors
-=======
 ## [3.0.17-beta] - 2019-04-04
 
->>>>>>> Release v3.0.17-beta
 ## [3.0.16] - 2019-04-04
 
 ## [3.0.16-beta.0] - 2019-04-04
