@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [3.3.1] - 2019-04-16
 
+## [3.3.1-beta.1] - 2019-04-17
+
 ## [3.3.1-beta.0] - 2019-04-17
 
 ## [3.3.1-beta] - 2019-04-15
