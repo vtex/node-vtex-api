@@ -24,7 +24,7 @@ export class Builder extends IOClient {
   private stickyHost!: string
 
   constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
-    super(ioContext, opts)
+    super(ioContext)
     this.http = HttpClient.forWorkspace('builder-hub.vtex', ioContext, opts)
     this.account = ioContext.account
     this.workspace = ioContext.workspace

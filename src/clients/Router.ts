@@ -17,7 +17,7 @@ export class Router extends IOClient {
   private workspace: string
 
   constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
-    super(ioContext, opts)
+    super(ioContext)
     this.account = ioContext.account
     this.workspace = ioContext.workspace
     this.http = HttpClient.forRoot('router', ioContext, opts)

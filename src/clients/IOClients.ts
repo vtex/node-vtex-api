@@ -7,7 +7,7 @@ import { AppAssets } from './AppAssets'
 import { IOClient } from './IOClient'
 import { IOClientHTTP } from './IOClientHTTP'
 
-export type IOClientFactory = new (context: ClientContext, options: InstanceOptions) => IOClient
+export type IOClientFactory = new (context: ClientContext, options?: InstanceOptions) => IOClient
 
 function hasDependencies<T extends IOClients>(instanceOptions: ClientInstanceOptions<T>): instanceOptions is ClientInstanceOptions<T> {
   return typeof (instanceOptions as ClientDependencies<T>).depends !== 'undefined'

@@ -22,7 +22,7 @@ export abstract class IOClientHTTP extends IOClient {
     protected context?: IOContext,
     protected options: InstanceOptions = {}
   ) {
-    super(context, options)
+    super(context)
   }
 
   public initialize(config: DataSourceConfig<ServiceContext>) {

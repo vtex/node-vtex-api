@@ -20,8 +20,8 @@ const endpoint = (env: string) => {
 export class ID extends IOClient {
   private http: HttpClient
 
-  constructor (context: IOContext, opts: InstanceOptions) {
-    super(context, opts)
+  constructor (context: IOContext, opts: InstanceOptions = {}) {
+    super(context)
     this.http = HttpClient.forExternal(endpoint(VTEXID_ENDPOINTS.STABLE), context, {...opts, authType: AuthType.token})
   }
 

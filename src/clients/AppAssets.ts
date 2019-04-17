@@ -10,8 +10,8 @@ export class AppAssets extends IOClient {
   protected apps: Apps
   protected registry: Registry
 
-  constructor(context: ClientContext<IOClients>, options: InstanceOptions) {
-    super(context, options)
+  constructor(context: ClientContext<IOClients>) {
+    super(context)
     this.apps = context.clients.apps!
     this.registry = context.clients.registry!
   }
