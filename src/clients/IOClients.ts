@@ -3,9 +3,9 @@ import { pickAll } from 'ramda'
 import { Apps, Billing, Builder, Events, ID, Logger, Messages, Metadata, Registry, Router, Segment, VBase, Workspaces } from '.'
 import { InstanceOptions } from '../HttpClient'
 import { ClientContext, ClientDependencies, ClientInstanceOptions, IOContext } from '../service/typings'
+import { AppAssets } from './AppAssets'
 import { IOClient } from './IOClient'
 import { IOClientHTTP } from './IOClientHTTP'
-import { AppAssets } from './Repository'
 
 export type IOClientFactory = new (context: ClientContext, options: InstanceOptions) => IOClient
 

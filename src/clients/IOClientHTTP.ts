@@ -19,7 +19,7 @@ export abstract class IOClientHTTP extends IOClient {
   private initialized = false
 
   constructor (
-    protected context: IOContext,
+    protected context?: IOContext,
     protected options: InstanceOptions = {}
   ) {
     super(context, options)
