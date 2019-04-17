@@ -2,7 +2,7 @@ import parseCookie from 'cookie'
 import { pickBy, prop } from 'ramda'
 
 import { inflightUrlWithQuery } from '../HttpClient/middlewares/inflight'
-import { forExternal, IODataSource } from '../IODataSource'
+import { forExternal, IOClientHTTP } from './IOClientHTTP'
 
 export interface SegmentData {
   campaigns?: any
@@ -31,7 +31,7 @@ const routes = {
   segments: (token?: string | null) => token ? `${routes.base}/${token}` : routes.base,
 }
 
-export class Segment extends IODataSource {
+export class Segment extends IOClientHTTP {
   protected httpClientFactory = forExternal
   protected service = 'http://portal.vtexcommercestable.com.br'
 

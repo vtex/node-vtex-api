@@ -1,10 +1,13 @@
 import { pickAll } from 'ramda'
-import { InstanceOptions } from '../HttpClient'
-import { IODataSource } from '../IODataSource'
-import { ClientContext, ClientDependencies, ClientInstanceOptions, IOContext } from '../service/typings'
-import { Apps, Billing, Builder, Events, ID, Logger, Messages, Metadata, Registry, Router, Segment, VBase, Workspaces } from './index'
 
-export type IOClient = new (context: ClientContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
+import { Apps, Billing, Builder, Events, ID, Logger, Messages, Metadata, Registry, Router, Segment, VBase, Workspaces } from '.'
+import { InstanceOptions } from '../HttpClient'
+import { ClientContext, ClientDependencies, ClientInstanceOptions, IOContext } from '../service/typings'
+import { IOClient } from './IOClient'
+import { IOClientHTTP } from './IOClientHTTP'
+import { AppAssets } from './Repository'
+
+export type IOClientFactory = new (context: ClientContext, options: InstanceOptions) => IOClient
 
 function hasDependencies<T extends IOClients>(instanceOptions: ClientInstanceOptions<T>): instanceOptions is ClientInstanceOptions<T> {
   return typeof (instanceOptions as ClientDependencies<T>).depends !== 'undefined'
@@ -12,15 +15,15 @@ function hasDependencies<T extends IOClients>(instanceOptions: ClientInstanceOpt
 
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: Record<string, ClientInstanceOptions>,
-  ctx: IOContext,
+  ctx: IOContext
 ) => T
 
 export class IOClients {
-  private clients: Record<string, IODataSource | any> = {}
+  private clients: Record<string, IOClientHTTP | any> = {}
 
   constructor(
     private clientOptions: Record<string, ClientInstanceOptions>,
-    private ctx: IOContext,
+    private ctx: IOContext
   ) { }
 
   public get apps() {
@@ -75,7 +78,11 @@ export class IOClients {
     return this.getOrSet('workspaces', Workspaces)
   }
 
-  protected getOrSet<TClient extends IOClient>(key: string, Implementation: TClient): InstanceType<TClient> {
+  public get appAssets() {
+    return this.getOrSet('appAssets', AppAssets)
+  }
+
+  protected getOrSet<TClient extends IOClientFactory>(key: string, Implementation: TClient): InstanceType<TClient> {
     const options = {
       ...this.clientOptions.default,
       ...this.clientOptions[key],

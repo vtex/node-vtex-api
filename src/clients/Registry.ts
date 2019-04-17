@@ -8,8 +8,8 @@ import { createGunzip, ZlibOptions } from 'zlib'
 import { DEFAULT_WORKSPACE } from '../constants'
 import { HttpClient } from '../HttpClient'
 import { inflightURL } from '../HttpClient/middlewares/inflight'
-import { HttpClientFactory, IODataSource } from '../IODataSource'
 import { AppBundlePublished, AppFilesList, AppManifest } from '../responses'
+import { HttpClientFactory, IOClientHTTP } from './IOClientHTTP'
 
 const EMPTY_OBJECT = {}
 
@@ -32,7 +32,7 @@ const paramsSerializer = (params: any) => {
   return stringify(params, {arrayFormat: 'repeat'})
 }
 
-export class Registry extends IODataSource {
+export class Registry extends IOClientHTTP {
   protected httpClientFactory = forWorkspaceMaster
   protected service = 'apps'
 

@@ -1,8 +1,6 @@
-import { InstanceOptions } from '../HttpClient'
 import { inflightUrlWithQuery } from '../HttpClient/middlewares/inflight'
-import { forWorkspace, IODataSource } from '../IODataSource'
 import { IOMessage } from '../service/graphql/schema/typeDefs/ioMessage'
-import { IOContext } from '../service/typings'
+import { forWorkspace, IOClientHTTP } from './IOClientHTTP'
 
 interface Locale {
   [token: string]: string
@@ -12,13 +10,9 @@ interface Locales {
   [lang: string]: Locale
 }
 
-export class Messages extends IODataSource {
+export class Messages extends IOClientHTTP {
   protected httpClientFactory = forWorkspace
   protected service = 'messages.vtex'
-
-  constructor(vtex: IOContext, options: InstanceOptions) {
-    super(vtex, options)
-  }
 
   public translate = (to: string, data: IOMessage[]): Promise<string[]> => this.http.get('/_v/translations', {
     headers: {

@@ -1,5 +1,6 @@
-import {AuthType, HttpClient, InstanceOptions} from '../HttpClient'
+import { AuthType, HttpClient, InstanceOptions } from '../HttpClient'
 import { IOContext } from '../service/typings'
+import { IOClient } from './IOClient'
 
 const routes = {
   SEND: '/accesskey/send',
@@ -16,10 +17,11 @@ const endpoint = (env: string) => {
   return VTEXID_ENDPOINTS[env] || env
 }
 
-export class ID {
+export class ID extends IOClient {
   private http: HttpClient
 
   constructor (context: IOContext, opts: InstanceOptions) {
+    super(context, opts)
     this.http = HttpClient.forExternal(endpoint(VTEXID_ENDPOINTS.STABLE), context, {...opts, authType: AuthType.token})
   }
 

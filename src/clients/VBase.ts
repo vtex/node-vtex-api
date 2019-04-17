@@ -7,9 +7,9 @@ import { createGzip } from 'zlib'
 import { InstanceOptions } from '../HttpClient'
 import { inflightURL } from '../HttpClient/middlewares/inflight'
 import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
-import { forWorkspace, IODataSource } from '../IODataSource'
 import { BucketMetadata, FileListItem } from '../responses'
 import { IOContext } from '../service/typings'
+import { forWorkspace, IOClientHTTP } from './IOClientHTTP'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']
@@ -24,11 +24,11 @@ const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
   return typeof opts !== 'string' && !(opts instanceof String)
 }
 
-export class VBase extends IODataSource {
+export class VBase extends IOClientHTTP {
   protected httpClientFactory = forWorkspace
   protected service = 'vbase'
 
-  constructor (context?: IOContext, options: InstanceOptions = {}) {
+  constructor (context: IOContext, options: InstanceOptions = {}) {
     super(context, options)
     if (runningAppName === '') {
       throw new Error(`Invalid path to access Vbase. Variable VTEX_APP_ID is not available.`)

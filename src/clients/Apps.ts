@@ -7,8 +7,8 @@ import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
 
 import { inflightURL } from '../HttpClient/middlewares/inflight'
-import { forWorkspace, IODataSource } from '../IODataSource'
 import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
+import { forWorkspace, IOClientHTTP } from './IOClientHTTP'
 
 const routes = {
   Acknowledge: (app: string, service: string) => `${routes.App(app)}/acknowledge/${service}`,
@@ -56,7 +56,7 @@ const workspaceFields = [
   '_isRoot',
 ].join(',')
 
-export class Apps extends IODataSource {
+export class Apps extends IOClientHTTP {
   protected httpClientFactory = forWorkspace
   protected service = 'apps'
 
