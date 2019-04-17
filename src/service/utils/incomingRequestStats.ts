@@ -20,10 +20,12 @@ class IncomingRequestStats {
 
 export const incomingRequestStats = new IncomingRequestStats()
 
+const requestClosed = () => {
+  incomingRequestStats.closed++
+}
+
 export async function trackIncomingRequestStats <T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
-  ctx.req.on('close', () => {
-    incomingRequestStats.closed++
-  })
+  ctx.req.on('close', requestClosed)
   incomingRequestStats.total++
   await next()
 }
