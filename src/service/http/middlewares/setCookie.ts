@@ -4,7 +4,7 @@ import { IOClients } from '../../../clients/IOClients'
 import { ServiceContext } from '../../typings'
 
 const warnMessage = `Removing set-cookie from response since cache-control has as public scope.
-This can be a huge security risk. Please either remove the public scope or set-cookie from your response.`
+This can be a huge security risk. Please remove either the public scope or set-cookie from your response.`
 
 const findStr = (target: string, set: string[]) => find((a: string) => a.toLocaleLowerCase() === target, set)
 
@@ -26,6 +26,6 @@ export async function removeSetCookie<T extends IOClients, U, V> (ctx: ServiceCo
   const scope = findScopeInCacheControl(cacheControl)
   if (scope === 'public') {
     ctx.set('Set-Cookie', '')
-    console.log(warnMessage)
+    console.warn(warnMessage)
   }
 }
