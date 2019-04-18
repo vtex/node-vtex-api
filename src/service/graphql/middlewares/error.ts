@@ -1,4 +1,4 @@
-import { any, chain, compose, filter, forEach, has, pluck, prop } from 'ramda'
+import { any, chain, compose, filter, forEach, has, pluck, prop, uniqBy } from 'ramda'
 
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
@@ -72,7 +72,13 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
   }
   finally {
     if (graphQLErrors) {
-      console.error('[node-vtex-api graphql errors]', graphQLErrors)
+      const uniqueErrors = uniqBy((e) => {
+        if (e.originalError && e.originalError.request) {
+          return e.originalError.request.path
+        }
+        return e
+      }, graphQLErrors)
+      console.error(`[node-vtex-api graphql errors] total=${graphQLErrors.length} unique=${uniqueErrors.length}`, uniqueErrors)
       ctx.graphql.status = 'error'
 
       // Do not generate etag for errors
@@ -102,15 +108,13 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
           console.error('Error logging error 🙄 retrying once...', reason ? reason.response : '')
           ctx.clients.logger.sendLog('-', log, 'error').catch()
         })
-      }, graphQLErrors)
+      }, uniqueErrors)
 
       // Expose graphQLErrors with pathNames to timings middleware
-      ctx.graphql.graphQLErrors = graphQLErrors
+      ctx.graphql.graphQLErrors = uniqueErrors
 
       // Show message in development environment
       if (!production) {
-        const message = parseMessage(graphQLErrors)
-        console.error(message.join('\n'))
         console.log(getSplunkQuery(account, workspace))
       }
     } else {

@@ -7,7 +7,22 @@ export type InflightKeyGenerator = (x: RequestConfig) => string
 
 export interface RequestConfig extends AxiosRequestConfig {
   'axios-retry'?: IAxiosRetryConfig
+  /**
+   * Identifies the type of request for metrification purposes. Should vary with client method.
+   */
   metric?: string
+  /**
+   * In verbose mode, a counter will be incremented for each request made with the same `metric` label.
+   */
+  count?: number
+  /**
+   * In verbose mode, a label will be created with a counter for each request made with the same `metric` label.
+   */
+  label?: string
+  /**
+   * Outputs verbose logs to console for this request.
+   */
+  verbose?: boolean
   production?: boolean
   cacheable?: CacheType
   memoizeable?: boolean

@@ -27,7 +27,6 @@ export class Messages extends IODataSource {
     inflightKey: inflightUrlWithQuery,
     metric: 'messages-translate',
     params: {
-      __p: process.env.VTEX_APP_ID,
       data: JSON.stringify(data),
       to,
     },
@@ -38,9 +37,6 @@ export class Messages extends IODataSource {
       Authorization: this.context!.authToken,
     },
     metric: 'messages-save-translation',
-    params: {
-      __p: process.env.VTEX_APP_ID,
-    },
   })
 }
 
