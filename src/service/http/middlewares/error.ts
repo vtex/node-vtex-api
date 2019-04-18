@@ -1,6 +1,5 @@
 import { IOClients } from '../../../clients/IOClients'
 import { cleanError } from '../../../utils/error'
-import { logError } from '../../../utils/error'
 import { ServiceContext } from '../../typings'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
@@ -35,6 +34,6 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
       ctx.set(CACHE_CONTROL_HEADER, `no-cache, no-store`)
     }
 
-    logError(ctx, err)
+    ctx.clients.logger.error(err, '-', ctx)
   }
 }

@@ -1,5 +1,7 @@
+import {IOClients} from '../clients/IOClients'
 import {HttpClient, withoutRecorder} from '../HttpClient'
 import {HttpClientFactory, IODataSource} from '../IODataSource'
+import {ServiceContext} from '../service/typings'
 import {cleanError} from '../utils/error'
 
 const DEFAULT_SUBJECT = '-'
@@ -26,14 +28,55 @@ export class Logger extends IODataSource {
   public warn = (message: any, subject: string = DEFAULT_SUBJECT) =>
     this.sendLog(subject, message, 'warn')
 
-  public error = (error: any, subject: string = DEFAULT_SUBJECT) => {
+  public error = <T extends IOClients, U, V>(error: any, subject: string = DEFAULT_SUBJECT, ctx?: ServiceContext<T, U, V>) => {
     if (!error) {
       error = new Error('Colossus.error was called with null or undefined error')
       error.code = 'ERR_NIL_ERR'
       console.error(error)
     }
 
-    return this.sendLog(subject, cleanError(error), 'error')
+    let log: any
+    const cleanedError = cleanError(error)
+
+    if (ctx) {
+      const {
+        method,
+        status,
+        vtex: {
+          operationId,
+          requestId,
+          route: {
+            id,
+          },
+        },
+        headers: {
+          'x-forwarded-path': forwardedPath,
+          'x-forwarded-host': forwardedHost,
+          'x-forwarded-proto': forwardedProto,
+          'x-vtex-platform': platform,
+        },
+      } = ctx
+
+      log = {
+        ...cleanedError,
+        forwardedHost,
+        forwardedPath,
+        forwardedProto,
+        method,
+        operationId,
+        platform,
+        requestId,
+        routeId: id,
+        status,
+      }
+    } else {
+      log = cleanedError
+    }
+
+    return this.sendLog(subject, log, 'error').catch((reason) => {
+      console.error('Error logging error 🙄 retrying once...', reason ? reason.response : '')
+      this.sendLog(subject, log, 'error').catch()
+    })
   }
 
   public sendLog = (subject: string, message: any, level: string) : Promise<void> => {
