@@ -1,9 +1,10 @@
 import axios from 'axios'
-import retry, {IAxiosRetryConfig} from 'axios-retry'
+import retry, {exponentialDelay} from 'axios-retry'
 import {Agent} from 'http'
 import {Limit} from 'p-limit'
 
 import {isAbortedOrNetworkErrorOrRouterTimeout} from '../../utils/retry'
+import {hrToMillis} from '../../utils/time'
 
 import {MiddlewareContext} from '../context'
 
@@ -17,27 +18,20 @@ const http = axios.create({
 retry(http, {
   retries: 0,
   retryCondition: isAbortedOrNetworkErrorOrRouterTimeout,
+  retryDelay: exponentialDelay,
   shouldResetTimeout: true,
 })
 
-http.interceptors.response.use(response => response, (err: any) => {
-  try {
-    delete err.response.request
-    delete err.response.config
-    delete err.config.res
-    delete err.config.data
-  } catch (e) {} // tslint:disable-line
-  return Promise.reject(err)
-})
-
-export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<string, string>, timeout: number, retryConfig?: IAxiosRetryConfig) => {
+export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<string, string>, timeout: number, retries?: number, verbose?: boolean) => {
+  const countByMetric: Record<string, number> = {}
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     ctx.config = {
-      'axios-retry': retryConfig, // Allow overriding default retryConfig per-request
+      'axios-retry': retries ? { retries } : undefined,
       baseURL,
       maxRedirects: 0,
       timeout,
       validateStatus: status => (status >= 200 && status < 300),
+      verbose,
       ...ctx.config,
       headers: {
         ...headers,
@@ -45,10 +39,44 @@ export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<
       },
     }
 
+    if (ctx.config.verbose && ctx.config.metric) {
+      const current = countByMetric[ctx.config.metric]
+      countByMetric[ctx.config.metric] = (current || 0) + 1
+      ctx.config.count = countByMetric[ctx.config.metric]
+      ctx.config.label = `${ctx.config.metric}#${ctx.config.count}`
+    }
+
     await next()
   }
 }
 
 export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-  ctx.response = await (limit ? limit(() => http.request(ctx.config)) : http.request(ctx.config))
+  const makeRequest = () => {
+    let start: [number, number] | undefined
+
+    if (ctx.config.verbose && ctx.config.label) {
+      start = process.hrtime()
+      console.log(ctx.config.label, `start`)
+    }
+
+    return http.request(ctx.config).then((r) => {
+      if (start) {
+        const end = process.hrtime(start)
+        const millis = hrToMillis(end)
+        console.log(ctx.config.label, `millis=${millis} status=${r.status}`)
+      }
+
+      return r
+    }).catch((e) => {
+      if (start) {
+        const end = process.hrtime(start)
+        const millis = hrToMillis(end)
+        console.log(ctx.config.label, `millis=${millis} code=${e.code} ${e.response ? `status=${e.response.status}` : ''}`)
+      }
+
+      throw e
+    })
+  }
+
+  ctx.response = await (limit ? limit(makeRequest) : makeRequest())
 }

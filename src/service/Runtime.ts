@@ -10,8 +10,13 @@ import { Service } from './Service'
 import { ClientsConfig, RouteHandler, ServiceDescriptor } from './typings'
 
 const defaultClients: ClientsConfig = {
-  implementation: IOClients,
-  options: {},
+  options: {
+    messages: {
+      concurrency: 15,
+      retries: 2,
+      timeout: 1000,
+    },
+  },
 }
 
 export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
@@ -27,8 +32,11 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
   ) {
     const {config} = service
     const clients = {
-      ...defaultClients,
-      ...config.clients,
+      implementation: config.clients && config.clients.implementation || IOClients,
+      options: {
+        ...defaultClients.options,
+        ...config.clients ? config.clients.options : null,
+      },
     }
 
     const Clients = clients.implementation as ClientsImplementation<ClientsT>

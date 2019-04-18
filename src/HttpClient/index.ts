@@ -1,5 +1,4 @@
 import { AxiosResponse } from 'axios'
-import { IAxiosRetryConfig } from 'axios-retry'
 import { IncomingMessage } from 'http'
 import compose, { Middleware } from 'koa-compose'
 import pLimit from 'p-limit'
@@ -73,7 +72,7 @@ export class HttpClient {
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor (opts: ClientOptions) {
-    const {baseURL, authToken, authType, memoryCache, diskCache, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS, segmentToken, retryConfig, concurrency, headers: defaultHeaders, operationId} = opts
+    const {baseURL, authToken, authType, memoryCache, diskCache, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS, segmentToken, retries, concurrency, headers: defaultHeaders, operationId, verbose} = opts
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
       ...defaultHeaders,
@@ -90,7 +89,7 @@ export class HttpClient {
     const memoizedCache = new Map<string, Promise<Memoized>>()
 
     this.runMiddlewares = compose([...opts.middlewares || [],
-      defaultsMiddleware(baseURL, headers, timeout, retryConfig),
+      defaultsMiddleware(baseURL, headers, timeout, retries, verbose),
       ...metrics ? [metricsMiddleware(metrics)] : [],
       memoizationMiddleware({memoizedCache}),
       singleFlightMiddleware,
@@ -169,7 +168,12 @@ export interface InstanceOptions {
   memoryCache?: CacheLayer<string, Cached>,
   diskCache?: CacheLayer<string, Cached>,
   baseURL?: string,
-  retryConfig?: IAxiosRetryConfig,
+  retries?: number,
+  /**
+   * @deprecated use retries instead.
+   * @memberof InstanceOptions
+   */
+  retryConfig?: void,
   metrics?: MetricsAccumulator,
   /**
    * Maximum number of concurrent requests
@@ -186,6 +190,7 @@ export interface InstanceOptions {
    */
   headers?: Record<string, string>,
   middlewares?: Array<Middleware<MiddlewareContext>>
+  verbose?: boolean
 }
 
 export interface IOResponse<T> {
@@ -215,11 +220,12 @@ interface ClientOptions {
   diskCache?: CacheLayer<string, Cached>
   segmentToken?: string
   sessionToken?: string
-  retryConfig?: IAxiosRetryConfig
+  retries?: number
   concurrency?: number
   headers?: Record<string, string>
   middlewares?: Array<Middleware<MiddlewareContext>>
   operationId: string
+  verbose?: boolean
 }
 
 export { RequestConfig } from './context'
