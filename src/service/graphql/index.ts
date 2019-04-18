@@ -3,6 +3,7 @@ import { InstanceOptions } from '../../HttpClient'
 import { createHttpRoute } from '../http'
 import { GraphQLOptions, RouteHandler } from '../typings'
 
+import { removeSetCookie } from '../http/middlewares/setCookie'
 import { error } from './middlewares/error'
 import { createFormatters } from './middlewares/formatters'
 import { parseQuery } from './middlewares/query'
@@ -31,6 +32,7 @@ export const createGraphQLRoute = <ClientsT extends IOClients, StateT, CustomT>(
       injectGraphql,
       timings,
       error,
+      removeSetCookie,
       upload,
       parseQuery,
       createFormatters,
