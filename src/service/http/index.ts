@@ -13,7 +13,7 @@ export const createHttpRoute = <ClientsT extends IOClients, StateT, CustomT>(
 ) => {
   return (handler: RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>) => {
     const middlewares = Array.isArray(handler) ? handler : [handler]
-    const pipeline = [clients(Clients, options), timings, error, removeSetCookie, ...middlewares]
+    const pipeline = [clients(Clients, options), removeSetCookie, timings, error, ...middlewares]
     return compose(pipeline)
   }
 }

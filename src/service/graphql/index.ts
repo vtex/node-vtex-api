@@ -29,10 +29,10 @@ export const createGraphQLRoute = <ClientsT extends IOClients, StateT, CustomT>(
     }
 
     return createHttpRoute<ClientsT, StateT, CustomT & GraphQLContext>(Clients, options)([
+      removeSetCookie,
       injectGraphql,
       timings,
       error,
-      removeSetCookie,
       upload,
       parseQuery,
       createFormatters,
