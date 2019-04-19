@@ -1,5 +1,6 @@
-import { InstanceOptions, IOContext } from './HttpClient'
-import { forWorkspace, IODataSource } from './IODataSource'
+import { InstanceOptions } from '../HttpClient'
+import { forWorkspace, IODataSource } from '../IODataSource'
+import { IOContext } from '../service/typings'
 
 const metricRoute = `/metrics`
 
@@ -7,29 +8,21 @@ const routes = {
   contractStatus: '/_v/contractStatus',
 }
 
-export class Billing {
-  private contracts: Contracts
-  private metrics: Metrics
+export class Billing extends IODataSource {
+  protected service = 'billing.vtex'
+  protected httpClientFactory = forWorkspace
+  protected metrics: Metrics
 
-  constructor(context: IOContext, options: InstanceOptions) {
-    this.contracts = new Contracts(context, options)
+  constructor (context?: IOContext, options: InstanceOptions = {}) {
+    super(context, options)
     this.metrics = new Metrics(context, options)
   }
 
   public status = () =>
-    this.contracts.status()
+    this.http.get<ContractStatus>(routes.contractStatus)
 
   public sendMetric = (metric: BillingMetric) =>
     this.metrics.sendMetric(metric)
-}
-
-// tslint:disable-next-line:max-classes-per-file
-class Contracts extends IODataSource {
-  protected service = 'billing.vtex'
-  protected httpClientFactory = forWorkspace
-
-  public status = () =>
-    this.http.get<ContractStatus>(routes.contractStatus)
 }
 
 // tslint:disable-next-line:max-classes-per-file
