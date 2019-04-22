@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.4.4] - 2019-04-22
+
 ## [3.4.4-beta] - 2019-04-19
 ### Changed
 - Fixed host reference for Billing metrics sending
