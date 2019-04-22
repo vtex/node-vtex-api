@@ -5,8 +5,15 @@ import {cleanError} from '../utils/error'
 const DEFAULT_SUBJECT = '-'
 const production = process.env.VTEX_PRODUCTION === 'true'
 
+export enum LogLevel {
+  Debug = 'debug',
+  Info = 'info',
+  Warn = 'warn',
+  Error = 'error',
+}
+
 const routes = {
-  Log: (level: string) => `/logs/${level}`,
+  Log: (level: LogLevel) => `/logs/${level}`,
 }
 
 const forWorkspaceWithoutRecorder: HttpClientFactory = ({service, context, options}) => (service && context)
@@ -18,28 +25,28 @@ export class Logger extends IODataSource {
   protected httpClientFactory = forWorkspaceWithoutRecorder
 
   public debug = (message: any, subject: string = DEFAULT_SUBJECT) =>
-    this.sendLog(subject, message, 'debug')
+    this.sendLog(subject, message, LogLevel.Debug)
 
   public info = (message: any, subject: string = DEFAULT_SUBJECT) =>
-    this.sendLog(subject, message, 'info')
+    this.sendLog(subject, message, LogLevel.Info)
 
-  public warn = (message: any, subject: string = DEFAULT_SUBJECT) =>
-    this.sendLog(subject, message, 'warn')
+  public warn = (warning: any, subject: string = DEFAULT_SUBJECT) =>
+    this.sendLog(subject, cleanError(warning), LogLevel.Warn)
 
-  public error = (error: any, subject: string = DEFAULT_SUBJECT) => {
-    if (!error) {
-      error = new Error('Colossus.error was called with null or undefined error')
-      error.code = 'ERR_NIL_ERR'
-      console.error(error)
+  public error = (error: any, subject: string = DEFAULT_SUBJECT) =>
+    this.sendLog(subject, cleanError(error), LogLevel.Error)
+
+  public sendLog = (subject: string, message: any, level: LogLevel) : Promise<void> => {
+    if (!message) {
+      message = new Error('Logger.sendLog was called with null or undefined message')
+      message.code = 'ERR_NIL_ERR'
+      console.error(message)
     }
 
-    return this.sendLog(subject, cleanError(error), 'error')
-  }
-
-  public sendLog = (subject: string, message: any, level: string) : Promise<void> => {
     if (message && typeof message === 'object') {
       message.production = production
     }
+
     return this.http.put(routes.Log(level), message, {params: {subject}, metric: 'logger-send'})
   }
 }

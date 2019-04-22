@@ -16,5 +16,9 @@ export class ForbiddenError extends ResolverWarning {
    */
   constructor(messageOrError: string | Error | AxiosError) {
     super(messageOrError, 403, 'FORBIDDEN')
+
+    if (typeof messageOrError !== 'object') {
+      Error.captureStackTrace(this, ForbiddenError)
+    }
   }
 }

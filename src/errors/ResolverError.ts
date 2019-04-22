@@ -1,6 +1,7 @@
 import { AxiosError } from 'axios'
 
-import { cleanError } from './../utils/error'
+import { LogLevel } from '../clients/Logger'
+import { cleanError } from '../utils/error'
 
 /**
  * The generic Error class to be thrown for caught errors inside resolvers.
@@ -11,6 +12,8 @@ import { cleanError } from './../utils/error'
  * @extends {Error}
  */
 export class ResolverError extends Error {
+  public level = LogLevel.Error
+
   /**
    * Creates an instance of ResolverError
    * @param {(string | Error | AxiosError)} messageOrError Either a message string or the complete original error object.

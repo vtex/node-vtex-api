@@ -16,5 +16,9 @@ export class AuthenticationError extends ResolverWarning {
    */
   constructor(messageOrError: string | Error | AxiosError) {
     super(messageOrError, 401, 'UNAUTHENTICATED')
+
+    if (typeof messageOrError !== 'object') {
+      Error.captureStackTrace(this, AuthenticationError)
+    }
   }
 }

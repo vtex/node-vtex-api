@@ -1,4 +1,5 @@
 import { IOClients } from '../../../clients/IOClients'
+import { LogLevel } from '../../../clients/Logger'
 import { cleanError } from '../../../utils/error'
 import { ServiceContext } from '../../typings'
 
@@ -53,6 +54,12 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
       },
     } = ctx
 
+    // Grab level from originalError, default to "error" level.
+    let level = err && err.level as LogLevel
+    if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
+      level = LogLevel.Error
+    }
+
     const log = {
       ...err,
       forwardedHost,
@@ -67,9 +74,9 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
     }
 
     // Use sendLog directly to avoid cleaning error twice.
-    ctx.clients.logger.sendLog('-', log, 'error').catch((reason) => {
+    ctx.clients.logger.sendLog('-', log, level).catch((reason) => {
       console.error('Error logging error 🙄 retrying once...', reason ? reason.response : '')
-      ctx.clients.logger.sendLog('-', log, 'error').catch()
+      ctx.clients.logger.sendLog('-', log, level).catch()
     })
   }
 }

@@ -1,5 +1,7 @@
 import { AxiosError } from 'axios'
 
+import { LogLevel } from '../clients/Logger'
+
 import { ResolverError } from './ResolverError'
 
 /**
@@ -10,6 +12,8 @@ import { ResolverError } from './ResolverError'
  * @extends {ResolverError}
  */
 export class ResolverWarning extends ResolverError {
+  public level = LogLevel.Warn
+
   /**
    * Creates an instance of ResolverWarning
    * @param {(string | Error | AxiosError)} messageOrError Either a message string or the complete original error object.
@@ -20,5 +24,9 @@ export class ResolverWarning extends ResolverError {
     public code: string = 'RESOLVER_WARNING'
   ) {
     super(messageOrError, status, code)
+
+    if (typeof messageOrError !== 'object') {
+      Error.captureStackTrace(this, ResolverWarning)
+    }
   }
 }

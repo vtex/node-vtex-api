@@ -16,5 +16,9 @@ export class UserInputError extends ResolverWarning {
    */
   constructor(messageOrError: string | Error | AxiosError) {
     super(messageOrError, 400, 'BAD_USER_INPUT')
+
+    if (typeof messageOrError !== 'object') {
+      Error.captureStackTrace(this, UserInputError)
+    }
   }
 }

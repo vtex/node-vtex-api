@@ -16,5 +16,9 @@ export class NotFoundError extends ResolverWarning {
    */
   constructor(messageOrError: string | Error | AxiosError) {
     super(messageOrError, 404, 'NOT_FOUND')
+
+    if (typeof messageOrError !== 'object') {
+      Error.captureStackTrace(this, NotFoundError)
+    }
   }
 }

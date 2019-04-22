@@ -1,5 +1,6 @@
 import { any, chain, compose, filter, forEach, has, pluck, prop, uniqBy } from 'ramda'
 
+import { LogLevel } from '../../../clients/Logger'
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
 import { generatePathName } from '../utils/pathname'
@@ -104,9 +105,15 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
           routeId: id,
         }
 
-        ctx.clients.logger.sendLog('-', log, 'error').catch((reason) => {
+        // Grab level from originalError, default to "error" level.
+        let level = err.originalError && err.originalError.level as LogLevel
+        if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
+          level = LogLevel.Error
+        }
+
+        ctx.clients.logger.sendLog('-', log, level).catch((reason) => {
           console.error('Error logging error 🙄 retrying once...', reason ? reason.response : '')
-          ctx.clients.logger.sendLog('-', log, 'error').catch()
+          ctx.clients.logger.sendLog('-', log, level).catch()
         })
       }, uniqueErrors)
 
