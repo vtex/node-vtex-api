@@ -1,5 +1,6 @@
 export * from './Apps'
 export * from './Billing'
+export * from './BillingMetrics'
 export * from './Builder'
 export * from './Events'
 export * from './ID'
