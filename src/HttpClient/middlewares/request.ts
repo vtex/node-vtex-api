@@ -7,7 +7,7 @@ import {mapObjIndexed, sum, values} from 'ramda'
 import {isAbortedOrNetworkErrorOrRouterTimeout} from '../../utils/retry'
 import {hrToMillis} from '../../utils/time'
 
-import {MiddlewareContext} from '../context'
+import {MiddlewareContext} from '../typings'
 
 const httpAgent = new Agent({
   keepAlive: true,
@@ -25,7 +25,7 @@ retry(http, {
   shouldResetTimeout: true,
 })
 
-export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<string, string>, timeout: number, retries?: number, verbose?: boolean) => {
+export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<string, string>, params: Record<string, string> | undefined, timeout: number, retries?: number, verbose?: boolean) => {
   const countByMetric: Record<string, number> = {}
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     ctx.config = {
@@ -39,6 +39,10 @@ export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<
       headers: {
         ...headers,
         ...ctx.config.headers,
+      },
+      params: {
+        ...params,
+        ...ctx.config.params,
       },
     }
 

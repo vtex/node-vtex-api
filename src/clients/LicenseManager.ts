@@ -1,7 +1,7 @@
 
 import { stringify } from 'qs'
 
-import { RequestConfig } from '../HttpClient/context'
+import { RequestConfig } from '../HttpClient/typings'
 import { forExternal, IODataSource } from '../IODataSource'
 
 const TWO_MINUTES_S = 2 * 60

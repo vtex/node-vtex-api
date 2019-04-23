@@ -1,7 +1,7 @@
 import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
 import { TIMEOUT_CODE } from '../../utils/retry'
 import { statusLabel } from '../../utils/status'
-import { MiddlewareContext } from '../context'
+import { MiddlewareContext } from '../typings'
 
 export const metricsMiddleware = (metrics: MetricsAccumulator) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {

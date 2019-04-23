@@ -1,7 +1,7 @@
 import {AxiosRequestConfig, AxiosResponse} from 'axios'
 import {URL} from 'url'
 import {CacheLayer} from '../../caches/CacheLayer'
-import {MiddlewareContext, RequestConfig} from '../context'
+import {MiddlewareContext, RequestConfig} from '../typings'
 
 const ROUTER_CACHE_KEY = 'x-router-cache'
 const ROUTER_CACHE_HIT = 'HIT'
