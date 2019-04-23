@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.5.0] - 2019-04-22
+
 ### Added
 - Add native error and warning classes and log these appropriately.
 
