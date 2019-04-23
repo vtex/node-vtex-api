@@ -1,10 +1,7 @@
 import { pickAll } from 'ramda'
-import { InstanceOptions } from '../HttpClient'
-import { IODataSource } from '../IODataSource'
-import { ClientContext, ClientDependencies, ClientInstanceOptions, IOContext } from '../service/typings'
+import { IOClient, IOClientConstructor } from '../HttpClient/IOClient'
+import { ClientDependencies, ClientInstanceOptions, IOContext } from '../service/typings'
 import { Apps, Billing, BillingMetrics, Builder, Events, ID, LicenseManager, Logger, Messages, Metadata, Registry, Router, Segment, Session, VBase, Workspaces } from './index'
-
-export type IOClient = new (context: ClientContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
 
 function hasDependencies<T extends IOClients>(instanceOptions: ClientInstanceOptions<T>): instanceOptions is ClientInstanceOptions<T> {
   return typeof (instanceOptions as ClientDependencies<T>).depends !== 'undefined'
@@ -16,7 +13,7 @@ export type ClientsImplementation<T extends IOClients> = new (
 ) => T
 
 export class IOClients {
-  private clients: Record<string, IODataSource | any> = {}
+  private clients: Record<string, IOClient | any> = {}
 
   constructor(
     private clientOptions: Record<string, ClientInstanceOptions>,
@@ -87,7 +84,7 @@ export class IOClients {
     return this.getOrSet('workspaces', Workspaces)
   }
 
-  protected getOrSet<TClient extends IOClient>(key: string, Implementation: TClient): InstanceType<TClient> {
+  protected getOrSet(key: string, Implementation: IOClientConstructor): InstanceType<IOClientConstructor> {
     const options = {
       ...this.clientOptions.default,
       ...this.clientOptions[key],
@@ -100,9 +97,8 @@ export class IOClients {
       && pickAll(options.depends.clients, this) || {} // deal with circular dependency
 
     if (!this.clients[key]) {
-      this.clients[key] = new Implementation({ ... this.ctx, clients }, options)
+      this.clients[key] = new Implementation({ ...this.ctx, clients } as any, options)
     }
-
 
     return this.clients[key]
   }
