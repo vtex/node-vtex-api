@@ -2,7 +2,7 @@ import { pickAll } from 'ramda'
 import { InstanceOptions } from '../HttpClient'
 import { IODataSource } from '../IODataSource'
 import { ClientContext, ClientDependencies, ClientInstanceOptions, IOContext } from '../service/typings'
-import { Apps, Billing, BillingMetrics, Builder, Events, ID, LicenseManager, Logger, Messages, Metadata, Registry, Router, Segment, VBase, Workspaces } from './index'
+import { Apps, Billing, BillingMetrics, Builder, Events, ID, LicenseManager, Logger, Messages, Metadata, Registry, Router, Segment, Session, VBase, Workspaces } from './index'
 
 export type IOClient = new (context: ClientContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
 
@@ -73,6 +73,10 @@ export class IOClients {
 
   public get segment() {
     return this.getOrSet('segment', Segment)
+  }
+
+  public get session() {
+    return this.getOrSet('session', Session)
   }
 
   public get vbase() {
