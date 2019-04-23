@@ -1,6 +1,7 @@
 export * from './caches'
 export * from './clients'
 export * from './clients/IOClients'
+export * from './errors'
 export * from './HttpClient'
 export * from './IODataSource'
 export * from './metrics/MetricsAccumulator'

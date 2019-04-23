@@ -12,7 +12,7 @@ function hasDependencies<T extends IOClients>(instanceOptions: ClientInstanceOpt
 
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: Record<string, ClientInstanceOptions>,
-  ctx: IOContext,
+  ctx: IOContext
 ) => T
 
 export class IOClients {
@@ -20,7 +20,7 @@ export class IOClients {
 
   constructor(
     private clientOptions: Record<string, ClientInstanceOptions>,
-    private ctx: IOContext,
+    private ctx: IOContext
   ) { }
 
   public get apps() {
