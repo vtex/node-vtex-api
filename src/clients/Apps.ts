@@ -6,9 +6,7 @@ import { Readable, Writable } from 'stream'
 import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
 
-import { InfraClient } from '../HttpClient/InfraClient'
-import { inflightURL } from '../HttpClient/middlewares/inflight'
-import { InstanceOptions } from '../HttpClient/typings'
+import { inflightURL, InfraClient, InstanceOptions } from '../HttpClient'
 import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
 import { IOContext } from '../service/typings'
 
