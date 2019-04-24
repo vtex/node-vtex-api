@@ -1,4 +1,4 @@
-import {AuthType, HttpClient, InstanceOptions} from '../HttpClient'
+import { ExternalClient, InstanceOptions } from '../HttpClient'
 import { IOContext } from '../service/typings'
 
 const routes = {
@@ -16,11 +16,9 @@ const endpoint = (env: string) => {
   return VTEXID_ENDPOINTS[env] || env
 }
 
-export class ID {
-  private http: HttpClient
-
+export class ID extends ExternalClient {
   constructor (context: IOContext, opts: InstanceOptions) {
-    this.http = HttpClient.forExternal(endpoint(VTEXID_ENDPOINTS.STABLE), context, {...opts, authType: AuthType.token})
+    super(endpoint(VTEXID_ENDPOINTS.STABLE), context, opts)
   }
 
   public getTemporaryToken = () => {
