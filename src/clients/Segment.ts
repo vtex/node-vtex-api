@@ -1,8 +1,7 @@
 import parseCookie from 'cookie'
 import { pickBy, prop } from 'ramda'
 
-import { inflightUrlWithQuery } from '../HttpClient/middlewares/inflight'
-import { forExternal, IODataSource } from '../IODataSource'
+import { inflightUrlWithQuery, JanusClient } from '../HttpClient'
 
 export interface SegmentData {
   campaigns?: any
@@ -31,10 +30,7 @@ const routes = {
   segments: (token?: string | null) => token ? `${routes.base}/${token}` : routes.base,
 }
 
-export class Segment extends IODataSource {
-  protected httpClientFactory = forExternal
-  protected service = 'http://portal.vtexcommercestable.com.br'
-
+export class Segment extends JanusClient {
   /**
    * @deprecated Please use `getSegment` or `getSegmentByToken` instead.
    *
@@ -75,19 +71,15 @@ export class Segment extends IODataSource {
   }
 
   private rawSegment = (token?: string | null, query?: Record<string, string>) => {
-    const {authToken, account} = this.context!
-
     return this.http.getRaw<SegmentData>(routes.segments(token), ({
       forceMaxAge: SEGMENT_MAX_AGE_S,
       headers: {
         'Content-Type': 'application/json',
-        'Proxy-Authorization': authToken,
       },
       inflightKey: inflightUrlWithQuery,
       metric: 'segment-get',
       params: {
         ...sanitizeParams(query),
-        an: account,
       },
     }))
   }
