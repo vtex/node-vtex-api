@@ -1,22 +1,17 @@
-import { pickAll } from 'ramda'
-import { IOClient, IOClientConstructor } from '../HttpClient/IOClient'
-import { ClientDependencies, ClientInstanceOptions, IOContext } from '../service/typings'
+import { InstanceOptions, IOClient, IOClientConstructor } from '../HttpClient'
+import { IOContext } from '../service/typings'
 import { Apps, Billing, BillingMetrics, Builder, Events, ID, LicenseManager, Logger, Messages, Metadata, Registry, Router, Segment, Session, VBase, Workspaces } from './index'
 
-function hasDependencies<T extends IOClients>(instanceOptions: ClientInstanceOptions<T>): instanceOptions is ClientInstanceOptions<T> {
-  return typeof (instanceOptions as ClientDependencies<T>).depends !== 'undefined'
-}
-
 export type ClientsImplementation<T extends IOClients> = new (
-  clientOptions: Record<string, ClientInstanceOptions>,
+  clientOptions: Record<string, InstanceOptions>,
   ctx: IOContext
 ) => T
 
 export class IOClients {
-  private clients: Record<string, IOClient | any> = {}
+  private clients: Record<string, IOClient> = {}
 
   constructor(
-    private clientOptions: Record<string, ClientInstanceOptions>,
+    private clientOptions: Record<string, InstanceOptions>,
     private ctx: IOContext
   ) { }
 
@@ -91,13 +86,8 @@ export class IOClients {
       metrics,
     }
 
-    const clients =
-      hasDependencies(options)
-      && options.depends
-      && pickAll(options.depends.clients, this) || {} // deal with circular dependency
-
     if (!this.clients[key]) {
-      this.clients[key] = new Implementation({ ...this.ctx, clients } as any, options)
+      this.clients[key] = new Implementation(this.ctx, options)
     }
 
     return this.clients[key]
