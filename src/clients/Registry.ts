@@ -6,10 +6,9 @@ import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
 
 import { DEFAULT_WORKSPACE } from '../constants'
-import { HttpClient } from '../HttpClient'
-import { inflightURL } from '../HttpClient/middlewares/inflight'
-import { HttpClientFactory, IODataSource } from '../IODataSource'
+import { inflightURL, InfraClient, InstanceOptions } from '../HttpClient'
 import { AppBundlePublished, AppFilesList, AppManifest } from '../responses'
+import { IOContext } from '../service/typings'
 
 const EMPTY_OBJECT = {}
 
@@ -24,17 +23,14 @@ const routes = {
   ResolveDependenciesWithManifest: '/v2/registry/_resolve',
 }
 
-const forWorkspaceMaster: HttpClientFactory = ({service, context, options}) => (service && context)
-  ? HttpClient.forWorkspace(service, {...context, workspace: DEFAULT_WORKSPACE}, options || {})
-  : undefined
-
 const paramsSerializer = (params: any) => {
   return stringify(params, {arrayFormat: 'repeat'})
 }
 
-export class Registry extends IODataSource {
-  protected httpClientFactory = forWorkspaceMaster
-  protected service = 'apps'
+export class Registry extends InfraClient {
+  constructor(context: IOContext, options: InstanceOptions) {
+    super('apps', {...context, workspace: DEFAULT_WORKSPACE}, options)
+  }
 
   public publishApp = async (files: File[], tag?: string, {zlib}: ZipOptions = {}) => {
     if (!(files[0] && files[0].path && files[0].content)) {
