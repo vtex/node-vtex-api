@@ -18,20 +18,16 @@ const routes = {
 }
 
 export class Builder extends AppClient {
-  private account: string
-  private workspace: string
   private stickyHost!: string
 
   constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
     super('vtex.builder-hub', ioContext, opts)
-    this.account = ioContext.account
-    this.workspace = ioContext.workspace
   }
 
   public availability = async (app: string, hintIndex: number) => {
     const stickyHint = hintIndex === undefined || hintIndex === null ?
-      `request:${this.account}:${this.workspace}:${app}` :
-      `request:${this.account}:${this.workspace}:${app}:${hintIndex}`
+      `request:${this.context.account}:${this.context.workspace}:${app}` :
+      `request:${this.context.account}:${this.context.workspace}:${app}:${hintIndex}`
     const headers = {
       'Content-Type': 'application/json',
       'x-vtex-sticky-host': stickyHint,
@@ -83,7 +79,7 @@ export class Builder extends AppClient {
     zip.on('error', (e) => {
       throw e
     })
-    const hint = stickyHint || `request:${this.account}:${this.workspace}:${app}`
+    const hint = stickyHint || `request:${this.context.account}:${this.context.workspace}:${app}`
     const metric = 'bh-zip-send'
     const params = tag ? {...requestParams, tag} : requestParams
     const request = this.http.postRaw<BuildResult>(route, zip, {
