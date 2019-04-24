@@ -1,5 +1,5 @@
-import {HttpClient, InstanceOptions} from '../HttpClient'
-import {IOContext} from '../service/typings'
+import { InfraClient, InstanceOptions } from '../HttpClient'
+import { IOContext } from '../service/typings'
 
 const routes = {
   AvailableIoVersions: '/_io',
@@ -10,15 +10,9 @@ const routes = {
   InstalledServices: (account: string, workspace: string) => `/${account}/${workspace}/services`,
 }
 
-export class Router {
-  private http: HttpClient
-  private account: string
-  private workspace: string
-
+export class Router extends InfraClient {
   constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
-    this.account = ioContext.account
-    this.workspace = ioContext.workspace
-    this.http = HttpClient.forRoot('router', ioContext, opts)
+    super('router', ioContext, opts, true)
   }
 
   public listAvailableIoVersions = () => {
@@ -26,17 +20,17 @@ export class Router {
   }
 
   public getInstalledIoVersion = () => {
-    if (!this.account || !this.workspace) {
+    if (!this.context.account || !this.context.workspace) {
       throw new Error('Missing client parameters: {account, workspace}')
     }
-    return this.http.get<InstalledIO>(routes.InstalledIoVersion(this.account, this.workspace))
+    return this.http.get<InstalledIO>(routes.InstalledIoVersion(this.context.account, this.context.workspace))
   }
 
   public installIo = (version: string) => {
-    if (!this.account || !this.workspace) {
+    if (!this.context.account || !this.context.workspace) {
       throw new Error('Missing client parameters: {account, workspace}')
     }
-    return this.http.put(routes.InstalledIoVersion(this.account, this.workspace), {version})
+    return this.http.put(routes.InstalledIoVersion(this.context.account, this.context.workspace), {version})
   }
 
   public listAvailableServices = () => {
@@ -48,17 +42,17 @@ export class Router {
   }
 
   public listInstalledServices = () => {
-    if (!this.account || !this.workspace) {
+    if (!this.context.account || !this.context.workspace) {
       throw new Error('Missing client parameters: {account, workspace}')
     }
-    return this.http.get<InstalledService[]>(routes.InstalledServices(this.account, this.workspace))
+    return this.http.get<InstalledService[]>(routes.InstalledServices(this.context.account, this.context.workspace))
   }
 
   public installService = (name: string, version: string) => {
-    if (!this.account || !this.workspace) {
+    if (!this.context.account || !this.context.workspace) {
       throw new Error('Missing client parameters: {account, workspace}')
     }
-    return this.http.post(routes.InstalledServices(this.account, this.workspace), {name, version})
+    return this.http.post(routes.InstalledServices(this.context.account, this.context.workspace), {name, version})
   }
 }
 
