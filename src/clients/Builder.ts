@@ -1,14 +1,12 @@
 import archiver from 'archiver'
 import {ZlibOptions} from 'zlib'
 
-import {HttpClient, InstanceOptions} from '../HttpClient'
+import {AppClient, InstanceOptions} from '../HttpClient'
 import {CacheType} from '../HttpClient/middlewares/cache'
 import {IOContext} from '../service/typings'
 
 import {Change} from './Apps'
 import {File} from './Registry'
-
-const EMPTY_OBJECT = {}
 
 const routes = {
   Availability: (app: string) => `${routes.Builder}/availability/${app}`,
@@ -19,14 +17,13 @@ const routes = {
   Relink: (app: string) => `${routes.Builder}/relink/${app}`,
 }
 
-export class Builder {
+export class Builder extends AppClient {
   private account: string
   private workspace: string
-  private http: HttpClient
   private stickyHost!: string
 
   constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
-    this.http = HttpClient.forWorkspace('builder-hub.vtex', ioContext, opts)
+    super('vtex.builder-hub', ioContext, opts)
     this.account = ioContext.account
     this.workspace = ioContext.workspace
   }
