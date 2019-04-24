@@ -1,5 +1,4 @@
-import { InstanceOptions } from '../HttpClient'
-import { forWorkspace, IODataSource } from '../IODataSource'
+import { InfraClient, InstanceOptions } from '../HttpClient'
 import { BucketMetadata } from '../responses'
 import { IOContext } from '../service/typings'
 
@@ -23,12 +22,9 @@ export interface MetadataEntryList {
   Next: string,
 }
 
-export class Metadata extends IODataSource {
-  protected service = 'router'
-  protected httpClientFactory = forWorkspace
-
-  constructor (context?: IOContext, options: InstanceOptions = {}) {
-    super(context, options)
+export class Metadata extends InfraClient {
+  constructor (context: IOContext, options: InstanceOptions = {}) {
+    super('router', context, options)
     if (runningAppName === '') {
       throw new Error(`Invalid path to access Metadata. Variable VTEX_APP_ID is not available.`)
     }

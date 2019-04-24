@@ -18,7 +18,7 @@ const routes = {
 
 export class Logger extends InfraClient {
   constructor(context: IOContext, options: InstanceOptions) {
-    super('colossus', false, {...context, recorder: undefined}, {...options, concurrency: 1})
+    super('colossus', {...context, recorder: undefined}, {...options, concurrency: 1})
   }
 
   public debug = (message: any, subject: string = DEFAULT_SUBJECT) =>

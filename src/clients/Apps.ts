@@ -58,7 +58,7 @@ const workspaceFields = [
 
 export class Apps extends InfraClient {
   constructor(context: IOContext, options: InstanceOptions) {
-    super('apps', false, context, options)
+    super('apps', context, options)
   }
 
   public installApp = (descriptor: string) => {
