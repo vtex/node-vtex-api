@@ -1,6 +1,6 @@
-import {HttpClient, withoutRecorder} from '../HttpClient'
-import {HttpClientFactory, IODataSource} from '../IODataSource'
-import {cleanError} from '../utils/error'
+import { InfraClient, InstanceOptions } from '../HttpClient'
+import { cleanError } from '../utils/error'
+import { IOContext } from './../../lib/service/typings.d'
 
 const DEFAULT_SUBJECT = '-'
 const production = process.env.VTEX_PRODUCTION === 'true'
@@ -16,13 +16,10 @@ const routes = {
   Log: (level: LogLevel) => `/logs/${level}`,
 }
 
-const forWorkspaceWithoutRecorder: HttpClientFactory = ({service, context, options}) => (service && context)
-  ? HttpClient.forWorkspace(service, withoutRecorder(context), {...options, concurrency: 1})
-  : undefined
-
-export class Logger extends IODataSource {
-  protected service = 'colossus'
-  protected httpClientFactory = forWorkspaceWithoutRecorder
+export class Logger extends InfraClient {
+  constructor(context: IOContext, options: InstanceOptions) {
+    super('colossus', false, {...context, recorder: undefined}, {...options, concurrency: 1})
+  }
 
   public debug = (message: any, subject: string = DEFAULT_SUBJECT) =>
     this.sendLog(subject, message, LogLevel.Debug)

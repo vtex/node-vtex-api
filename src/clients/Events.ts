@@ -1,15 +1,12 @@
-import {HttpClient, withoutRecorder} from '../HttpClient'
-import {HttpClientFactory, IODataSource} from '../IODataSource'
+import { InfraClient, InstanceOptions} from '../HttpClient'
+import { IOContext } from '../service/typings'
 
 const eventRoute = (route: string) => `/events/${route}`
 
-const forWorkspaceWithoutRecorder: HttpClientFactory = ({service, context, options}) => (service && context)
-  ? HttpClient.forWorkspace(service, withoutRecorder(context), options || {})
-  : undefined
-
-export class Events extends IODataSource {
-  protected service = 'colossus'
-  protected httpClientFactory = forWorkspaceWithoutRecorder
+export class Events extends InfraClient {
+  constructor(context: IOContext, options: InstanceOptions) {
+    super('colossus', false, {...context, recorder: undefined}, options)
+  }
 
   public sendEvent = (subject: string, route: string, message?: any) => {
     return this.http.put(eventRoute(route), message, {params: {subject}, metric: 'events-send'})

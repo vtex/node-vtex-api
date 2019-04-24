@@ -5,7 +5,6 @@ import pLimit from 'p-limit'
 
 import { CacheLayer } from '../caches/CacheLayer'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
-import { IOContext } from '../service/typings'
 import { forExternal, forRoot, forWorkspace } from './factories'
 import { CacheableRequestConfig, Cached, cacheMiddleware, CacheType } from './middlewares/cache'
 import { singleFlightMiddleware } from './middlewares/inflight'
@@ -130,8 +129,4 @@ export class HttpClient {
     await this.runMiddlewares(context)
     return context.response!
   }
-}
-
-export const withoutRecorder = (ioContext: IOContext): IOContext => {
-  return {...ioContext, recorder: undefined}
 }
