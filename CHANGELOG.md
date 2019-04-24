@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.6.0] - 2019-04-24
+
+## [3.5.2-beta] - 2019-04-24
+
 ## [3.5.1] - 2019-04-23
 
 ## [3.5.0] - 2019-04-22
@@ -29,6 +33,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [3.4.0] - 2019-04-18
 
 ## [3.3.1] - 2019-04-16
+
+## [3.3.1-beta.1] - 2019-04-17
+
+## [3.3.1-beta.0] - 2019-04-17
+
+## [3.3.1-beta] - 2019-04-15
 
 ## [3.3.0] - 2019-04-11
 ### Added
@@ -417,4 +427,3 @@ instead
 ## [0.48.0] - 2018-09-21
 ### Changed
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
-

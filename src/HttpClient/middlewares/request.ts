@@ -2,17 +2,20 @@ import axios from 'axios'
 import retry, {exponentialDelay} from 'axios-retry'
 import {Agent} from 'http'
 import {Limit} from 'p-limit'
+import {mapObjIndexed, sum, values} from 'ramda'
 
 import {isAbortedOrNetworkErrorOrRouterTimeout} from '../../utils/retry'
 import {hrToMillis} from '../../utils/time'
 
 import {MiddlewareContext} from '../context'
 
+const httpAgent = new Agent({
+  keepAlive: true,
+  maxFreeSockets: 50,
+})
+
 const http = axios.create({
-  httpAgent: new Agent({
-    keepAlive: true,
-    maxFreeSockets: 50,
-  }),
+  httpAgent,
 })
 
 retry(http, {
@@ -79,4 +82,26 @@ export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContex
   }
 
   ctx.response = await (limit ? limit(makeRequest) : makeRequest())
+}
+
+function countPerOrigin (obj: { [key: string]: any[] }) {
+  try {
+    return mapObjIndexed(val => val.length, obj)
+  } catch (_) {
+    return {}
+  }
+}
+
+export function httpAgentStats () {
+  const socketsPerOrigin = countPerOrigin(httpAgent.sockets)
+  const sockets = sum(values(socketsPerOrigin))
+  const pendingRequestsPerOrigin = countPerOrigin(httpAgent.requests)
+  const pendingRequests = sum(values(pendingRequestsPerOrigin))
+
+  return {
+    pendingRequests,
+    pendingRequestsPerOrigin,
+    sockets,
+    socketsPerOrigin,
+  }
 }
