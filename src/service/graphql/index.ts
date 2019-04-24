@@ -4,7 +4,6 @@ import { createHttpRoute } from '../http'
 import { GraphQLOptions, RouteHandler } from '../typings'
 
 import { removeSetCookie } from '../http/middlewares/setCookie'
-import { trackIncomingRequestStats } from '../utils/incomingRequestStats'
 import { error } from './middlewares/error'
 import { createFormatters } from './middlewares/formatters'
 import { parseQuery } from './middlewares/query'
@@ -30,7 +29,6 @@ export const createGraphQLRoute = <ClientsT extends IOClients, StateT, CustomT>(
     }
 
     return createHttpRoute<ClientsT, StateT, CustomT & GraphQLContext>(Clients, options)([
-      trackIncomingRequestStats,
       removeSetCookie,
       injectGraphql,
       timings,
