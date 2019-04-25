@@ -2,7 +2,7 @@ import { assoc, flatten, map, mapObjIndexed, values } from 'ramda'
 import { mean, median, percentile } from 'stats-lite'
 
 import { httpAgentStats } from '../HttpClient/middlewares/request'
-import { incomingRequestStats } from '../service/utils/incomingRequestStats'
+import { incomingRequestStats } from '../service/http/middlewares/requestStats'
 import { hrToMillis } from '../utils/time'
 
 export interface Metric {
