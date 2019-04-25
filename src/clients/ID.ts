@@ -17,7 +17,7 @@ const endpoint = (env: string) => {
 }
 
 export class ID extends ExternalClient {
-  constructor (context: IOContext, opts: InstanceOptions) {
+  constructor (context: IOContext, opts?: InstanceOptions) {
     super(endpoint(VTEXID_ENDPOINTS.STABLE), context, opts)
   }
 

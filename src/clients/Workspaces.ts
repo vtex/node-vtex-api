@@ -9,7 +9,7 @@ const routes = {
 }
 
 export class Workspaces extends InfraClient {
-  constructor(context: IOContext, options: InstanceOptions) {
+  constructor(context: IOContext, options?: InstanceOptions) {
     super('router', context, options, true)
   }
 

@@ -23,7 +23,7 @@ export interface MetadataEntryList {
 }
 
 export class Metadata extends InfraClient {
-  constructor (context: IOContext, options: InstanceOptions = {}) {
+  constructor (context: IOContext, options?: InstanceOptions) {
     super('router', context, options)
     if (runningAppName === '') {
       throw new Error(`Invalid path to access Metadata. Variable VTEX_APP_ID is not available.`)

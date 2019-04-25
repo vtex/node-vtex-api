@@ -11,7 +11,7 @@ interface Locales {
 }
 
 export class Messages extends AppClient {
-  constructor(vtex: IOContext, options: InstanceOptions) {
+  constructor(vtex: IOContext, options?: InstanceOptions) {
     super('vtex.messages', vtex, options)
   }
 

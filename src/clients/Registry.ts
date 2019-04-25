@@ -28,7 +28,7 @@ const paramsSerializer = (params: any) => {
 }
 
 export class Registry extends InfraClient {
-  constructor(context: IOContext, options: InstanceOptions) {
+  constructor(context: IOContext, options?: InstanceOptions) {
     super('apps', {...context, workspace: DEFAULT_WORKSPACE}, options)
   }
 

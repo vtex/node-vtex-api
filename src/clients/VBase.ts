@@ -23,7 +23,7 @@ const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
 }
 
 export class VBase extends InfraClient {
-  constructor (context: IOContext, options: InstanceOptions) {
+  constructor (context: IOContext, options?: InstanceOptions) {
     super('vbase', context, options)
     if (runningAppName === '') {
       throw new Error(`Invalid path to access VBase. Variable VTEX_APP_ID is not available.`)

@@ -17,7 +17,7 @@ import { InstanceOptions } from './typings'
  * }
  */
 export class JanusClient extends ExternalClient {
-  constructor(context: IOContext, options: InstanceOptions) {
+  constructor(context: IOContext, options?: InstanceOptions) {
     const {account} = context
 
     super(

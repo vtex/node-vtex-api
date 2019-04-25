@@ -57,7 +57,7 @@ const workspaceFields = [
 ].join(',')
 
 export class Apps extends InfraClient {
-  constructor(context: IOContext, options: InstanceOptions) {
+  constructor(context: IOContext, options?: InstanceOptions) {
     super('apps', context, options)
   }
 

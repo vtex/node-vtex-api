@@ -7,8 +7,9 @@ import { InstanceOptions } from './typings'
  * Used to perform calls to external endpoints for which you have declared outbound access policies in your manifest.
  */
 export class ExternalClient extends IOClient {
-  constructor(baseURL: string, context: IOContext, options: InstanceOptions) {
+  constructor(baseURL: string, context: IOContext, options?: InstanceOptions) {
     const {authToken} = context
+    const headers = options && options.headers || {}
 
     super(
       context,
@@ -16,7 +17,7 @@ export class ExternalClient extends IOClient {
         ...options,
         baseURL,
         headers: {
-          ...options.headers,
+          ...headers,
           'Proxy-Authorization': authToken,
         },
       }

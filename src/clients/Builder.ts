@@ -20,7 +20,7 @@ const routes = {
 export class Builder extends AppClient {
   private stickyHost!: string
 
-  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
+  constructor (ioContext: IOContext, opts?: InstanceOptions) {
     super('vtex.builder-hub', ioContext, opts)
   }
 

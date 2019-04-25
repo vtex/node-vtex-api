@@ -11,7 +11,7 @@ const routes = {
 }
 
 export class Router extends InfraClient {
-  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
+  constructor (ioContext: IOContext, opts?: InstanceOptions) {
     super('router', ioContext, opts, true)
   }
 
