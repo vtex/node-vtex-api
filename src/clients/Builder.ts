@@ -1,14 +1,12 @@
 import archiver from 'archiver'
 import {ZlibOptions} from 'zlib'
 
-import {HttpClient, InstanceOptions} from '../HttpClient'
+import {AppClient, InstanceOptions} from '../HttpClient'
 import {CacheType} from '../HttpClient/middlewares/cache'
 import {IOContext} from '../service/typings'
 
 import {Change} from './Apps'
 import {File} from './Registry'
-
-const EMPTY_OBJECT = {}
 
 const routes = {
   Availability: (app: string) => `${routes.Builder}/availability/${app}`,
@@ -19,22 +17,17 @@ const routes = {
   Relink: (app: string) => `${routes.Builder}/relink/${app}`,
 }
 
-export class Builder {
-  private account: string
-  private workspace: string
-  private http: HttpClient
+export class Builder extends AppClient {
   private stickyHost!: string
 
-  constructor (ioContext: IOContext, opts: InstanceOptions = {}) {
-    this.http = HttpClient.forWorkspace('builder-hub.vtex', ioContext, opts)
-    this.account = ioContext.account
-    this.workspace = ioContext.workspace
+  constructor (ioContext: IOContext, opts?: InstanceOptions) {
+    super('vtex.builder-hub', ioContext, opts)
   }
 
   public availability = async (app: string, hintIndex: number) => {
     const stickyHint = hintIndex === undefined || hintIndex === null ?
-      `request:${this.account}:${this.workspace}:${app}` :
-      `request:${this.account}:${this.workspace}:${app}:${hintIndex}`
+      `request:${this.context.account}:${this.context.workspace}:${app}` :
+      `request:${this.context.account}:${this.context.workspace}:${app}:${hintIndex}`
     const headers = {
       'Content-Type': 'application/json',
       'x-vtex-sticky-host': stickyHint,
@@ -86,7 +79,7 @@ export class Builder {
     zip.on('error', (e) => {
       throw e
     })
-    const hint = stickyHint || `request:${this.account}:${this.workspace}:${app}`
+    const hint = stickyHint || `request:${this.context.account}:${this.context.workspace}:${app}`
     const metric = 'bh-zip-send'
     const params = tag ? {...requestParams, tag} : requestParams
     const request = this.http.postRaw<BuildResult>(route, zip, {

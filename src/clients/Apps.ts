@@ -6,9 +6,9 @@ import { Readable, Writable } from 'stream'
 import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
 
-import { inflightURL } from '../HttpClient/middlewares/inflight'
-import { forWorkspace, IODataSource } from '../IODataSource'
+import { inflightURL, InfraClient, InstanceOptions } from '../HttpClient'
 import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
+import { IOContext } from '../service/typings'
 
 const routes = {
   Acknowledge: (app: string, service: string) => `${routes.App(app)}/acknowledge/${service}`,
@@ -56,9 +56,10 @@ const workspaceFields = [
   '_isRoot',
 ].join(',')
 
-export class Apps extends IODataSource {
-  protected httpClientFactory = forWorkspace
-  protected service = 'apps'
+export class Apps extends InfraClient {
+  constructor(context: IOContext, options?: InstanceOptions) {
+    super('apps', context, options)
+  }
 
   public installApp = (descriptor: string) => {
     return this.http.post(routes.Apps, {id: descriptor}, {metric: 'apps-install'})

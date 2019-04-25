@@ -10,6 +10,9 @@ interface HttpClientFactoryOptions {
 
 export type HttpClientFactory = (opts: HttpClientFactoryOptions) => HttpClient | void
 
+/**
+ * @deprecated Extend one of the subclasses of IOClient instead.
+ */
 export abstract class IODataSource extends DataSource<ServiceContext> {
   protected abstract httpClientFactory: HttpClientFactory
   protected service: string | void = undefined

@@ -1,4 +1,4 @@
-import { MiddlewareContext } from '../context'
+import { MiddlewareContext } from '../typings'
 import { cacheKey, CacheType, isCacheable } from './cache'
 
 export type Memoized = Required<Pick<MiddlewareContext, 'cacheHit' | 'response'>>

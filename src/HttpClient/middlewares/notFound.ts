@@ -1,5 +1,5 @@
 import {AxiosRequestConfig} from 'axios'
-import {MiddlewareContext} from '../context'
+import {MiddlewareContext} from '../typings'
 
 const addNotFound = (validateStatus: (status: number) => boolean) =>
   (status: number) => validateStatus(status) || status === 404

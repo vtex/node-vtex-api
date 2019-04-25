@@ -1,25 +1,17 @@
-import { pickAll } from 'ramda'
-import { InstanceOptions } from '../HttpClient'
-import { IODataSource } from '../IODataSource'
-import { ClientContext, ClientDependencies, ClientInstanceOptions, IOContext } from '../service/typings'
-import { Apps, Billing, BillingMetrics, Builder, Events, ID, Logger, Messages, Metadata, Registry, Router, Segment, VBase, Workspaces } from './index'
-
-export type IOClient = new (context: ClientContext, options: InstanceOptions) => IODataSource | Builder | ID | Router
-
-function hasDependencies<T extends IOClients>(instanceOptions: ClientInstanceOptions<T>): instanceOptions is ClientInstanceOptions<T> {
-  return typeof (instanceOptions as ClientDependencies<T>).depends !== 'undefined'
-}
+import { InstanceOptions, IOClient, IOClientConstructor } from '../HttpClient'
+import { IOContext } from '../service/typings'
+import { Apps, Billing, BillingMetrics, Builder, Events, ID, LicenseManager, Logger, Messages, Metadata, Registry, Router, Segment, Session, VBase, Workspaces } from './index'
 
 export type ClientsImplementation<T extends IOClients> = new (
-  clientOptions: Record<string, ClientInstanceOptions>,
+  clientOptions: Record<string, InstanceOptions>,
   ctx: IOContext
 ) => T
 
 export class IOClients {
-  private clients: Record<string, IODataSource | any> = {}
+  private clients: Record<string, IOClient> = {}
 
   constructor(
-    private clientOptions: Record<string, ClientInstanceOptions>,
+    private clientOptions: Record<string, InstanceOptions>,
     private ctx: IOContext
   ) { }
 
@@ -47,6 +39,10 @@ export class IOClients {
     return this.getOrSet('id', ID)
   }
 
+  public get licenseManager() {
+    return this.getOrSet('licenseManager', LicenseManager)
+  }
+
   public get logger() {
     return this.getOrSet('logger', Logger)
   }
@@ -71,6 +67,10 @@ export class IOClients {
     return this.getOrSet('segment', Segment)
   }
 
+  public get session() {
+    return this.getOrSet('session', Session)
+  }
+
   public get vbase() {
     return this.getOrSet('vbase', VBase)
   }
@@ -79,23 +79,17 @@ export class IOClients {
     return this.getOrSet('workspaces', Workspaces)
   }
 
-  protected getOrSet<TClient extends IOClient>(key: string, Implementation: TClient): InstanceType<TClient> {
+  protected getOrSet<TClient extends IOClientConstructor>(key: string, Implementation: TClient): InstanceType<TClient> {
     const options = {
       ...this.clientOptions.default,
       ...this.clientOptions[key],
       metrics,
     }
 
-    const clients =
-      hasDependencies(options)
-      && options.depends
-      && pickAll(options.depends.clients, this) || {} // deal with circular dependency
-
     if (!this.clients[key]) {
-      this.clients[key] = new Implementation({ ... this.ctx, clients }, options)
+      this.clients[key] = new Implementation(this.ctx, options)
     }
 
-
-    return this.clients[key]
+    return this.clients[key] as InstanceType<TClient>
   }
 }

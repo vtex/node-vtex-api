@@ -4,10 +4,8 @@ import { basename } from 'path'
 import { Readable } from 'stream'
 import { createGzip } from 'zlib'
 
-import { InstanceOptions } from '../HttpClient'
-import { inflightURL } from '../HttpClient/middlewares/inflight'
+import { inflightURL, InfraClient, InstanceOptions } from '../HttpClient'
 import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
-import { forWorkspace, IODataSource } from '../IODataSource'
 import { BucketMetadata, FileListItem } from '../responses'
 import { IOContext } from '../service/typings'
 
@@ -24,14 +22,11 @@ const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
   return typeof opts !== 'string' && !(opts instanceof String)
 }
 
-export class VBase extends IODataSource {
-  protected httpClientFactory = forWorkspace
-  protected service = 'vbase'
-
-  constructor (context?: IOContext, options: InstanceOptions = {}) {
-    super(context, options)
+export class VBase extends InfraClient {
+  constructor (context: IOContext, options?: InstanceOptions) {
+    super('vbase', context, options)
     if (runningAppName === '') {
-      throw new Error(`Invalid path to access Vbase. Variable VTEX_APP_ID is not available.`)
+      throw new Error(`Invalid path to access VBase. Variable VTEX_APP_ID is not available.`)
     }
   }
 

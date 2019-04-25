@@ -1,5 +1,6 @@
-import {DEFAULT_WORKSPACE} from '../constants'
-import {forRoot, IODataSource} from '../IODataSource'
+import { DEFAULT_WORKSPACE } from '../constants'
+import { InfraClient, InstanceOptions } from '../HttpClient'
+import { IOContext } from '../service/typings'
 
 const routes = {
   Account: (account: string) => `/${account}`,
@@ -7,9 +8,10 @@ const routes = {
   Workspace: (account: string, workspace: string) => `${routes.Account(account)}/${workspace}`,
 }
 
-export class Workspaces extends IODataSource {
-  protected service = 'router'
-  protected httpClientFactory = forRoot
+export class Workspaces extends InfraClient {
+  constructor(context: IOContext, options?: InstanceOptions) {
+    super('router', context, options, true)
+  }
 
   public list = (account: string) => {
     return this.http.get<WorkspaceMetadata[]>(routes.Account(account), {metric: 'workspaces-list'})

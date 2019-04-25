@@ -1,5 +1,5 @@
 import { stringify } from 'qs'
-import { InflightKeyGenerator, MiddlewareContext, RequestConfig } from '../context'
+import { InflightKeyGenerator, MiddlewareContext, RequestConfig } from '../typings'
 
 export type Inflight = Required<Pick<MiddlewareContext, 'cacheHit' | 'response'>>
 
