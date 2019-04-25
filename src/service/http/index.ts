@@ -2,6 +2,7 @@ import { ClientsImplementation, IOClients } from '../../clients/IOClients'
 import { InstanceOptions } from '../../HttpClient'
 import { RouteHandler } from '../typings'
 import { compose } from '../utils/compose'
+import { authTokens } from './middlewares/authTokens'
 import { clients } from './middlewares/clients'
 import { error } from './middlewares/error'
 import { trackIncomingRequestStats } from './middlewares/requestStats'
@@ -14,7 +15,7 @@ export const createHttpRoute = <ClientsT extends IOClients, StateT, CustomT>(
 ) => {
   return (handler: RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>) => {
     const middlewares = Array.isArray(handler) ? handler : [handler]
-    const pipeline = [trackIncomingRequestStats, clients(Clients, options), removeSetCookie, timings, error, ...middlewares]
+    const pipeline = [trackIncomingRequestStats, authTokens, clients(Clients, options), removeSetCookie, timings, error, ...middlewares]
     return compose(pipeline)
   }
 }
