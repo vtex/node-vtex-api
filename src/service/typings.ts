@@ -5,8 +5,8 @@ import { ParameterizedContext } from 'koa'
 import { Middleware } from 'koa-compose'
 import { ParsedUrlQuery } from 'querystring'
 
-import { ClientsImplementation, IOClient, IOClients } from '../clients/IOClients'
-import { InstanceOptions } from '../HttpClient'
+import { ClientsImplementation, IOClients } from '../clients/IOClients'
+import { InstanceOptions, IOClientConstructor } from '../HttpClient'
 import { Recorder } from '../HttpClient/middlewares/recorder'
 
 export interface Context<T extends IOClients> {
@@ -41,7 +41,7 @@ export type DataSourcesGenerator = () => {
   [name: string]: DataSource<ServiceContext>,
 }
 
-type IOClientInstances<ClientsT extends IOClients = IOClients> = keyof PickByValue<ClientsT, InstanceType<IOClient>>
+type IOClientInstances<ClientsT extends IOClients = IOClients> = keyof PickByValue<ClientsT, InstanceType<IOClientConstructor>>
 
 export type ClientContext<ClientsT extends IOClients = IOClients> = IOContext & { clients: { [k in IOClientInstances<ClientsT>]?: ClientsT[k] } }
 

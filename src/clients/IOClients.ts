@@ -79,7 +79,7 @@ export class IOClients {
     return this.getOrSet('workspaces', Workspaces)
   }
 
-  protected getOrSet(key: string, Implementation: IOClientConstructor): InstanceType<IOClientConstructor> {
+  protected getOrSet<TClient extends IOClientConstructor>(key: string, Implementation: TClient): InstanceType<TClient> {
     const options = {
       ...this.clientOptions.default,
       ...this.clientOptions[key],
@@ -90,6 +90,6 @@ export class IOClients {
       this.clients[key] = new Implementation(this.ctx, options)
     }
 
-    return this.clients[key]
+    return this.clients[key] as InstanceType<TClient>
   }
 }

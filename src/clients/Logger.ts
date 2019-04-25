@@ -1,6 +1,6 @@
 import { InfraClient, InstanceOptions } from '../HttpClient'
+import { IOContext } from '../service/typings'
 import { cleanError } from '../utils/error'
-import { IOContext } from './../../lib/service/typings.d'
 
 const DEFAULT_SUBJECT = '-'
 const production = process.env.VTEX_PRODUCTION === 'true'
