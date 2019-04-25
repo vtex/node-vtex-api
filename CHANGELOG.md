@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.7.0] - 2019-04-25
+
 ### Changed
 - Add LicenseManager client
 - Add Session client
