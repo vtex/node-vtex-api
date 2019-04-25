@@ -33,7 +33,6 @@ export class LicenseManager extends JanusClient {
       headers: {
         VtexIdclientAutCookie,
       },
-      memoizeable: false,
       metric: 'lm-topbar-data',
     })
   }
