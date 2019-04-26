@@ -57,7 +57,12 @@ export interface DataSources {
 
 export interface IOContext {
   account: string
+  // Identifies current app for the VTEX IO infrastructure.
   authToken: string
+  // Identifies the user based on the cookie `VtexIdclientAutCookie`. Cookies are only available in private routes.
+  adminUserAuthToken?: string
+  // Identifies the user based on the cookie `VtexIdclientAutCookie_${account}`. Cookies are only available in private routes.
+  storeUserAuthToken?: string
   production: boolean
   recorder?: Recorder
   region: string

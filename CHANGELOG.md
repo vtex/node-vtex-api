@@ -7,13 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.8.0] - 2019-04-26
+
+### Changed
+- Add `adminUserAuthToken` (from cookie `VtexIdclientAutCookie`) and `storeUserAuthToken` (from cookie `VtexIdclientAutCookie_${account}`) to `ctx.vtex`
+
 ## [3.7.0] - 2019-04-25
 
 ### Changed
 - Add LicenseManager client
 - Add Session client
 - Restructure HttpClient
-- Add HttpClient subclasses
+- Implement IOClient
+- Implement IOClient subclasses
+- Port all native clients
+- Reduced default timeout to 1s
+- Added default `params` to HttpClient
 
 ## [3.6.1] - 2019-04-24
 

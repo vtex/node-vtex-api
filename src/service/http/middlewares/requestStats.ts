@@ -1,5 +1,5 @@
-import { IOClients } from '../../clients/IOClients'
-import { ServiceContext } from '../typings'
+import { IOClients } from '../../../clients/IOClients'
+import { ServiceContext } from '../../typings'
 
 class IncomingRequestStats {
   public closed = 0
