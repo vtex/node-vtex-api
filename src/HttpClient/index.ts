@@ -6,4 +6,5 @@ export * from './IOClient'
 export * from './JanusClient'
 export * from './typings'
 
+export { Cached, CacheType } from './middlewares/cache'
 export { inflightURL, inflightUrlWithQuery } from './middlewares/inflight'
