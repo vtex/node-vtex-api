@@ -80,8 +80,11 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     const cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
 
     if (cached) {
-      const {etag: cachedEtag, response, expiration} = cached as Cached
+      const {etag: cachedEtag, response, expiration, responseType, responseEncoding} = cached as Cached
       if (expiration > Date.now() && response) {
+        if (responseType === 'arraybuffer') {
+          response.data = Buffer.from(response.data, responseEncoding)
+        }
         ctx.response = response as AxiosResponse
         ctx.cacheHit = {
           inflight: 0,
@@ -156,13 +159,20 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     }
 
     if (shouldCache) {
+      const {responseType, responseEncoding} = ctx.config
       const currentAge = revalidated ? 0 : age
       const varySegment = ctx.response.headers.vary && ctx.response.headers.vary.includes('x-vtex-segment')
       const setKey = varySegment ? keyWithSegment : key
+      const cacheableData = responseType === 'arraybuffer'
+        ? (data as Buffer).toString(responseEncoding)
+        : data
+
       await storage.set(setKey, {
         etag,
         expiration: Date.now() + (maxAge - currentAge) * 1000,
-        response: {data, headers, status},
+        response: {data: cacheableData, headers, status},
+        responseEncoding,
+        responseType,
       })
       return
     }
@@ -173,6 +183,8 @@ export interface Cached {
   etag: string
   expiration: number
   response: Partial<AxiosResponse>
+  responseType?: string
+  responseEncoding?: string
 }
 
 export type CacheableRequestConfig = RequestConfig & {
