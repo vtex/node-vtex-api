@@ -82,7 +82,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     if (cached) {
       const {etag: cachedEtag, response, expiration, responseType, responseEncoding} = cached as Cached
       if (expiration > Date.now() && response) {
-        if (responseType === 'arraybuffer') {
+        if (type === CacheType.Disk && responseType === 'arraybuffer') {
           response.data = Buffer.from(response.data, responseEncoding)
         }
         ctx.response = response as AxiosResponse
@@ -163,7 +163,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
       const currentAge = revalidated ? 0 : age
       const varySegment = ctx.response.headers.vary && ctx.response.headers.vary.includes('x-vtex-segment')
       const setKey = varySegment ? keyWithSegment : key
-      const cacheableData = responseType === 'arraybuffer'
+      const cacheableData = type === CacheType.Disk && responseType === 'arraybuffer'
         ? (data as Buffer).toString(responseEncoding)
         : data
 
