@@ -29,7 +29,7 @@ const createRoutes = ({account, workspace}: IOContext) => {
     Master: `/${account}/master`,
     Meta: () => `${routes.Workspace}/v2/apps`,
     Registry: () => `${routes.Master}/registry`,
-    ResolveDependencies: () => 'dependencies/_resolve',
+    ResolveDependencies: () => `${routes.Workspace}/dependencies/_resolve`,
     ResolveDependenciesWithManifest: () => `${routes.Workspace}/v2/apps/_resolve`,
     Settings: (app: string) => `${routes.App(app)}/settings`,
     Unlink: (app: string) => `${routes.Links}/${app}`,
