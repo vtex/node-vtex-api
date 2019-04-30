@@ -1,4 +1,5 @@
 export * from './app'
+export * from './assets'
 export * from './error'
 export * from './retry'
 export * from './time'
