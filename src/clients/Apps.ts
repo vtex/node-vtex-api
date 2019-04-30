@@ -12,6 +12,32 @@ import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
 import { IOContext } from '../service/typings'
 import { parseAppId, removeVersionFromAppId } from '../utils'
 
+const createRoutes = ({account, workspace}: IOContext) => {
+  const routes = {
+    Acknowledge: (app: string, service: string) => `${routes.App(app)}/acknowledge/${service}`,
+    App: (app: string) => `${routes.Apps()}/${app}`,
+    AppBundle: (locator: AppLocator, path: string) => `${routes.AppOrRegistry(locator)}/bundle/${path}`,
+    AppOrRegistry: ({name, version, build}: AppLocator) => build
+      ? `${routes.Apps()}/${name}@${version}+${build}`
+      : `${routes.Registry()}/${name}/${version}`,
+    Apps: () => `${routes.Workspace}/apps`,
+    Dependencies:() => `${routes.Workspace}/dependencies`,
+    File: (locator: AppLocator, path: string) => `${routes.Files(locator)}/${path}`,
+    Files: (locator: AppLocator) => `${routes.AppOrRegistry(locator)}/files`,
+    Link: (app: string) => `${routes.Workspace}/v2/links/${app}`,
+    Links: () => `${routes.Workspace}/links`,
+    Master: `/${account}/master`,
+    Meta: () => `${routes.Workspace}/v2/apps`,
+    Registry: () => `${routes.Master}/registry`,
+    ResolveDependencies: () => 'dependencies/_resolve',
+    ResolveDependenciesWithManifest: () => `${routes.Workspace}/v2/apps/_resolve`,
+    Settings: (app: string) => `${routes.App(app)}/settings`,
+    Unlink: (app: string) => `${routes.Links}/${app}`,
+    Workspace: `/${account}/${workspace}`,
+  }
+  return routes
+}
+
 const getVendorAndName = ({id}: {id: string}) => removeVersionFromAppId(id)
 const notFound = (e: any) => {
   if (e.response && e.response.status === 404) {
@@ -19,6 +45,7 @@ const notFound = (e: any) => {
   }
   throw e
 }
+
 const zipObj = (keys: string[], values: any[]) => {
   let idx = 0
   const len = Math.min(keys.length, values.length)
@@ -47,31 +74,16 @@ interface AppLocator {
 }
 
 export class Apps extends InfraClient {
-  private routes = {
-    Acknowledge: (app: string, service: string) => `${this.routes.App(app)}/acknowledge/${service}`,
-    App: (app: string) => `${this.routes.Apps()}/${app}`,
-    AppBundle: (locator: AppLocator, path: string) => `${this.routes.AppOrRegistry(locator)}/bundle/${path}`,
-    AppOrRegistry: ({name, version, build}: AppLocator) => build
-      ? `${this.routes.Apps()}/${name}@${version}+${build}`
-      : `${this.routes.Registry()}/${name}/${version}`,
-    Apps: () => `${this.routes.Workspace}/apps`,
-    Dependencies:() => `${this.routes.Workspace}/dependencies`,
-    File: (locator: AppLocator, path: string) => `${this.routes.Files(locator)}/${path}`,
-    Files: (locator: AppLocator) => `${this.routes.AppOrRegistry(locator)}/files`,
-    Link: (app: string) => `${this.routes.Workspace}/v2/links/${app}`,
-    Links: () => `${this.routes.Workspace}/links`,
-    Master: `/${this.context.account}/master`,
-    Meta: () => `${this.routes.Workspace}/v2/apps`,
-    Registry: () => `${this.routes.Master}/registry`,
-    ResolveDependencies: () => 'dependencies/_resolve',
-    ResolveDependenciesWithManifest: () => `${this.routes.Workspace}/v2/apps/_resolve`,
-    Settings: (app: string) => `${this.routes.App(app)}/settings`,
-    Unlink: (app: string) => `${this.routes.Links}/${app}`,
-    Workspace: `/${this.context.account}/${this.context.workspace}`,
+  // tslint:disable-next-line: variable-name
+  private _routes: ReturnType<typeof createRoutes>
+
+  private get routes () {
+    return this._routes
   }
 
   constructor(context: IOContext, options?: InstanceOptions) {
     super('apps', context, options, true)
+    this._routes = createRoutes(context)
   }
 
   public installApp = (descriptor: string) => {
