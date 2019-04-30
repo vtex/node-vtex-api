@@ -6,6 +6,7 @@ import { Readable, Writable } from 'stream'
 import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
 
+import { CacheType, inflightURL, InfraClient, InstanceOptions } from '../HttpClient'
 import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
 import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
 import { IOContext } from '../service/typings'
@@ -182,7 +183,17 @@ export class Apps extends InfraClient {
   }
 
   public getAppFile = (app: string, path: string, context: string[] = []) => {
+    const metric = 'apps-get-file'
     const params = {context: contextQuery(context)}
+    const inflightKey = inflightURL
+    return this.http.getBuffer(routes.File(app, path), {
+      cacheable: CacheType.Memory,
+      inflightKey,
+      metric,
+      params,
+    })
+  }
+
   public getAppJSON = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
     const metric = 'apps-get-json'
     const inflightKey = inflightURL
