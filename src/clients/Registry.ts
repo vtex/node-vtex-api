@@ -101,7 +101,7 @@ export class Registry extends InfraClient {
     const inflightKey = inflightURL
     const metric = 'registry-get-file'
     return this.http.getBuffer(routes.AppFile(app, version, path), {
-      cacheable: CacheType.Any,
+      cacheable: CacheType.Disk,
       inflightKey,
       metric,
     })

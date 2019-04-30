@@ -211,7 +211,7 @@ export class Apps extends InfraClient {
     const linked = !!locator.build
     const inflightKey = inflightURL
     return this.http.getBuffer(this.routes.File(locator, path), {
-      cacheable: linked ? CacheType.Memory : CacheType.Any,
+      cacheable: linked ? CacheType.Memory : CacheType.Disk,
       inflightKey,
       metric: linked ? 'apps-get-file' : 'registry-get-file',
     })
