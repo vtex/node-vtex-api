@@ -6,7 +6,7 @@ import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
 
 import { DEFAULT_WORKSPACE } from '../constants'
-import { inflightURL, InfraClient, InstanceOptions } from '../HttpClient'
+import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
 import { AppBundlePublished, AppFilesList, AppManifest } from '../responses'
 import { IOContext } from '../service/typings'
 
@@ -99,7 +99,16 @@ export class Registry extends InfraClient {
   public getAppFile = (app: string, version: string, path: string) => {
     const inflightKey = inflightURL
     const metric = 'registry-get-file'
-    return this.http.getBuffer(routes.AppFile(app, version, path), {metric, inflightKey})
+
+  public getAppJSON = <T extends object | null>(app: string, version: string, path: string, nullIfNotFound?: boolean) => {
+    const inflightKey = inflightURL
+    const metric = 'registry-get-json'
+    return this.http.get<T>(routes.AppFile(app, version, path), {
+      cacheable: CacheType.Any,
+      inflightKey,
+      metric,
+      nullIfNotFound,
+    } as IgnoreNotFoundRequestConfig)
   }
 
   public getAppFileStream = (app: string, version: string, path: string): Promise<IncomingMessage> => {
