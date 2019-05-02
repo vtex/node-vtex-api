@@ -10,6 +10,10 @@ interface Locales {
   [lang: string]: Locale
 }
 
+interface LocalesByProvider {
+  [provider: string]: Locales
+}
+
 export class Messages extends AppClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
     super('vtex.messages', vtex, options)
@@ -24,7 +28,7 @@ export class Messages extends AppClient {
     },
   })
 
-  public saveTranslation = (data: Locales): Promise<void> => this.http.post('/_v/translations/save', data, {
+  public saveTranslation = (data: LocalesByProvider): Promise<void> => this.http.post('/_v/translations', data, {
     metric: 'messages-save-translation',
   })
 }
