@@ -56,7 +56,7 @@ function getIncomingRequestStats () {
   return stats
 }
 
-export type StatusTrack = () => EnvMetric[]
+export type StatusTrack = () => Promise<EnvMetric[]>
 
 export class MetricsAccumulator {
   private metricsMillis: Record<string, number[]>
