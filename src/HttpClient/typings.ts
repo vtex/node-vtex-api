@@ -59,6 +59,7 @@ export interface InstanceOptions {
   memoryCache?: CacheLayer<string, Cached>
   diskCache?: CacheLayer<string, Cached>
   baseURL?: string
+  accountName?: string
   retries?: number
   /**
    * @deprecated use retries instead.
