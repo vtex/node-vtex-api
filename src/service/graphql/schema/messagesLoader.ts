@@ -26,12 +26,14 @@ const batchData = (lengths: number[], indexedData: IOMessage[]) => {
   return append(batch, batchedData)
 }
 
-const sortByContent = (indexedData: Array<[string, IOMessage]>) => sortBy(([_, data]) => prop('content', data), indexedData)
+const sortByContent = (indexedData: Array<[string, IOMessage]>) =>
+  sortBy(([_, data]) => prop('content', data), indexedData)
 
-const sortByOriginalIndex = (indexedTraslations: Array<[string, string]>) => sortBy(([index, _]) => Number(index), indexedTraslations)
+const sortByOriginalIndex = (indexedTraslations: Array<[string, string]>) =>
+  sortBy(([index, _]) => Number(index), indexedTraslations)
 
-export const messagesLoader = (messagesAPI: Messages) => new DataLoader<IOMessage, string>(
-  async (data: IOMessage[]) => {
+export const messagesLoader = (messagesAPI: Messages) =>
+  new DataLoader<IOMessage, string>(async (data: IOMessage[]) => {
     const to = data[0].to // Should be consistent across batches
     const indexedData = toPairs(data) as Array<[string, IOMessage]>
     const sortedIndexedData = sortByContent(indexedData)
@@ -39,10 +41,13 @@ export const messagesLoader = (messagesAPI: Messages) => new DataLoader<IOMessag
     const sortedData = pluck(1, sortedIndexedData) as IOMessage[]
     const strLength = map(obj => JSON.stringify(obj).length, sortedData)
     const batches = batchData(strLength, sortedData)
-    const promises = map((batch: IOMessage[]) => !!to ? messagesAPI.translate(to, batch) : Promise.resolve(pluck('content', batch)), batches)
+    const promises = map(
+      (batch: IOMessage[]) =>
+        !!to ? messagesAPI.translate(to, batch) : Promise.resolve(pluck('content', batch)),
+      batches
+    )
     const translations = await Promise.all(promises).then(res => flatten<string>(res))
     const indexedTranslations = zip(originalIndexes, translations) as Array<[string, string]>
     const translationsInOriginalOrder = sortByOriginalIndex(indexedTranslations)
     return pluck(1, translationsInOriginalOrder)
-  }
-)
+  })

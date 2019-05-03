@@ -1,4 +1,4 @@
-import {MiddlewareContext} from '../typings'
+import { MiddlewareContext } from '../typings'
 
 export const recorderMiddleware = (recorder: Recorder) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {

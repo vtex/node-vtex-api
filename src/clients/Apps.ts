@@ -12,16 +12,18 @@ import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
 import { IOContext } from '../service/typings'
 import { parseAppId, removeVersionFromAppId } from '../utils'
 
-const createRoutes = ({account, workspace}: IOContext) => {
+const createRoutes = ({ account, workspace }: IOContext) => {
   const routes = {
     Acknowledge: (app: string, service: string) => `${routes.App(app)}/acknowledge/${service}`,
     App: (app: string) => `${routes.Apps()}/${app}`,
-    AppBundle: (locator: AppLocator, path: string) => `${routes.AppOrRegistry(locator)}/bundle/${path}`,
-    AppOrRegistry: ({name, version, build}: AppLocator) => build
-      ? `${routes.Apps()}/${name}@${version}+${build}`
-      : `${routes.Registry()}/${name}/${version}`,
+    AppBundle: (locator: AppLocator, path: string) =>
+      `${routes.AppOrRegistry(locator)}/bundle/${path}`,
+    AppOrRegistry: ({ name, version, build }: AppLocator) =>
+      build
+        ? `${routes.Apps()}/${name}@${version}+${build}`
+        : `${routes.Registry()}/${name}/${version}`,
     Apps: () => `${routes.Workspace}/apps`,
-    Dependencies:() => `${routes.Workspace}/dependencies`,
+    Dependencies: () => `${routes.Workspace}/dependencies`,
     File: (locator: AppLocator, path: string) => `${routes.Files(locator)}/${path}`,
     Files: (locator: AppLocator) => `${routes.AppOrRegistry(locator)}/files`,
     Link: (app: string) => `${routes.Workspace}/v2/links/${app}`,
@@ -38,7 +40,7 @@ const createRoutes = ({account, workspace}: IOContext) => {
   return routes
 }
 
-const getVendorAndName = ({id}: {id: string}) => removeVersionFromAppId(id)
+const getVendorAndName = ({ id }: { id: string }) => removeVersionFromAppId(id)
 const notFound = (e: any) => {
   if (e.response && e.response.status === 404) {
     return {}
@@ -49,7 +51,7 @@ const notFound = (e: any) => {
 const zipObj = (keys: string[], values: any[]) => {
   let idx = 0
   const len = Math.min(keys.length, values.length)
-  const out: {[key: string]: any} = {}
+  const out: { [key: string]: any } = {}
   while (idx < len) {
     out[keys[idx]] = values[idx]
     idx += 1
@@ -58,14 +60,10 @@ const zipObj = (keys: string[], values: any[]) => {
 }
 
 const paramsSerializer = (params: any) => {
-  return stringify(params, {arrayFormat: 'repeat'})
+  return stringify(params, { arrayFormat: 'repeat' })
 }
 
-const workspaceFields = [
-  '_resolvedDependencies',
-  'settingsSchema',
-  '_isRoot',
-].join(',')
+const workspaceFields = ['_resolvedDependencies', 'settingsSchema', '_isRoot'].join(',')
 
 interface AppLocator {
   name: string
@@ -77,7 +75,7 @@ export class Apps extends InfraClient {
   // tslint:disable-next-line: variable-name
   private _routes: ReturnType<typeof createRoutes>
 
-  private get routes () {
+  private get routes() {
     return this._routes
   }
 
@@ -87,20 +85,22 @@ export class Apps extends InfraClient {
   }
 
   public installApp = (descriptor: string) => {
-    return this.http.post(this.routes.Apps(), {id: descriptor}, {metric: 'apps-install'})
+    return this.http.post(this.routes.Apps(), { id: descriptor }, { metric: 'apps-install' })
   }
 
   public uninstallApp = (app: string) => {
-    return this.http.delete(this.routes.App(app), {metric: 'apps-uninstall'})
+    return this.http.delete(this.routes.App(app), { metric: 'apps-uninstall' })
   }
 
   public acknowledgeApp = (app: string, service: string) => {
-    return this.http.put(this.routes.Acknowledge(app, service), null, {metric: 'apps-ack'})
+    return this.http.put(this.routes.Acknowledge(app, service), null, { metric: 'apps-ack' })
   }
 
-  public link = async (app: string, files: Change[], {zlib}: ZipOptions = {}) => {
+  public link = async (app: string, files: Change[], { zlib }: ZipOptions = {}) => {
     if (!(files[0] && files[0].path)) {
-      throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
+      throw new Error(
+        'Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.'
+      )
     }
 
     const emptyChanges = files.filter(file => !file.content)
@@ -108,21 +108,21 @@ export class Apps extends InfraClient {
       throw new Error(`Missing content for paths: ${emptyChanges.map(e => e.path).join('; ')}`)
     }
 
-    const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
+    const indexOfManifest = files.findIndex(({ path }) => path === 'manifest.json')
     if (indexOfManifest === -1) {
       throw new Error('No manifest.json file found in files.')
     }
-    const zip = archiver('zip', {zlib})
+    const zip = archiver('zip', { zlib })
     // Throw stream errors so they reject the promise chain.
-    zip.on('error', (e) => {
+    zip.on('error', e => {
       throw e
     })
     const request = this.http.put<AppBundleLinked>(this.routes.Link(app), zip, {
-      headers: {'Content-Type': 'application/zip'},
+      headers: { 'Content-Type': 'application/zip' },
       metric: 'apps-link',
     })
 
-    files.forEach(({content, path}) => zip.append(content, {name: path}))
+    files.forEach(({ content, path }) => zip.append(content, { name: path }))
     const finalize = zip.finalize()
 
     try {
@@ -135,9 +135,11 @@ export class Apps extends InfraClient {
     }
   }
 
-  public patch = async (app: string, changes: Change[], {zlib}: ZipOptions = {}) => {
+  public patch = async (app: string, changes: Change[], { zlib }: ZipOptions = {}) => {
     if (!(changes[0] && changes[0].path)) {
-      throw new Error('Argument changes must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
+      throw new Error(
+        'Argument changes must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.'
+      )
     }
 
     const files = changes.filter(change => !!change.content)
@@ -146,18 +148,18 @@ export class Apps extends InfraClient {
       .map(change => change.path)
       .join(':')
 
-    const zip = archiver('zip', {zlib})
+    const zip = archiver('zip', { zlib })
     // Throw stream errors so they reject the promise chain.
-    zip.on('error', (e) => {
+    zip.on('error', e => {
       throw e
     })
     const request = this.http.patch(this.routes.Link(app), zip, {
-      headers: {'Content-Type': 'application/zip'},
+      headers: { 'Content-Type': 'application/zip' },
       metric: 'apps-patch',
-      params: {deletedFiles},
+      params: { deletedFiles },
     })
 
-    files.forEach(({content, path}) => zip.append(content, {name: path}))
+    files.forEach(({ content, path }) => zip.append(content, { name: path }))
     const finalize = zip.finalize()
 
     const [response] = await Promise.all([request, finalize])
@@ -173,12 +175,12 @@ export class Apps extends InfraClient {
   }
 
   public saveAppSettings = (app: string, settings: any) => {
-    const headers = {'Content-Type': 'application/json'}
+    const headers = { 'Content-Type': 'application/json' }
     const metric = 'apps-save'
-    return this.http.put(this.routes.Settings(app), settings, {headers, metric})
+    return this.http.put(this.routes.Settings(app), settings, { headers, metric })
   }
 
-  public listApps = ({oldVersion, since, service}: ListAppsOptions = {}) => {
+  public listApps = ({ oldVersion, since, service }: ListAppsOptions = {}) => {
     const params = {
       oldVersion,
       service,
@@ -186,10 +188,10 @@ export class Apps extends InfraClient {
     }
     const metric = 'apps-list'
     const inflightKey = inflightURL
-    return this.http.get<AppsList>(this.routes.Apps(), {params, metric, inflightKey})
+    return this.http.get<AppsList>(this.routes.Apps(), { params, metric, inflightKey })
   }
 
-  public listAppFiles = (app: string, {prefix, nextMarker}: ListFilesOptions = {}) => {
+  public listAppFiles = (app: string, { prefix, nextMarker }: ListFilesOptions = {}) => {
     const locator = parseAppId(app)
     const linked = !!locator.build
     const params = {
@@ -198,12 +200,12 @@ export class Apps extends InfraClient {
     }
     const metric = linked ? 'apps-list-files' : 'registry-list-files'
     const inflightKey = inflightURL
-    return this.http.get<AppFilesList>(this.routes.Files(locator), {params, metric, inflightKey})
+    return this.http.get<AppFilesList>(this.routes.Files(locator), { params, metric, inflightKey })
   }
 
   public listLinks = () => {
     const inflightKey = inflightURL
-    return this.http.get<string[]>(this.routes.Links(), {metric: 'apps-list-links', inflightKey})
+    return this.http.get<string[]>(this.routes.Links(), { metric: 'apps-list-links', inflightKey })
   }
 
   public getAppFile = (app: string, path: string) => {
@@ -217,7 +219,11 @@ export class Apps extends InfraClient {
     })
   }
 
-  public getAppJSON = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
+  public getAppJSON = <T extends object | null>(
+    app: string,
+    path: string,
+    nullIfNotFound?: boolean
+  ) => {
     const locator = parseAppId(app)
     const linked = !!locator.build
     const inflightKey = inflightURL
@@ -232,34 +238,43 @@ export class Apps extends InfraClient {
   public getAppFileStream = (app: string, path: string): Promise<IncomingMessage> => {
     const locator = parseAppId(app)
     const metric = locator.build ? 'apps-get-file-s' : 'registry-get-file-s'
-    return this.http.getStream(this.routes.File(locator, path), {metric})
+    return this.http.getStream(this.routes.File(locator, path), { metric })
   }
 
   public getApp = (app: string) => {
     const metric = 'apps-get-app'
     const inflightKey = inflightURL
-    return this.http.get<AppManifest>(this.routes.App(app), {metric, inflightKey})
+    return this.http.get<AppManifest>(this.routes.App(app), { metric, inflightKey })
   }
 
   public getAppSettings = (app: string) => {
     const inflightKey = inflightURL
     const metric = 'apps-get-settings'
-    return this.http.get<any>(this.routes.Settings(app), {inflightKey, metric})
+    return this.http.get<any>(this.routes.Settings(app), { inflightKey, metric })
   }
 
   public getAllAppsSettings = (listAppsOptions: ListAppsOptions = {}): Promise<AppsSettings> => {
-    return this.listApps(listAppsOptions).then(({data: installedApps}: AppsList) => {
+    return this.listApps(listAppsOptions).then(({ data: installedApps }: AppsList) => {
       const names = installedApps.map(getVendorAndName)
-      const settingsPromises = names.map(vendorAndName => this.getAppSettings(vendorAndName).catch(notFound))
+      const settingsPromises = names.map(vendorAndName =>
+        this.getAppSettings(vendorAndName).catch(notFound)
+      )
       return Promise.all(settingsPromises).then((settings: any[]) => {
         return zipObj(names, settings)
       })
     })
   }
 
-  public getAppBundle = (app: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
+  public getAppBundle = (
+    app: string,
+    bundlePath: string,
+    generatePackageJson: boolean
+  ): Promise<Readable> => {
     const locator = parseAppId(app)
-    const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
+    const params = generatePackageJson && {
+      _packageJSONEngine: 'npm',
+      _packageJSONFilter: 'vtex.render-builder@x',
+    }
     const metric = locator.build ? 'apps-get-bundle' : 'registry-get-bundle'
     return this.http.getStream(this.routes.AppBundle(locator, bundlePath), {
       headers: {
@@ -271,56 +286,84 @@ export class Apps extends InfraClient {
     })
   }
 
-  public unpackAppBundle = (app: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean): Promise<Writable> => {
-    return this.getAppBundle(app, bundlePath, generatePackageJson)
-      .then(stream => stream
-        .pipe(createGunzip())
-        .pipe(extract(unpackPath))
-      )
+  public unpackAppBundle = (
+    app: string,
+    bundlePath: string,
+    unpackPath: string,
+    generatePackageJson: boolean
+  ): Promise<Writable> => {
+    return this.getAppBundle(app, bundlePath, generatePackageJson).then(stream =>
+      stream.pipe(createGunzip()).pipe(extract(unpackPath))
+    )
   }
 
   public getAppsMetaInfos = async (filter?: string) => {
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
-    const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey}).then(prop('apps'))
+    const appsMetaInfos = await this.http
+      .get<WorkspaceMetaInfo>(this.routes.Meta(), {
+        params: { fields: workspaceFields },
+        metric,
+        inflightKey,
+      })
+      .then(prop('apps'))
     if (filter) {
-      return ramdaFilter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfos)
+      return ramdaFilter(
+        appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta),
+        appsMetaInfos
+      )
     }
     return appsMetaInfos
   }
 
   public getDependencies = (filter: string = '') => {
-    const params = {filter}
+    const params = { filter }
     const metric = 'apps-get-deps'
     const inflightKey = inflightURL
-    return this.http.get<Record<string, string[]>>(this.routes.Dependencies(), {params, metric, inflightKey})
+    return this.http.get<Record<string, string[]>>(this.routes.Dependencies(), {
+      params,
+      metric,
+      inflightKey,
+    })
   }
 
   public updateDependencies = () => {
-    return this.http.put<Record<string, string[]>>(this.routes.Dependencies(), null, {metric: 'apps-update-deps'})
+    return this.http.put<Record<string, string[]>>(this.routes.Dependencies(), null, {
+      metric: 'apps-update-deps',
+    })
   }
 
   public updateDependency = (name: string, version: string, registry: string) => {
-    return this.http.patch(this.routes.Apps(), [{name, version, registry}], {metric: 'apps-update-dep'})
+    return this.http.patch(this.routes.Apps(), [{ name, version, registry }], {
+      metric: 'apps-update-dep',
+    })
   }
 
   public resolveDependencies = (apps: string[], registries: string[], filter: string = '') => {
-    const params = {apps, registries, filter}
+    const params = { apps, registries, filter }
     const metric = 'apps-resolve-deps'
     const inflightKey = inflightURL
-    return this.http.get(this.routes.ResolveDependencies(), {params, paramsSerializer, metric, inflightKey})
+    return this.http.get(this.routes.ResolveDependencies(), {
+      params,
+      paramsSerializer,
+      metric,
+      inflightKey,
+    })
   }
 
   public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {
-    const params = {filter}
+    const params = { filter }
     const metric = 'apps-resolve-deps-m'
-    return this.http.post<Record<string, string[]>>(this.routes.ResolveDependenciesWithManifest(), manifest, {params, paramsSerializer, metric})
+    return this.http.post<Record<string, string[]>>(
+      this.routes.ResolveDependenciesWithManifest(),
+      manifest,
+      { params, paramsSerializer, metric }
+    )
   }
-
 }
 
 interface ZipOptions {
-  zlib?: ZlibOptions,
+  zlib?: ZlibOptions
 }
 
 export interface AppMetaInfo {
@@ -335,33 +378,33 @@ export interface WorkspaceMetaInfo {
 }
 
 export interface AppsListItem {
-  app: string,
-  id: string,
-  location: string,
+  app: string
+  id: string
+  location: string
 }
 
 export interface AppsList {
-  data: AppsListItem[],
+  data: AppsListItem[]
 }
 
 export interface Change {
-  path: string,
-  content: string | Readable | Buffer,
+  path: string
+  content: string | Readable | Buffer
 }
 
 export interface ListAppsOptions {
-  oldVersion?: string,
-  context?: string[],
-  since?: string,
-  service?: string,
+  oldVersion?: string
+  context?: string[]
+  since?: string
+  service?: string
 }
 
 export interface ListFilesOptions {
-  prefix?: string,
-  context?: string[],
-  nextMarker?: string,
+  prefix?: string
+  context?: string[]
+  nextMarker?: string
 }
 
 export interface AppsSettings {
-  [app: string]: any,
+  [app: string]: any
 }

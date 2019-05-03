@@ -17,7 +17,7 @@ const queryFromUrl = compose<string, Url, string, Record<string, any>>(
 )
 
 export const parseQuery = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
-  const {request, req} = ctx
+  const { request, req } = ctx
 
   let query: Record<string, any>
   if (request.is('multipart/form-data')) {

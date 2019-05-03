@@ -6,8 +6,7 @@ import LRU from 'lru-cache'
 import { join } from 'path'
 import ReadWriteLock from 'rwlock'
 
-export class LRUDiskCache<V> implements CacheLayer<string, V>{
-
+export class LRUDiskCache<V> implements CacheLayer<string, V> {
   private lock: ReadWriteLock
   private disposed: number
   private hits = 0
@@ -15,7 +14,12 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   private lruStorage: LRU<string, number>
   private keyToBeDeleted: string
 
-  constructor(private cachePath: string, options: LRUDiskCacheOptions, private readFile=readJSON, private writeFile=outputJSON) {
+  constructor(
+    private cachePath: string,
+    options: LRUDiskCacheOptions,
+    private readFile = readJSON,
+    private writeFile = outputJSON
+  ) {
     this.hits = 0
     this.total = 0
     this.disposed = 0
@@ -33,12 +37,11 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     }
 
     this.lruStorage = new LRU<string, number>(lruOptions)
-
   }
 
   public has = (key: string): boolean => this.lruStorage.has(key)
 
-  public getStats = (name='disk-lru-cache'): LRUStats => {
+  public getStats = (name = 'disk-lru-cache'): LRUStats => {
     const stats = {
       disposedItems: this.disposed,
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
@@ -55,11 +58,10 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     return stats
   }
 
-  public get = async (key: string): Promise<V | void>  => {
+  public get = async (key: string): Promise<V | void> => {
     const timeOfDeath = this.lruStorage.get(key)
     this.total += 1
     if (timeOfDeath === undefined) {
-
       // if it is an outdated file when stale=false
       if (this.keyToBeDeleted) {
         await this.deleteFile(key)
@@ -97,8 +99,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     if (maxAge) {
       timeOfDeath = maxAge + Date.now()
       this.lruStorage.set(key, timeOfDeath, maxAge)
-    }
-    else {
+    } else {
       this.lruStorage.set(key, NaN)
     }
 

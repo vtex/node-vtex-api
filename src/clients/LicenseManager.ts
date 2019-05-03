@@ -1,4 +1,3 @@
-
 import { stringify } from 'qs'
 
 import { JanusClient, RequestConfig } from '../HttpClient'
@@ -10,13 +9,13 @@ const routes = {
   topbarData: '/api/license-manager/site/pvt/newtopbar',
 }
 
-const inflightKey = ({baseURL, url, params}: RequestConfig) => {
-  return baseURL! + url! + stringify(params, {arrayFormat: 'repeat', addQueryPrefix: true})
+const inflightKey = ({ baseURL, url, params }: RequestConfig) => {
+  return baseURL! + url! + stringify(params, { arrayFormat: 'repeat', addQueryPrefix: true })
 }
 
 export class LicenseManager extends JanusClient {
-  public getAccountData () {
-    const {authToken} = this.context!
+  public getAccountData() {
+    const { authToken } = this.context!
 
     return this.http.get(routes.accountData, {
       forceMaxAge: TWO_MINUTES_S,
@@ -28,7 +27,7 @@ export class LicenseManager extends JanusClient {
     })
   }
 
-  public getTopbarData (VtexIdclientAutCookie: string) {
+  public getTopbarData(VtexIdclientAutCookie: string) {
     return this.http.get(routes.topbarData, {
       headers: {
         VtexIdclientAutCookie,

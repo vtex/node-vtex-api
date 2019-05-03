@@ -38,7 +38,7 @@ export const addProcessListeners = () => {
     process.exit(420)
   })
 
-  process.on('unhandledRejection', (reason: Error | any, promise: Promise<void>)  => {
+  process.on('unhandledRejection', (reason: Error | any, promise: Promise<void>) => {
     console.error('unhandledRejection', reason, promise)
     if (reason && lastLogger) {
       reason.type = 'unhandledRejection'
@@ -46,7 +46,7 @@ export const addProcessListeners = () => {
     }
   })
 
-  process.on('warning', (warning) => {
+  process.on('warning', warning => {
     console.warn(warning)
   })
 

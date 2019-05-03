@@ -8,18 +8,15 @@ import { AuthType, InstanceOptions } from './typings'
  */
 export class AppClient extends IOClient {
   constructor(app: string, context: IOContext, options?: InstanceOptions) {
-    const {account, workspace, region} = context
+    const { account, workspace, region } = context
     const [vendor, name] = app.split('.') // vtex.messages
     const service = [name, vendor].join('.') // messages.vtex
     const baseURL = `http://${service}.${region}.vtex.io/${account}/${workspace}`
 
-    super(
-      context,
-      {
-        ...options,
-        authType: AuthType.bearer,
-        baseURL,
-      }
-    )
+    super(context, {
+      ...options,
+      authType: AuthType.bearer,
+      baseURL,
+    })
   }
 }

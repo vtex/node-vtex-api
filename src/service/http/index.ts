@@ -13,9 +13,21 @@ export const createHttpRoute = <ClientsT extends IOClients, StateT, CustomT>(
   Clients: ClientsImplementation<ClientsT>,
   options: Record<string, InstanceOptions>
 ) => {
-  return (handler: RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>) => {
+  return (
+    handler:
+      | RouteHandler<ClientsT, StateT, CustomT>
+      | Array<RouteHandler<ClientsT, StateT, CustomT>>
+  ) => {
     const middlewares = Array.isArray(handler) ? handler : [handler]
-    const pipeline = [trackIncomingRequestStats, authTokens, clients(Clients, options), removeSetCookie, timings, error, ...middlewares]
+    const pipeline = [
+      trackIncomingRequestStats,
+      authTokens,
+      clients(Clients, options),
+      removeSetCookie,
+      timings,
+      error,
+      ...middlewares,
+    ]
     return compose(pipeline)
   }
 }

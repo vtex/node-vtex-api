@@ -7,16 +7,16 @@ import { hrToMillis } from '../utils/time'
 
 export interface Metric {
   name: string
-  [key: string]: number | string | null,
+  [key: string]: number | string | null
 }
 
 interface NamedMetric {
-  name: string,
+  name: string
   [key: string]: any
 }
 
 export interface EnvMetric extends NamedMetric {
-  production: boolean,
+  production: boolean
 }
 
 // Production pods never handle development workspaces and vice-versa.
@@ -35,13 +35,13 @@ type AggregateMetric = EnvMetric & Aggregate
 
 interface GetStats {
   getStats(): {
-    [key: string]: number | boolean | string | undefined,
+    [key: string]: number | boolean | string | undefined
   }
 }
 
 let lastCpu: NodeJS.CpuUsage = process.cpuUsage()
 
-function cpuUsage () {
+function cpuUsage() {
   const diff = process.cpuUsage(lastCpu)
   lastCpu = {
     system: lastCpu.system + diff.system,
@@ -50,7 +50,7 @@ function cpuUsage () {
   return diff
 }
 
-function getIncomingRequestStats () {
+function getIncomingRequestStats() {
   const stats = incomingRequestStats.get()
   incomingRequestStats.clear()
   return stats
@@ -89,7 +89,11 @@ export class MetricsAccumulator {
     this.batchMetric(name, hrToMillis(process.hrtime(start)))
   }
 
-  public batchMetric = (name: string, timeMillis: number, extensions?: Record<string, string | number>) => {
+  public batchMetric = (
+    name: string,
+    timeMillis: number,
+    extensions?: Record<string, string | number>
+  ) => {
     if (!this.metricsMillis[name]) {
       this.metricsMillis[name] = []
     }
@@ -121,7 +125,11 @@ export class MetricsAccumulator {
    *
    * @see https://nodejs.org/api/process.html#process_process_hrtime_time
    */
-  public batch = (name: string, diffNs: [number, number], extensions?: Record<string, string | number>) => {
+  public batch = (
+    name: string,
+    diffNs: [number, number],
+    extensions?: Record<string, string | number>
+  ) => {
     this.batchMetric(name, hrToMillis(diffNs), extensions)
   }
 
@@ -161,10 +169,9 @@ export class MetricsAccumulator {
   })
 
   private flushMetrics = (): EnvMetric[] => {
-    const aggregateMetrics: EnvMetric[] = values(mapObjIndexed(
-      this.metricToAggregate,
-      this.metricsMillis
-    ))
+    const aggregateMetrics: EnvMetric[] = values(
+      mapObjIndexed(this.metricToAggregate, this.metricsMillis)
+    )
 
     const systemMetrics: EnvMetric[] = [
       {
@@ -189,13 +196,12 @@ export class MetricsAccumulator {
       },
     ]
 
-    const onFlushMetrics = flatten(map(getMetric => getMetric(), this.onFlushMetrics)) as NamedMetric[]
+    const onFlushMetrics = flatten(
+      map(getMetric => getMetric(), this.onFlushMetrics)
+    ) as NamedMetric[]
     const envFlushMetric = map(assoc('production', production), onFlushMetrics) as EnvMetric[]
 
-    const cacheMetrics = values(mapObjIndexed(
-      this.cacheToMetric,
-      this.cacheMap
-    ))
+    const cacheMetrics = values(mapObjIndexed(this.cacheToMetric, this.cacheMap))
 
     return [...systemMetrics, ...aggregateMetrics, ...envFlushMetric, ...cacheMetrics]
   }

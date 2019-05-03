@@ -43,11 +43,9 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
           cacheHit: ctx.cacheHit!,
           response: ctx.response!,
         })
-      }
-      catch (err) {
+      } catch (err) {
         reject(err)
-      }
-      finally {
+      } finally {
         inflight.delete(key)
       }
     })
@@ -56,6 +54,12 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
   }
 }
 
-export const inflightURL: InflightKeyGenerator = ({baseURL, url}: RequestConfig) => baseURL! + url!
+export const inflightURL: InflightKeyGenerator = ({ baseURL, url }: RequestConfig) =>
+  baseURL! + url!
 
-export const inflightUrlWithQuery: InflightKeyGenerator = ({baseURL, url, params}: RequestConfig) => baseURL! + url! + stringify(params, {arrayFormat: 'repeat', addQueryPrefix: true})
+export const inflightUrlWithQuery: InflightKeyGenerator = ({
+  baseURL,
+  url,
+  params,
+}: RequestConfig) =>
+  baseURL! + url! + stringify(params, { arrayFormat: 'repeat', addQueryPrefix: true })

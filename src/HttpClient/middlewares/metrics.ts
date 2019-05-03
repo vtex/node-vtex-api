@@ -17,11 +17,9 @@ export const metricsMiddleware = (metrics: MetricsAccumulator) => {
       if (ctx.config.metric) {
         if (err.code === 'ECONNABORTED') {
           status = 'aborted'
-        }
-        else if (err.response && err.response.data && err.response.data.code === TIMEOUT_CODE) {
+        } else if (err.response && err.response.data && err.response.data.code === TIMEOUT_CODE) {
           status = 'timeout'
-        }
-        else if (err.response && err.response.status) {
+        } else if (err.response && err.response.status) {
           status = statusLabel(err.response.status)
         } else {
           status = 'error'
@@ -39,7 +37,7 @@ export const metricsMiddleware = (metrics: MetricsAccumulator) => {
         }
 
         if (ctx.config['axios-retry']) {
-          const {retryCount} = ctx.config['axios-retry'] as any
+          const { retryCount } = ctx.config['axios-retry'] as any
 
           if (retryCount && retryCount > 0) {
             extensions[`retry-${retryCount}`] = 1

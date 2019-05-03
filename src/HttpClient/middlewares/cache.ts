@@ -1,7 +1,7 @@
-import {AxiosRequestConfig, AxiosResponse} from 'axios'
-import {URL} from 'url'
-import {CacheLayer} from '../../caches/CacheLayer'
-import {MiddlewareContext, RequestConfig} from '../typings'
+import { AxiosRequestConfig, AxiosResponse } from 'axios'
+import { URL } from 'url'
+import { CacheLayer } from '../../caches/CacheLayer'
+import { MiddlewareContext, RequestConfig } from '../typings'
 
 const ROUTER_CACHE_KEY = 'x-router-cache'
 const ROUTER_CACHE_HIT = 'HIT'
@@ -9,7 +9,7 @@ const RANGE_HEADER_QS_KEY = '__range_header'
 const cacheableStatusCodes = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501] // https://tools.ietf.org/html/rfc7231#section-6.1
 
 export const cacheKey = (config: AxiosRequestConfig) => {
-  const {baseURL = '', url = '', params, headers} = config
+  const { baseURL = '', url = '', params, headers } = config
   const fullURL = [baseURL, url].filter(str => str).join('/')
   const urlObject = new URL(fullURL)
 
@@ -30,7 +30,7 @@ export const cacheKey = (config: AxiosRequestConfig) => {
 }
 
 const parseCacheHeaders = (headers: Record<string, string>) => {
-  const {'cache-control': cacheControl = '', etag, age: ageStr} = headers
+  const { 'cache-control': cacheControl = '', etag, age: ageStr } = headers
   const cacheDirectives = cacheControl.split(',').map(d => d.trim())
   const maxAgeDirective = cacheDirectives.find(d => d.startsWith('max-age'))
   const [, maxAgeStr] = maxAgeDirective ? maxAgeDirective.split('=') : [null, null]
@@ -46,13 +46,16 @@ const parseCacheHeaders = (headers: Record<string, string>) => {
   }
 }
 
-export function isCacheable (arg: RequestConfig, type: CacheType): arg is CacheableRequestConfig {
-  return arg && !!arg.cacheable
-    && (arg.cacheable === type || arg.cacheable === CacheType.Any || type === CacheType.Any)
+export function isCacheable(arg: RequestConfig, type: CacheType): arg is CacheableRequestConfig {
+  return (
+    arg &&
+    !!arg.cacheable &&
+    (arg.cacheable === type || arg.cacheable === CacheType.Any || type === CacheType.Any)
+  )
 }
 
-const addNotModified = (validateStatus: (status: number) => boolean) =>
-  (status: number) => validateStatus(status) || status === 304
+const addNotModified = (validateStatus: (status: number) => boolean) => (status: number) =>
+  validateStatus(status) || status === 304
 
 export enum CacheType {
   None,
@@ -67,7 +70,7 @@ interface CacheOptions {
   segmentToken: string
 }
 
-export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => {
+export const cacheMiddleware = ({ type, storage, segmentToken }: CacheOptions) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     if (!isCacheable(ctx.config, type)) {
       return await next()
@@ -80,7 +83,13 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     const cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
 
     if (cached) {
-      const {etag: cachedEtag, response, expiration, responseType, responseEncoding} = cached as Cached
+      const {
+        etag: cachedEtag,
+        response,
+        expiration,
+        responseType,
+        responseEncoding,
+      } = cached as Cached
       if (expiration > Date.now() && response) {
         if (type === CacheType.Disk && responseType === 'arraybuffer') {
           response.data = Buffer.from(response.data, responseEncoding)
@@ -121,16 +130,18 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
       }
     }
 
-    const {data, headers, status} = ctx.response as AxiosResponse
-    const {age, etag, maxAge: headerMaxAge, noStore, noCache} = parseCacheHeaders(headers)
-    const {forceMaxAge} = ctx.config
-    const maxAge = forceMaxAge && cacheableStatusCodes.includes(status) ? Math.max(forceMaxAge, headerMaxAge) : headerMaxAge
+    const { data, headers, status } = ctx.response as AxiosResponse
+    const { age, etag, maxAge: headerMaxAge, noStore, noCache } = parseCacheHeaders(headers)
+    const { forceMaxAge } = ctx.config
+    const maxAge =
+      forceMaxAge && cacheableStatusCodes.includes(status)
+        ? Math.max(forceMaxAge, headerMaxAge)
+        : headerMaxAge
 
     if (headers[ROUTER_CACHE_KEY] === ROUTER_CACHE_HIT) {
       if (ctx.cacheHit) {
         ctx.cacheHit.router = 1
-      }
-      else {
+      } else {
         ctx.cacheHit = {
           inflight: 0,
           memoized: 0,
@@ -159,18 +170,20 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     }
 
     if (shouldCache) {
-      const {responseType, responseEncoding} = ctx.config
+      const { responseType, responseEncoding } = ctx.config
       const currentAge = revalidated ? 0 : age
-      const varySegment = ctx.response.headers.vary && ctx.response.headers.vary.includes('x-vtex-segment')
+      const varySegment =
+        ctx.response.headers.vary && ctx.response.headers.vary.includes('x-vtex-segment')
       const setKey = varySegment ? keyWithSegment : key
-      const cacheableData = type === CacheType.Disk && responseType === 'arraybuffer'
-        ? (data as Buffer).toString(responseEncoding)
-        : data
+      const cacheableData =
+        type === CacheType.Disk && responseType === 'arraybuffer'
+          ? (data as Buffer).toString(responseEncoding)
+          : data
 
       await storage.set(setKey, {
         etag,
         expiration: Date.now() + (maxAge - currentAge) * 1000,
-        response: {data: cacheableData, headers, status},
+        response: { data: cacheableData, headers, status },
         responseEncoding,
         responseType,
       })
@@ -188,7 +201,7 @@ export interface Cached {
 }
 
 export type CacheableRequestConfig = RequestConfig & {
-  url: string,
-  cacheable: CacheType,
+  url: string
+  cacheable: CacheType
   memoizable: boolean
 }

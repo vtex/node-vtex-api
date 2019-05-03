@@ -28,14 +28,14 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
   constructor(
     service: Service<ClientsT, StateT, CustomT>,
     // tslint:disable-next-line
-    descriptor: ServiceDescriptor,
+    descriptor: ServiceDescriptor
   ) {
-    const {config} = service
+    const { config } = service
     const clients = {
-      implementation: config.clients && config.clients.implementation || IOClients,
+      implementation: (config.clients && config.clients.implementation) || IOClients,
       options: {
         ...defaultClients.options,
-        ...config.clients ? config.clients.options : null,
+        ...(config.clients ? config.clients.options : null),
       },
     }
 
@@ -51,7 +51,11 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
         console.warn('Using legacy graphql route id', GRAPHQL_ROUTE_LEGACY)
         graphqlRoute = GRAPHQL_ROUTE_LEGACY
       }
-      this.routes[graphqlRoute] = createGraphQLRoute<ClientsT, StateT, CustomT>(config.graphql, Clients, clients.options)
+      this.routes[graphqlRoute] = createGraphQLRoute<ClientsT, StateT, CustomT>(
+        config.graphql,
+        Clients,
+        clients.options
+      )
     }
 
     this.events = config.events

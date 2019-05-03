@@ -12,10 +12,12 @@ import { ServiceConfig } from './typings'
  * @template StateT The state bag in `ctx.state`
  * @template CustomT Any custom fields in `ctx`. THIS IS NOT RECOMMENDED. Use StateT instead.
  */
-export class Service<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void>{
+export class Service<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
   constructor(public config: ServiceConfig<ClientsT, StateT, CustomT>) {
     if (config.routes && config.routes.graphql) {
-      console.warn('Route id "graphql" is reserved and apps containing this routes will stop working in the near future. To create a GraphQL app, export a "graphql" key with {resolvers}.')
+      console.warn(
+        'Route id "graphql" is reserved and apps containing this routes will stop working in the near future. To create a GraphQL app, export a "graphql" key with {resolvers}.'
+      )
     }
   }
 }

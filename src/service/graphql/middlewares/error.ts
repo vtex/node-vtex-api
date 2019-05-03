@@ -22,9 +22,16 @@ const filterErrors = filter(has('errors')) as (x: ReadonlyArray<{}>) => Readonly
 
 const chainErrors = chain(prop<any, any>('errors'))
 
-const hasError = compose(arrayHasError, toArray)
+const hasError = compose(
+  arrayHasError,
+  toArray
+)
 
-const parseError = compose(chainErrors, filterErrors, toArray)
+const parseError = compose(
+  chainErrors,
+  filterErrors,
+  toArray
+)
 
 const parseErrorResponse = (response: any) => {
   if (hasError(response)) {
@@ -35,14 +42,12 @@ const parseErrorResponse = (response: any) => {
 
 const production = process.env.VTEX_PRODUCTION === 'true'
 
-export async function error (ctx: GraphQLServiceContext, next: () => Promise<void>) {
+export async function error(ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {
     vtex: {
       account,
       workspace,
-      route: {
-        id,
-      },
+      route: { id },
     },
   } = ctx
 
@@ -52,8 +57,7 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
     await next()
 
     graphQLErrors = parseErrorResponse(ctx.graphql.graphqlResponse || {})
-  }
-  catch (e) {
+  } catch (e) {
     const formatError = ctx.graphql.formatters!.formatError
 
     if (e.isGraphQLError) {
@@ -62,7 +66,7 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
       ctx.body = response
     } else {
       graphQLErrors = [formatError(e)]
-      ctx.body = {errors: graphQLErrors}
+      ctx.body = { errors: graphQLErrors }
     }
 
     // Add response
@@ -70,16 +74,20 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
     if (e.headers) {
       ctx.set(e.headers)
     }
-  }
-  finally {
+  } finally {
     if (graphQLErrors) {
-      const uniqueErrors = uniqBy((e) => {
+      const uniqueErrors = uniqBy(e => {
         if (e.originalError && e.originalError.request) {
           return e.originalError.request.path
         }
         return e
       }, graphQLErrors)
-      console.error(`[node-vtex-api graphql errors] total=${graphQLErrors.length} unique=${uniqueErrors.length}`, uniqueErrors)
+      console.error(
+        `[node-vtex-api graphql errors] total=${graphQLErrors.length} unique=${
+          uniqueErrors.length
+        }`,
+        uniqueErrors
+      )
       ctx.graphql.status = 'error'
 
       // Do not generate etag for errors
@@ -106,12 +114,12 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
         }
 
         // Grab level from originalError, default to "error" level.
-        let level = err.originalError && err.originalError.level as LogLevel
+        let level = err.originalError && (err.originalError.level as LogLevel)
         if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
           level = LogLevel.Error
         }
 
-        ctx.clients.logger.sendLog('-', log, level).catch((reason) => {
+        ctx.clients.logger.sendLog('-', log, level).catch(reason => {
           console.error('Error logging error 🙄 retrying once...', reason ? reason.response : '')
           ctx.clients.logger.sendLog('-', log, level).catch()
         })

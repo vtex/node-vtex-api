@@ -7,13 +7,13 @@ import { GraphQLServiceContext } from '../typings'
  * in the graphql cacheControl
  */
 export const maxAgeEnums = {
-  LONG  : 86400,
+  LONG: 86400,
   MEDIUM: 3600,
-  SHORT : 120,
+  SHORT: 120,
 }
 
 export const defaultMaxAgeFromCtx = (ctx: GraphQLServiceContext) => {
   const forwarded = path<string>(['request', 'header', 'x-forwarded-path'], ctx)
   const isPrivateRoute = forwarded && /_v\/graphql\/private\/v*/.test(forwarded)
-  return (isPrivateRoute) ? 0 : maxAgeEnums.LONG
+  return isPrivateRoute ? 0 : maxAgeEnums.LONG
 }

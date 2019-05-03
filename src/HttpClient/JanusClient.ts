@@ -18,17 +18,13 @@ import { InstanceOptions } from './typings'
  */
 export class JanusClient extends ExternalClient {
   constructor(context: IOContext, options?: InstanceOptions) {
-    const {account} = context
+    const { account } = context
 
-    super(
-      'http://portal.vtexcommercestable.com.br',
-      context,
-      {
-        ...options,
-        params: {
-          an: account,
-        },
-      }
-    )
+    super('http://portal.vtexcommercestable.com.br', context, {
+      ...options,
+      params: {
+        an: account,
+      },
+    })
   }
 }

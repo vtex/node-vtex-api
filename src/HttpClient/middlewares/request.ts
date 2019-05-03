@@ -1,13 +1,13 @@
 import axios from 'axios'
-import retry, {exponentialDelay} from 'axios-retry'
-import {Agent} from 'http'
-import {Limit} from 'p-limit'
-import {mapObjIndexed, sum, values} from 'ramda'
+import retry, { exponentialDelay } from 'axios-retry'
+import { Agent } from 'http'
+import { Limit } from 'p-limit'
+import { mapObjIndexed, sum, values } from 'ramda'
 
-import {isAbortedOrNetworkErrorOrRouterTimeout} from '../../utils/retry'
-import {hrToMillis} from '../../utils/time'
+import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../utils/retry'
+import { hrToMillis } from '../../utils/time'
 
-import {MiddlewareContext} from '../typings'
+import { MiddlewareContext } from '../typings'
 
 const httpAgent = new Agent({
   keepAlive: true,
@@ -25,7 +25,14 @@ retry(http, {
   shouldResetTimeout: true,
 })
 
-export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<string, string>, params: Record<string, string> | undefined, timeout: number, retries?: number, verbose?: boolean) => {
+export const defaultsMiddleware = (
+  baseURL: string | undefined,
+  headers: Record<string, string>,
+  params: Record<string, string> | undefined,
+  timeout: number,
+  retries?: number,
+  verbose?: boolean
+) => {
   const countByMetric: Record<string, number> = {}
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     ctx.config = {
@@ -33,7 +40,7 @@ export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<
       baseURL,
       maxRedirects: 0,
       timeout,
-      validateStatus: status => (status >= 200 && status < 300),
+      validateStatus: status => status >= 200 && status < 300,
       verbose,
       ...ctx.config,
       headers: {
@@ -57,7 +64,10 @@ export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<
   }
 }
 
-export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+export const requestMiddleware = (limit?: Limit) => async (
+  ctx: MiddlewareContext,
+  next: () => Promise<void>
+) => {
   const makeRequest = () => {
     let start: [number, number] | undefined
 
@@ -66,29 +76,35 @@ export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContex
       console.log(ctx.config.label, `start`)
     }
 
-    return http.request(ctx.config).then((r) => {
-      if (start) {
-        const end = process.hrtime(start)
-        const millis = hrToMillis(end)
-        console.log(ctx.config.label, `millis=${millis} status=${r.status}`)
-      }
+    return http
+      .request(ctx.config)
+      .then(r => {
+        if (start) {
+          const end = process.hrtime(start)
+          const millis = hrToMillis(end)
+          console.log(ctx.config.label, `millis=${millis} status=${r.status}`)
+        }
 
-      return r
-    }).catch((e) => {
-      if (start) {
-        const end = process.hrtime(start)
-        const millis = hrToMillis(end)
-        console.log(ctx.config.label, `millis=${millis} code=${e.code} ${e.response ? `status=${e.response.status}` : ''}`)
-      }
+        return r
+      })
+      .catch(e => {
+        if (start) {
+          const end = process.hrtime(start)
+          const millis = hrToMillis(end)
+          console.log(
+            ctx.config.label,
+            `millis=${millis} code=${e.code} ${e.response ? `status=${e.response.status}` : ''}`
+          )
+        }
 
-      throw e
-    })
+        throw e
+      })
   }
 
   ctx.response = await (limit ? limit(makeRequest) : makeRequest())
 }
 
-function countPerOrigin (obj: { [key: string]: any[] }) {
+function countPerOrigin(obj: { [key: string]: any[] }) {
   try {
     return mapObjIndexed(val => val.length, obj)
   } catch (_) {
@@ -96,7 +112,7 @@ function countPerOrigin (obj: { [key: string]: any[] }) {
   }
 }
 
-export function httpAgentStats () {
+export function httpAgentStats() {
   const socketsPerOrigin = countPerOrigin(httpAgent.sockets)
   const sockets = sum(values(socketsPerOrigin))
   const pendingRequestsPerOrigin = countPerOrigin(httpAgent.requests)

@@ -1,51 +1,51 @@
 export interface Policy {
-  name: string,
+  name: string
   attrs?: {
-    [name: string]: string,
+    [name: string]: string
   }
 }
 
 export interface AppManifest {
   [internal: string]: any // internal fields like _id, _link, _registry
-  vendor: string,
-  name: string,
-  version: string,
-  title?: string,
-  description?: string,
-  mustUpdateAt?: string,
+  vendor: string
+  name: string
+  version: string
+  title?: string
+  description?: string
+  mustUpdateAt?: string
   builders: {
-    [name: string]: string,
+    [name: string]: string
   }
-  categories?: string[],
+  categories?: string[]
   dependencies?: {
-    [name: string]: string,
-  },
+    [name: string]: string
+  }
   peerDependencies?: {
-    [name: string]: string,
-  },
-  settingsSchema?: any,
-  registries?: string[],
-  credentialType?: string,
-  policies?: Policy[],
-  billingOptions?: BillingOptions,
+    [name: string]: string
+  }
+  settingsSchema?: any
+  registries?: string[]
+  credentialType?: string
+  policies?: Policy[]
+  billingOptions?: BillingOptions
   _resolvedDependencies?: {
-    [name: string]: string[],
-  },
+    [name: string]: string[]
+  }
 }
 
 export interface FileListItem {
-  path: string,
-  hash: string,
+  path: string
+  hash: string
 }
 
 export interface AppFilesList {
-  data: FileListItem[],
+  data: FileListItem[]
 }
 
 export interface BucketMetadata {
-  state: string,
-  lastModified: string,
-  hash: string,
+  state: string
+  lastModified: string
+  hash: string
 }
 
 interface RootBillingOptions {
@@ -58,52 +58,57 @@ export interface Support {
   email: string
 }
 
-export type BillingOptions = RootBillingOptions & ({
-  free: boolean,
-} | {
-  policies: BillingPolicy[],
-})
+export type BillingOptions = RootBillingOptions &
+  (
+    | {
+        free: boolean
+      }
+    | {
+        policies: BillingPolicy[]
+      })
 
 export interface BillingPolicy {
-  currency: string,
-  billing: BillingChargeElements,
+  currency: string
+  billing: BillingChargeElements
 }
 
 export interface BillingChargeElements {
-  taxClassification: string,
-  items: CalculationItem[],
+  taxClassification: string
+  items: CalculationItem[]
 }
 
 export type CalculationItem = {
-  itemCurrency: string,
-} & ({
-  fixed: number,
-} | {
-  calculatedByMetricUnit: CalculatedByMetricUnit,
-})
+  itemCurrency: string
+} & (
+  | {
+      fixed: number
+    }
+  | {
+      calculatedByMetricUnit: CalculatedByMetricUnit
+    })
 
 export interface CalculatedByMetricUnit {
-  metricId: string,
-  metricName: string,
-  ranges: Range[],
-  route?: string,
+  metricId: string
+  metricName: string
+  ranges: Range[]
+  route?: string
 }
 
 export interface Range {
-  exclusiveFrom: number,
-  inclusiveTo?: number,
-  multiplier: number,
+  exclusiveFrom: number
+  inclusiveTo?: number
+  multiplier: number
 }
 
 export interface AppBundleResponse {
-  message: string,
-  id: string,
+  message: string
+  id: string
 }
 
 export type AppBundlePublished = AppBundleResponse & {
-  bundleSize?: number,
+  bundleSize?: number
 }
 
 export type AppBundleLinked = AppBundleResponse & {
-  bundleSize?: number,
+  bundleSize?: number
 }

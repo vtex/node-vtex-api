@@ -17,28 +17,20 @@ export const run = async (ctx: GraphQLServiceContext, next: () => Promise<void>)
   const {
     method,
     graphql,
-    vtex: {production},
+    vtex: { production },
     request,
   } = ctx
 
-  const {
-    dataSources,
-    formatters,
-    query,
-    schema,
-  } = graphql
+  const { dataSources, formatters, query, schema } = graphql
 
-  const {
-    formatError,
-    formatResponse,
-  } = formatters!
+  const { formatError, formatResponse } = formatters!
 
   // We don't want resolvers to have access to the GraphQL context,
   // so we delete it here and restore it after execution.
   delete ctx.graphql
 
   try {
-    const {graphqlResponse, responseInit} = await runHttpQuery([], {
+    const { graphqlResponse, responseInit } = await runHttpQuery([], {
       method,
       options: {
         cacheControl: {

@@ -6,16 +6,14 @@ import { cacheControl } from '../utils/cacheControl'
 const SEGMENT_HEADER = 'x-vtex-segment'
 
 export const response = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
-  const {responseInit, graphqlResponse} = ctx.graphql
+  const { responseInit, graphqlResponse } = ctx.graphql
 
-  const {
-    maxAge = '',
-    scope = '',
-    segment = null,
-  } = graphqlResponse ? cacheControl(graphqlResponse, ctx) : {}
+  const { maxAge = '', scope = '', segment = null } = graphqlResponse
+    ? cacheControl(graphqlResponse, ctx)
+    : {}
 
   ctx.set({
-    ...responseInit && responseInit.headers,
+    ...(responseInit && responseInit.headers),
     'Cache-Control': `${maxAge}, ${scope}`,
   })
 

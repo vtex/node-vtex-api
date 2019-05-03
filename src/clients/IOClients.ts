@@ -1,6 +1,23 @@
 import { InstanceOptions, IOClient, IOClientConstructor } from '../HttpClient'
 import { IOContext } from '../service/typings'
-import { Apps, Billing, BillingMetrics, Builder, Events, ID, LicenseManager, Logger, Messages, Metadata, Registry, Router, Segment, Session, VBase, Workspaces } from './index'
+import {
+  Apps,
+  Billing,
+  BillingMetrics,
+  Builder,
+  Events,
+  ID,
+  LicenseManager,
+  Logger,
+  Messages,
+  Metadata,
+  Registry,
+  Router,
+  Segment,
+  Session,
+  VBase,
+  Workspaces,
+} from './index'
 
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: Record<string, InstanceOptions>,
@@ -10,10 +27,7 @@ export type ClientsImplementation<T extends IOClients> = new (
 export class IOClients {
   private clients: Record<string, IOClient> = {}
 
-  constructor(
-    private clientOptions: Record<string, InstanceOptions>,
-    private ctx: IOContext
-  ) { }
+  constructor(private clientOptions: Record<string, InstanceOptions>, private ctx: IOContext) {}
 
   public get apps() {
     return this.getOrSet('apps', Apps)
@@ -79,7 +93,10 @@ export class IOClients {
     return this.getOrSet('workspaces', Workspaces)
   }
 
-  protected getOrSet<TClient extends IOClientConstructor>(key: string, Implementation: TClient): InstanceType<TClient> {
+  protected getOrSet<TClient extends IOClientConstructor>(
+    key: string,
+    Implementation: TClient
+  ): InstanceType<TClient> {
     const options = {
       ...this.clientOptions.default,
       ...this.clientOptions[key],

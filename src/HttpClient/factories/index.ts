@@ -3,7 +3,11 @@ import { IOContext } from '../../service/typings'
 import { HttpClient } from '../HttpClient'
 import { AuthType, InstanceOptions } from '../typings'
 
-export const rootURL = (service: string, {region}: IOContext, {baseURL}: InstanceOptions): string => {
+export const rootURL = (
+  service: string,
+  { region }: IOContext,
+  { baseURL }: InstanceOptions
+): string => {
   if (baseURL) {
     return 'http://' + baseURL
   }
@@ -15,8 +19,12 @@ export const rootURL = (service: string, {region}: IOContext, {baseURL}: Instanc
   throw new Error('Missing required: should specify either {region} or {baseURL}')
 }
 
-export const workspaceURL = (service: string, context: IOContext, opts: InstanceOptions): string => {
-  const {account, workspace} = context
+export const workspaceURL = (
+  service: string,
+  context: IOContext,
+  opts: InstanceOptions
+): string => {
+  const { account, workspace } = context
   if (!account || !workspace) {
     throw new Error('Missing required arguments: {account, workspace}')
   }
@@ -24,7 +32,11 @@ export const workspaceURL = (service: string, context: IOContext, opts: Instance
   return rootURL(service, context, opts) + `/${account}/${workspace}`
 }
 
-export const forWorkspace = (service: string, context: IOContext, opts: InstanceOptions): HttpClient => {
+export const forWorkspace = (
+  service: string,
+  context: IOContext,
+  opts: InstanceOptions
+): HttpClient => {
   const baseURL = workspaceURL(service, context, opts)
   return new HttpClient({
     ...context,
@@ -44,7 +56,11 @@ export const forRoot = (service: string, context: IOContext, opts: InstanceOptio
   })
 }
 
-export const forExternal = (baseURL: string, context: IOContext, opts: InstanceOptions): HttpClient => {
+export const forExternal = (
+  baseURL: string,
+  context: IOContext,
+  opts: InstanceOptions
+): HttpClient => {
   return new HttpClient({
     ...context,
     ...opts,
