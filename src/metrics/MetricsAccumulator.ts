@@ -133,7 +133,7 @@ export class MetricsAccumulator {
     this.cacheMap[name] = cacheInstance
   }
 
-  public statusTrack = () => {
+  public statusTrack = async () => {
     return this.flushMetrics()
   }
 

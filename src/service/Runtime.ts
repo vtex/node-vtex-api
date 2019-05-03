@@ -22,7 +22,7 @@ const defaultClients: ClientsConfig = {
 export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
   public routes: Record<string, RouteHandler<ClientsT, StateT, CustomT>>
   public events: any
-  public statusTrack: () => EnvMetric[]
+  public statusTrack: () => Promise<EnvMetric[]>
   public __is_service: true = true // tslint:disable-line
 
   constructor(
@@ -60,10 +60,10 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
     addProcessListeners()
   }
 
-  private mergeStatusTrack (globalStatusTrack: () => EnvMetric[], customStatusTrack?: () => EnvMetric[]) {
+  private mergeStatusTrack (globalStatusTrack: () => Promise<EnvMetric[]>, customStatusTrack?: () => Promise<EnvMetric[]>) {
     if (customStatusTrack) {
-      return () => {
-        return [...globalStatusTrack(), ...customStatusTrack()]
+      return async () => {
+        return [...await globalStatusTrack(), ...await customStatusTrack()]
       }
     }
     return globalStatusTrack

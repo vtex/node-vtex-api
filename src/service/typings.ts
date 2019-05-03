@@ -50,7 +50,7 @@ export interface ServiceConfig<ClientsT extends IOClients = IOClients, StateT = 
   events?: any,
   graphql?: GraphQLOptions<ClientsT, StateT, CustomT>,
   routes?: Record<string, RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>>
-  statusTrack?: () => EnvMetric[],
+  statusTrack?: () => Promise<EnvMetric[]>,
 }
 
 export interface DataSources {
