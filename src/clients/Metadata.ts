@@ -36,8 +36,8 @@ export class Metadata extends InfraClient {
 
   public list = (bucket: string, includeValue: boolean, limit?: number, nextMarker?: string) => {
     const query: { value: boolean; _limit: number; _marker?: string } = {
-      value: includeValue,
       _limit: 10,
+      value: includeValue,
     }
     if (limit && limit > 0) {
       query._limit = limit

@@ -302,9 +302,9 @@ export class Apps extends InfraClient {
     const inflightKey = inflightURL
     const appsMetaInfos = await this.http
       .get<WorkspaceMetaInfo>(this.routes.Meta(), {
-        params: { fields: workspaceFields },
-        metric,
         inflightKey,
+        metric,
+        params: { fields: workspaceFields },
       })
       .then(prop('apps'))
     if (filter) {
@@ -321,9 +321,9 @@ export class Apps extends InfraClient {
     const metric = 'apps-get-deps'
     const inflightKey = inflightURL
     return this.http.get<Record<string, string[]>>(this.routes.Dependencies(), {
-      params,
-      metric,
       inflightKey,
+      metric,
+      params,
     })
   }
 
@@ -344,10 +344,10 @@ export class Apps extends InfraClient {
     const metric = 'apps-resolve-deps'
     const inflightKey = inflightURL
     return this.http.get(this.routes.ResolveDependencies(), {
+      inflightKey,
+      metric,
       params,
       paramsSerializer,
-      metric,
-      inflightKey,
     })
   }
 

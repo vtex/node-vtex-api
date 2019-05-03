@@ -92,9 +92,9 @@ export class Registry extends InfraClient {
     const params = opts
     const metric = 'registry-manifest'
     return this.http.get<AppManifest>(routes.AppVersion(app, version), {
-      params,
-      metric,
       inflightKey,
+      metric,
+      params,
     })
   }
 
@@ -103,9 +103,9 @@ export class Registry extends InfraClient {
     const params = opts
     const metric = 'registry-list-files'
     return this.http.get<AppFilesList>(routes.AppFiles(app, version), {
-      params,
-      metric,
       inflightKey,
+      metric,
+      params,
     })
   }
 

@@ -62,9 +62,9 @@ export class VBase extends InfraClient {
     const inflightKey = inflightURL
     const metric = 'vbase-get-json'
     return this.http.get<T>(routes.File(bucket, path), {
-      nullIfNotFound,
-      metric,
       inflightKey,
+      metric,
+      nullIfNotFound,
     } as IgnoreNotFoundRequestConfig)
   }
 

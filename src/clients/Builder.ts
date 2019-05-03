@@ -38,9 +38,9 @@ export class Builder extends AppClient {
       data: { availability },
       headers: { 'x-vtex-sticky-host': host },
     } = await this.http.getRaw(routes.Availability(app), {
+      cacheable: CacheType.None,
       headers,
       metric,
-      cacheable: CacheType.None,
     })
     const { hostname, score } = availability as AvailabilityResponse
     return { host, hostname, score }

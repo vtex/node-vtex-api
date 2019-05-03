@@ -93,18 +93,18 @@ export class HttpClient {
       ...(memoryCache
         ? [
             cacheMiddleware({
-              type: CacheType.Memory,
-              storage: memoryCache,
               segmentToken: segmentToken || '',
+              storage: memoryCache,
+              type: CacheType.Memory,
             }),
           ]
         : []),
       ...(diskCache
         ? [
             cacheMiddleware({
-              type: CacheType.Disk,
-              storage: diskCache,
               segmentToken: segmentToken || '',
+              storage: diskCache,
+              type: CacheType.Disk,
             }),
           ]
         : []),
@@ -115,8 +115,8 @@ export class HttpClient {
 
   public get = <T = any>(url: string, config: RequestConfig = {}): Promise<T> => {
     const cacheableConfig = {
-      memoizable: true,
       cacheable: CacheType.Memory,
+      memoizable: true,
       ...config,
       url,
     } as CacheableRequestConfig
@@ -125,8 +125,8 @@ export class HttpClient {
 
   public getRaw = <T = any>(url: string, config: RequestConfig = {}): Promise<IOResponse<T>> => {
     const cacheableConfig = {
-      memoizable: true,
       cacheable: CacheType.Memory,
+      memoizable: true,
       ...config,
       url,
     } as CacheableRequestConfig
@@ -140,9 +140,9 @@ export class HttpClient {
     const bufferConfig = {
       cacheable: CacheType.Disk,
       ...config,
-      url,
       responseType: 'arraybuffer',
       transformResponse: noTransforms,
+      url,
     }
     return this.request(bufferConfig)
   }
