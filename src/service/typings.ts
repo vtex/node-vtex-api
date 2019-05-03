@@ -8,6 +8,7 @@ import { ParsedUrlQuery } from 'querystring'
 import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { InstanceOptions } from '../HttpClient'
 import { Recorder } from '../HttpClient/middlewares/recorder'
+import { EnvMetric } from '../metrics/MetricsAccumulator'
 
 export interface Context<T extends IOClients> {
   clients: T
@@ -49,6 +50,7 @@ export interface ServiceConfig<ClientsT extends IOClients = IOClients, StateT = 
   events?: any,
   graphql?: GraphQLOptions<ClientsT, StateT, CustomT>,
   routes?: Record<string, RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>>
+  statusTrack?: () => EnvMetric[],
 }
 
 export interface DataSources {

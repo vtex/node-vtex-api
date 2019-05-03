@@ -55,9 +55,18 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
     }
 
     this.events = config.events
-    this.statusTrack = global.metrics.statusTrack
+    this.statusTrack = this.mergeStatusTrack(global.metrics.statusTrack, config.statusTrack)
 
     addProcessListeners()
+  }
+
+  private mergeStatusTrack (globalStatusTrack: () => EnvMetric[], customStatusTrack?: () => EnvMetric[]) {
+    if (customStatusTrack) {
+      return () => {
+        return [...globalStatusTrack(), ...customStatusTrack()]
+      }
+    }
+    return globalStatusTrack
   }
 }
 
