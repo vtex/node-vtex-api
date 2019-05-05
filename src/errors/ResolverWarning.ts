@@ -12,6 +12,7 @@ import { ErrorLike, ResolverError } from './ResolverError'
  * @extends {ResolverError}
  */
 export class ResolverWarning extends ResolverError {
+  public name = 'ResolverWarning'
   public level = LogLevel.Warn
 
   /**

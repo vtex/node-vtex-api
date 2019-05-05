@@ -10,6 +10,8 @@ import { ResolverWarning } from './ResolverWarning'
  * @extends {ResolverWarning}
  */
 export class ForbiddenError extends ResolverWarning {
+  public name = 'ForbiddenError'
+
   /**
    * Creates an instance of ForbiddenError
    * @param {(string | Error | AxiosError)} messageOrError Either a message string or the complete original error object.
@@ -17,7 +19,7 @@ export class ForbiddenError extends ResolverWarning {
   constructor(messageOrError: string | Error | AxiosError) {
     super(messageOrError, 403, 'FORBIDDEN')
 
-    if (typeof messageOrError !== 'object') {
+    if (typeof messageOrError === 'string' || !messageOrError.stack) {
       Error.captureStackTrace(this, ForbiddenError)
     }
   }

@@ -10,6 +10,8 @@ import { ResolverWarning } from './ResolverWarning'
  * @extends {ResolverWarning}
  */
 export class UserInputError extends ResolverWarning {
+  public name = 'UserInputError'
+
   /**
    * Creates an instance of UserInputError
    * @param {(string | Error | AxiosError)} messageOrError Either a message string or the complete original error object.
@@ -17,7 +19,7 @@ export class UserInputError extends ResolverWarning {
   constructor(messageOrError: string | Error | AxiosError) {
     super(messageOrError, 400, 'BAD_USER_INPUT')
 
-    if (typeof messageOrError !== 'object') {
+    if (typeof messageOrError === 'string' || !messageOrError.stack) {
       Error.captureStackTrace(this, UserInputError)
     }
   }

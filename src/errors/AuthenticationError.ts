@@ -10,6 +10,8 @@ import { ResolverWarning } from './ResolverWarning'
  * @extends {ResolverWarning}
  */
 export class AuthenticationError extends ResolverWarning {
+  public name = 'AuthenticationError'
+
   /**
    * Creates an instance of AuthenticationError
    * @param {(string | Error | AxiosError)} messageOrError Either a message string or the complete original error object.
@@ -17,7 +19,7 @@ export class AuthenticationError extends ResolverWarning {
   constructor(messageOrError: string | Error | AxiosError) {
     super(messageOrError, 401, 'UNAUTHENTICATED')
 
-    if (typeof messageOrError !== 'object') {
+    if (typeof messageOrError === 'string' || !messageOrError.stack) {
       Error.captureStackTrace(this, AuthenticationError)
     }
   }

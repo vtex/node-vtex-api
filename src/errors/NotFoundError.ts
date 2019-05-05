@@ -10,6 +10,8 @@ import { ResolverWarning } from './ResolverWarning'
  * @extends {ResolverWarning}
  */
 export class NotFoundError extends ResolverWarning {
+  public name = 'NotFoundError'
+
   /**
    * Creates an instance of NotFoundError
    * @param {(string | Error | AxiosError)} messageOrError Either a message string or the complete original error object.
@@ -17,7 +19,7 @@ export class NotFoundError extends ResolverWarning {
   constructor(messageOrError: string | Error | AxiosError) {
     super(messageOrError, 404, 'NOT_FOUND')
 
-    if (typeof messageOrError !== 'object') {
+    if (typeof messageOrError === 'string' || !messageOrError.stack) {
       Error.captureStackTrace(this, NotFoundError)
     }
   }

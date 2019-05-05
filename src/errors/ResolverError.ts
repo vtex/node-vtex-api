@@ -4,7 +4,6 @@ import { LogLevel } from '../clients/Logger'
 import { cleanError } from '../utils/error'
 
 export interface ErrorLike extends Error {
-  name: string
   message: string
   stack?: string
   [key: string]: any
@@ -19,6 +18,7 @@ export interface ErrorLike extends Error {
  * @extends {Error}
  */
 export class ResolverError extends Error {
+  public name = 'ResolverError'
   public level = LogLevel.Error
 
   /**
