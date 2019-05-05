@@ -39,17 +39,20 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
     const {
       method,
       status,
+      query,
       vtex: {
         operationId,
         requestId,
         route: {
           id,
+          params,
         },
       },
       headers: {
         'x-forwarded-path': forwardedPath,
         'x-forwarded-host': forwardedHost,
         'x-forwarded-proto': forwardedProto,
+        'x-vtex-caller': caller,
         'x-vtex-platform': platform,
       },
     } = ctx
@@ -62,12 +65,15 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
 
     const log = {
       ...err,
+      caller,
       forwardedHost,
       forwardedPath,
       forwardedProto,
       method,
       operationId,
+      params,
       platform,
+      query,
       requestId,
       routeId: id,
       status,
