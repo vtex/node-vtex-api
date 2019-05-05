@@ -2,7 +2,7 @@ import { AxiosError } from 'axios'
 
 import { LogLevel } from '../clients/Logger'
 
-import { ResolverError } from './ResolverError'
+import { ErrorLike, ResolverError } from './ResolverError'
 
 /**
  * Indicates a non-fatal error occurred and was handled.
@@ -16,16 +16,16 @@ export class ResolverWarning extends ResolverError {
 
   /**
    * Creates an instance of ResolverWarning
-   * @param {(string | Error | AxiosError)} messageOrError Either a message string or the complete original error object.
+   * @param {(string | AxiosError | ErrorLike)} messageOrError Either a message string or the complete original error object.
    */
   constructor(
-    messageOrError: string | Error | AxiosError,
+    messageOrError: string | AxiosError | ErrorLike,
     public status: number = 422,
     public code: string = 'RESOLVER_WARNING'
   ) {
     super(messageOrError, status, code)
 
-    if (typeof messageOrError !== 'object') {
+    if (typeof messageOrError === 'string' || !messageOrError.stack) {
       Error.captureStackTrace(this, ResolverWarning)
     }
   }
