@@ -3,7 +3,8 @@ import { AxiosError } from 'axios'
 import { LogLevel } from '../clients/Logger'
 import { cleanError } from '../utils/error'
 
-export interface ErrorLike extends Error {
+export interface ErrorLike {
+  name?: string
   message: string
   stack?: string
   [key: string]: any

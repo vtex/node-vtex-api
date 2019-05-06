@@ -1,5 +1,6 @@
 import { AxiosError } from 'axios'
 
+import { ErrorLike } from './ResolverError'
 import { ResolverWarning } from './ResolverWarning'
 
 /**
@@ -14,9 +15,9 @@ export class AuthenticationError extends ResolverWarning {
 
   /**
    * Creates an instance of AuthenticationError
-   * @param {(string | Error | AxiosError)} messageOrError Either a message string or the complete original error object.
+   * @param {(string | AxiosError | ErrorLike)} messageOrError Either a message string or the complete original error object.
    */
-  constructor(messageOrError: string | Error | AxiosError) {
+  constructor(messageOrError: string | AxiosError | ErrorLike) {
     super(messageOrError, 401, 'UNAUTHENTICATED')
 
     if (typeof messageOrError === 'string' || !messageOrError.stack) {
