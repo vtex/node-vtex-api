@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Add "buildFeatures" inside "manifest".
+
 ## [3.11.0] - 2019-05-06
 
 ## [3.10.0] - 2019-05-06
