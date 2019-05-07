@@ -32,7 +32,7 @@ const requestAborted = () => {
 
 export async function trackIncomingRequestStats <T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
   ctx.req.on('close', requestClosed)
-  ctx.req.on('aborted', requestAborted)
+  ctx.req.on('abort', requestAborted)
   incomingRequestStats.total++
   await next()
 }
