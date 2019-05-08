@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+- Made query string param serialization `repeat` by default. This means arrays, which were previously encoded as e.g. `files[]=a&files[]=b` become `files=a&files=b`.
+
+### Added
+- Implement Settings client for `vtex.settings-server`.
+
 ## [3.12.1] - 2019-05-08
 
 ## [3.12.0] - 2019-05-07
