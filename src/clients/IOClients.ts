@@ -1,6 +1,6 @@
 import { InstanceOptions, IOClient, IOClientConstructor } from '../HttpClient'
 import { IOContext } from '../service/typings'
-import { Apps, Billing, BillingMetrics, Builder, Events, ID, LicenseManager, Logger, Messages, Metadata, Registry, Router, Segment, Session, VBase, Workspaces } from './index'
+import { Apps, Billing, BillingMetrics, Builder, Events, ID, LicenseManager, Logger, Messages, Metadata, Registry, Router, Segment, Session, Settings, VBase, Workspaces } from './index'
 
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: Record<string, InstanceOptions>,
@@ -65,6 +65,10 @@ export class IOClients {
 
   public get segment() {
     return this.getOrSet('segment', Segment)
+  }
+
+  public get settings() {
+    return this.getOrSet('settings', Settings)
   }
 
   public get session() {
