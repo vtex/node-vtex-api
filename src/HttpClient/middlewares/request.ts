@@ -2,6 +2,7 @@ import axios from 'axios'
 import retry, {exponentialDelay} from 'axios-retry'
 import {Agent} from 'http'
 import {Limit} from 'p-limit'
+import {stringify} from 'qs'
 import {mapObjIndexed, sum, values} from 'ramda'
 
 import {isAbortedOrNetworkErrorOrRouterTimeout} from '../../utils/retry'
@@ -25,6 +26,10 @@ retry(http, {
   shouldResetTimeout: true,
 })
 
+const paramsSerializer = (params: any) => {
+  return stringify(params, {arrayFormat: 'repeat'})
+}
+
 export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<string, string>, params: Record<string, string> | undefined, timeout: number, retries?: number, verbose?: boolean) => {
   const countByMetric: Record<string, number> = {}
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
@@ -44,6 +49,7 @@ export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<
         ...params,
         ...ctx.config.params,
       },
+      paramsSerializer,
     }
 
     if (ctx.config.verbose && ctx.config.metric) {
