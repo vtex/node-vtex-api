@@ -1,6 +1,5 @@
 import archiver from 'archiver'
 import { IncomingMessage } from 'http'
-import { stringify } from 'qs'
 import { filter as ramdaFilter, path as ramdaPath, prop } from 'ramda'
 import { Readable, Writable } from 'stream'
 import { extract } from 'tar-fs'
@@ -55,10 +54,6 @@ const zipObj = (keys: string[], values: any[]) => {
     idx += 1
   }
   return out
-}
-
-const paramsSerializer = (params: any) => {
-  return stringify(params, {arrayFormat: 'repeat'})
 }
 
 const workspaceFields = [
@@ -309,13 +304,13 @@ export class Apps extends InfraClient {
     const params = {apps, registries, filter}
     const metric = 'apps-resolve-deps'
     const inflightKey = inflightURL
-    return this.http.get(this.routes.ResolveDependencies(), {params, paramsSerializer, metric, inflightKey})
+    return this.http.get(this.routes.ResolveDependencies(), {params, metric, inflightKey})
   }
 
   public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {
     const params = {filter}
     const metric = 'apps-resolve-deps-m'
-    return this.http.post<Record<string, string[]>>(this.routes.ResolveDependenciesWithManifest(), manifest, {params, paramsSerializer, metric})
+    return this.http.post<Record<string, string[]>>(this.routes.ResolveDependenciesWithManifest(), manifest, {params, metric})
   }
 
 }

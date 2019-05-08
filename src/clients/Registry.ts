@@ -1,6 +1,5 @@
 import archiver from 'archiver'
 import { IncomingMessage } from 'http'
-import { stringify } from 'qs'
 import { Readable, Writable } from 'stream'
 import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
@@ -22,10 +21,6 @@ const routes = {
   Publish: '/v2/registry',
   Registry: '/registry',
   ResolveDependenciesWithManifest: '/v2/registry/_resolve',
-}
-
-const paramsSerializer = (params: any) => {
-  return stringify(params, {arrayFormat: 'repeat'})
 }
 
 export class Registry extends InfraClient {
@@ -146,7 +141,7 @@ export class Registry extends InfraClient {
   public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {
     const params = {filter}
     const metric = 'registry-resolve-deps'
-    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {params, paramsSerializer, metric})
+    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {params, metric})
   }
 }
 
