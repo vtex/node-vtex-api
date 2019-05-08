@@ -329,7 +329,7 @@ export interface AppMetaInfo {
   settingsSchema?: Record<string, any>
   _resolvedDependencies: Record<string, string>
   _isRoot: boolean
-  _buildFeatures: Array<'scopeMessages'>
+  _buildFeatures: string[]
 }
 
 export interface WorkspaceMetaInfo {
