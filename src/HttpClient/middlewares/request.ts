@@ -37,7 +37,7 @@ export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<
       'axios-retry': retries ? { retries } : undefined,
       baseURL,
       maxRedirects: 0,
-      timeout,
+      timeout: ctx.config.timeout || timeout,
       validateStatus: status => (status >= 200 && status < 300),
       verbose,
       ...ctx.config,
