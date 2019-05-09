@@ -105,10 +105,14 @@ function countPerOrigin (obj: { [key: string]: any[] }) {
 export function httpAgentStats () {
   const socketsPerOrigin = countPerOrigin(httpAgent.sockets)
   const sockets = sum(values(socketsPerOrigin))
+  const freeSocketsPerOrigin = countPerOrigin((httpAgent as any).freeSockets)
+  const freeSockets = sum(values(freeSocketsPerOrigin))
   const pendingRequestsPerOrigin = countPerOrigin(httpAgent.requests)
   const pendingRequests = sum(values(pendingRequestsPerOrigin))
 
   return {
+    freeSockets,
+    freeSocketsPerOrigin,
     pendingRequests,
     pendingRequestsPerOrigin,
     sockets,
