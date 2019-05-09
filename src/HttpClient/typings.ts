@@ -31,7 +31,7 @@ export interface RequestConfig extends AxiosRequestConfig {
   memoizeable?: boolean
   inflightKey?: InflightKeyGenerator
   forceMaxAge?: number
-  responseEncoding?: string
+  responseEncoding?: BufferEncoding
 }
 
 export interface CacheHit {
