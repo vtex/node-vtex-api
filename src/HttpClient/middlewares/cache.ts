@@ -184,7 +184,7 @@ export interface Cached {
   expiration: number
   response: Partial<AxiosResponse>
   responseType?: string
-  responseEncoding?: string
+  responseEncoding?: BufferEncoding
 }
 
 export type CacheableRequestConfig = RequestConfig & {
