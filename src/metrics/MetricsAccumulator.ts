@@ -52,6 +52,7 @@ function cpuUsage () {
 
 function getIncomingRequestStats () {
   const stats = incomingRequestStats.get()
+  console.error(`${(new Date()).getTime()} stats=`, stats)
   incomingRequestStats.clear()
   return stats
 }
@@ -188,6 +189,7 @@ export class MetricsAccumulator {
         production,
       },
     ]
+    console.error(`${(new Date()).getTime()} systemMetrics=`, systemMetrics)
 
     const onFlushMetrics = flatten(map(getMetric => getMetric(), this.onFlushMetrics)) as NamedMetric[]
     const envFlushMetric = map(assoc('production', production), onFlushMetrics) as EnvMetric[]
