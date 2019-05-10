@@ -7,11 +7,13 @@ class IncomingRequestStats {
   public total = 0
 
   public get () {
-    return {
+    const ret = {
       aborted: this.aborted,
       closed: this.closed,
       total: this.total,
     }
+    console.error('ret=', ret)
+    return ret
   }
 
   public clear () {
@@ -24,9 +26,11 @@ class IncomingRequestStats {
 export const incomingRequestStats = new IncomingRequestStats()
 
 const requestClosed = () => {
+  console.error(`${(new Date()).getTime()} api close`)
   incomingRequestStats.closed++
 }
 const requestAborted = () => {
+  console.error(`${(new Date()).getTime()} api aborted`)
   incomingRequestStats.aborted++
 }
 
