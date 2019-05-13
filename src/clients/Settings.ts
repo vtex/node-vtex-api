@@ -39,8 +39,7 @@ export class Settings extends AppClient {
     return createHash('md5').update(joinIds(dependingApps)).digest('hex')
   }
 
-  public async getSettings(client: Apps, appAtMajor: string, params?: SettingsParams) {
-    const dependencies = await client.getAppsMetaInfos()
+  public async getSettings(dependencies: AppMetaInfo[], appAtMajor: string, params?: SettingsParams) {
     const filtered = this.getFilteredDependencies(appAtMajor, dependencies)
     const depsHash = this.getDependenciesHash(filtered)
     return this.http.get(`/settings/${appAtMajor}/${depsHash}`, {
