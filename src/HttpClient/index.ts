@@ -5,6 +5,8 @@ export * from './InfraClient'
 export * from './IOClient'
 export * from './JanusClient'
 export * from './typings'
+export * from './GraphQLClient'
+export * from './AppClientGraphQL'
 
 export { Cached, CacheType } from './middlewares/cache'
 export { inflightURL, inflightUrlWithQuery } from './middlewares/inflight'
