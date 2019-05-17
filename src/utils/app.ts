@@ -1,5 +1,7 @@
 import semver from 'semver'
 
+import { AppMetaInfo } from '../clients/Apps'
+
 // Note: The name that composes the part of the appId that precedes the
 // character '@' includes the name given to the app and the vendor name.
 
@@ -12,6 +14,8 @@ export const extractVersionFromAppId = (appId: string): string => appId.split('@
 export const transformToLinkedLocator = (appId: string) => appId.replace(/\+build.*$/, '+linked')
 
 export const formatLocator = (name: string, versionAndBuild: string): string => `${name}@${removeBuild(versionAndBuild)}`
+
+export const isLinkedApp = (app: AppMetaInfo) => app.id.includes('+build')
 
 export const parseAppId = (appId: string): ParsedLocator => {
   const name = removeVersionFromAppId(appId)
