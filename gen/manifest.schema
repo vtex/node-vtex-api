@@ -1,7 +1,5 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "additionalProperties": {
-    },
     "definitions": {
         "BillingChargeElements": {
             "properties": {
@@ -141,15 +139,6 @@
         }
     },
     "properties": {
-        "_resolvedDependencies": {
-            "additionalProperties": {
-                "items": {
-                    "type": "string"
-                },
-                "type": "array"
-            },
-            "type": "object"
-        },
         "billingOptions": {
             "anyOf": [
                 {
