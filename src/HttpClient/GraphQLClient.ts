@@ -14,7 +14,7 @@ interface MutateOptions<Variables extends object> extends RequestConfig {
   variables: Variables
 }
 
-type Serializable = object | boolean | string | number
+export type Serializable = object | boolean | string | number
 
 export interface GraphQLResponse <T extends Serializable> {
   data?: T
