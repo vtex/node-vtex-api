@@ -51,8 +51,7 @@
     "rwlock": "^5.0.0",
     "semver": "^5.5.1",
     "stats-lite": "vtex/node-stats-lite#dist",
-    "tar-fs": "^2.0.0",
-    "typescript-json-schema": "^0.38.0"
+    "tar-fs": "^2.0.0"
   },
   "devDependencies": {
     "@types/archiver": "^2.0.1",
@@ -72,6 +71,7 @@
     "tslint": "^5.14.0",
     "tslint-config-vtex": "^2.1.0",
     "tslint-eslint-rules": "^5.4.0",
-    "typescript": "^3.1.6"
+    "typescript": "^3.1.6",
+    "typescript-json-schema": "^0.38.0"
   }
 }
