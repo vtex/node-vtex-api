@@ -5,7 +5,6 @@ export interface Policy {
   }
 }
 
-
 interface PublicAppManifest {
   vendor: string,
   name: string,
@@ -29,6 +28,7 @@ interface PublicAppManifest {
   policies?: Policy[],
   billingOptions?: BillingOptions,
 }
+
 export interface AppManifest extends PublicAppManifest {
   [internal: string]: any // internal fields like _id, _link, _registry
   _resolvedDependencies?: {
