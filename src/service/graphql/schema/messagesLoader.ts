@@ -1,48 +1,48 @@
+import { props } from 'bluebird'
 import DataLoader from 'dataloader'
-import { append, flatten, map, pluck, prop, sortBy, toPairs, zip } from 'ramda'
+import { forEachObjIndexed, mapObjIndexed, pick, repeat } from 'ramda'
 
-import { Messages } from '../../../clients'
-import { IOMessage } from '../schema/typeDefs/ioMessage'
+import { MessagesGraphQL } from '../../../clients'
+import { IOMessage, providerFromMessage } from '../../../utils/message'
 
-const MAX_QUERYSTRING_LENGTH = 2048
+export const messagesLoader = (messagesGraphQL: MessagesGraphQL) =>
+  new DataLoader<IOMessage, string>(async (messages: IOMessage[]) => {
+    const to = messages[0].to!
+    const messagesByProvider: Record<string, IOMessage[]> = {}
+    const indexByProvider: Record<string, number[]> = {}
 
-const batchData = (lengths: number[], indexedData: IOMessage[]) => {
-  let batchedData: IOMessage[][] = []
-  let batch: IOMessage[] = []
-  let sumLength = 0
+    messages.forEach((message, index) => {
+      const provider = providerFromMessage(message)
+      if (!messagesByProvider[provider]) {
+        messagesByProvider[provider] = []
+        indexByProvider[provider] = []
+      }
+      messagesByProvider[provider].push(pick(['id', 'content', 'description'], message))
+      indexByProvider[provider].push(index)
+    })
 
-  indexedData.forEach((obj: IOMessage, index: number) => {
-    const length = lengths[index]
-    if (sumLength + length > MAX_QUERYSTRING_LENGTH) {
-      batchedData = append(batch, batchedData)
-      batch = [obj]
-      sumLength = length
-    } else {
-      sumLength = sumLength + length
-      batch = append(obj, batch)
-    }
+    const translationsByProvider: Record<string, string[]> = await props(
+      mapObjIndexed(
+        (messagesArray, provider) =>
+          messagesGraphQL.translate({
+            messages: messagesArray,
+            provider,
+            to,
+          }),
+        messagesByProvider
+      )
+    )
+
+    const translations = repeat('', messages.length)
+    forEachObjIndexed<string[], Record<string, string[]>>(
+      (translationsArray, provider) => {
+        const indices = indexByProvider[provider]
+        translationsArray.forEach((translation, index) => {
+          translations[indices[index]] = translation
+        })
+      },
+      translationsByProvider
+    )
+
+    return translations
   })
-
-  return append(batch, batchedData)
-}
-
-const sortByContent = (indexedData: Array<[string, IOMessage]>) => sortBy(([_, data]) => prop('content', data), indexedData)
-
-const sortByOriginalIndex = (indexedTraslations: Array<[string, string]>) => sortBy(([index, _]) => Number(index), indexedTraslations)
-
-export const messagesLoader = (messagesAPI: Messages) => new DataLoader<IOMessage, string>(
-  async (data: IOMessage[]) => {
-    const to = data[0].to // Should be consistent across batches
-    const indexedData = toPairs(data) as Array<[string, IOMessage]>
-    const sortedIndexedData = sortByContent(indexedData)
-    const originalIndexes = pluck(0, sortedIndexedData) as string[]
-    const sortedData = pluck(1, sortedIndexedData) as IOMessage[]
-    const strLength = map(obj => JSON.stringify(obj).length, sortedData)
-    const batches = batchData(strLength, sortedData)
-    const promises = map((batch: IOMessage[]) => !!to ? messagesAPI.translate(to, batch) : Promise.resolve(pluck('content', batch)), batches)
-    const translations = await Promise.all(promises).then(res => flatten<string>(res))
-    const indexedTranslations = zip(originalIndexes, translations) as Array<[string, string]>
-    const translationsInOriginalOrder = sortByOriginalIndex(indexedTranslations)
-    return pluck(1, translationsInOriginalOrder)
-  }
-)

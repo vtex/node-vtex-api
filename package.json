@@ -33,6 +33,7 @@
     "archiver": "^3.0.0",
     "axios": "^0.18.0",
     "axios-retry": "^3.1.2",
+    "bluebird": "^3.5.4",
     "co-body": "^6.0.0",
     "cookie": "^0.3.1",
     "dataloader": "^1.4.0",
@@ -55,6 +56,7 @@
   },
   "devDependencies": {
     "@types/archiver": "^2.0.1",
+    "@types/bluebird": "^3.5.26",
     "@types/co-body": "^0.0.3",
     "@types/cookie": "^0.3.2",
     "@types/fs-extra": "^5.0.0",
