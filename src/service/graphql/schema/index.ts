@@ -49,7 +49,7 @@ export const makeSchema = (ctx: GraphQLServiceContext) => {
 
   const resolverContext = {
     getLocaleTo,
-    translationsLoader: messagesLoader(ctx.clients.messages),
+    translationsLoader: messagesLoader(ctx.clients.messagesGraphQL),
   }
 
   const executableSchema = makeExecutableSchema({
