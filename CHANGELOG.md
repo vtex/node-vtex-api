@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.15.1] - 2019-05-17
+
+### Changed
+- Change type of `buildFeatures` to `Record<string, string[]>`
+
 ## [3.15.0] - 2019-05-13
 
 ## [3.14.1] - 2019-05-10
