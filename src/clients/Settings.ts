@@ -1,10 +1,13 @@
 import { createHash } from 'crypto'
-import { filter, join, pluck } from 'ramda'
+import { any, filter, join, pluck } from 'ramda'
 
 import { AppClient, inflightUrlWithQuery, InstanceOptions } from '../HttpClient'
 import { IOContext } from '../service/typings'
+import { isLinkedApp } from '../utils/app'
 
-import { AppMetaInfo, Apps } from './Apps'
+import { AppMetaInfo } from './Apps'
+
+const LINKED_ROUTE = 'linked'
 
 const dependsOnApp = (appAtMajor: string) => (a: AppMetaInfo) => {
   const [name, major] = appAtMajor.split('@')
@@ -18,6 +21,7 @@ const dependsOnApp = (appAtMajor: string) => (a: AppMetaInfo) => {
 }
 
 const joinIds = join('')
+const containsLinks = any(isLinkedApp)
 
 export interface SettingsParams {
   merge?: boolean
@@ -41,8 +45,12 @@ export class Settings extends AppClient {
 
   public async getSettings(dependencies: AppMetaInfo[], appAtMajor: string, params?: SettingsParams) {
     const filtered = this.getFilteredDependencies(appAtMajor, dependencies)
-    const depsHash = this.getDependenciesHash(filtered)
-    return this.http.get(`/settings/${appAtMajor}/${depsHash}`, {
+    // Settings server exposes a smartCache-enabled route for when the workspace contains links.
+    const lastSegment = containsLinks(filtered)
+      ? LINKED_ROUTE
+      : this.getDependenciesHash(filtered)
+
+    return this.http.get(`/settings/${appAtMajor}/${lastSegment}`, {
       inflightKey: inflightUrlWithQuery,
       metric: 'settings-get',
       params,
