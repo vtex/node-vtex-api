@@ -8,8 +8,9 @@
     "clean": "rimraf lib/",
     "watch": "tsc --watch",
     "build": "tsc",
+    "gen": "typescript-json-schema src/responses.ts AppManifest > gen/manifest.schema",
     "lint": "tsc --noEmit && tslint --fix -c tslint.json './src/**/*.ts'",
-    "prepublish": "run-s clean build",
+    "prepublish": "run-s clean build gen",
     "prereleasy": "yarn prepublish"
   },
   "engines": {
@@ -50,7 +51,8 @@
     "rwlock": "^5.0.0",
     "semver": "^5.5.1",
     "stats-lite": "vtex/node-stats-lite#dist",
-    "tar-fs": "^2.0.0"
+    "tar-fs": "^2.0.0",
+    "typescript-json-schema": "^0.38.0"
   },
   "devDependencies": {
     "@types/archiver": "^2.0.1",
