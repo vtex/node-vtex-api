@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.17.0] - 2019-05-20
+### Added
+- GraphQL Client
+
 ## [3.16.0] - 2019-05-17
 
 ## [3.15.1] - 2019-05-17
