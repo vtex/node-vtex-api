@@ -1,0 +1,241 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "definitions": {
+        "BillingChargeElements": {
+            "properties": {
+                "items": {
+                    "items": {
+                        "anyOf": [
+                            {
+                                "allOf": [
+                                    {
+                                        "properties": {
+                                            "itemCurrency": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    {
+                                        "properties": {
+                                            "fixed": {
+                                                "type": "number"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                ]
+                            },
+                            {
+                                "allOf": [
+                                    {
+                                        "properties": {
+                                            "itemCurrency": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "type": "object"
+                                    },
+                                    {
+                                        "properties": {
+                                            "calculatedByMetricUnit": {
+                                                "$ref": "#/definitions/CalculatedByMetricUnit"
+                                            }
+                                        },
+                                        "type": "object"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "type": "array"
+                },
+                "taxClassification": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "BillingPolicy": {
+            "properties": {
+                "billing": {
+                    "$ref": "#/definitions/BillingChargeElements"
+                },
+                "currency": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "CalculatedByMetricUnit": {
+            "properties": {
+                "metricId": {
+                    "type": "string"
+                },
+                "metricName": {
+                    "type": "string"
+                },
+                "ranges": {
+                    "items": {
+                        "$ref": "#/definitions/Range"
+                    },
+                    "type": "array"
+                },
+                "route": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "Policy": {
+            "properties": {
+                "attrs": {
+                    "additionalProperties": {
+                        "type": "string"
+                    },
+                    "type": "object"
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "Range": {
+            "properties": {
+                "exclusiveFrom": {
+                    "type": "number"
+                },
+                "inclusiveTo": {
+                    "type": "number"
+                },
+                "multiplier": {
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        },
+        "RootBillingOptions": {
+            "properties": {
+                "support": {
+                    "$ref": "#/definitions/Support"
+                },
+                "termsURL": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "Support": {
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "properties": {
+        "billingOptions": {
+            "anyOf": [
+                {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/RootBillingOptions"
+                        },
+                        {
+                            "properties": {
+                                "free": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    ]
+                },
+                {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/RootBillingOptions"
+                        },
+                        {
+                            "properties": {
+                                "policies": {
+                                    "items": {
+                                        "$ref": "#/definitions/BillingPolicy"
+                                    },
+                                    "type": "array"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    ]
+                }
+            ]
+        },
+        "builders": {
+            "additionalProperties": {
+                "type": "string"
+            },
+            "type": "object"
+        },
+        "categories": {
+            "items": {
+                "type": "string"
+            },
+            "type": "array"
+        },
+        "credentialType": {
+            "type": "string"
+        },
+        "dependencies": {
+            "additionalProperties": {
+                "type": "string"
+            },
+            "type": "object"
+        },
+        "description": {
+            "type": "string"
+        },
+        "mustUpdateAt": {
+            "type": "string"
+        },
+        "name": {
+            "type": "string"
+        },
+        "peerDependencies": {
+            "additionalProperties": {
+                "type": "string"
+            },
+            "type": "object"
+        },
+        "policies": {
+            "items": {
+                "$ref": "#/definitions/Policy"
+            },
+            "type": "array"
+        },
+        "registries": {
+            "items": {
+                "type": "string"
+            },
+            "type": "array"
+        },
+        "settingsSchema": {
+        },
+        "title": {
+            "type": "string"
+        },
+        "vendor": {
+            "type": "string"
+        },
+        "version": {
+            "type": "string"
+        }
+    },
+    "type": "object"
+}
+

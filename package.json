@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "3.17.0",
+  "version": "3.18.0",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -8,8 +8,9 @@
     "clean": "rimraf lib/",
     "watch": "tsc --watch",
     "build": "tsc",
+    "gen": "typescript-json-schema src/responses.ts PublicAppManifest > gen/manifest.schema",
     "lint": "tsc --noEmit && tslint --fix -c tslint.json './src/**/*.ts'",
-    "prepublish": "run-s clean build",
+    "prepublish": "run-s clean build gen",
     "prereleasy": "yarn prepublish"
   },
   "engines": {
@@ -70,6 +71,7 @@
     "tslint": "^5.14.0",
     "tslint-config-vtex": "^2.1.0",
     "tslint-eslint-rules": "^5.4.0",
-    "typescript": "^3.1.6"
+    "typescript": "^3.1.6",
+    "typescript-json-schema": "^0.38.0"
   }
 }

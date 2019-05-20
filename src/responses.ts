@@ -5,8 +5,7 @@ export interface Policy {
   }
 }
 
-export interface AppManifest {
-  [internal: string]: any // internal fields like _id, _link, _registry
+interface PublicAppManifest {
   vendor: string,
   name: string,
   version: string,
@@ -28,6 +27,10 @@ export interface AppManifest {
   credentialType?: string,
   policies?: Policy[],
   billingOptions?: BillingOptions,
+}
+
+export interface AppManifest extends PublicAppManifest {
+  [internal: string]: any // internal fields like _id, _link, _registry
   _resolvedDependencies?: {
     [name: string]: string[],
   },
