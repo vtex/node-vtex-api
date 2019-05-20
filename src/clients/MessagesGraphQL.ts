@@ -1,7 +1,7 @@
 import { map as mapP } from 'bluebird'
 import { append, flatten, map, path, pluck, sortBy, toPairs, zip } from 'ramda'
 
-import { AppClientGraphQL, inflightUrlWithQuery, InstanceOptions } from '../HttpClient'
+import { AppGraphQLClient, inflightUrlWithQuery, InstanceOptions } from '../HttpClient'
 import { IOContext } from '../service/typings'
 import { IOMessage } from '../utils/message'
 
@@ -56,7 +56,7 @@ const batchData = (lengths: number[], indexedData: IOMessageInput[]) => {
   return append(batch, batchedData)
 }
 
-export class MessagesGraphQL extends AppClientGraphQL {
+export class MessagesGraphQL extends AppGraphQLClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
     super('vtex.messages', vtex, options)
   }
@@ -82,26 +82,28 @@ export class MessagesGraphQL extends AppClientGraphQL {
   }
 
   public save = (args: SaveArgs): Promise<boolean> => this.graphql.mutate<boolean, { args: SaveArgs }>({
-    metric: 'messages-save-translation',
     mutate: `
-    mutation Save($args: SaveArgs!){
+    mutation Save($args: SaveArgs!) {
       save(args: $args)
     }
     `,
     variables: { args },
+  }, {
+    metric: 'messages-save-translation',
   }).then(path(['data', 'save'])) as Promise<boolean>
 
   private doTranslate = (args: Translate) =>
     this.graphql.query<TranslateResponse, { args: Translate }>({
-      inflightKey: inflightUrlWithQuery,
-      metric: 'messages-translate',
       query: `
-        query Translate($args: TranslateArgs!){
-          translate(args: $args)
-        }
+      query Translate($args: TranslateArgs!) {
+        translate(args: $args)
+      }
       `,
       useGet: true,
       variables: { args },
+    }, {
+      inflightKey: inflightUrlWithQuery,
+      metric: 'messages-translate',
     })
     .then(path(['data', 'translate'])) as Promise<TranslateResponse['translate']>
 }
