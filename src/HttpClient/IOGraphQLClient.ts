@@ -6,7 +6,7 @@ import { InstanceOptions } from './typings'
 /**
  * A GraphQL client that can be instantiated by the Service runtime layer.
  */
-export class IOClientGraphQL extends IOClient {
+export class IOGraphQLClient extends IOClient {
   protected graphql: GraphQLClient
 
   constructor(protected context: IOContext, protected options?: InstanceOptions) {

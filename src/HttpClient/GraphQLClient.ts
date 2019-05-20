@@ -3,13 +3,13 @@ import { GraphQLError } from 'graphql'
 import { HttpClient } from './HttpClient'
 import { RequestConfig } from './typings'
 
-interface QueryOptions<Variables extends object> extends RequestConfig {
+interface QueryOptions<Variables extends object> {
   query: string
   variables: Variables
   useGet?: boolean
 }
 
-interface MutateOptions<Variables extends object> extends RequestConfig {
+interface MutateOptions<Variables extends object> {
   mutate: string
   variables: Variables
 }
@@ -27,35 +27,29 @@ export class GraphQLClient {
     private http: HttpClient
   ) {}
 
-  public query = <Data extends Serializable, Variables extends object>({
-    query,
-    variables,
-    useGet,
-    url,
-    ...opts
-  }: QueryOptions<Variables>) => useGet
-      ? this.http.get<GraphQLResponse<Data>>(url || '', {
-        ...opts,
-        params: {
-          query,
-          variables: JSON.stringify(variables),
-        },
-      })
-      : this.http.post<GraphQLResponse<Data>>(url || '', {
-        ...opts,
+  public query = <Data extends Serializable, Variables extends object>(
+    { query, variables, useGet }: QueryOptions<Variables>,
+    config: RequestConfig = {}
+  ) => useGet
+    ? this.http.get<GraphQLResponse<Data>>(config.url || '', {
+      ...config,
+      params: {
         query,
-        variables,
-      })
-
-  public mutate = <Data extends Serializable, Variables extends object>({
-    mutate,
-    variables,
-    url,
-    ...opts
-  }: MutateOptions<Variables>) =>
-    this.http.post<GraphQLResponse<Data>>(url || '', {
-      ...opts,
-      query: mutate,
-      variables,
+        variables: JSON.stringify(variables),
+      },
     })
+    : this.http.post<GraphQLResponse<Data>>(config.url || '',
+      { query, variables },
+      config
+    )
+
+  public mutate = <Data extends Serializable, Variables extends object>(
+    { mutate, variables }: MutateOptions<Variables>,
+    config: RequestConfig = {}
+  ) =>
+    this.http.post<GraphQLResponse<Data>>(
+      config.url || '',
+      { query: mutate, variables },
+      config
+    )
 }
