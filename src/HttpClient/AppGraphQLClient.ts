@@ -5,7 +5,7 @@ import { AuthType, InstanceOptions } from './typings'
 /**
  * Used to perform calls on apps you declared a dependency for in your manifest.
  */
-export class AppClientGraphQL extends IOGraphQLClient {
+export class AppGraphQLClient extends IOGraphQLClient {
   constructor(app: string, context: IOContext, options?: InstanceOptions) {
     const {account, workspace, region} = context
     const [vendor, name] = app.split('.') // vtex.messages

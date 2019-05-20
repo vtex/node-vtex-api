@@ -6,7 +6,7 @@ export * from './IOClient'
 export * from './JanusClient'
 export * from './typings'
 export * from './GraphQLClient'
-export * from './AppClientGraphQL'
+export * from './AppGraphQLClient'
 export * from './IOGraphQLClient'
 
 export { Cached, CacheType } from './middlewares/cache'
