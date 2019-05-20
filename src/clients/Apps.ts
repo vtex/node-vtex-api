@@ -5,7 +5,7 @@ import { Readable, Writable } from 'stream'
 import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
 
-import { CacheType, inflightURL, InfraClient, InstanceOptions } from '../HttpClient'
+import { CacheType, inflightURL, inflightUrlWithQuery, InfraClient, InstanceOptions } from '../HttpClient'
 import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
 import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
 import { IOContext } from '../service/typings'
@@ -181,7 +181,7 @@ export class Apps extends InfraClient {
       since,
     }
     const metric = 'apps-list'
-    const inflightKey = inflightURL
+    const inflightKey = inflightUrlWithQuery
     return this.http.get<AppsList>(this.routes.Apps(), {params, metric, inflightKey})
   }
 
@@ -193,7 +193,7 @@ export class Apps extends InfraClient {
       prefix,
     }
     const metric = linked ? 'apps-list-files' : 'registry-list-files'
-    const inflightKey = inflightURL
+    const inflightKey = inflightUrlWithQuery
     return this.http.get<AppFilesList>(this.routes.Files(locator), {params, metric, inflightKey})
   }
 
@@ -288,7 +288,7 @@ export class Apps extends InfraClient {
   public getDependencies = (filter: string = '') => {
     const params = {filter}
     const metric = 'apps-get-deps'
-    const inflightKey = inflightURL
+    const inflightKey = inflightUrlWithQuery
     return this.http.get<Record<string, string[]>>(this.routes.Dependencies(), {params, metric, inflightKey})
   }
 
@@ -303,7 +303,7 @@ export class Apps extends InfraClient {
   public resolveDependencies = (apps: string[], registries: string[], filter: string = '') => {
     const params = {apps, registries, filter}
     const metric = 'apps-resolve-deps'
-    const inflightKey = inflightURL
+    const inflightKey = inflightUrlWithQuery
     return this.http.get(this.routes.ResolveDependencies(), {params, metric, inflightKey})
   }
 
