@@ -10,7 +10,7 @@ For a complete example on using `@vtex/api`, check out this app: https://github.
 
 The most basic usage is to export a new `Service()` with your route handlers:
 
-```
+```javascript
 // Import global types
 import './globals'
 
@@ -30,7 +30,7 @@ export default new Service({
 
 This allows you to define middlewares that receive a `Context` param which contains all IO Clients in the `clients` property:
 
-```
+```javascript
 export const example = async (ctx: Context, next: () => Promise<any>) => {
   const {state: {code}, clients: {apps}} = ctx
   console.log('Received code:', code)
