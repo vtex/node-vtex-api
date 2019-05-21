@@ -111,7 +111,7 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
           level = LogLevel.Error
         }
 
-        ctx.clients.logger.sendLog('-', log, level).catch((reason) => {
+        ctx.clients.logger.sendLog('-', log, level).catch((reason: any) => {
           console.error('Error logging error 🙄 retrying once...', reason ? reason.response : '')
           ctx.clients.logger.sendLog('-', log, level).catch()
         })

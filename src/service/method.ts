@@ -28,6 +28,13 @@ type MethodOptions<
   >
 >
 
+const TEN_SECONDS_S = 10
+
+function methodNotAllowed<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void>(ctx: ServiceContext<ClientsT, StateT, CustomT>) {
+  ctx.status = 405
+  ctx.set('cache-control', `public, max-age=${TEN_SECONDS_S}`)
+}
+
 export function method<
   ClientsT extends IOClients = IOClients,
   StateT = void,
@@ -42,12 +49,12 @@ export function method<
     >
   )
 
-  return async (
+  const inner = async function forMethod (
     ctx: ServiceContext<ClientsT, StateT, CustomT>,
     next: () => Promise<any>
-  ) => {
+  ) {
     const verb = ctx.method.toUpperCase()
-    const handler = handlers[verb] || handlers.DEFAULT
+    const handler = handlers[verb] || handlers.DEFAULT || methodNotAllowed
 
     if (handler) {
       await handler(ctx)
@@ -55,4 +62,8 @@ export function method<
 
     await next()
   }
+
+  inner.skipTimer = true
+
+  return inner
 }

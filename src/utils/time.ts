@@ -37,6 +37,14 @@ function recordTimings(start: [number, number], name: string, timings: Record<st
 }
 
 export function timer<T extends IOClients, U, V>(middleware: RouteHandler<T, U, V>): RouteHandler<T, U, V> {
+  if ((middleware as any).skipTimer) {
+    return middleware
+  }
+
+  if (!middleware.name) {
+    console.warn('Please use a named function as handler for better metrics.', middleware.toString())
+  }
+
   return async (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) => {
     if (!ctx.timings) {
       ctx.timings = {}
