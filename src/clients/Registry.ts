@@ -5,7 +5,7 @@ import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
 
 import { DEFAULT_WORKSPACE } from '../constants'
-import { CacheType, inflightURL, InfraClient, InstanceOptions } from '../HttpClient'
+import { CacheType, inflightURL, inflightUrlWithQuery, InfraClient, InstanceOptions } from '../HttpClient'
 import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
 import { AppBundlePublished, AppFilesList, AppManifest } from '../responses'
 import { IOContext } from '../service/typings'
@@ -79,14 +79,14 @@ export class Registry extends InfraClient {
   }
 
   public getAppManifest = (app: string, version: string, opts?: AppsManifestOptions) => {
-    const inflightKey = inflightURL
+    const inflightKey = inflightUrlWithQuery
     const params = opts
     const metric = 'registry-manifest'
     return this.http.get<AppManifest>(routes.AppVersion(app, version), {params, metric, inflightKey})
   }
 
   public listAppFiles = (app: string, version: string, opts?: ListAppFilesOptions) => {
-    const inflightKey = inflightURL
+    const inflightKey = inflightUrlWithQuery
     const params = opts
     const metric = 'registry-list-files'
     return this.http.get<AppFilesList>(routes.AppFiles(app, version), {params, metric, inflightKey})

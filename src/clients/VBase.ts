@@ -4,7 +4,7 @@ import { basename } from 'path'
 import { Readable } from 'stream'
 import { createGzip } from 'zlib'
 
-import { inflightURL, InfraClient, InstanceOptions } from '../HttpClient'
+import { inflightURL, inflightUrlWithQuery, InfraClient, InstanceOptions } from '../HttpClient'
 import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
 import { BucketMetadata, FileListItem } from '../responses'
 import { IOContext } from '../service/typings'
@@ -48,7 +48,7 @@ export class VBase extends InfraClient {
       params = {prefix: opts}
     }
     const metric = 'vbase-list'
-    const inflightKey = inflightURL
+    const inflightKey = inflightUrlWithQuery
     return this.http.get<BucketFileList>(routes.Files(bucket), {params, metric, inflightKey})
   }
 

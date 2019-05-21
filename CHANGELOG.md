@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.18.1] - 2019-05-21
+
 ## [3.18.0] - 2019-05-20
 ### Added
 - Generate `manifest.json` schema from TypeScript definition.
