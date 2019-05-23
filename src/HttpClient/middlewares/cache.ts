@@ -1,7 +1,9 @@
-import {AxiosRequestConfig, AxiosResponse} from 'axios'
-import {URL} from 'url'
-import {CacheLayer} from '../../caches/CacheLayer'
-import {MiddlewareContext, RequestConfig} from '../typings'
+import { AxiosRequestConfig, AxiosResponse } from 'axios'
+import { URL } from 'url'
+
+import { CacheLayer } from '../../caches/CacheLayer'
+import { SEGMENT_HEADER } from '../../constants'
+import { MiddlewareContext, RequestConfig } from '../typings'
 
 const ROUTER_CACHE_KEY = 'x-router-cache'
 const ROUTER_CACHE_HIT = 'HIT'
@@ -64,16 +66,15 @@ export enum CacheType {
 interface CacheOptions {
   type: CacheType
   storage: CacheLayer<string, Cached>
-  segmentToken: string
 }
 
-export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => {
+export const cacheMiddleware = ({type, storage}: CacheOptions) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     if (!isCacheable(ctx.config, type)) {
       return await next()
     }
-
     const key = cacheKey(ctx.config)
+    const segmentToken = ctx.config.headers[SEGMENT_HEADER]
     const keyWithSegment = key + segmentToken
 
     const cacheHasWithSegment = await storage.has(keyWithSegment)
@@ -161,7 +162,7 @@ export const cacheMiddleware = ({type, storage, segmentToken}: CacheOptions) => 
     if (shouldCache) {
       const {responseType, responseEncoding} = ctx.config
       const currentAge = revalidated ? 0 : age
-      const varySegment = ctx.response.headers.vary && ctx.response.headers.vary.includes('x-vtex-segment')
+      const varySegment = ctx.response.headers.vary && ctx.response.headers.vary.includes(SEGMENT_HEADER)
       const setKey = varySegment ? keyWithSegment : key
       const cacheableData = type === CacheType.Disk && responseType === 'arraybuffer'
         ? (data as Buffer).toString(responseEncoding)
