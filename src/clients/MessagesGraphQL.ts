@@ -3,7 +3,7 @@ import { append, flatten, map, path, pluck, sortBy, toPairs, zip } from 'ramda'
 
 import { AppGraphQLClient, inflightUrlWithQuery, InstanceOptions } from '../HttpClient'
 import { IOContext } from '../service/typings'
-import { IOMessage } from '../utils/message'
+import { IOMessage, removeProviderFromId } from '../utils/message'
 
 type IOMessageInput = Pick<IOMessage, 'id' | 'content' | 'description'>
 
@@ -100,7 +100,12 @@ export class MessagesGraphQL extends AppGraphQLClient {
       }
       `,
       useGet: true,
-      variables: { args },
+      variables: {
+        args: {
+          ...args,
+          messages: map(removeProviderFromId, args.messages),
+        },
+      },
     }, {
       inflightKey: inflightUrlWithQuery,
       metric: 'messages-translate',

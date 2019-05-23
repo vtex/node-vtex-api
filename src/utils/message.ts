@@ -8,10 +8,25 @@ export interface IOMessage {
   to?: string
 }
 
-export const providerFromMessage = ({id}: IOMessage) => {
+export const providerFromMessage = (message: IOMessage) => {
+  const {provider} = parseIOMessageId(message)
+  return provider || 'unknown'
+}
+
+export const parseIOMessageId = ({id}: IOMessage) => {
   const splitted = id.split(PROVIDER_SPACER)
   if (splitted.length === 2) {
-    return splitted[0]
+    return {
+      locator: splitted[1],
+      provider: splitted[0],
+    }
   }
-  return 'unknown'
+  return {
+    locator: splitted[0],
+  }
 }
+
+export const removeProviderFromId = (message: IOMessage) => ({
+  ...message,
+  id: parseIOMessageId(message).locator,
+})
