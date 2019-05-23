@@ -1,14 +1,14 @@
 import axios from 'axios'
-import retry, {exponentialDelay} from 'axios-retry'
-import {Agent} from 'http'
-import {Limit} from 'p-limit'
-import {stringify} from 'qs'
-import {mapObjIndexed, sum, values} from 'ramda'
+import retry, { exponentialDelay } from 'axios-retry'
+import { Agent } from 'http'
+import { Limit } from 'p-limit'
+import { stringify } from 'qs'
+import { mapObjIndexed, sum, toLower, values } from 'ramda'
 
-import {isAbortedOrNetworkErrorOrRouterTimeout} from '../../utils/retry'
-import {hrToMillis} from '../../utils/time'
-
-import {MiddlewareContext} from '../typings'
+import { renameBy } from '../../utils/renameBy'
+import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../utils/retry'
+import { hrToMillis } from '../../utils/time'
+import { MiddlewareContext } from '../typings'
 
 const httpAgent = new Agent({
   keepAlive: true,
@@ -30,8 +30,9 @@ const paramsSerializer = (params: any) => {
   return stringify(params, {arrayFormat: 'repeat'})
 }
 
-export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<string, string>, params: Record<string, string> | undefined, timeout: number, retries?: number, verbose?: boolean) => {
+export const defaultsMiddleware = (baseURL: string | undefined, rawHeaders: Record<string, string>, params: Record<string, string> | undefined, timeout: number, retries?: number, verbose?: boolean) => {
   const countByMetric: Record<string, number> = {}
+  const headers = renameBy(toLower, rawHeaders)
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     ctx.config = {
       'axios-retry': retries ? { retries } : undefined,
@@ -43,7 +44,7 @@ export const defaultsMiddleware = (baseURL: string | undefined, headers: Record<
       ...ctx.config,
       headers: {
         ...headers,
-        ...ctx.config.headers,
+        ...renameBy(toLower, ctx.config.headers),
       },
       params: {
         ...params,

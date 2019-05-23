@@ -4,6 +4,7 @@ import compose, { Middleware } from 'koa-compose'
 import pLimit from 'p-limit'
 
 import { CacheLayer } from '../caches/CacheLayer'
+import { SEGMENT_HEADER } from '../constants'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { forExternal, forRoot, forWorkspace } from './factories'
 import { CacheableRequestConfig, Cached, cacheMiddleware, CacheType } from './middlewares/cache'
@@ -56,7 +57,7 @@ export class HttpClient {
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
       ... operationId ? {'x-vtex-operation-id': operationId} : null,
-      ... segmentToken ? {'x-vtex-segment': segmentToken} : null,
+      ... segmentToken ? {[SEGMENT_HEADER]: segmentToken} : null,
     }
 
     if (authType && authToken) {
@@ -72,8 +73,8 @@ export class HttpClient {
       ...recorder ? [recorderMiddleware(recorder)] : [],
       singleFlightMiddleware,
       acceptNotFoundMiddleware,
-      ...memoryCache ? [cacheMiddleware({type: CacheType.Memory, storage: memoryCache, segmentToken: segmentToken || ''})] : [],
-      ...diskCache ? [cacheMiddleware({type: CacheType.Disk, storage: diskCache, segmentToken: segmentToken || ''})] : [],
+      ...memoryCache ? [cacheMiddleware({type: CacheType.Memory, storage: memoryCache})] : [],
+      ...diskCache ? [cacheMiddleware({type: CacheType.Disk, storage: diskCache})] : [],
       notFoundFallbackMiddleware,
       requestMiddleware(limit),
     ])

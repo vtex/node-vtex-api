@@ -1,9 +1,9 @@
 import { pick } from 'ramda'
 
+import { SEGMENT_HEADER } from '../../../constants'
 import { GraphQLServiceContext } from '../typings'
 import { cacheControl } from '../utils/cacheControl'
 
-const SEGMENT_HEADER = 'x-vtex-segment'
 
 export const response = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
   const {responseInit, graphqlResponse} = ctx.graphql
