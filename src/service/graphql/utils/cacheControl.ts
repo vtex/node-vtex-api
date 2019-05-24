@@ -16,7 +16,7 @@ const pluck = <K extends string, T> (p: K) => (list: ReadonlyArray<T>) => rPluck
 const publicRegExp = compose(
   (exp: string) => new RegExp(exp),
   (exp: string) => `.*${exp}.*`,
-  replace('.', '\\.'),
+  replace('.', '\\.')
 )
 
 const VTEX_PUBLIC_ENDPOINT = process.env.VTEX_PUBLIC_ENDPOINT || ''
@@ -27,7 +27,7 @@ const VTEX_REGEXP = publicRegExp(VTEX_PUBLIC_ENDPOINT)
 
 const pickCacheControlHints = (response: GraphQLResponse) => path<CacheControlHintsFormat>(
   ['extensions', 'cacheControl', 'hints'],
-  response,
+  response
 )
 
 const minArray = (nums: number[]): number => reduce<number, number>(min, maxAgeEnums.LONG, nums)
@@ -35,17 +35,17 @@ const minArray = (nums: number[]): number => reduce<number, number>(min, maxAgeE
 const minMaxAge = (hints: CacheControlHintsFormat): number => compose<CacheControlHintsFormat, MaybeNumber[], number[], number>(
   minArray,
   reject(isNil),
-  pluck('maxAge'),
+  pluck('maxAge')
 )(hints)
 
 const anyPrivate = (hints: CacheControlHintsFormat): boolean => compose<CacheControlHintsFormat, MaybeCacheScope[], boolean>(
   any(equals('PRIVATE')) as any,
-  pluck('scope'),
+  pluck('scope')
 )(hints)
 
 const anySegment = (hints: CacheControlHintsFormat): boolean => compose<CacheControlHintsFormat, MaybeCacheScope[], boolean>(
   any(equals('SEGMENT')) as any,
-  pluck('scope'),
+  pluck('scope')
 )(hints)
 
 const isPrivateRoute = ({request: {headers}}: GraphQLServiceContext) => test(/_v\/graphql\/private\/v*/, headers['x-forwarded-path'] || '')
@@ -65,8 +65,13 @@ export const cacheControl = (response: GraphQLResponse, ctx: GraphQLServiceConte
   const age = hints && minMaxAge(hints)
   const isPrivate = hints && anyPrivate(hints)
   const segment = hints && anySegment(hints)
+  const maxAge = age === 0
+    ? 'no-cache, no-store'
+    : isPublicEndpoint(ctx) || !production
+      ? ''
+      : `max-age=${age}`
   return {
-    maxAge: (age === 0 || isPublicEndpoint(ctx) || !production) ? 'no-cache, no-store' : `max-age=${age}`,
+    maxAge,
     scope: (isPrivate || isPrivateRoute(ctx)) ? 'private' : 'public',
     segment,
   }

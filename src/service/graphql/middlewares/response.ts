@@ -1,9 +1,8 @@
-import { pick } from 'ramda'
+import { isEmpty, pick, reject } from 'ramda'
 
 import { SEGMENT_HEADER } from '../../../constants'
 import { GraphQLServiceContext } from '../typings'
 import { cacheControl } from '../utils/cacheControl'
-
 
 export const response = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
   const {responseInit, graphqlResponse} = ctx.graphql
@@ -13,10 +12,11 @@ export const response = async (ctx: GraphQLServiceContext, next: () => Promise<v
     scope = '',
     segment = null,
   } = graphqlResponse ? cacheControl(graphqlResponse, ctx) : {}
+  const cacheControlHeader = reject(isEmpty, [maxAge, scope]).join(',')
 
   ctx.set({
     ...responseInit && responseInit.headers,
-    'Cache-Control': `${maxAge}, ${scope}`,
+    'Cache-Control': cacheControlHeader,
   })
 
   if (segment) {
