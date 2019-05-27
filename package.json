@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "3.19.0",
+  "version": "3.20.0",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
