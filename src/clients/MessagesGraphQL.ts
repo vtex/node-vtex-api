@@ -100,7 +100,6 @@ export class MessagesGraphQL extends AppGraphQLClient {
         translate(args: $args)
       }
       `,
-      useGet: true,
       variables: {
         args: {
           ...args,
