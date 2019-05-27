@@ -1,6 +1,6 @@
 import { AppClient, inflightUrlWithQuery, InstanceOptions } from '../HttpClient'
-import { IOMessage } from '../service/graphql/schema/typeDefs/ioMessage'
 import { IOContext } from '../service/typings'
+import { IOMessage } from '../utils/message'
 
 interface Locale {
   [token: string]: string

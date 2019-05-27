@@ -2,13 +2,7 @@ import { ApolloError } from 'apollo-server-core'
 import DataLoader from 'dataloader'
 import { ASTNode, GraphQLScalarType, Kind } from 'graphql'
 
-export interface IOMessage {
-  id: string
-  content: string
-  description: string
-  from?: string
-  to?: string
-}
+import { IOMessage } from '../../../../utils/message'
 
 export interface NativeResolverContext {
   getLocaleTo: () => Promise<string>
