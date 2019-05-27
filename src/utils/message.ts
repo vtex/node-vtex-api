@@ -6,6 +6,7 @@ export interface IOMessage {
   description?: string
   from?: string
   to?: string
+  behavior?: string
 }
 
 export const providerFromMessage = (message: IOMessage) => {

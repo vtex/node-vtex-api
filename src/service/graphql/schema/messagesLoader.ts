@@ -9,6 +9,7 @@ export const messagesLoader = (messagesGraphQL: MessagesGraphQL) =>
   new DataLoader<IOMessage, string>(async (messages: IOMessage[]) => {
     const to = messages[0].to!
     const from = messages[0].from
+    const behavior = messages[0].behavior
     const messagesByProvider: Record<string, IOMessage[]> = {}
     const indexByProvider: Record<string, number[]> = {}
 
@@ -26,6 +27,7 @@ export const messagesLoader = (messagesGraphQL: MessagesGraphQL) =>
       mapObjIndexed(
         (messagesArray, provider) =>
           messagesGraphQL.translate({
+            behavior,
             from,
             messages: messagesArray,
             provider,

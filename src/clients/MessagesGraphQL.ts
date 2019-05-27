@@ -16,6 +16,7 @@ export interface Translate {
   messages: IOMessageInput[]
   from?: string
   to: string
+  behavior?: string
 }
 
 export interface SaveArgs {
