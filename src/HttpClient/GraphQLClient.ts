@@ -30,7 +30,7 @@ export class GraphQLClient {
   public query = <Data extends Serializable, Variables extends object>(
     { query, variables, useGet }: QueryOptions<Variables>,
     config: RequestConfig = {}
-  ) => useGet
+  ) => useGet !== false
     ? this.http.get<GraphQLResponse<Data>>(config.url || '', {
       ...config,
       params: {
