@@ -11,6 +11,8 @@ type MaybeNumber = number | null
 
 type MaybeCacheScope = CacheScope | null
 
+const linked = !!process.env.VTEX_APP_LINK
+
 const pluck = <K extends string, T> (p: K) => (list: ReadonlyArray<T>) => rPluck(p, list)
 
 const publicRegExp = compose(
@@ -65,8 +67,13 @@ export const cacheControl = (response: GraphQLResponse, ctx: GraphQLServiceConte
   const age = hints && minMaxAge(hints)
   const isPrivate = hints && anyPrivate(hints)
   const segment = hints && anySegment(hints)
+  const maxAge = linked
+    ? 'no-store'
+    : (age === 0 || isPublicEndpoint(ctx) || !production)
+      ? 'no-cache'
+      : `max-age=${age}`
   return {
-    maxAge: (age === 0 || isPublicEndpoint(ctx) || !production) ? 'no-cache' : `max-age=${age}`,
+    maxAge,
     scope: (isPrivate || isPrivateRoute(ctx)) ? 'private' : 'public',
     segment,
   }
