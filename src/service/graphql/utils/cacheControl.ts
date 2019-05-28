@@ -69,7 +69,7 @@ export const cacheControl = (response: GraphQLResponse, ctx: GraphQLServiceConte
   const segment = hints && anySegment(hints)
   const maxAge = linked
     ? 'no-store'
-    : (age === 0 || isPublicEndpoint(ctx) || !production)
+    : (isPublicEndpoint(ctx) || !production)
       ? 'no-cache'
       : `max-age=${age}`
   return {
