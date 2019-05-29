@@ -20,6 +20,17 @@ export class JanusClient extends ExternalClient {
   constructor(context: IOContext, options?: InstanceOptions) {
     const {account} = context
 
+    if (context.janusEnv) {
+      options = options || {}
+      options = {
+        ...options,
+        headers: {
+          ...options.headers,
+          'cookie': context.janusEnv,
+        },
+      }
+    }
+
     super(
       'http://portal.vtexcommercestable.com.br',
       context,

@@ -77,6 +77,8 @@ export interface IOContext {
   sessionToken?: string
   requestId: string
   operationId: string
+  // Admins may send a cookie in the request to indicate they should be routed to a specific environment, e.g. beta.
+  janusEnv?: JanusEnv
 }
 
 export interface ServiceRoute {
@@ -101,3 +103,5 @@ export interface ServiceDescriptor {
     },
   },
 }
+
+export type JanusEnv = string
