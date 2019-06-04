@@ -2,7 +2,7 @@ import { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { URL } from 'url'
 
 import { CacheLayer } from '../../caches/CacheLayer'
-import { SEGMENT_HEADER } from '../../constants'
+import { SEGMENT_HEADER, SESSION_HEADER } from '../../constants'
 import { MiddlewareContext, RequestConfig } from '../typings'
 
 const ROUTER_CACHE_KEY = 'x-router-cache'
@@ -49,7 +49,7 @@ const parseCacheHeaders = (headers: Record<string, string>) => {
 }
 
 export function isCacheable (arg: RequestConfig, type: CacheType): arg is CacheableRequestConfig {
-  return arg && !!arg.cacheable
+  return arg && !!arg.cacheable && !arg.headers[SESSION_HEADER]
     && (arg.cacheable === type || arg.cacheable === CacheType.Any || type === CacheType.Any)
 }
 
