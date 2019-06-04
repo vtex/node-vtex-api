@@ -8,6 +8,7 @@ import { error } from './middlewares/error'
 import { trackIncomingRequestStats } from './middlewares/requestStats'
 import { removeSetCookie } from './middlewares/setCookie'
 import { timings } from './middlewares/timings'
+import { vary } from './middlewares/vary'
 
 export const createHttpRoute = <ClientsT extends IOClients, StateT, CustomT>(
   Clients: ClientsImplementation<ClientsT>,
@@ -15,7 +16,7 @@ export const createHttpRoute = <ClientsT extends IOClients, StateT, CustomT>(
 ) => {
   return (handler: RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>) => {
     const middlewares = Array.isArray(handler) ? handler : [handler]
-    const pipeline = [trackIncomingRequestStats, authTokens, clients(Clients, options), removeSetCookie, timings, error, ...middlewares]
+    const pipeline = [trackIncomingRequestStats, vary, authTokens, clients(Clients, options), removeSetCookie, timings, error, ...middlewares]
     return compose(pipeline)
   }
 }
