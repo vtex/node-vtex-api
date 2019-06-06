@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.22.0] - 2019-06-06
+### Added
+- Typings for Free and Paid Billing Options
+- Typings for Fixed and Metric-Based Calculation Items
+- Type guards for Billing Options
+
 ## [3.21.3] - 2019-06-04
 
 ## [3.21.2] - 2019-05-27

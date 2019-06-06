@@ -51,9 +51,17 @@ export interface BucketMetadata {
   hash: string,
 }
 
-interface RootBillingOptions {
+export interface RootBillingOptions {
   termsURL: string
   support: Support
+}
+
+export interface FreeBillingOptions extends RootBillingOptions {
+  free: boolean
+}
+
+export interface ChargeableBillingOptions extends RootBillingOptions {
+  policies: BillingPolicy[],
 }
 
 export interface Support {
@@ -61,11 +69,7 @@ export interface Support {
   email: string
 }
 
-export type BillingOptions = RootBillingOptions & ({
-  free: boolean,
-} | {
-  policies: BillingPolicy[],
-})
+export type BillingOptions = FreeBillingOptions | ChargeableBillingOptions
 
 export interface BillingPolicy {
   currency: string,
@@ -77,13 +81,19 @@ export interface BillingChargeElements {
   items: CalculationItem[],
 }
 
-export type CalculationItem = {
-  itemCurrency: string,
-} & ({
-  fixed: number,
-} | {
-  calculatedByMetricUnit: CalculatedByMetricUnit,
-})
+export interface RootCalculationItem {
+  itemCurrency: string
+}
+
+export interface FixedCalculationItem extends RootCalculationItem {
+  fixed: number
+}
+
+export interface MetricBasedCalculationItem extends RootCalculationItem {
+  calculatedByMetricUnit: CalculatedByMetricUnit
+}
+
+export type CalculationItem = FixedCalculationItem | MetricBasedCalculationItem
 
 export interface CalculatedByMetricUnit {
   metricId: string,
