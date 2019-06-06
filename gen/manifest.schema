@@ -7,44 +7,10 @@
                     "items": {
                         "anyOf": [
                             {
-                                "allOf": [
-                                    {
-                                        "properties": {
-                                            "itemCurrency": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "type": "object"
-                                    },
-                                    {
-                                        "properties": {
-                                            "fixed": {
-                                                "type": "number"
-                                            }
-                                        },
-                                        "type": "object"
-                                    }
-                                ]
+                                "$ref": "#/definitions/FixedCalculationItem"
                             },
                             {
-                                "allOf": [
-                                    {
-                                        "properties": {
-                                            "itemCurrency": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "type": "object"
-                                    },
-                                    {
-                                        "properties": {
-                                            "calculatedByMetricUnit": {
-                                                "$ref": "#/definitions/CalculatedByMetricUnit"
-                                            }
-                                        },
-                                        "type": "object"
-                                    }
-                                ]
+                                "$ref": "#/definitions/MetricBasedCalculationItem"
                             }
                         ]
                     },
@@ -87,6 +53,59 @@
             },
             "type": "object"
         },
+        "ChargeableBillingOptions": {
+            "properties": {
+                "policies": {
+                    "items": {
+                        "$ref": "#/definitions/BillingPolicy"
+                    },
+                    "type": "array"
+                },
+                "support": {
+                    "$ref": "#/definitions/Support"
+                },
+                "termsURL": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "FixedCalculationItem": {
+            "properties": {
+                "fixed": {
+                    "type": "number"
+                },
+                "itemCurrency": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "FreeBillingOptions": {
+            "properties": {
+                "free": {
+                    "type": "boolean"
+                },
+                "support": {
+                    "$ref": "#/definitions/Support"
+                },
+                "termsURL": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "MetricBasedCalculationItem": {
+            "properties": {
+                "calculatedByMetricUnit": {
+                    "$ref": "#/definitions/CalculatedByMetricUnit"
+                },
+                "itemCurrency": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
         "Policy": {
             "properties": {
                 "attrs": {
@@ -115,17 +134,6 @@
             },
             "type": "object"
         },
-        "RootBillingOptions": {
-            "properties": {
-                "support": {
-                    "$ref": "#/definitions/Support"
-                },
-                "termsURL": {
-                    "type": "string"
-                }
-            },
-            "type": "object"
-        },
         "Support": {
             "properties": {
                 "email": {
@@ -142,37 +150,10 @@
         "billingOptions": {
             "anyOf": [
                 {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/RootBillingOptions"
-                        },
-                        {
-                            "properties": {
-                                "free": {
-                                    "type": "boolean"
-                                }
-                            },
-                            "type": "object"
-                        }
-                    ]
+                    "$ref": "#/definitions/FreeBillingOptions"
                 },
                 {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/RootBillingOptions"
-                        },
-                        {
-                            "properties": {
-                                "policies": {
-                                    "items": {
-                                        "$ref": "#/definitions/BillingPolicy"
-                                    },
-                                    "type": "array"
-                                }
-                            },
-                            "type": "object"
-                        }
-                    ]
+                    "$ref": "#/definitions/ChargeableBillingOptions"
                 }
             ]
         },
