@@ -1,5 +1,5 @@
 import { InfraClient, InstanceOptions } from '../HttpClient'
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 import { cleanError } from '../utils/error'
 
 const DEFAULT_SUBJECT = '-'
@@ -17,7 +17,7 @@ const routes = {
 }
 
 export class Logger extends InfraClient {
-  constructor(context: IOContext, options?: InstanceOptions) {
+  constructor(context: BaseIOContext, options?: InstanceOptions) {
     super('colossus', {...context, recorder: undefined}, {...options, concurrency: 1})
   }
 

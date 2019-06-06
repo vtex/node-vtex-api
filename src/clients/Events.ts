@@ -1,10 +1,10 @@
 import { InfraClient, InstanceOptions} from '../HttpClient'
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 
 const eventRoute = (route: string) => `/events/${route}`
 
 export class Events extends InfraClient {
-  constructor(context: IOContext, options?: InstanceOptions) {
+  constructor(context: BaseIOContext, options?: InstanceOptions) {
     super('colossus', {...context, recorder: undefined}, options)
   }
 

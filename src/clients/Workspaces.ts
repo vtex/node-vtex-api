@@ -1,6 +1,6 @@
 import { DEFAULT_WORKSPACE } from '../constants'
 import { InfraClient, InstanceOptions } from '../HttpClient'
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 
 const routes = {
   Account: (account: string) => `/${account}`,
@@ -9,7 +9,7 @@ const routes = {
 }
 
 export class Workspaces extends InfraClient {
-  constructor(context: IOContext, options?: InstanceOptions) {
+  constructor(context: BaseIOContext, options?: InstanceOptions) {
     super('router', context, options, true)
   }
 

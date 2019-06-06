@@ -1,9 +1,9 @@
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 
 import { HttpClient } from './HttpClient'
 import { InstanceOptions } from './typings'
 
-export type IOClientConstructor = new (context: IOContext, options?: InstanceOptions) => IOClient
+export type IOClientConstructor = new (context: BaseIOContext, options?: InstanceOptions) => IOClient
 
 /**
  * A client that can be instantiated by the Service runtime layer.
@@ -11,7 +11,7 @@ export type IOClientConstructor = new (context: IOContext, options?: InstanceOpt
 export class IOClient {
   protected http: HttpClient
 
-  constructor(protected context: IOContext, protected options?: InstanceOptions) {
+  constructor(protected context: BaseIOContext, protected options?: InstanceOptions) {
     this.http = new HttpClient({
       ...context,
       ...options,

@@ -1,8 +1,8 @@
 import { InfraClient, InstanceOptions } from '../HttpClient'
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 
 export class BillingMetrics extends InfraClient {
-  constructor(context: IOContext, options?: InstanceOptions) {
+  constructor(context: BaseIOContext, options?: InstanceOptions) {
     super('colossus', context, options)
   }
 

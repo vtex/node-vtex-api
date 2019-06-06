@@ -1,10 +1,10 @@
 import { InstanceOptions, IOClient, IOClientConstructor } from '../HttpClient'
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 import { Apps, Billing, BillingMetrics, Builder, Events, ID, LicenseManager, Logger, Messages, Metadata, Registry, Router, Segment, Session, Settings, VBase, Workspaces } from './index'
 
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: Record<string, InstanceOptions>,
-  ctx: IOContext
+  ctx: BaseIOContext
 ) => T
 
 export class IOClients {
@@ -12,7 +12,7 @@ export class IOClients {
 
   constructor(
     private clientOptions: Record<string, InstanceOptions>,
-    private ctx: IOContext
+    private ctx: BaseIOContext
   ) { }
 
   public get apps() {

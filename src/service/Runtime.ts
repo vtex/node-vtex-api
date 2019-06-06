@@ -4,10 +4,11 @@ import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { EnvMetric, MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { addProcessListeners } from '../utils/unhandled'
 
+import { createEvent } from './event'
 import { createGraphQLRoute, GRAPHQL_ROUTE, GRAPHQL_ROUTE_LEGACY } from './graphql'
 import { createHttpRoute } from './http'
 import { Service } from './Service'
-import { ClientsConfig, RouteHandler, ServiceDescriptor } from './typings'
+import { ClientsConfig, EventHandler, RouteHandler, ServiceDescriptor } from './typings'
 
 const defaultClients: ClientsConfig = {
   options: {
@@ -21,7 +22,7 @@ const defaultClients: ClientsConfig = {
 
 export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
   public routes: Record<string, RouteHandler<ClientsT, StateT, CustomT>>
-  public events: any
+  public events: Record<string, EventHandler<ClientsT, StateT, CustomT>>
   public statusTrack: () => EnvMetric[]
   public __is_service: true = true // tslint:disable-line
 
@@ -55,6 +56,9 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
     }
 
     this.events = config.events
+      ? map(createEvent<ClientsT, StateT, CustomT>(Clients, clients.options), config.events)
+      : {}
+
     this.statusTrack = global.metrics.statusTrack
 
     addProcessListeners()

@@ -1,5 +1,5 @@
 import { InfraClient, InstanceOptions } from '../HttpClient'
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 
 const routes = {
   AvailableIoVersions: '/_io',
@@ -11,7 +11,7 @@ const routes = {
 }
 
 export class Router extends InfraClient {
-  constructor (ioContext: IOContext, opts?: InstanceOptions) {
+  constructor (ioContext: BaseIOContext, opts?: InstanceOptions) {
     super('router', ioContext, opts, true)
   }
 

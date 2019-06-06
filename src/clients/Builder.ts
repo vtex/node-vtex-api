@@ -3,7 +3,7 @@ import {ZlibOptions} from 'zlib'
 
 import {AppClient, InstanceOptions} from '../HttpClient'
 import {CacheType} from '../HttpClient/middlewares/cache'
-import {IOContext} from '../service/typings'
+import {BaseIOContext} from '../service/typings'
 
 import {Change} from './Apps'
 import {File} from './Registry'
@@ -20,7 +20,7 @@ const routes = {
 export class Builder extends AppClient {
   private stickyHost!: string
 
-  constructor (ioContext: IOContext, opts?: InstanceOptions) {
+  constructor (ioContext: BaseIOContext, opts?: InstanceOptions) {
     super('vtex.builder-hub', ioContext, opts)
   }
 

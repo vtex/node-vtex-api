@@ -8,10 +8,10 @@ import { createGunzip, ZlibOptions } from 'zlib'
 import { CacheType, inflightURL, inflightUrlWithQuery, InfraClient, InstanceOptions } from '../HttpClient'
 import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
 import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 import { parseAppId, removeVersionFromAppId } from '../utils'
 
-const createRoutes = ({account, workspace}: IOContext) => {
+const createRoutes = ({account, workspace}: BaseIOContext) => {
   const routes = {
     Acknowledge: (app: string, service: string) => `${routes.App(app)}/acknowledge/${service}`,
     App: (app: string) => `${routes.Apps()}/${app}`,
@@ -77,7 +77,7 @@ export class Apps extends InfraClient {
     return this._routes
   }
 
-  constructor(context: IOContext, options?: InstanceOptions) {
+  constructor(context: BaseIOContext, options?: InstanceOptions) {
     super('apps', context, options, true)
     this._routes = createRoutes(context)
   }

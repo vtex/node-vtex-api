@@ -8,7 +8,7 @@ import { DEFAULT_WORKSPACE } from '../constants'
 import { CacheType, inflightURL, inflightUrlWithQuery, InfraClient, InstanceOptions } from '../HttpClient'
 import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
 import { AppBundlePublished, AppFilesList, AppManifest } from '../responses'
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 
 const EMPTY_OBJECT = {}
 
@@ -24,7 +24,7 @@ const routes = {
 }
 
 export class Registry extends InfraClient {
-  constructor(context: IOContext, options?: InstanceOptions) {
+  constructor(context: BaseIOContext, options?: InstanceOptions) {
     super('apps', {...context, workspace: DEFAULT_WORKSPACE}, options)
   }
 

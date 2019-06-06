@@ -1,6 +1,6 @@
 import { AppClient, inflightUrlWithQuery, InstanceOptions } from '../HttpClient'
 import { IOMessage } from '../service/graphql/schema/typeDefs/ioMessage'
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 
 interface Locale {
   [token: string]: string
@@ -15,7 +15,7 @@ interface LocalesByProvider {
 }
 
 export class Messages extends AppClient {
-  constructor(vtex: IOContext, options?: InstanceOptions) {
+  constructor(vtex: BaseIOContext, options?: InstanceOptions) {
     super('vtex.messages', vtex, options)
   }
 

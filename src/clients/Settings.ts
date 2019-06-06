@@ -2,7 +2,7 @@ import { createHash } from 'crypto'
 import { any, filter, join, pluck } from 'ramda'
 
 import { AppClient, inflightUrlWithQuery, InstanceOptions } from '../HttpClient'
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 import { isLinkedApp } from '../utils/app'
 
 import { AppMetaInfo } from './Apps'
@@ -29,7 +29,7 @@ export interface SettingsParams {
 }
 
 export class Settings extends AppClient {
-  constructor (context: IOContext, options?: InstanceOptions) {
+  constructor (context: BaseIOContext, options?: InstanceOptions) {
     super('vtex.settings-server', context, options)
   }
 

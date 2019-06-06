@@ -9,12 +9,19 @@ import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { InstanceOptions } from '../HttpClient'
 import { Recorder } from '../HttpClient/middlewares/recorder'
 
-export interface Context<T extends IOClients> {
+interface BaseContext<T extends IOClients> {
   clients: T
-  vtex: IOContext
   dataSources?: DataSources
   timings: Record<string, [number, number]>
   metrics: Record<string, [number, number]>
+}
+
+export interface Context<T extends IOClients> extends BaseContext<T> {
+  vtex: IOContext
+}
+
+export interface EventContext<T extends IOClients> extends BaseContext<T> {
+  vtex: EventIOContext
 }
 
 type KnownKeys<T> = {
@@ -23,7 +30,11 @@ type KnownKeys<T> = {
 
 export type ServiceContext<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Pick<ParameterizedContext<StateT, Context<ClientsT>>, KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>> & CustomT
 
+export type EventServiceContext<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = EventContext<ClientsT> & { state: StateT } & CustomT
+
 export type RouteHandler<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>
+
+export type EventHandler<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Middleware<EventServiceContext>
 
 export type Resolver<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> =
   GraphQLFieldResolver<any, ServiceContext<ClientsT, StateT, CustomT>, any>
@@ -46,7 +57,7 @@ export interface GraphQLOptions<ClientsT extends IOClients = IOClients, StateT =
 
 export interface ServiceConfig<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
   clients?: ClientsConfig<ClientsT>
-  events?: any,
+  events?: Record<string, EventHandler<ClientsT, StateT, CustomT> | Array<EventHandler<ClientsT, StateT, CustomT>>>,
   graphql?: GraphQLOptions<ClientsT, StateT, CustomT>,
   routes?: Record<string, RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>>
 }
@@ -55,29 +66,36 @@ export interface DataSources {
   [name: string]: DataSource<ServiceContext>,
 }
 
-export interface IOContext {
+export interface BaseIOContext {
   account: string
   // Identifies current app for the VTEX IO infrastructure.
   authToken: string
+  production: boolean
+  recorder?: Recorder
+  region: string
+  // TODO: segmentToken was placed in BaseIOContext only because Segment client uses it. Think about this.
+  segmentToken?: string
+  userAgent: string
+  workspace: string
+  requestId: string
+  operationId: string
+}
+
+export interface IOContext extends BaseIOContext {
   // Identifies the user based on the cookie `VtexIdclientAutCookie`. Cookies are only available in private routes.
   adminUserAuthToken?: string
   // Identifies the user based on the cookie `VtexIdclientAutCookie_${account}`. Cookies are only available in private routes.
   storeUserAuthToken?: string
-  production: boolean
-  recorder?: Recorder
-  region: string
+  sessionToken?: string
   route: {
     declarer?: string
     id: string
     params: ParsedUrlQuery
   }
-  userAgent: string
-  workspace: string
-  segmentToken?: string
-  sessionToken?: string
-  requestId: string
-  operationId: string
 }
+
+// tslint:disable-next-line:no-empty-interface
+export interface EventIOContext extends BaseIOContext {}
 
 export interface ServiceRoute {
   path: string,
@@ -93,7 +111,7 @@ export interface ServiceDescriptor {
   timeout?: number,
   runtimeArgs?: string[],
   routes?: Record<string, ServiceRoute>,
-  events: {
+  events?: {
     [handler: string]: {
       keys?: string[],
       sender?: string,

@@ -1,4 +1,4 @@
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 
 import { ExternalClient } from './ExternalClient'
 import { InstanceOptions } from './typings'
@@ -17,7 +17,7 @@ import { InstanceOptions } from './typings'
  * }
  */
 export class JanusClient extends ExternalClient {
-  constructor(context: IOContext, options?: InstanceOptions) {
+  constructor(context: BaseIOContext, options?: InstanceOptions) {
     const {account} = context
 
     super(

@@ -1,8 +1,8 @@
 import { AppClient, InstanceOptions } from '../HttpClient'
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 
 export class Billing extends AppClient {
-  constructor(context: IOContext, options?: InstanceOptions) {
+  constructor(context: BaseIOContext, options?: InstanceOptions) {
     super('vtex.billing', context, options)
   }
 

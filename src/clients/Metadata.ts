@@ -1,6 +1,6 @@
 import { InfraClient, InstanceOptions } from '../HttpClient'
 import { BucketMetadata } from '../responses'
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']
@@ -23,7 +23,7 @@ export interface MetadataEntryList {
 }
 
 export class Metadata extends InfraClient {
-  constructor (context: IOContext, options?: InstanceOptions) {
+  constructor (context: BaseIOContext, options?: InstanceOptions) {
     super('router', context, options)
     if (runningAppName === '') {
       throw new Error(`Invalid path to access Metadata. Variable VTEX_APP_ID is not available.`)

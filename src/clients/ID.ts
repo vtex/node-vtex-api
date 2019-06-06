@@ -1,5 +1,5 @@
 import { ExternalClient, InstanceOptions } from '../HttpClient'
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 
 const routes = {
   SEND: '/accesskey/send',
@@ -17,7 +17,7 @@ const endpoint = (env: string) => {
 }
 
 export class ID extends ExternalClient {
-  constructor (context: IOContext, opts?: InstanceOptions) {
+  constructor (context: BaseIOContext, opts?: InstanceOptions) {
     super(endpoint(VTEXID_ENDPOINTS.STABLE), context, opts)
   }
 

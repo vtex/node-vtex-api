@@ -7,7 +7,7 @@ import { createGzip } from 'zlib'
 import { inflightURL, inflightUrlWithQuery, InfraClient, InstanceOptions } from '../HttpClient'
 import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
 import { BucketMetadata, FileListItem } from '../responses'
-import { IOContext } from '../service/typings'
+import { BaseIOContext } from '../service/typings'
 
 const appId = process.env.VTEX_APP_ID
 const [runningAppName] = appId ? appId.split('@') : ['']
@@ -23,7 +23,7 @@ const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
 }
 
 export class VBase extends InfraClient {
-  constructor (context: IOContext, options?: InstanceOptions) {
+  constructor (context: BaseIOContext, options?: InstanceOptions) {
     super('vbase', context, options)
     if (runningAppName === '') {
       throw new Error(`Invalid path to access VBase. Variable VTEX_APP_ID is not available.`)
