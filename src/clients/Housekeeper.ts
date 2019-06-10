@@ -4,7 +4,7 @@ import { IOContext } from '../service/typings'
 
 const createRoutes = ({account, workspace}: IOContext) => {
   const routes = {
-    Apply: () => `housekeeping/apply`,
+    Apply: () => `v2/housekeeping/apply`,
     Perform: () => `_housekeeping/perform`,
     Resolve: () => `v2/housekeeping/resolve`,
   }
