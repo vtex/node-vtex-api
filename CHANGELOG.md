@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.22.1-beta] - 2019-06-12
+
 ## [3.22.0] - 2019-06-06
 ### Added
 - Typings for Free and Paid Billing Options
