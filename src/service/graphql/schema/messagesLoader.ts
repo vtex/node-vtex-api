@@ -33,7 +33,7 @@ export const messagesLoader = (messagesGraphQL: MessagesGraphQL, logger: Logger)
             provider,
             to,
           }).catch(err => {
-            logger.error(err)
+            logger.error(err, 'messages-translations')
             throw err
           }),
         messagesByProvider
