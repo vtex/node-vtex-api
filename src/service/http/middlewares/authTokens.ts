@@ -9,7 +9,7 @@ export async function authTokens <T extends IOClients, U, V> (ctx: ServiceContex
 
   ctx.vtex.adminUserAuthToken = ctx.cookies.get(VTEX_ID_COOKIE_KEY)
   ctx.vtex.storeUserAuthToken = ctx.cookies.get(`${VTEX_ID_COOKIE_KEY}_${account}`)
-  ctx.vtex.janusEnv = `${JANUS_ENV_COOKIE_KEY}=${ctx.cookies.get(JANUS_ENV_COOKIE_KEY)}`
+  ctx.vtex.janusEnv = ctx.cookies.get(JANUS_ENV_COOKIE_KEY)
 
   await next()
 }

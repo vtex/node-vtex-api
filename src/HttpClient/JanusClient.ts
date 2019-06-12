@@ -19,20 +19,10 @@ import { InstanceOptions } from './typings'
 export class JanusClient extends ExternalClient {
   constructor(context: IOContext, options?: InstanceOptions) {
     const {account} = context
-
-    if (context.janusEnv) {
-      options = options || {}
-      options = {
-        ...options,
-        headers: {
-          ...options.headers,
-          'cookie': context.janusEnv,
-        },
-      }
-    }
+    const env = context.janusEnv && context.janusEnv === 'beta'? 'beta' : 'stable'
 
     super(
-      'http://portal.vtexcommercestable.com.br',
+      `http://portal.vtexcommerce${env}.com.br`,
       context,
       {
         ...options,
