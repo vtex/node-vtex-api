@@ -19,9 +19,10 @@ import { InstanceOptions } from './typings'
 export class JanusClient extends ExternalClient {
   constructor(context: IOContext, options?: InstanceOptions) {
     const {account} = context
+    const env = context.janusEnv && context.janusEnv === 'beta'? 'beta' : 'stable'
 
     super(
-      'http://portal.vtexcommercestable.com.br',
+      `http://portal.vtexcommerce${env}.com.br`,
       context,
       {
         ...options,
