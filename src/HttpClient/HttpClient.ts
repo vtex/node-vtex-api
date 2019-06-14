@@ -4,7 +4,7 @@ import compose, { Middleware } from 'koa-compose'
 import pLimit from 'p-limit'
 
 import { CacheLayer } from '../caches/CacheLayer'
-import { SEGMENT_HEADER } from '../constants'
+import { SEGMENT_HEADER, SESSION_HEADER } from '../constants'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { forExternal, forRoot, forWorkspace } from './factories'
 import { CacheableRequestConfig, Cached, cacheMiddleware, CacheType } from './middlewares/cache'
@@ -50,7 +50,7 @@ export class HttpClient {
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor (opts: ClientOptions) {
-    const {baseURL, authToken, authType, memoryCache, diskCache, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS, segmentToken, retries, concurrency, headers: defaultHeaders, params, operationId, verbose} = opts
+    const {baseURL, authToken, authType, memoryCache, diskCache, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS, segmentToken, sessionToken, retries, concurrency, headers: defaultHeaders, params, operationId, verbose} = opts
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
       ...defaultHeaders,
@@ -58,6 +58,7 @@ export class HttpClient {
       'User-Agent': userAgent,
       ... operationId ? {'x-vtex-operation-id': operationId} : null,
       ... segmentToken ? {[SEGMENT_HEADER]: segmentToken} : null,
+      ... sessionToken ? {[SESSION_HEADER]: sessionToken} : null,
     }
 
     if (authType && authToken) {
