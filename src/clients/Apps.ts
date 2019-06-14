@@ -61,7 +61,7 @@ const workspaceFields = [
   'settingsSchema',
   '_isRoot',
   '_buildFeatures',
-].join(',')
+]
 
 interface AppLocator {
   name: string
@@ -278,11 +278,17 @@ export class Apps extends InfraClient {
   public getAppsMetaInfos = async (filter?: string) => {
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
-    const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey}).then(prop('apps'))
+    const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields.join(',')}, metric, inflightKey}).then(prop('apps'))
     if (filter) {
       return ramdaFilter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfos)
     }
     return appsMetaInfos
+  }
+
+  public getAppsMetaInfosWithFields = async (rootOnly: boolean, fields: string[] = workspaceFields) => {
+    const metric = 'get-root-apps-meta'
+    const inflightKey = inflightURL
+    return await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: fields.join(','), rootOnly}, metric, inflightKey}).then(prop('apps'))
   }
 
   public getDependencies = (filter: string = '') => {
