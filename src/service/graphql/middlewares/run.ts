@@ -13,7 +13,7 @@ const persistedQueries = {
   }),
 }
 
-export const run = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
+export async function run (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {
     method,
     graphql,

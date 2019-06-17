@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.24.1] - 2019-06-17
+### Fixed
+- Fixes `Please use a named function as handler for better metrics` warnings
+
 ## [3.24.0] - 2019-06-14
 
 ## [3.24.0-beta.0] - 2019-06-13

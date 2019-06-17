@@ -41,7 +41,7 @@ const createFormatResponse = (formatter: (e: any) => any) => (response: any) => 
   }
 }
 
-export const createFormatters = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
+export async function createFormatters (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {
     headers: {
       'x-forwarded-host': forwardedHost,
