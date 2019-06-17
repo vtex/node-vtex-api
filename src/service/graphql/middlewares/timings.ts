@@ -34,7 +34,7 @@ const batchResolversTracing = (resolvers: ResolverTracing[], graphQLErrors?: any
   })
 }
 
-export const timings = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
+export async function timings (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const start = process.hrtime()
 
   // Errors will be caught by the next middleware so we don't have to catch.

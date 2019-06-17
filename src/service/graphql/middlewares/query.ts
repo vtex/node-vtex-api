@@ -16,7 +16,7 @@ const queryFromUrl = compose<string, Url, string, Record<string, any>>(
   partialRight(parse, [true])
 )
 
-export const parseQuery = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
+export async function parseQuery (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {request, req} = ctx
 
   let query: Record<string, any>

@@ -4,7 +4,7 @@ import { SEGMENT_HEADER } from '../../../constants'
 import { GraphQLServiceContext } from '../typings'
 import { cacheControl } from '../utils/cacheControl'
 
-export const response = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
+export async function response (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {responseInit, graphqlResponse} = ctx.graphql
 
   const {
