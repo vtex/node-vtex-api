@@ -61,12 +61,20 @@ const workspaceFields = [
   'settingsSchema',
   '_isRoot',
   '_buildFeatures',
-]
+].join(',')
 
 interface AppLocator {
   name: string
   version: string
   build?: string
+}
+
+interface MetaInfosParams {
+  rootOnly?: boolean
+  linked?: boolean
+  vendor?: string
+  category?: string
+  dependentOn?: string
 }
 
 export class Apps extends InfraClient {
@@ -278,17 +286,17 @@ export class Apps extends InfraClient {
   public getAppsMetaInfos = async (filter?: string) => {
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
-    const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields.join(',')}, metric, inflightKey}).then(prop('apps'))
+    const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey}).then(prop('apps'))
     if (filter) {
       return ramdaFilter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfos)
     }
     return appsMetaInfos
   }
 
-  public getAppsMetaInfosWithFields = async (rootOnly: boolean, fields: string[] = workspaceFields) => {
+  public getAppsMetaInfosWithFields = async (fields: string[], params: MetaInfosParams = {}) => {
     const metric = 'get-root-apps-meta'
     const inflightKey = inflightURL
-    return await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: fields.join(','), rootOnly}, metric, inflightKey}).then(prop('apps'))
+    return await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: fields.join(','), ...params}, metric, inflightKey}).then(prop('apps'))
   }
 
   public getDependencies = (filter: string = '') => {
