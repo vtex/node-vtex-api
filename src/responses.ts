@@ -120,3 +120,22 @@ export type AppBundlePublished = AppBundleResponse & {
 export type AppBundleLinked = AppBundleResponse & {
   bundleSize?: number,
 }
+
+export interface HouseKeeperState {
+  infra: string[]
+  edition: string[]
+  runtimes: string[]
+  apps: Array<{id: string, source: string}>
+}
+
+export interface HouseKeeperUpdates extends HouseKeeperState {
+  editionApps?: {
+    install?: string[]
+    uninstall?: string[]
+  }
+}
+
+export interface HousekeeperStatesAndUpdates {
+  state: HouseKeeperState
+  updates: HouseKeeperUpdates
+}
