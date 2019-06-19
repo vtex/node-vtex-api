@@ -6,6 +6,7 @@ import { cacheControl } from '../utils/cacheControl'
 
 export async function response (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {responseInit, graphqlResponse} = ctx.graphql
+  const {production} = ctx.vtex
 
   const {
     maxAge = '',
@@ -23,7 +24,10 @@ export async function response (ctx: GraphQLServiceContext, next: () => Promise<
     ctx.vary(SEGMENT_HEADER)
   }
 
-  ctx.body = pick(['data', 'errors'], graphqlResponse!)
+  const fields = production
+    ? ['data', 'errors']
+    : ['data', 'errors', 'extensions']
 
+  ctx.body = pick(fields, graphqlResponse!)
   await next()
 }
