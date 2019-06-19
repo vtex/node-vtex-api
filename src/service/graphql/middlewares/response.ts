@@ -4,8 +4,12 @@ import { SEGMENT_HEADER } from '../../../constants'
 import { GraphQLServiceContext } from '../typings'
 import { cacheControl } from '../utils/cacheControl'
 
+const DEV_FIELDS = ['data', 'errors', 'extensions']
+const PROD_FIELDS = ['data', 'errors']
+
 export async function response (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {responseInit, graphqlResponse} = ctx.graphql
+  const {production} = ctx.vtex
 
   const {
     maxAge = '',
@@ -23,7 +27,7 @@ export async function response (ctx: GraphQLServiceContext, next: () => Promise<
     ctx.vary(SEGMENT_HEADER)
   }
 
-  ctx.body = pick(['data', 'errors'], graphqlResponse!)
-
+  const fields = production ? PROD_FIELDS : DEV_FIELDS
+  ctx.body = pick(fields, graphqlResponse!)
   await next()
 }
