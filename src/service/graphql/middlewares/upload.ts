@@ -8,7 +8,7 @@ declare module 'graphql-upload' {
 const graphqlUpload = graphqlUploadKoa({
   maxFieldSize: 1e6, // size in Bytes
   maxFileSize: 4 * 1e6, // size in Bytes
-  maxFiles: 5,
+  maxFiles: 10,
 })
 
 function graphqlUploadKoaMiddleware(
