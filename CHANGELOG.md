@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.26.2] - 2019-06-21
+
 ## [3.26.1] - 2019-06-21
 ### Fixed
 - Problem with `recorder` inside `context` - Assure that `recorder` is inside `context` at the right moment.
