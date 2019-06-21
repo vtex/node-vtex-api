@@ -2,10 +2,10 @@ import { props } from 'bluebird'
 import DataLoader from 'dataloader'
 import { forEachObjIndexed, mapObjIndexed, pick, repeat } from 'ramda'
 
-import { MessagesGraphQL } from '../../../clients'
+import { IOClients } from '../../../clients/IOClients'
 import { IOMessage, providerFromMessage } from '../../../utils/message'
 
-export const messagesLoader = (messagesGraphQL: MessagesGraphQL) =>
+export const messagesLoader = (clients: IOClients) =>
   new DataLoader<IOMessage, string>(async (messages: IOMessage[]) => {
     const to = messages[0].to!
     const from = messages[0].from
@@ -26,7 +26,7 @@ export const messagesLoader = (messagesGraphQL: MessagesGraphQL) =>
     const translationsByProvider: Record<string, string[]> = await props(
       mapObjIndexed(
         (messagesArray, provider) =>
-          messagesGraphQL.translate({
+          clients.messagesGraphQL.translate({
             behavior,
             from,
             messages: messagesArray,
