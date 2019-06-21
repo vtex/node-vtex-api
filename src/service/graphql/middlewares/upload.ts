@@ -5,15 +5,16 @@ declare module 'graphql-upload' {
   export function graphqlUploadKoa(options: ApolloUploadOptions): (ctx: GraphQLServiceContext, next: () => Promise<any>) => Promise<void>
 }
 
+const graphqlUpload = graphqlUploadKoa({
+  maxFieldSize: 1e6, // size in Bytes
+  maxFileSize: 4 * 1e6, // size in Bytes
+  maxFiles: 5,
+})
+
 function graphqlUploadKoaMiddleware(
   ctx: GraphQLServiceContext,
   next: () => Promise<any>
 ): Promise<void> {
-  const graphqlUpload = graphqlUploadKoa({
-    maxFieldSize: 1e6, // size in Bytes
-    maxFileSize: 4 * 1e6, // size in Bytes
-    maxFiles: 5,
-  })
   return graphqlUpload(ctx, next)
 }
 
