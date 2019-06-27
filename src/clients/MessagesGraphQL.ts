@@ -59,12 +59,7 @@ const batchData = (lengths: number[], indexedData: IOMessageInput[]) => {
 
 export class MessagesGraphQL extends AppGraphQLClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
-    super('vtex.messages', vtex, {
-      concurrency: 20,
-      retries: 1,
-      timeout: 1500, // messages max(p99) as of 27/06/2019
-      ...options,
-    })
+    super('vtex.messages', vtex, options)
   }
 
   public translate = async (args: Translate): Promise<string[]> => {
