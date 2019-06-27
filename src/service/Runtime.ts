@@ -12,7 +12,12 @@ import { ClientsConfig, RouteHandler, ServiceDescriptor } from './typings'
 const defaultClients: ClientsConfig = {
   options: {
     messages: {
-      concurrency: 15,
+      concurrency: 10,
+      retries: 2,
+      timeout: 1000,
+    },
+    messagesGraphQL: {
+      concurrency: 10,
       retries: 2,
       timeout: 1000,
     },
