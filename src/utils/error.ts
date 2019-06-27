@@ -10,7 +10,7 @@ const findCaseInsensitive = (target: string, set: string[]) => find(
   set
 )
 
-const destroyCircular = (from: any, seen: string[]) => {
+const destroyCircular = (from: any, seen: any[]) => {
   const to: {[key: string]: any} = Array.isArray(from) ? [] : {}
 
   seen.push(from)
@@ -33,7 +33,6 @@ const destroyCircular = (from: any, seen: string[]) => {
       } else {
         to[key] = value
       }
-
       continue
     }
 
@@ -65,8 +64,8 @@ const destroyCircular = (from: any, seen: string[]) => {
   ]
 
   for (const property of axiosProperties) {
-    if (from[property]) {
-      to[property] = pick(PICKED_AXIOS_PROPS, from[property])
+    if (to[property]) {
+      to[property] = pick(PICKED_AXIOS_PROPS, to[property])
       const headers = to[property] && to[property].headers
       if (headers) {
         const headerNames = keys(headers)

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.26.4] - 2019-06-27
+### Fixed
+- Removal of circular references in logs.
+
 ## [3.26.3] - 2019-06-24
 
 ## [3.26.2] - 2019-06-24
