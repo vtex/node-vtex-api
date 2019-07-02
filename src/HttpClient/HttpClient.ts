@@ -121,6 +121,11 @@ export class HttpClient {
     return this.request(patchConfig).then(response => response.data as T)
   }
 
+  public head = (url: string, config:RequestConfig = {}): Promise<IOResponse<void>> => {
+    const headConfig: RequestConfig = {...config, url, method: 'head'}
+    return this.request(headConfig)
+  }
+
   public delete = <T = void>(url: string, config?: RequestConfig): Promise<IOResponse<T>> => {
     const deleteConfig: RequestConfig = {...config, url, method: 'delete'}
     return this.request(deleteConfig)
