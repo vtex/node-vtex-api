@@ -72,6 +72,10 @@ export class VBase extends InfraClient {
     return this.saveContent(bucket, path, stream, {gzip, ttl})
   }
 
+  public getFileMetadata = (bucket:string, path:string) => {
+    return this.http.head(routes.File(bucket, path), {metric: 'vbase-get-file-metadata'})
+  }
+
   public saveJSON = <T>(bucket: string, path: string, data: T) => {
     const headers = {'Content-Type': 'application/json'}
     const metric = 'vbase-save-json'
