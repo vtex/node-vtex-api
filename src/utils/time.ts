@@ -16,6 +16,8 @@ export const formatNano = (nanoseconds: number): string =>
 export const reduceHrToNano =
   reduce((acc: number, hr: [number, number]) => acc + hrToNano(hr), 0 as number)
 
+export const shouldForwardTimings = (timing: string) => timing.endsWith('.server') || timing.endsWith('.client')
+
 function recordTimings(start: [number, number], name: string, timings: Record<string, [number, number]>, middlewareMetrics: Record<string, [number, number]>) {
   // Capture the total amount of time spent in this middleware
   const end = process.hrtime(start)
@@ -46,6 +48,9 @@ export function timer<T extends IOClients, U, V>(middleware: RouteHandler<T, U, 
   }
 
   return async (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) => {
+    if (!ctx.serverTiming) {
+      ctx.serverTiming = {}
+    }
     if (!ctx.timings) {
       ctx.timings = {}
     }

@@ -89,6 +89,8 @@ export interface InstanceOptions {
   params?: Record<string, string>,
   middlewares?: Array<Middleware<MiddlewareContext>>
   verbose?: boolean
+  name?: string
+  serverTimings?: Record<string, string>
 }
 
 export interface IOResponse<T> {

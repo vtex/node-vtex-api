@@ -9,12 +9,15 @@ import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { InstanceOptions } from '../HttpClient'
 import { Recorder } from '../HttpClient/middlewares/recorder'
 
+type ServerTiming = Record<string, string>
+
 export interface Context<T extends IOClients> {
   clients: T
   vtex: IOContext
   dataSources?: DataSources
   timings: Record<string, [number, number]>
   metrics: Record<string, [number, number]>
+  serverTiming?: ServerTiming
 }
 
 type KnownKeys<T> = {
@@ -79,6 +82,7 @@ export interface IOContext {
   operationId: string
   // Admins may send a cookie in the request to indicate they should be routed to a specific environment, e.g. beta.
   janusEnv?: JanusEnv
+  serverTiming?: ServerTiming
 }
 
 export interface ServiceRoute {
