@@ -27,6 +27,7 @@ interface ClientOptions {
   timeout?: number
   recorder?: Recorder
   metrics?: MetricsAccumulator
+  serverTiming?: Record<string, string>
   memoryCache?: CacheLayer<string, Cached>
   diskCache?: CacheLayer<string, Cached>
   segmentToken?: string
@@ -40,6 +41,7 @@ interface ClientOptions {
   middlewares?: Array<Middleware<MiddlewareContext>>
   operationId: string
   verbose?: boolean
+  name?: string
 }
 
 export class HttpClient {
@@ -50,7 +52,26 @@ export class HttpClient {
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor (opts: ClientOptions) {
-    const {baseURL, authToken, authType, memoryCache, diskCache, metrics, recorder, userAgent, timeout = DEFAULT_TIMEOUT_MS, segmentToken, sessionToken, retries, concurrency, headers: defaultHeaders, params, operationId, verbose} = opts
+    const {
+      baseURL,
+      authToken,
+      authType,
+      memoryCache,
+      diskCache,
+      name,
+      metrics,
+      serverTiming,
+      recorder,
+      userAgent,
+      timeout = DEFAULT_TIMEOUT_MS,
+      segmentToken,
+      sessionToken,
+      retries,
+      concurrency,
+      headers: defaultHeaders,
+      params, operationId,
+      verbose,
+    } = opts
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
       ...defaultHeaders,
@@ -69,7 +90,7 @@ export class HttpClient {
 
     this.runMiddlewares = compose([...opts.middlewares || [],
       defaultsMiddleware(baseURL, headers, params, timeout, retries, verbose),
-      ...metrics ? [metricsMiddleware(metrics)] : [],
+      metricsMiddleware({metrics, serverTiming, name}),
       memoizationMiddleware({memoizedCache}),
       ...recorder ? [recorderMiddleware(recorder)] : [],
       singleFlightMiddleware,

@@ -1,11 +1,33 @@
+import { compose, forEach, path, reduce, replace, split } from 'ramda'
+
 import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
+import { hrToMillis, shouldForwardTimings } from '../../utils'
 import { TIMEOUT_CODE } from '../../utils/retry'
 import { statusLabel } from '../../utils/status'
 import { MiddlewareContext } from '../typings'
 
-export const metricsMiddleware = (metrics: MetricsAccumulator) => {
+const filterForwardableServerTimingsHeaders = (serverTimingsHeaderValue: string) => compose<string, string, string[], Array<[string, string]>>(
+  reduce((acc, rawHeader) => {
+    const [name, durStr] = rawHeader.split(';')
+    const [_, dur] = durStr ? durStr.split('=') : [null, null]
+    if (shouldForwardTimings(name) && dur && name) {
+      acc.push([name, dur])
+    }
+    return acc
+  }, [] as Array<[string, string]>),
+  split(','),
+  replace(/\s/g, '')
+)(serverTimingsHeaderValue)
+
+interface MetricsOpts {
+  metrics?: MetricsAccumulator
+  serverTiming?: Record<string, string>
+  name?: string
+}
+
+export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-    const start = ctx.config.metric ? process.hrtime() : null
+    const start = process.hrtime()
     let status: string = 'unknown'
 
     try {
@@ -29,8 +51,8 @@ export const metricsMiddleware = (metrics: MetricsAccumulator) => {
       }
       throw err
     } finally {
-      if (ctx.config.metric) {
-        const end = process.hrtime(start as [number, number])
+      const end = process.hrtime(start as [number, number])
+      if (ctx.config.metric && metrics) {
         const label = `http-client-${status}-${ctx.config.metric}`
         const extensions: Record<string, string | number> = {}
 
@@ -47,6 +69,28 @@ export const metricsMiddleware = (metrics: MetricsAccumulator) => {
         }
 
         metrics.batch(label, end, extensions)
+      }
+      if (serverTiming) {
+        // Timings in the client's perspective
+        const label = `${name || 'unknown'}.client`
+        const dur = `${hrToMillis(end)}`
+        if (!serverTiming[label] || serverTiming[label] < dur) {
+          serverTiming[label] = dur
+        }
+
+        // Timings in the servers's perspective
+        const serverTimingsHeader = path<string>(['response', 'headers', 'server-timing'], ctx)
+        if (serverTimingsHeader) {
+          const forwardableTimings = filterForwardableServerTimingsHeaders(serverTimingsHeader)
+          forEach(
+            ([timingsName, timingsDur]) => {
+              if (!serverTiming[timingsName] || serverTiming[timingsName] < dur) {
+                serverTiming[timingsName] = timingsDur
+              }
+            },
+            forwardableTimings
+          )
+        }
       }
     }
   }
