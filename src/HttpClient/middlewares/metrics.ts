@@ -1,4 +1,4 @@
-import { compose, forEach, path, reduce, replace, split } from 'ramda'
+import { compose, forEach, path, reduce, replace, split, values } from 'ramda'
 
 import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
 import { hrToMillis, shrinkTimings } from '../../utils'
@@ -81,9 +81,10 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
           serverTiming[serverTimingLabel] = `${dur}`
         }
 
-        // Timings in the servers's perspective
+        // Forward server timings
         const serverTimingsHeader = path<string>(['response', 'headers', 'server-timing'], ctx)
-        if (serverTimingsHeader) {
+        const cacheHit = ctx.cacheHit && values(ctx.cacheHit).reduce((a, b) => a || b !== 0, false)
+        if (serverTimingsHeader && !cacheHit) {
           const parsedServerTiming = parseServerTiming(serverTimingsHeader)
           forEach(
             ([timingsName, timingsDur]) => {
