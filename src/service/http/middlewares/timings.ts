@@ -1,16 +1,15 @@
-import { compose, filter, reduce, toPairs } from 'ramda'
+import { compose, reduce, toPairs } from 'ramda'
 
 import { IOClients } from '../../../clients/IOClients'
 import { statusLabel } from '../../../utils/status'
-import { hrToMillis, shouldForwardTimings } from '../../../utils/time'
+import { hrToMillis, shrinkTimings } from '../../../utils/time'
 import { updateLastLogger } from '../../../utils/unhandled'
 import { ServiceContext } from '../../typings'
 
-const APP_ELAPSED_TIME_LOCATOR = `${process.env.VTEX_APP_VENDOR}.${process.env.VTEX_APP_NAME}.server`
+const APP_ELAPSED_TIME_LOCATOR = shrinkTimings(`0%${process.env.VTEX_APP_NAME}`)
 
-const reduceTimings = (timingsObj: Record<string, string>) => compose<Record<string, string>, Array<[string, string]>, Array<[string, string]>, string>(
+const reduceTimings = (timingsObj: Record<string, string>) => compose<Record<string, string>, Array<[string, string]>, string>(
   reduce((acc, [key, dur]) => `${key};dur=${dur}, ${acc}`, ''),
-  filter(([name]: [string, [number, number]]) => shouldForwardTimings(name)),
   toPairs
 )(timingsObj)
 
