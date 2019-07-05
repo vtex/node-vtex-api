@@ -76,7 +76,10 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
       }
       if (serverTiming) {
         // Timings in the client's perspective
-        serverTiming[serverTimingLabel] = `${hrToMillis(process.hrtime(serverTimingStart))}`
+        const dur = hrToMillis(process.hrtime(serverTimingStart))
+        if (!serverTiming[serverTimingLabel] || Number(serverTiming[serverTimingLabel]) < dur) {
+          serverTiming[serverTimingLabel] = `${dur}`
+        }
 
         // Timings in the servers's perspective
         const serverTimingsHeader = path<string>(['response', 'headers', 'server-timing'], ctx)
