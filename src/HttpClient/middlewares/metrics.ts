@@ -1,17 +1,19 @@
 import { compose, forEach, path, reduce, replace, split } from 'ramda'
 
 import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
-import { hrToMillis, shouldForwardTimings } from '../../utils'
+import { hrToMillis, shrinkTimings } from '../../utils'
 import { TIMEOUT_CODE } from '../../utils/retry'
 import { statusLabel } from '../../utils/status'
 import { MiddlewareContext } from '../typings'
 
-const filterForwardableServerTimingsHeaders = (serverTimingsHeaderValue: string) => compose<string, string, string[], Array<[string, string]>>(
+const parseServerTiming = (serverTimingsHeaderValue: string) => compose<string, string, string[], Array<[string, string]>>(
   reduce((acc, rawHeader) => {
-    const [name, durStr] = rawHeader.split(';')
+    const [hopAndName, durStr] = rawHeader.split(';')
+    const [hop, name]  = hopAndName ? hopAndName.split('%') : [null, null]
     const [_, dur] = durStr ? durStr.split('=') : [null, null]
-    if (shouldForwardTimings(name) && dur && name) {
-      acc.push([name, dur])
+    const incrementedName = !hop || Number.isNaN(hop as any) ? name : `${Number(hop)+1}%${name}`
+    if (dur && incrementedName) {
+      acc.push([incrementedName, dur])
     }
     return acc
   }, [] as Array<[string, string]>),
@@ -26,6 +28,8 @@ interface MetricsOpts {
 }
 
 export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) => {
+  const serverTimingLabel = shrinkTimings(`0%${process.env.VTEX_APP_NAME}#${name || 'unknown'}`)
+  const serverTimingStart = process.hrtime()
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     const start = process.hrtime()
     let status: string = 'unknown'
@@ -51,7 +55,7 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
       }
       throw err
     } finally {
-      const end = process.hrtime(start as [number, number])
+      const end = process.hrtime(start)
       if (ctx.config.metric && metrics) {
         const label = `http-client-${status}-${ctx.config.metric}`
         const extensions: Record<string, string | number> = {}
@@ -72,23 +76,19 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
       }
       if (serverTiming) {
         // Timings in the client's perspective
-        const label = `${name || 'unknown'}.client`
-        const dur = `${hrToMillis(end)}`
-        if (!serverTiming[label] || serverTiming[label] < dur) {
-          serverTiming[label] = dur
-        }
+        serverTiming[serverTimingLabel] = `${hrToMillis(process.hrtime(serverTimingStart))}`
 
         // Timings in the servers's perspective
         const serverTimingsHeader = path<string>(['response', 'headers', 'server-timing'], ctx)
         if (serverTimingsHeader) {
-          const forwardableTimings = filterForwardableServerTimingsHeaders(serverTimingsHeader)
+          const parsedServerTiming = parseServerTiming(serverTimingsHeader)
           forEach(
             ([timingsName, timingsDur]) => {
-              if (!serverTiming[timingsName] || serverTiming[timingsName] < dur) {
+              if (!serverTiming[timingsName] || Number(serverTiming[timingsName]) < Number(timingsDur)) {
                 serverTiming[timingsName] = timingsDur
               }
             },
-            forwardableTimings
+            parsedServerTiming
           )
         }
       }

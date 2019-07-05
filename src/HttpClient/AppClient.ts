@@ -19,7 +19,7 @@ export class AppClient extends IOClient {
         ...options,
         authType: AuthType.bearer,
         baseURL,
-        name: app,
+        name,
       }
     )
   }
