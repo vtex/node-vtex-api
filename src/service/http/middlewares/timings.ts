@@ -1,8 +1,14 @@
 import { IOClients } from '../../../clients/IOClients'
 import { statusLabel } from '../../../utils/status'
-import { hrToMillis } from '../../../utils/time'
+import { formatTimingName, hrToMillis, reduceTimings, shrinkTimings } from '../../../utils/time'
 import { updateLastLogger } from '../../../utils/unhandled'
 import { ServiceContext } from '../../typings'
+
+const APP_ELAPSED_TIME_LOCATOR = shrinkTimings(formatTimingName({
+  hopNumber: 0,
+  source: process.env.VTEX_APP_NAME!,
+  target: '',
+}))
 
 const log = <T extends IOClients, U, V>(
   {vtex: {account, workspace, route: {id}}, path, method, status}: ServiceContext<T, U, V>,
@@ -21,7 +27,9 @@ export async function timings<T extends IOClients, U, V> (ctx: ServiceContext<T,
   const { status, vtex: { route: { id } } } = ctx
   const end = process.hrtime(start)
   const millis = hrToMillis(end)
+  console.log(log(ctx, millis))
 
   metrics.batch(`http-handler-${statusLabel(status)}-${id}`, end, { [status]: 1 })
-  console.log(log(ctx, millis))
+  ctx.serverTiming![APP_ELAPSED_TIME_LOCATOR] = `${millis}`
+  ctx.set('Server-Timing', reduceTimings(ctx.serverTiming!))
 }

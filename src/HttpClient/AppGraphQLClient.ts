@@ -18,6 +18,7 @@ export class AppGraphQLClient extends IOGraphQLClient {
         ...options,
         authType: AuthType.bearer,
         baseURL,
+        name,
       }
     )
   }

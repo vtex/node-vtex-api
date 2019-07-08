@@ -13,6 +13,7 @@ export class IOClient {
 
   constructor(protected context: IOContext, protected options?: InstanceOptions) {
     this.http = new HttpClient({
+      name: this.constructor.name,
       ...context,
       ...options,
     })

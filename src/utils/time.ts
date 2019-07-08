@@ -1,4 +1,4 @@
-import { forEach, keys, reduce } from 'ramda'
+import { compose, forEach, keys, reduce, toPairs } from 'ramda'
 
 import { IOClients } from '../clients/IOClients'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
@@ -15,6 +15,28 @@ export const formatNano = (nanoseconds: number): string =>
 
 export const reduceHrToNano =
   reduce((acc: number, hr: [number, number]) => acc + hrToNano(hr), 0 as number)
+
+export const shrinkTimings = (name: string) => name.replace(/graphql/g, 'gql').replace(/server/g, 'srv')
+
+type TimingFormat = ReturnType<typeof parseTimingName>
+
+export const formatTimingName = ({hopNumber, target, source}: TimingFormat) =>
+  `${Number.isNaN(hopNumber as any) ? '' : hopNumber}.${source || ''}#${target || ''}`
+
+export const parseTimingName = (timing: string | undefined) => {
+  const [hopNumber, sourceAndTarget] = timing ? timing.split('.') : [null, null]
+  const [source, target] = sourceAndTarget ? sourceAndTarget.split('#') : [null, null]
+  return {
+    hopNumber: Number.isNaN(hopNumber as any) ? null : Number(hopNumber),
+    source,
+    target,
+  }
+}
+
+export const reduceTimings = (timingsObj: Record<string, string>) => compose<Record<string, string>, Array<[string, string]>, string>(
+  reduce((acc, [key, dur]) => `${key};dur=${dur}, ${acc}`, ''),
+  toPairs
+)(timingsObj)
 
 function recordTimings(start: [number, number], name: string, timings: Record<string, [number, number]>, middlewareMetrics: Record<string, [number, number]>) {
   // Capture the total amount of time spent in this middleware
@@ -46,6 +68,9 @@ export function timer<T extends IOClients, U, V>(middleware: RouteHandler<T, U, 
   }
 
   return async (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) => {
+    if (!ctx.serverTiming) {
+      ctx.serverTiming = {}
+    }
     if (!ctx.timings) {
       ctx.timings = {}
     }
