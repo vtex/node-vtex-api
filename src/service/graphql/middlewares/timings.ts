@@ -30,7 +30,9 @@ const batchResolversTracing = (resolvers: ResolverTracing[], graphQLErrors?: any
       pathName,
       returnType: resolver.returnType,
     }
-    metrics.batchMetric(`graphql-resolver-${status}-${pathName}`, nanoToMillis(resolver.duration), extensions)
+    if (resolver.parentType === 'Query') {
+      metrics.batchMetric(`graphql-resolver-${status}-${pathName}`, nanoToMillis(resolver.duration), extensions)
+    }
   })
 }
 
