@@ -5,8 +5,6 @@ import { CacheLayer } from '../../caches/CacheLayer'
 import { SEGMENT_HEADER, SESSION_HEADER } from '../../constants'
 import { MiddlewareContext, RequestConfig } from '../typings'
 
-const ROUTER_CACHE_KEY = 'x-router-cache'
-const ROUTER_CACHE_HIT = 'HIT'
 const RANGE_HEADER_QS_KEY = '__range_header'
 const cacheableStatusCodes = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501] // https://tools.ietf.org/html/rfc7231#section-6.1
 
@@ -48,7 +46,7 @@ const parseCacheHeaders = (headers: Record<string, string>) => {
   }
 }
 
-export function isCacheable (arg: RequestConfig, type: CacheType): arg is CacheableRequestConfig {
+export function isLocallyCacheable (arg: RequestConfig, type: CacheType): arg is CacheableRequestConfig {
   return arg && !!arg.cacheable && !arg.headers[SESSION_HEADER]
     && (arg.cacheable === type || arg.cacheable === CacheType.Any || type === CacheType.Any)
 }
@@ -70,7 +68,7 @@ interface CacheOptions {
 
 export const cacheMiddleware = ({type, storage}: CacheOptions) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-    if (!isCacheable(ctx.config, type)) {
+    if (!isLocallyCacheable(ctx.config, type)) {
       return await next()
     }
     const key = cacheKey(ctx.config)
@@ -126,21 +124,6 @@ export const cacheMiddleware = ({type, storage}: CacheOptions) => {
     const {age, etag, maxAge: headerMaxAge, noStore, noCache} = parseCacheHeaders(headers)
     const {forceMaxAge} = ctx.config
     const maxAge = forceMaxAge && cacheableStatusCodes.includes(status) ? Math.max(forceMaxAge, headerMaxAge) : headerMaxAge
-
-    if (headers[ROUTER_CACHE_KEY] === ROUTER_CACHE_HIT) {
-      if (ctx.cacheHit) {
-        ctx.cacheHit.router = 1
-      }
-      else {
-        ctx.cacheHit = {
-          inflight: 0,
-          memoized: 0,
-          memory: 0,
-          revalidated: 0,
-          router: 1,
-        }
-      }
-    }
 
     // Indicates this should NOT be cached and this request will not be considered a miss.
     if (!forceMaxAge && (noStore || (noCache && !etag))) {

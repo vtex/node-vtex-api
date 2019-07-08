@@ -24,6 +24,7 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
   const key = inflightKey(ctx.config)
   const isInflight = inflight.has(key) ? 1 : 0
   ctx.cacheHit = {
+    ...ctx.cacheHit,
     inflight: isInflight,
   }
 
