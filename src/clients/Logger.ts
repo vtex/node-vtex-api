@@ -40,6 +40,10 @@ export class Logger extends InfraClient {
       console.error(message)
     }
 
+    if (typeof message === 'string' || message instanceof String) {
+      message = {message}
+    }
+
     if (message && typeof message === 'object') {
       message.production = production
     }
