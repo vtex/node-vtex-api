@@ -82,9 +82,7 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
 
         metrics.batch(label, end, extensions)
       }
-      const cacheHit = ctx.cacheHit && values(ctx.cacheHit).reduce((a, b) => a || b !== 0, false)
-      if (!cacheHit && serverTiming) {
-
+      if (serverTiming) {
         // Timings in the client's perspective
         const dur = hrToMillis(process.hrtime(serverTimingStart))
         if (!serverTiming[serverTimingLabel] || Number(serverTiming[serverTimingLabel]) < dur) {
@@ -92,8 +90,9 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
         }
 
         // Forward server timings
+        const cacheHit = ctx.cacheHit && values(ctx.cacheHit).reduce((a, b) => a || b !== 0, false)
         const serverTimingsHeader = path<string>(['response', 'headers', 'server-timing'], ctx)
-        if (serverTimingsHeader) {
+        if (!cacheHit && serverTimingsHeader) {
           const parsedServerTiming = parseServerTiming(serverTimingsHeader)
           forEach(
             ([timingsName, timingsDur]) => {

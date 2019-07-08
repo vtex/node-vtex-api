@@ -13,7 +13,7 @@ import { memoizationMiddleware, Memoized } from './middlewares/memoization'
 import { metricsMiddleware } from './middlewares/metrics'
 import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewares/notFound'
 import { recorderMiddleware } from './middlewares/recorder'
-import { defaultsMiddleware, requestMiddleware } from './middlewares/request'
+import { defaultsMiddleware, requestMiddleware, routerCacheMiddleware } from './middlewares/request'
 import { AuthType, IOResponse, MiddlewareContext, Recorder, RequestConfig } from './typings'
 
 const DEFAULT_TIMEOUT_MS = 1000
@@ -98,6 +98,7 @@ export class HttpClient {
       ...memoryCache ? [cacheMiddleware({type: CacheType.Memory, storage: memoryCache})] : [],
       ...diskCache ? [cacheMiddleware({type: CacheType.Disk, storage: diskCache})] : [],
       notFoundFallbackMiddleware,
+      routerCacheMiddleware,
       requestMiddleware(limit),
     ])
   }

@@ -3,7 +3,7 @@ import retry, { exponentialDelay } from 'axios-retry'
 import { Agent } from 'http'
 import { Limit } from 'p-limit'
 import { stringify } from 'qs'
-import { mapObjIndexed, sum, toLower, values } from 'ramda'
+import { mapObjIndexed, path, sum, toLower, values } from 'ramda'
 
 import { renameBy } from '../../utils/renameBy'
 import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../utils/retry'
@@ -61,6 +61,29 @@ export const defaultsMiddleware = (baseURL: string | undefined, rawHeaders: Reco
     }
 
     await next()
+  }
+}
+
+const ROUTER_CACHE_KEY = 'x-router-cache'
+const ROUTER_CACHE_HIT = 'HIT'
+const ROUTER_CACHE_REVALIDATED = 'REVALIDATED'
+const ROUTER_CACHE_KEY_PATH = ['response', 'headers', ROUTER_CACHE_KEY]
+const ROUTER_RESPONSE_STATUS_PATH = ['response', 'status']
+
+export const routerCacheMiddleware = async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+  await next()
+
+  const routerCacheHit = path(ROUTER_CACHE_KEY_PATH, ctx)
+  const status = path(ROUTER_RESPONSE_STATUS_PATH, ctx)
+  if (routerCacheHit === ROUTER_CACHE_HIT || (routerCacheHit === ROUTER_CACHE_REVALIDATED && status !== 304)) {
+    ctx.cacheHit = {
+      inflight: 0,
+      memoized: 0,
+      memory: 0,
+      revalidated: 0,
+      ...ctx.cacheHit,
+      router: 1,
+    }
   }
 }
 
