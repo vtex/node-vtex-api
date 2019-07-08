@@ -1,19 +1,23 @@
 import { compose, forEach, path, reduce, replace, split, values } from 'ramda'
 
 import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
-import { hrToMillis, shrinkTimings } from '../../utils'
+import { formatTimingName, hrToMillis, parseTimingName, shrinkTimings } from '../../utils'
 import { TIMEOUT_CODE } from '../../utils/retry'
 import { statusLabel } from '../../utils/status'
 import { MiddlewareContext } from '../typings'
 
 const parseServerTiming = (serverTimingsHeaderValue: string) => compose<string, string, string[], Array<[string, string]>>(
   reduce((acc, rawHeader) => {
-    const [hopAndName, durStr] = rawHeader.split(';')
-    const [hop, name]  = hopAndName ? hopAndName.split('%') : [null, null]
+    const [name, durStr] = rawHeader.split(';')
     const [_, dur] = durStr ? durStr.split('=') : [null, null]
-    const incrementedName = !hop || Number.isNaN(hop as any) ? name : `${Number(hop)+1}%${name}`
-    if (dur && incrementedName) {
-      acc.push([incrementedName, dur])
+    const {hopNumber, source, target} = parseTimingName(name)
+    const formatted = formatTimingName({
+      hopNumber: Number.isNaN(hopNumber as any) ? null : hopNumber! + 1,
+      source,
+      target,
+    })
+    if (dur && formatted) {
+      acc.push([formatted, dur])
     }
     return acc
   }, [] as Array<[string, string]>),
@@ -28,8 +32,12 @@ interface MetricsOpts {
 }
 
 export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) => {
-  const serverTimingLabel = shrinkTimings(`0%${process.env.VTEX_APP_NAME}#${name || 'unknown'}`)
   const serverTimingStart = process.hrtime()
+  const serverTimingLabel = shrinkTimings(formatTimingName({
+    hopNumber: 0,
+    source: process.env.VTEX_APP_NAME!,
+    target: name || 'unknown',
+  }))
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     const start = process.hrtime()
     let status: string = 'unknown'
