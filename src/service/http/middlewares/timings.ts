@@ -1,8 +1,6 @@
-import { compose, reduce, toPairs } from 'ramda'
-
 import { IOClients } from '../../../clients/IOClients'
 import { statusLabel } from '../../../utils/status'
-import { formatTimingName, hrToMillis, shrinkTimings } from '../../../utils/time'
+import { formatTimingName, hrToMillis, reduceTimings, shrinkTimings } from '../../../utils/time'
 import { updateLastLogger } from '../../../utils/unhandled'
 import { ServiceContext } from '../../typings'
 
@@ -11,11 +9,6 @@ const APP_ELAPSED_TIME_LOCATOR = shrinkTimings(formatTimingName({
   source: process.env.VTEX_APP_NAME!,
   target: '',
 }))
-
-const reduceTimings = (timingsObj: Record<string, string>) => compose<Record<string, string>, Array<[string, string]>, string>(
-  reduce((acc, [key, dur]) => `${key};dur=${dur}, ${acc}`, ''),
-  toPairs
-)(timingsObj)
 
 const log = <T extends IOClients, U, V>(
   {vtex: {account, workspace, route: {id}}, path, method, status}: ServiceContext<T, U, V>,

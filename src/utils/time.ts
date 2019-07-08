@@ -1,4 +1,4 @@
-import { forEach, keys, reduce } from 'ramda'
+import { compose, forEach, keys, reduce, toPairs } from 'ramda'
 
 import { IOClients } from '../clients/IOClients'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
@@ -32,6 +32,11 @@ export const parseTimingName = (timing: string | undefined) => {
     target,
   }
 }
+
+export const reduceTimings = (timingsObj: Record<string, string>) => compose<Record<string, string>, Array<[string, string]>, string>(
+  reduce((acc, [key, dur]) => `${key};dur=${dur}, ${acc}`, ''),
+  toPairs
+)(timingsObj)
 
 function recordTimings(start: [number, number], name: string, timings: Record<string, [number, number]>, middlewareMetrics: Record<string, [number, number]>) {
   // Capture the total amount of time spent in this middleware
