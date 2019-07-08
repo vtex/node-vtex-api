@@ -18,6 +18,21 @@ export const reduceHrToNano =
 
 export const shrinkTimings = (name: string) => name.replace(/graphql/g, 'gql').replace(/server/g, 'srv')
 
+type TimingFormat = ReturnType<typeof parseTimingName>
+
+export const formatTimingName = ({hopNumber, target, source}: TimingFormat) =>
+  `${Number.isNaN(hopNumber as any) ? '' : hopNumber}.${source || ''}#${target || ''}`
+
+export const parseTimingName = (timing: string | undefined) => {
+  const [hopNumber, sourceAndTarget] = timing ? timing.split('.') : [null, null]
+  const [source, target] = sourceAndTarget ? sourceAndTarget.split('#') : [null, null]
+  return {
+    hopNumber: Number.isNaN(hopNumber as any) ? null : Number(hopNumber),
+    source,
+    target,
+  }
+}
+
 function recordTimings(start: [number, number], name: string, timings: Record<string, [number, number]>, middlewareMetrics: Record<string, [number, number]>) {
   // Capture the total amount of time spent in this middleware
   const end = process.hrtime(start)

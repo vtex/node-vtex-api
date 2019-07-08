@@ -2,11 +2,15 @@ import { compose, reduce, toPairs } from 'ramda'
 
 import { IOClients } from '../../../clients/IOClients'
 import { statusLabel } from '../../../utils/status'
-import { hrToMillis, shrinkTimings } from '../../../utils/time'
+import { formatTimingName, hrToMillis, shrinkTimings } from '../../../utils/time'
 import { updateLastLogger } from '../../../utils/unhandled'
 import { ServiceContext } from '../../typings'
 
-const APP_ELAPSED_TIME_LOCATOR = shrinkTimings(`0%${process.env.VTEX_APP_NAME}`)
+const APP_ELAPSED_TIME_LOCATOR = shrinkTimings(formatTimingName({
+  hopNumber: 0,
+  source: process.env.VTEX_APP_NAME!,
+  target: '',
+}))
 
 const reduceTimings = (timingsObj: Record<string, string>) => compose<Record<string, string>, Array<[string, string]>, string>(
   reduce((acc, [key, dur]) => `${key};dur=${dur}, ${acc}`, ''),
@@ -30,6 +34,7 @@ export async function timings<T extends IOClients, U, V> (ctx: ServiceContext<T,
   const { status, vtex: { route: { id } } } = ctx
   const end = process.hrtime(start)
   const millis = hrToMillis(end)
+  console.log(log(ctx, millis))
 
   metrics.batch(`http-handler-${statusLabel(status)}-${id}`, end, { [status]: 1 })
   ctx.serverTiming![APP_ELAPSED_TIME_LOCATOR] = `${millis}`
