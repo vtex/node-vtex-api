@@ -64,7 +64,7 @@ const destroyCircular = (from: any, seen: any[]) => {
   ]
 
   for (const property of axiosProperties) {
-    if (to[property]) {
+    if (to[property] != null && typeof to[property] === 'object') {
       to[property] = pick(PICKED_AXIOS_PROPS, to[property])
       const headers = to[property] && to[property].headers
       if (headers) {
