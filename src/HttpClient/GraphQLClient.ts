@@ -30,18 +30,10 @@ export class GraphQLClient {
   public query = <Data extends Serializable, Variables extends object>(
     { query, variables, useGet }: QueryOptions<Variables>,
     config: RequestConfig = {}
-  ) => useGet !== false
-    ? this.http.get<GraphQLResponse<Data>>(config.url || '', {
-      ...config,
-      params: {
-        query,
-        variables: JSON.stringify(variables),
-      },
-    })
-    : this.http.post<GraphQLResponse<Data>>(config.url || '',
-      { query, variables },
-      config
-    )
+  ) => this.http.post<GraphQLResponse<Data>>(config.url || '',
+    { query, variables },
+    config
+  )
 
   public mutate = <Data extends Serializable, Variables extends object>(
     { mutate, variables }: MutateOptions<Variables>,

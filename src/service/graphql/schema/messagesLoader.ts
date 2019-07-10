@@ -14,39 +14,18 @@ export const messagesLoader = (clients: IOClients) =>
     const indexByProvider: Record<string, number[]> = {}
 
     messages.forEach((message, index) => {
-      const provider = providerFromMessage(message)
-      if (!messagesByProvider[provider]) {
-        messagesByProvider[provider] = []
-        indexByProvider[provider] = []
-      }
-      messagesByProvider[provider].push(pick(['id', 'content', 'description'], message))
-      indexByProvider[provider].push(index)
+      message.provider = providerFromMessage(message)
+      delete message.from
+      delete message.to
     })
 
-    const translationsByProvider: Record<string, string[]> = await props(
-      mapObjIndexed(
-        (messagesArray, provider) =>
-          clients.messagesGraphQL.translate({
-            behavior,
-            from,
-            messages: messagesArray,
-            provider,
-            to,
-          }),
-        messagesByProvider
-      )
-    )
+    const translations = await clients.messagesGraphQL.translate({
+        behavior,
+        from,
+        messages,
+        to
+      })
 
-    const translations = repeat('', messages.length)
-    forEachObjIndexed<string[], Record<string, string[]>>(
-      (translationsArray, provider) => {
-        const indices = indexByProvider[provider]
-        translationsArray.forEach((translation, index) => {
-          translations[indices[index]] = translation
-        })
-      },
-      translationsByProvider
-    )
-
+    console.log(`The translatons are: ` + JSON.stringify(translations, null,2 ))
     return translations
   })
