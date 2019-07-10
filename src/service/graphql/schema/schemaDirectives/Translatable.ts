@@ -32,8 +32,12 @@ export class Translatable extends SchemaDirectiveVisitor {
           id: response,
         }
         : response
-      const { content, from } = resObj
+      const { content, from, id } = resObj
       const to = await segment.getSegment().then(prop('cultureInfo'))
+
+      if (!content && !id) {
+        throw new Error(`@translatable directive needs a content or id to translate, but received ${JSON.stringify(response)}`)
+      }
 
       // If the message is already in the target locale, return the content.
       if (!to || from === to) {
