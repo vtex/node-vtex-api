@@ -19,6 +19,11 @@ export class Translatable extends SchemaDirectiveVisitor {
 
       const response = await resolve(root, args, context, info)
 
+      // Messages only knows how to process non empty strings.
+      if ((typeof response !== 'string' && typeof response !== 'object') || Array.isArray(response) || response == null) {
+        return response
+      }
+
       const resObj = typeof response === 'string'
         ? {
           content: response,
@@ -27,8 +32,12 @@ export class Translatable extends SchemaDirectiveVisitor {
           id: response,
         }
         : response
-      const { content, from } = resObj
+      const { content, from, id } = resObj
       const to = await segment.getSegment().then(prop('cultureInfo'))
+
+      if (!content && !id) {
+        throw new Error(`@translatable directive needs a content or id to translate, but received ${JSON.stringify(response)}`)
+      }
 
       // If the message is already in the target locale, return the content.
       if (!to || from === to) {
