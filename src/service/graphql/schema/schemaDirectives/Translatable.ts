@@ -19,6 +19,11 @@ export class Translatable extends SchemaDirectiveVisitor {
 
       const response = await resolve(root, args, context, info)
 
+      // Messages only knows how to process non empty strings.
+      if ((typeof response !== 'string' && typeof response !== 'object') || Array.isArray(response) || response == null) {
+        return response
+      }
+
       const resObj = typeof response === 'string'
         ? {
           content: response,
