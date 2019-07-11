@@ -1,31 +1,55 @@
 import { props } from 'bluebird'
 import DataLoader from 'dataloader'
-import { forEachObjIndexed, mapObjIndexed, pick, repeat } from 'ramda'
+import { compose, forEachObjIndexed, map, mapObjIndexed, pick, pluck, repeat, sortBy, toPairs, values, zip } from 'ramda'
 
 import { IOClients } from '../../../clients/IOClients'
-import { IOMessage, providerFromMessage } from '../../../utils/message'
+import { IOMessage, providerFromMessage, removeProviderFromId } from '../../../utils/message'
+
+const sortByProvider = (indexedMessages: Array<[string, IOMessage]>) => sortBy(([_, message]) => providerFromMessage(message), indexedMessages)
+
+const sortByIndex = (indexedTranslations: Array<[string, string]>) => sortBy(([index, _]) => Number(index), indexedTranslations)
 
 export const messagesLoader = (clients: IOClients) =>
   new DataLoader<IOMessage, string>(async (messages: IOMessage[]) => {
     const to = messages[0].to!
     const from = messages[0].from
     const behavior = messages[0].behavior
+    const indexedMessages = toPairs(messages) as Array<[string, IOMessage]>
+    const sortedIndexedMessages = sortByProvider(indexedMessages)
+    const originalIndexes = pluck(0, sortedIndexedMessages) as string[]
+    const sortedMessages = pluck(1, sortedIndexedMessages) as IOMessage[]
     const messagesByProvider: Record<string, IOMessage[]> = {}
     const indexByProvider: Record<string, number[]> = {}
 
-    messages.forEach((message, index) => {
-      message.provider = providerFromMessage(message)
-      delete message.from
-      delete message.to
+    sortedMessages.forEach((message, index) => {
+      const provider = providerFromMessage(message)
+      if (!messagesByProvider[provider]) {
+        messagesByProvider[provider] = []
+
+        indexByProvider[provider] = []
+      }
+      messagesByProvider[provider].push(pick(['id', 'content', 'description'], message))
+      indexByProvider[provider].push(index)
     })
 
-    const translations = await clients.messagesGraphQL.translate({
-        behavior,
-        from,
-        messages,
-        to
-      })
+    const messagesInput = compose(
+      values,
+      mapObjIndexed(
+        (messagesArray, provider) => ({
+          messages: map(removeProviderFromId, messagesArray),
+          provider,
+        })
+      )
+    )(messagesByProvider)
 
-    console.log(`The translatons are: ` + JSON.stringify(translations, null,2 ))
-    return translations
+    const translations = await clients.messagesGraphQL.translate({
+      behavior,
+      from,
+      messages: messagesInput,
+      to,
+    })
+
+    const indexedTranslations = zip(originalIndexes, translations)
+    const translationsInOriginalOrder = sortByIndex(indexedTranslations)
+    return pluck(1, translationsInOriginalOrder)
   })

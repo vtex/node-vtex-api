@@ -3,7 +3,7 @@ import { append, flatten, map, path, pluck, sortBy, toPairs, zip } from 'ramda'
 
 import { AppGraphQLClient, inflightUrlWithQuery, InstanceOptions } from '../HttpClient'
 import { IOContext } from '../service/typings'
-import { IOMessage, removeProviderFromId } from '../utils/message'
+import { IOMessage } from '../utils/message'
 
 type IOMessageInput = Pick<IOMessage, 'id' | 'content' | 'description' | 'provider'>
 
@@ -32,10 +32,6 @@ interface TranslateResponse {
 
 const MAX_QUERYSTRING_LENGTH = 1548
 
-const sortById = (indexedMessages: Array<[string, IOMessageInput]>) => sortBy(([, {id}]) => id, indexedMessages)
-
-const sortByIndex = (indexedTranslations: Array<[string, string]>) => sortBy(([index, _]) => Number(index), indexedTranslations)
-
 export class MessagesGraphQL extends AppGraphQLClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
     super('vtex.messages', vtex, options)
@@ -48,17 +44,11 @@ export class MessagesGraphQL extends AppGraphQLClient {
         translate(args: $args)
       }
       `,
-      variables: {
-        args: {
-          ...args,
-          messages: map(removeProviderFromId, args.messages),
-        },
-      },
+      variables: { args },
     }, {
-      inflightKey: inflightUrlWithQuery,
+      //inflightKey: inflightUrlWithQuery,
       metric: 'messages-translate',
-    })
-    .then(path(['data', 'translate'])) as Promise<TranslateResponse['translate']>
+    }).then(path(['data', 'translate'])) as Promise<TranslateResponse['translate']>
 
   public save = (args: SaveArgs): Promise<boolean> => this.graphql.mutate<boolean, { args: SaveArgs }>({
     mutate: `
