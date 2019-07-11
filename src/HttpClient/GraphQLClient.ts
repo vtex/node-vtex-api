@@ -1,3 +1,4 @@
+import { createHash } from 'crypto'
 import { GraphQLError } from 'graphql'
 
 import { HttpClient } from './HttpClient'
@@ -28,12 +29,16 @@ export class GraphQLClient {
   ) {}
 
   public query = <Data extends Serializable, Variables extends object>(
-    { query, variables, useGet }: QueryOptions<Variables>,
+    { query, variables }: QueryOptions<Variables>,
     config: RequestConfig = {}
-  ) => this.http.post<GraphQLResponse<Data>>(config.url || '',
-    { query, variables },
-    config
-  )
+  ) => {
+    const data = { query, variables }
+    const bodyHash = createHash('md5').update(JSON.stringify(data)).digest('hex')
+    return this.http.post<GraphQLResponse<Data>>(config.url || '',
+      { query, variables },
+      { ...config, params: { bodyHash } }
+    )
+  }
 
   public mutate = <Data extends Serializable, Variables extends object>(
     { mutate, variables }: MutateOptions<Variables>,

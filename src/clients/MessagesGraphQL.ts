@@ -46,7 +46,7 @@ export class MessagesGraphQL extends AppGraphQLClient {
       `,
       variables: { args },
     }, {
-      //inflightKey: inflightUrlWithQuery,
+      inflightKey: inflightUrlWithQuery,
       metric: 'messages-translate',
     }).then(path(['data', 'translate'])) as Promise<TranslateResponse['translate']>
 
