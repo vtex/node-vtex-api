@@ -5,7 +5,7 @@ import { AppGraphQLClient, inflightUrlWithQuery, InstanceOptions } from '../Http
 import { IOContext } from '../service/typings'
 import { IOMessage } from '../utils/message'
 
-type IOMessageInput = Pick<IOMessage, 'id' | 'content' | 'description' | 'provider'>
+type IOMessageInput = Pick<IOMessage, 'id' | 'content' | 'description'>
 
 export interface IOMessageSaveInput extends IOMessageInput {
   content: string
