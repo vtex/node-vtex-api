@@ -27,7 +27,7 @@ export interface SaveArgs {
 }
 
 interface TranslateResponse {
-  translate: string[]
+  newTranslate: string[]
 }
 
 const MAX_QUERYSTRING_LENGTH = 1548
@@ -40,15 +40,15 @@ export class MessagesGraphQL extends AppGraphQLClient {
   public translate = async (args: Translate): Promise<string[]> =>
     this.graphql.query<TranslateResponse, { args: Translate }>({
       query: `
-      query Translate($args: TranslateArgs!) {
-        translate(args: $args)
+      query Translate($args: NewTranslateArgs!) {
+        newTranslate(args: $args)
       }
       `,
       variables: { args },
     }, {
       inflightKey: inflightUrlWithQuery,
       metric: 'messages-translate',
-    }).then(path(['data', 'translate'])) as Promise<TranslateResponse['translate']>
+    }).then(path(['data', 'newTranslate'])) as Promise<TranslateResponse['newTranslate']>
 
   public save = (args: SaveArgs): Promise<boolean> => this.graphql.mutate<boolean, { args: SaveArgs }>({
     mutate: `
