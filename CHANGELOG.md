@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.31.0] - 2019-07-15
+### Changed
+- Do not separate messages `translate` queries in batches. Instead, use a single POST request for all translations.
+
 ## [3.30.2] - 2019-07-10
 
 ## [3.30.1] - 2019-07-10
