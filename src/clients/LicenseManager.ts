@@ -9,8 +9,8 @@ const BASE_URL = '/api/license-manager'
 
 const routes = {
   accountData: `${BASE_URL}/account`,
-  topbarData: `${BASE_URL}/site/pvt/newtopbar`,
-  resourceAccess: `${BASE_URL}/resources`
+  resourceAccess: `${BASE_URL}/resources`,
+  topbarData: `${BASE_URL}/site/pvt/newtopbar`
 }
 
 const inflightKey = ({baseURL, url, params}: RequestConfig) => {
