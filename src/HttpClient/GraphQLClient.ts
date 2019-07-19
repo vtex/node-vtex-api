@@ -43,9 +43,6 @@ export class GraphQLClient {
         },
       })
     }
-    // else, use a POST, with a hash of the request's body in the query string
-    // to avoid problems with inflight.
-    const data = { query, variables }
     return this.http.post<GraphQLResponse<Data>>(config.url || '',
       { query, variables },
       {
