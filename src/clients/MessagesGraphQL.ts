@@ -1,7 +1,7 @@
 import { map as mapP } from 'bluebird'
 import { append, flatten, map, path, pluck, sortBy, toPairs, zip } from 'ramda'
 
-import { AppGraphQLClient, inflightUrlWithQuery, InstanceOptions } from '../HttpClient'
+import { AppGraphQLClient, InstanceOptions } from '../HttpClient'
 import { IOContext } from '../service/typings'
 import { IOMessage } from '../utils/message'
 import { throwOnGraphQLErrors } from '../utils/throwOnGraphQLErrors'
@@ -52,7 +52,6 @@ export class MessagesGraphQL extends AppGraphQLClient {
       useGet: false,
       variables: { args },
     }, {
-      inflightKey: inflightUrlWithQuery,
       metric: 'messages-translate',
     }).then(throwOnTranslateErrors).then(path(['data', 'newTranslate'])) as Promise<TranslateResponse['newTranslate']>
 

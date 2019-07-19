@@ -1,12 +1,14 @@
 import { GraphQLError } from 'graphql'
 
 import { HttpClient } from './HttpClient'
+import { inflightUrlWithQuery, inflightUrlWithQueryAndBody } from './middlewares/inflight'
 import { RequestConfig } from './typings'
 
 interface QueryOptions<Variables extends object> {
   query: string
   variables: Variables
   useGet?: boolean
+  inflight?: boolean
 }
 
 interface MutateOptions<Variables extends object> {
@@ -28,11 +30,12 @@ export class GraphQLClient {
   ) {}
 
   public query = <Data extends Serializable, Variables extends object>(
-    { query, variables, useGet }: QueryOptions<Variables>,
+    { query, variables, useGet, inflight }: QueryOptions<Variables>,
     config: RequestConfig = {}
   ) => {
     if (useGet !== false) {
       return this.http.get<GraphQLResponse<Data>>(config.url || '', {
+        inflightKey: inflight !== false ? inflightUrlWithQuery : undefined,
         ...config,
         params: {
           query,
@@ -43,11 +46,14 @@ export class GraphQLClient {
     // else, use a POST, with a hash of the request's body in the query string
     // to avoid problems with inflight.
     const data = { query, variables }
-    const bodyHash = createHash('md5').update(JSON.stringify(data)).digest('hex')
     return this.http.post<GraphQLResponse<Data>>(config.url || '',
       { query, variables },
-      config
+      {
+        inflightKey: inflight !== false ? inflightUrlWithQueryAndBody : undefined,
+        ...config,
+      }
     )
+  }
 
   public mutate = <Data extends Serializable, Variables extends object>(
     { mutate, variables }: MutateOptions<Variables>,
