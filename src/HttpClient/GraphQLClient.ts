@@ -30,15 +30,21 @@ export class GraphQLClient {
   public query = <Data extends Serializable, Variables extends object>(
     { query, variables, useGet }: QueryOptions<Variables>,
     config: RequestConfig = {}
-  ) => useGet !== false
-    ? this.http.get<GraphQLResponse<Data>>(config.url || '', {
-      ...config,
-      params: {
-        query,
-        variables: JSON.stringify(variables),
-      },
-    })
-    : this.http.post<GraphQLResponse<Data>>(config.url || '',
+  ) => {
+    if (useGet !== false) {
+      return this.http.get<GraphQLResponse<Data>>(config.url || '', {
+        ...config,
+        params: {
+          query,
+          variables: JSON.stringify(variables),
+        },
+      })
+    }
+    // else, use a POST, with a hash of the request's body in the query string
+    // to avoid problems with inflight
+    const data = { query, variables }
+    const bodyHash = createHash('md5').update(JSON.stringify(data)).digest('hex')
+    return this.http.post<GraphQLResponse<Data>>(config.url || '',
       { query, variables },
       config
     )
