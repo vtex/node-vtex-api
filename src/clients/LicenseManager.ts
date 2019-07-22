@@ -5,9 +5,12 @@ import { JanusClient, RequestConfig } from '../HttpClient'
 
 const TWO_MINUTES_S = 2 * 60
 
+const BASE_URL = '/api/license-manager'
+
 const routes = {
-  accountData: '/api/license-manager/account',
-  topbarData: '/api/license-manager/site/pvt/newtopbar',
+  accountData: `${BASE_URL}/account`,
+  resourceAccess: `${BASE_URL}/resources`,
+  topbarData: `${BASE_URL}/site/pvt/newtopbar`
 }
 
 const inflightKey = ({baseURL, url, params}: RequestConfig) => {
@@ -35,5 +38,14 @@ export class LicenseManager extends JanusClient {
       },
       metric: 'lm-topbar-data',
     })
+  }
+
+  public canAccessResource (VtexIdclientAutCookie: string, resourceKey: string) {
+    return this.http.get(`${routes.resourceAccess}/${resourceKey}/access`, {
+      headers: {
+        VtexIdclientAutCookie,
+      },
+      metric: 'lm-resource-access',
+    }).then(() => true, () => false)
   }
 }
