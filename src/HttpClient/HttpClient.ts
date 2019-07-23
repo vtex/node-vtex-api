@@ -165,7 +165,6 @@ export class HttpClient {
 
   public request = async (config: RequestConfig): Promise<AxiosResponse> => {
     const context: MiddlewareContext = {config}
-    console.log('This is the context sent in the request: ' + JSON.stringify(context, null, 2))
     await this.runMiddlewares(context)
     return context.response!
   }
