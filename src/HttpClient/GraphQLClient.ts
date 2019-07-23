@@ -45,6 +45,7 @@ export class GraphQLClient {
       params: {
         bodyHash,
       },
+      headers: {'Content-Type': 'application/json',},
     })
   }
 
