@@ -85,4 +85,3 @@ export class MessagesGraphQL extends AppGraphQLClient {
     })
     .then(path(['data', 'translate'])) as Promise<TranslateResponse['translate']>
 }
-

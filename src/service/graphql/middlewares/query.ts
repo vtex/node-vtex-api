@@ -1,9 +1,14 @@
-import { json } from 'co-body'
+import { default as bodyParse } from 'co-body'
 import { compose, partialRight, prop } from 'ramda'
 import { parse, Url } from 'url'
 import { GraphQLServiceContext } from '../typings'
 
+const BODY_HASH = 'bodyHash'
+
 const parseVariables = (query: any) => {
+  if (query && query[BODY_HASH]) {
+    return null
+  }
   if (query && typeof query.variables === 'string') {
     query.variables = JSON.parse(query.variables)
   }
@@ -23,10 +28,11 @@ export async function parseQuery (ctx: GraphQLServiceContext, next: () => Promis
   if (request.is('multipart/form-data')) {
     query = (request as any).body
   } else if (request.method.toUpperCase() === 'POST') {
-    query = await json(req)
+    query = await bodyParse(req)
   } else {
-    query = queryFromUrl(request.url)
+    query = queryFromUrl(request.url) || await bodyParse(req)
   }
+  console.log(`The query is:` + JSON.stringify(query, null, 2))
 
   ctx.graphql.query = query
 

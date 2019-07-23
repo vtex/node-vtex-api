@@ -1,6 +1,7 @@
+import { createHash } from 'crypto'
 import { GraphQLError } from 'graphql'
 
-import { HttpClient } from './HttpClient'
+import { getConfig, HttpClient } from './HttpClient'
 import { inflightUrlWithQuery, inflightUrlWithQueryAndBody } from './middlewares/inflight'
 import { RequestConfig } from './typings'
 
@@ -30,26 +31,21 @@ export class GraphQLClient {
   ) {}
 
   public query = <Data extends Serializable, Variables extends object>(
-    { query, variables, useGet, inflight }: QueryOptions<Variables>,
+    { query, variables, inflight }: QueryOptions<Variables>,
     config: RequestConfig = {}
-  ) => {
-    if (useGet !== false) {
-      return this.http.get<GraphQLResponse<Data>>(config.url || '', {
-        inflightKey: inflight !== false ? inflightUrlWithQuery : undefined,
-        ...config,
-        params: {
-          query,
-          variables: JSON.stringify(variables),
-        },
-      })
-    }
-    return this.http.post<GraphQLResponse<Data>>(config.url || '',
-      { query, variables },
-      {
-        inflightKey: inflight !== false ? inflightUrlWithQueryAndBody : undefined,
-        ...config,
-      }
-    )
+  ): Promise<GraphQLResponse<Data>> => {
+    const requestConfig = getConfig(config.url || '', config)
+    const data = { query, variables }
+    const bodyHash = createHash('md5').update(JSON.stringify(data, null, 2)).digest('hex')
+    return this.http.request({
+      inflightKey: inflight !== false ? inflightUrlWithQuery : undefined,
+      ...requestConfig,
+      data,
+      method: 'get',
+      params: {
+        bodyHash,
+      },
+    })
   }
 
   public mutate = <Data extends Serializable, Variables extends object>(

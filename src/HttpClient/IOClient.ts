@@ -9,7 +9,7 @@ export type IOClientConstructor = new (context: IOContext, options?: InstanceOpt
  * A client that can be instantiated by the Service runtime layer.
  */
 export class IOClient {
-  protected http: HttpClient
+  public http: HttpClient
 
   constructor(protected context: IOContext, protected options?: InstanceOptions) {
     this.http = new HttpClient({

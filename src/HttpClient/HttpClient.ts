@@ -19,6 +19,13 @@ import { AuthType, IOResponse, MiddlewareContext, Recorder, RequestConfig } from
 const DEFAULT_TIMEOUT_MS = 1000
 const noTransforms = [(data: any) => data]
 
+export const getConfig = (url: string, config: RequestConfig = {}): CacheableRequestConfig => ({
+    cacheable: CacheType.Memory,
+    memoizable: true,
+    ...config,
+    url,
+  })
+
 interface ClientOptions {
   authType?: AuthType
   authToken?: string
@@ -107,7 +114,7 @@ export class HttpClient {
   }
 
   public get = <T = any>(url: string, config: RequestConfig = {}): Promise<T> => {
-    const cacheableConfig = {memoizable: true, cacheable: CacheType.Memory, ...config, url} as CacheableRequestConfig
+    const cacheableConfig = getConfig(url, config)
     return this.request(cacheableConfig).then(response => response.data as T)
   }
 
@@ -156,8 +163,9 @@ export class HttpClient {
     return this.request(deleteConfig)
   }
 
-  protected request = async (config: RequestConfig): Promise<AxiosResponse> => {
+  public request = async (config: RequestConfig): Promise<AxiosResponse> => {
     const context: MiddlewareContext = {config}
+    console.log('This is the context sent in the request: ' + JSON.stringify(context, null, 2))
     await this.runMiddlewares(context)
     return context.response!
   }
