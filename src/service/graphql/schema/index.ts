@@ -31,9 +31,13 @@ try{
 
 export const makeSchema = (ctx: GraphQLServiceContext) => {
   const {
-    resolvers: appResolvers,
-    schemaDirectives: appDirectives,
-  } = ctx.graphql
+    graphql: { resolvers: appResolvers,
+      schemaDirectives: appDirectives,
+    },
+    clients: { segment },
+    vtex: { segmentToken },
+    query: { session_path, session_host },
+  } = ctx
 
   if (cache.executableSchema) {
     return cache.executableSchema
@@ -43,7 +47,9 @@ export const makeSchema = (ctx: GraphQLServiceContext) => {
 
   // The target translation locale is only necessary if this GraphQL app uses the `IOMessage` resolver.
   const getLocaleTo = async () => {
-    const {cultureInfo} = await ctx.clients.segment.getSegment()
+    const sessionQuery = {session_path, session_host}
+    const { segmentData: { cultureInfo } } = await segment.getOrCreateSegment(sessionQuery, segmentToken)
+
     return cultureInfo
   }
 
