@@ -52,7 +52,7 @@ export class MessagesGraphQL extends AppGraphQLClient {
       variables: { args },
     }, {
       metric: 'messages-translate',
-    }).then(throwOnTranslateErrors).then(path(['data', 'data', 'newTranslate'])) as Promise<TranslateResponse['newTranslate']>
+    }).then(throwOnTranslateErrors).then(path(['data', 'newTranslate'])) as Promise<TranslateResponse['newTranslate']>
 
   public save = (args: SaveArgs): Promise<boolean> => this.graphql.mutate<boolean, { args: SaveArgs }>({
     mutate: `

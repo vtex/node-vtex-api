@@ -1,6 +1,7 @@
 import { createHash } from 'crypto'
 import { GraphQLError } from 'graphql'
 
+import { GRAPHQL_BODY_HASH } from '../constants'
 import { getConfig, HttpClient } from './HttpClient'
 import { inflightUrlWithQuery } from './middlewares/inflight'
 import { RequestConfig } from './typings'
@@ -43,9 +44,9 @@ export class GraphQLClient {
       data,
       method: 'get',
       params: {
-        bodyHash,
+        [GRAPHQL_BODY_HASH]: bodyHash,
       },
-    })
+    }).then(response => response.data as GraphQLResponse<Data>)
   }
 
   public mutate = <Data extends Serializable, Variables extends object>(
