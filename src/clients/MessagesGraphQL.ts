@@ -13,7 +13,6 @@ export interface IOMessageSaveInput extends IOMessageInput {
 }
 
 export interface Translate {
-  provider: string
   messages: IOMessageInput[]
   from?: string
   to: string
@@ -29,7 +28,7 @@ export interface SaveArgs {
 }
 
 interface TranslateResponse {
-  translate: string[]
+  newTranslate: string[]
 }
 
 const MAX_QUERYSTRING_LENGTH = 1548
@@ -65,23 +64,5 @@ export class MessagesGraphQL extends AppGraphQLClient {
     metric: 'messages-save-translation',
   }).then(throwOnSaveErrors).then(path(['data', 'save'])) as Promise<boolean>
 
-  private doTranslate = (args: Translate) =>
-    this.graphql.query<TranslateResponse, { args: Translate }>({
-      query: `
-      query Translate($args: TranslateArgs!) {
-        translate(args: $args)
-      }
-      `,
-      variables: {
-        args: {
-          ...args,
-          messages: map(removeProviderFromId, args.messages),
-        },
-      },
-    }, {
-      inflightKey: inflightUrlWithQuery,
-      metric: 'messages-translate',
-    })
-    .then(path(['data', 'translate'])) as Promise<TranslateResponse['translate']>
 }
 
