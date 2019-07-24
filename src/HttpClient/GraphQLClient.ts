@@ -2,7 +2,7 @@ import { createHash } from 'crypto'
 import { GraphQLError } from 'graphql'
 
 import { getConfig, HttpClient } from './HttpClient'
-import { inflightUrlWithQuery, inflightUrlWithQueryAndBody } from './middlewares/inflight'
+import { inflightUrlWithQuery } from './middlewares/inflight'
 import { RequestConfig } from './typings'
 
 interface QueryOptions<Variables extends object> {
