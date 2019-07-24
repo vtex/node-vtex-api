@@ -32,7 +32,6 @@ export async function parseQuery (ctx: GraphQLServiceContext, next: () => Promis
   } else {
     query = queryFromUrl(request.url) || await json(req)
   }
-  console.log(`Received a query: ` + JSON.stringify(query))
 
   ctx.graphql.query = query
 
