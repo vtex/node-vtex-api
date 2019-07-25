@@ -40,18 +40,6 @@ export class VBase extends InfraClient {
     return this.http.delete(routes.Files(bucket), {metric: 'vbase-reset-bucket'})
   }
 
-  public listFiles = (bucket: string, opts?: string | VBaseOptions) => {
-    let params: VBaseOptions = {}
-    if (isVBaseOptions(opts)) {
-      params = opts
-    } else if (opts) {
-      params = {prefix: opts}
-    }
-    const metric = 'vbase-list'
-    const inflightKey = inflightUrlWithQuery
-    return this.http.get<BucketFileList>(routes.Files(bucket), {params, metric, inflightKey})
-  }
-
   public getFile = (bucket: string, path: string) => {
     const inflightKey = inflightURL
     const metric = 'vbase-get-file'
