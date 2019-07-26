@@ -9,7 +9,7 @@ export class Translatable extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, ServiceContext>) {
     const { resolve = defaultFieldResolver } = field
     field.resolve = async (root, args, context, info) => {
-      const { clients: { segment }, clients, query: { session_path, session_host }, vtex: { segmentToken } } = context
+      const { clients: { segment }, clients } = context
       if (!context.loaders || !context.loaders.messages) {
         context.loaders = {
           ...context.loaders,
@@ -34,12 +34,7 @@ export class Translatable extends SchemaDirectiveVisitor {
         : response
       const { content, from, id } = resObj
 
-      const sessionQuery = {
-        session_host, 
-        session_path,
-      }
-      const { segmentData } = await segment.getOrCreateSegment(sessionQuery, segmentToken)
-      const { cultureInfo: to } = segmentData
+      const { cultureInfo: to } = await segment.getSegment()
 
       if (content == null && id == null) {
         throw new Error(`@translatable directive needs a content or id to translate, but received ${JSON.stringify(response)}`)

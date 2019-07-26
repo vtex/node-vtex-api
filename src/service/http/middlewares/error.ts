@@ -54,6 +54,7 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
         'x-forwarded-proto': forwardedProto,
         'x-vtex-caller': caller,
         'x-vtex-platform': platform,
+        'x-vtex-product': product,
       },
     } = ctx
 
@@ -73,6 +74,7 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
       operationId,
       params,
       platform,
+      product,
       query,
       requestId,
       routeId: id,

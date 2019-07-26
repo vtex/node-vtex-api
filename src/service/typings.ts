@@ -9,7 +9,7 @@ import { ParsedUrlQuery } from 'querystring'
 import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { InstanceOptions } from '../HttpClient'
 import { Recorder } from '../HttpClient/middlewares/recorder'
-import { IOMessage } from '../utils/message';
+import { IOMessage } from '../utils/message'
 
 type ServerTiming = Record<string, string>
 
@@ -73,6 +73,7 @@ export interface IOContext {
   // Identifies the user based on the cookie `VtexIdclientAutCookie_${account}`. Cookies are only available in private routes.
   storeUserAuthToken?: string
   production: boolean
+  product: string
   recorder?: Recorder
   region: string
   route: {

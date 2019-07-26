@@ -35,8 +35,6 @@ export const makeSchema = (ctx: GraphQLServiceContext) => {
       schemaDirectives: appDirectives,
     },
     clients: { segment },
-    vtex: { segmentToken },
-    query: { session_path, session_host },
   } = ctx
 
   if (cache.executableSchema) {
@@ -47,9 +45,7 @@ export const makeSchema = (ctx: GraphQLServiceContext) => {
 
   // The target translation locale is only necessary if this GraphQL app uses the `IOMessage` resolver.
   const getLocaleTo = async () => {
-    const sessionQuery = {session_path, session_host}
-    const { segmentData: { cultureInfo } } = await segment.getOrCreateSegment(sessionQuery, segmentToken)
-
+    const { cultureInfo } = await segment.getSegment()
     return cultureInfo
   }
 

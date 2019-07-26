@@ -4,7 +4,7 @@ import compose, { Middleware } from 'koa-compose'
 import pLimit from 'p-limit'
 
 import { CacheLayer } from '../caches/CacheLayer'
-import { SEGMENT_HEADER, SESSION_HEADER } from '../constants'
+import { PRODUCT_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../constants'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { forExternal, forRoot, forWorkspace } from './factories'
 import { CacheableRequestConfig, Cached, cacheMiddleware, CacheType } from './middlewares/cache'
@@ -42,6 +42,7 @@ interface ClientOptions {
   operationId: string
   verbose?: boolean
   name?: string
+  product?: string
 }
 
 export class HttpClient {
@@ -60,6 +61,7 @@ export class HttpClient {
       diskCache,
       name,
       metrics,
+      product,
       serverTiming,
       recorder,
       userAgent,
@@ -80,6 +82,7 @@ export class HttpClient {
       ... operationId ? {'x-vtex-operation-id': operationId} : null,
       ... segmentToken ? {[SEGMENT_HEADER]: segmentToken} : null,
       ... sessionToken ? {[SESSION_HEADER]: sessionToken} : null,
+      ... product ? {[PRODUCT_HEADER]: product} : null,
     }
 
     if (authType && authToken) {
