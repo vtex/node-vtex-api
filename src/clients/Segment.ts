@@ -1,6 +1,7 @@
 import parseCookie from 'cookie'
 import { pickBy, prop } from 'ramda'
 
+import { PRODUCT_HEADER } from '../constants'
 import { inflightUrlWithQuery, JanusClient } from '../HttpClient'
 
 export interface SegmentData {
@@ -71,15 +72,19 @@ export class Segment extends JanusClient {
   }
 
   private rawSegment = (token?: string | null, query?: Record<string, string>) => {
+    const { product } = this.context
+
     return this.http.getRaw<SegmentData>(routes.segments(token), ({
       forceMaxAge: SEGMENT_MAX_AGE_S,
       headers: {
         'Content-Type': 'application/json',
+        [PRODUCT_HEADER]: product || '',
       },
       inflightKey: inflightUrlWithQuery,
       metric: 'segment-get',
       params: {
         ...sanitizeParams(query),
+        session_path: product || '',
       },
     }))
   }
