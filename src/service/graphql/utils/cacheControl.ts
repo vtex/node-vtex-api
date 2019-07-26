@@ -67,6 +67,10 @@ export const cacheControl = (response: GraphQLResponse, ctx: GraphQLServiceConte
   const age = hints && minMaxAge(hints)
   const isPrivate = hints && anyPrivate(hints)
   const segment = hints && anySegment(hints)
+  const cacheControlHeaderScope = (isPrivate || isPrivateRoute(ctx)) ? 'private' : 'public'
+
+  ctx.graphql.cacheScope = segment ? 'segment' : cacheControlHeaderScope
+
   const maxAge = linked
     ? 'no-store'
     : (isPublicEndpoint(ctx) || !production)
@@ -74,7 +78,7 @@ export const cacheControl = (response: GraphQLResponse, ctx: GraphQLServiceConte
       : `max-age=${age}`
   return {
     maxAge,
-    scope: (isPrivate || isPrivateRoute(ctx)) ? 'private' : 'public',
+    scope: cacheControlHeaderScope,
     segment,
   }
 }

@@ -23,7 +23,6 @@ export const createGraphQLRoute = <ClientsT extends IOClients, StateT, CustomT>(
     const injectGraphql = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
       ctx.graphql = graphql as GraphQLOptions<IOClients, StateT, CustomT>
       await next()
-      delete ctx.graphql
     }
 
     return createHttpRoute<ClientsT, StateT, CustomT & GraphQLContext>(Clients, options)([

@@ -1,3 +1,4 @@
+import { CacheScope } from 'apollo-cache-control'
 import { HttpQueryRequest } from 'apollo-server-core'
 import { HttpQueryResponse } from 'apollo-server-core/dist/runHttpQuery'
 import { GraphQLSchema } from 'graphql'
@@ -18,6 +19,7 @@ export interface GraphQLContext {
       formatError: <T>(e: T) => T
       formatResponse: <T>(r: T) => T
     }
+    cacheScope?: 'public' | 'private' | 'segment'
   }
 }
 
