@@ -78,13 +78,13 @@ export class Segment extends JanusClient {
       forceMaxAge: SEGMENT_MAX_AGE_S,
       headers: {
         'Content-Type': 'application/json',
-        [PRODUCT_HEADER]: product,
+        [PRODUCT_HEADER]: product || '',
       },
       inflightKey: inflightUrlWithQuery,
       metric: 'segment-get',
       params: {
         ...sanitizeParams(query),
-        session_path: product,
+        session_path: product || '',
       },
     }))
   }
