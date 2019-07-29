@@ -10,6 +10,7 @@ import { run } from './middlewares/run'
 import { injectSchema } from './middlewares/schema'
 import { timings } from './middlewares/timings'
 import { upload } from './middlewares/upload'
+import { vary } from './middlewares/vary'
 import { GraphQLContext, GraphQLServiceContext } from './typings'
 
 export const GRAPHQL_ROUTE_LEGACY = '__graphql'
@@ -23,6 +24,7 @@ export const createGraphQLRoute = <ClientsT extends IOClients, StateT, CustomT>(
     const injectGraphql = async (ctx: GraphQLServiceContext, next: () => Promise<void>) => {
       ctx.graphql = graphql as GraphQLOptions<IOClients, StateT, CustomT>
       await next()
+      delete ctx.graphql
     }
 
     return createHttpRoute<ClientsT, StateT, CustomT & GraphQLContext>(Clients, options)([
@@ -35,5 +37,6 @@ export const createGraphQLRoute = <ClientsT extends IOClients, StateT, CustomT>(
       injectSchema,
       run,
       response,
+      vary,
     ]) as RouteHandler<ClientsT, StateT, CustomT>
 }
