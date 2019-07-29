@@ -19,7 +19,6 @@ export interface GraphQLContext {
       formatError: <T>(e: T) => T
       formatResponse: <T>(r: T) => T
     }
-    cacheScope?: 'public' | 'private' | 'segment'
   }
 }
 
