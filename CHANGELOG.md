@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.33.1] - 2019-07-29
+### Changed
+- `getAccountData` now requires to pass the param `VtexIdclientAutCookie`.
+
 ## [3.33.0] - 2019-07-26
 
 ## [3.32.2] - 2019-07-24

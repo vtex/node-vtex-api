@@ -19,12 +19,10 @@ const inflightKey = ({baseURL, url, params}: RequestConfig) => {
 
 export class LicenseManager extends JanusClient {
   public getAccountData (VtexIdclientAutCookie: string) {
-    const authToken = VtexIdclientAutCookie || this.context.authToken
-
     return this.http.get(routes.accountData, {
       forceMaxAge: TWO_MINUTES_S,
       headers: {
-        VtexIdclientAutCookie: authToken,
+        VtexIdclientAutCookie,
       },
       inflightKey,
       metric: 'lm-account-data',
