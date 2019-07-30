@@ -30,6 +30,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     const lruOptions = {
       ...options,
       dispose,
+      noDisposeOnSet: true,
     }
 
     this.lruStorage = new LRU<string, number>(lruOptions)
