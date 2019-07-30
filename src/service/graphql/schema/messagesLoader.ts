@@ -13,7 +13,6 @@ export const messagesLoader = (clients: IOClients) =>
   new DataLoader<IOMessage, string>(async (messages: IOMessage[]) => {
     const to = messages[0].to!
     const from = messages[0].from
-    const behavior = messages[0].behavior
     const indexedMessages = toPairs(messages) as Array<[string, IOMessage]>
     const sortedIndexedMessages = sortByProvider(indexedMessages)
     const originalIndexes = pluck(0, sortedIndexedMessages) as string[]
@@ -43,7 +42,6 @@ export const messagesLoader = (clients: IOClients) =>
     )(messagesByProvider)
 
     const translations = await clients.messagesGraphQL.translate({
-      behavior,
       from,
       messages: messagesInput,
       to,

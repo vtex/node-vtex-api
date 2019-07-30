@@ -6,7 +6,7 @@ import { IOContext } from '../service/typings'
 import { IOMessage } from '../utils/message'
 import { throwOnGraphQLErrors } from '../utils/throwOnGraphQLErrors'
 
-type IOMessageInput = Pick<IOMessage, 'id' | 'content' | 'description'>
+type IOMessageInput = Pick<IOMessage, 'id' | 'content' | 'description' | 'behavior'>
 
 export interface IOMessageSaveInput extends IOMessageInput {
   content: string
@@ -16,7 +16,6 @@ export interface Translate {
   messages: IOMessageInput[]
   from?: string
   to: string
-  behavior?: string
 }
 
 export interface SaveArgs {
@@ -42,6 +41,9 @@ export class MessagesGraphQL extends AppGraphQLClient {
   }
 
   public translate = async (args: Translate): Promise<string[]> =>
+
+    // force behavior here
+
     this.graphql.query<TranslateResponse, { args: Translate }>({
       query: `
       query Translate($args: NewTranslateArgs!) {
