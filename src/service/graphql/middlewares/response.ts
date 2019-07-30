@@ -1,5 +1,6 @@
 import { isEmpty, pick, reject } from 'ramda'
 
+import { SEGMENT_HEADER } from '../../../constants'
 import { GraphQLServiceContext } from '../typings'
 import { cacheControl } from '../utils/cacheControl'
 
@@ -13,6 +14,7 @@ export async function response (ctx: GraphQLServiceContext, next: () => Promise<
   const {
     maxAge = '',
     scope = '',
+    segment = null,
   } = graphqlResponse ? cacheControl(graphqlResponse, ctx) : {}
   const cacheControlHeader = reject(isEmpty, [maxAge, scope]).join(',')
 
@@ -20,6 +22,10 @@ export async function response (ctx: GraphQLServiceContext, next: () => Promise<
     ...responseInit && responseInit.headers,
     'Cache-Control': cacheControlHeader,
   })
+
+  if (segment) {
+    ctx.vary(SEGMENT_HEADER)
+  }
 
   const fields = production ? PROD_FIELDS : DEV_FIELDS
   ctx.body = pick(fields, graphqlResponse!)
