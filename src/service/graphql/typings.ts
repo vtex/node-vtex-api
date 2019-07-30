@@ -1,3 +1,4 @@
+import { CacheScope } from 'apollo-cache-control'
 import { HttpQueryRequest } from 'apollo-server-core'
 import { HttpQueryResponse } from 'apollo-server-core/dist/runHttpQuery'
 import { GraphQLSchema } from 'graphql'

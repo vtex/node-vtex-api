@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.34.0] - 2019-07-30
+
+### Fixed
+- Create middleware that deletes headers passed to make cache behavior consistent regarldess of CDN.
+
 ## [3.33.1] - 2019-07-29
 ### Changed
 - `getAccountData` now requires to pass the param `VtexIdclientAutCookie`.
