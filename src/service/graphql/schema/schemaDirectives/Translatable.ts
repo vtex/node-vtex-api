@@ -28,7 +28,7 @@ export class Translatable extends SchemaDirectiveVisitor {
 
 const handleSingleString = async (response: any, context: ServiceContext<IOClients, void, void>) => {
   // Messages only knows how to process non empty strings.
-  if (typeof response !== 'string' && typeof response !== 'object' || response == null) {
+  if ((typeof response !== 'string' && typeof response !== 'object') || Array.isArray(response) || response == null) {
     return response
   }
 
