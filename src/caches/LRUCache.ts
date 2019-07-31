@@ -17,6 +17,7 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
     this.storage = new LRU({
       ...options,
       dispose: () => this.disposed += 1,
+      noDisposeOnSet: true,
     })
     this.multilayer = new MultilayeredCache([this])
   }
