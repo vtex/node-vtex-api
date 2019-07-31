@@ -1,6 +1,5 @@
-import { props } from 'bluebird'
 import DataLoader from 'dataloader'
-import { compose, forEachObjIndexed, map, mapObjIndexed, pick, pluck, repeat, sortBy, toPairs, values, zip } from 'ramda'
+import { compose, map, mapObjIndexed, pick, pluck, sortBy, toPairs, values, zip } from 'ramda'
 
 import { IOClients } from '../../../clients/IOClients'
 import { IOMessage, providerFromMessage, removeProviderFromId } from '../../../utils/message'
@@ -27,7 +26,7 @@ export const messagesLoader = (clients: IOClients) =>
 
         indexByProvider[provider] = []
       }
-      messagesByProvider[provider].push(pick(['id', 'content', 'description'], message))
+      messagesByProvider[provider].push(pick(['id', 'content', 'description', 'behavior'], message))
       indexByProvider[provider].push(index)
     })
 

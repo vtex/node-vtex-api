@@ -1,12 +1,12 @@
 import { json } from 'co-body'
 import { compose, partialRight, prop } from 'ramda'
 import { parse, Url } from 'url'
-import { GRAPHQL_BODY_HASH } from '../../../constants'
+
+import { BODY_HASH } from '../../../constants'
 import { GraphQLServiceContext } from '../typings'
 
-
 const parseVariables = (query: any) => {
-  if (query && query[GRAPHQL_BODY_HASH]) {
+  if (query && query[BODY_HASH]) {
     return null
   }
   if (query && typeof query.variables === 'string') {

@@ -6,4 +6,4 @@ export const PRODUCT_HEADER = 'x-vtex-product'
 
 export type VaryHeaders = typeof SEGMENT_HEADER | typeof SESSION_HEADER | typeof PRODUCT_HEADER
 
-export const GRAPHQL_BODY_HASH = '__graphqlBodyHash'
+export const BODY_HASH = '__graphqlBodyHash'

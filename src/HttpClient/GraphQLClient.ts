@@ -1,21 +1,21 @@
-import { createHash } from 'crypto'
 import { GraphQLError } from 'graphql'
 
-import { GRAPHQL_BODY_HASH } from '../constants'
-import { getConfig, HttpClient } from './HttpClient'
+import CustomGraphQLError from '../errors/customGraphQLError'
+import { HttpClient } from './HttpClient'
 import { inflightUrlWithQuery } from './middlewares/inflight'
 import { RequestConfig } from './typings'
 
 interface QueryOptions<Variables extends object> {
   query: string
   variables: Variables
-  useGet?: boolean
   inflight?: boolean
+  throwOnError?: boolean
 }
 
 interface MutateOptions<Variables extends object> {
   mutate: string
   variables: Variables
+  throwOnError?: boolean
 }
 
 export type Serializable = object | boolean | string | number
@@ -26,36 +26,44 @@ export interface GraphQLResponse <T extends Serializable> {
   extensions?: Record<string, any>
 }
 
+const throwOnGraphQLErrors = <T extends Serializable>(message: string, response: GraphQLResponse<T>) => {
+  if (response && response.errors && response.errors.length > 0) {
+    throw new CustomGraphQLError(message, response.errors)
+  }
+  return response
+}
+
 export class GraphQLClient {
   constructor(
     private http: HttpClient
   ) {}
 
   public query = <Data extends Serializable, Variables extends object>(
-    { query, variables, inflight }: QueryOptions<Variables>,
+    { query, variables, inflight, throwOnError }: QueryOptions<Variables>,
     config: RequestConfig = {}
-  ): Promise<GraphQLResponse<Data>> => {
-    const requestConfig = getConfig(config.url || '', config)
-    const data = { query, variables }
-    const bodyHash = createHash('md5').update(JSON.stringify(data, null, 2)).digest('hex')
-    return this.http.request({
+  ): Promise<GraphQLResponse<Data>> => this.http.getWithBody<GraphQLResponse<Data>>(
+    config.url || '',
+    { query, variables },
+    {
       inflightKey: inflight !== false ? inflightUrlWithQuery : undefined,
-      ...requestConfig,
-      data,
-      method: 'get',
-      params: {
-        [GRAPHQL_BODY_HASH]: bodyHash,
-      },
-    }).then(response => response.data as GraphQLResponse<Data>)
-  }
+      ...config,
+    })
+    .then(graphqlResponse => throwOnError === false
+      ? graphqlResponse
+      : throwOnGraphQLErrors(this.http.name, graphqlResponse)
+    )
 
   public mutate = <Data extends Serializable, Variables extends object>(
-    { mutate, variables }: MutateOptions<Variables>,
+    { mutate, variables, throwOnError }: MutateOptions<Variables>,
     config: RequestConfig = {}
   ) =>
     this.http.post<GraphQLResponse<Data>>(
       config.url || '',
       { query: mutate, variables },
       config
+    )
+    .then(graphqlResponse => throwOnError === false
+      ? graphqlResponse
+      : throwOnGraphQLErrors(this.http.name, graphqlResponse)
     )
 }

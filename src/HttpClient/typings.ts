@@ -95,7 +95,7 @@ export interface InstanceOptions {
 
 export interface IOResponse<T> {
   data: T
-  headers: any
+  headers: Record<string, string>
   status: number
 }
 
