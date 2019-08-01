@@ -8,7 +8,7 @@
     "clean": "rimraf lib/",
     "watch": "tsc --watch",
     "build": "tsc",
-    "gen": "typescript-json-schema src/responses.ts PublicAppManifest > gen/manifest.schema",
+    "gen": "typescript-json-schema tsconfig.json PublicAppManifest > gen/manifest.schema",
     "lint": "tsc --noEmit && tslint --fix -c tslint.json './src/**/*.ts'",
     "prepublish": "run-s clean build gen",
     "prereleasy": "yarn prepublish"
