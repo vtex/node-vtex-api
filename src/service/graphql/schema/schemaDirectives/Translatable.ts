@@ -6,7 +6,6 @@ import { IOClients } from '../../../../clients/IOClients';
 import { ServiceContext } from '../../../typings';
 import { messagesLoader } from '../messagesLoader';
 
-
 export class Translatable extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, ServiceContext>) {
     const { resolve = defaultFieldResolver } = field
@@ -22,13 +21,13 @@ export class Translatable extends SchemaDirectiveVisitor {
 
       const response = await resolve(root, args, context, info)
 
-      const handler = handleSingleString(context)
+      const handler = handleSingleString(context, behavior)
       return Array.isArray(response) ? await map(response, handler) : await handler(response)
     }
   }
 }
 
-const handleSingleString = (context: ServiceContext<IOClients, void, void>) => async (response: any) => {
+const handleSingleString = (context: ServiceContext<IOClients, void, void>, behavior: string) => async (response: any) => {
   // Messages only knows how to process non empty strings.
   if ((typeof response !== 'string' && typeof response !== 'object') || Array.isArray(response) || response == null) {
     return response
