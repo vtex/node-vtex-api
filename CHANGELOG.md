@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.35.0] - 2019-08-01
+### Fixed
+- Use POST requests for queries only in the `MessagesGraphQL` client, not in the `GraphQLClient`.
+
 ## [3.34.1] - 2019-07-31
 
 ## [3.34.0] - 2019-07-30

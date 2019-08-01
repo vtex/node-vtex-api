@@ -1,10 +1,11 @@
 import { AxiosResponse } from 'axios'
+import { createHash } from 'crypto'
 import { IncomingMessage } from 'http'
 import compose, { Middleware } from 'koa-compose'
 import pLimit from 'p-limit'
 
 import { CacheLayer } from '../caches/CacheLayer'
-import { PRODUCT_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../constants'
+import { BODY_HASH, PRODUCT_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../constants'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { forExternal, forRoot, forWorkspace } from './factories'
 import { CacheableRequestConfig, Cached, cacheMiddleware, CacheType } from './middlewares/cache'
@@ -49,6 +50,7 @@ export class HttpClient {
   public static forWorkspace = forWorkspace
   public static forRoot = forRoot
   public static forExternal = forExternal
+  public name: string
 
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
@@ -74,6 +76,7 @@ export class HttpClient {
       params, operationId,
       verbose,
     } = opts
+    this.name = name || baseURL || 'unknown'
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
       ...defaultHeaders,
@@ -107,13 +110,26 @@ export class HttpClient {
   }
 
   public get = <T = any>(url: string, config: RequestConfig = {}): Promise<T> => {
-    const cacheableConfig = {memoizable: true, cacheable: CacheType.Memory, ...config, url} as CacheableRequestConfig
-    return this.request(cacheableConfig).then(response => response.data as T)
+    const cacheableConfig = this.getConfig(url, config)
+    return this.request(cacheableConfig).then(response => response.data)
   }
 
   public getRaw = <T = any>(url: string, config: RequestConfig = {}): Promise<IOResponse<T>> => {
-    const cacheableConfig = {memoizable: true, cacheable: CacheType.Memory, ...config, url} as CacheableRequestConfig
-    return this.request(cacheableConfig) as Promise<IOResponse<T>>
+    const cacheableConfig = this.getConfig(url, config)
+    return this.request(cacheableConfig)
+  }
+
+  public getWithBody = <T = any>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
+    const bodyHash = createHash('md5').update(JSON.stringify(data, null, 2)).digest('hex')
+    const cacheableConfig = this.getConfig(url, {
+      ...config,
+      data,
+      params: {
+        ...config.params,
+        [BODY_HASH]: bodyHash,
+      },
+    })
+    return this.request(cacheableConfig).then(response => response.data)
   }
 
   public getBuffer = (url: string, config: RequestConfig = {}): Promise<{data: Buffer, headers: any}> => {
@@ -161,4 +177,11 @@ export class HttpClient {
     await this.runMiddlewares(context)
     return context.response!
   }
+
+  private getConfig = (url: string, config: RequestConfig = {}): CacheableRequestConfig => ({
+    cacheable: CacheType.Memory,
+    memoizable: true,
+    ...config,
+    url,
+  })
 }

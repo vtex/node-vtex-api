@@ -1,9 +1,14 @@
 import { json } from 'co-body'
 import { compose, partialRight, prop } from 'ramda'
 import { parse, Url } from 'url'
+
+import { BODY_HASH } from '../../../constants'
 import { GraphQLServiceContext } from '../typings'
 
 const parseVariables = (query: any) => {
+  if (query && query[BODY_HASH]) {
+    return null
+  }
   if (query && typeof query.variables === 'string') {
     query.variables = JSON.parse(query.variables)
   }
@@ -25,7 +30,7 @@ export async function parseQuery (ctx: GraphQLServiceContext, next: () => Promis
   } else if (request.method.toUpperCase() === 'POST') {
     query = await json(req)
   } else {
-    query = queryFromUrl(request.url)
+    query = queryFromUrl(request.url) || await json(req)
   }
 
   ctx.graphql.query = query

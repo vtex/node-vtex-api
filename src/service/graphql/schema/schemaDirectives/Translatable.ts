@@ -1,6 +1,5 @@
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
-import { prop } from 'ramda'
 
 import { ServiceContext } from '../../../typings'
 import { messagesLoader } from '../messagesLoader'
@@ -8,6 +7,7 @@ import { messagesLoader } from '../messagesLoader'
 export class Translatable extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, ServiceContext>) {
     const { resolve = defaultFieldResolver } = field
+    const { behavior = 'FULL' } = this.args
     field.resolve = async (root, args, context, info) => {
       const { clients: { segment }, clients } = context
       if (!context.loaders || !context.loaders.messages) {
@@ -47,6 +47,7 @@ export class Translatable extends SchemaDirectiveVisitor {
 
       return context.loaders.messages!.load({
         ...resObj,
+        behavior,
         from,
         to,
       })

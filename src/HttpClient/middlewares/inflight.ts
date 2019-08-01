@@ -1,3 +1,4 @@
+import { createHash } from 'crypto'
 import { stringify } from 'qs'
 import { InflightKeyGenerator, MiddlewareContext, RequestConfig } from '../typings'
 
