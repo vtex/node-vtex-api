@@ -17,19 +17,16 @@ import { InstanceOptions } from './typings'
  * }
  */
 export class JanusClient extends ExternalClient {
-  constructor(context: IOContext, options?: InstanceOptions) {
-    const {account} = context
-    const env = context.janusEnv && context.janusEnv === 'beta'? 'beta' : 'stable'
+  public constructor(context: IOContext, options?: InstanceOptions) {
+    const { account } = context
+    const env =
+      context.janusEnv && context.janusEnv === 'beta' ? 'beta' : 'stable'
 
-    super(
-      `http://portal.vtexcommerce${env}.com.br`,
-      context,
-      {
-        ...options,
-        params: {
-          an: account,
-        },
-      }
-    )
+    super(`http://portal.vtexcommerce${env}.com.br`, context, {
+      ...options,
+      params: {
+        an: account,
+      },
+    })
   }
 }

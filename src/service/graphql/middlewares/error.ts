@@ -1,4 +1,4 @@
-import { any, chain, compose, filter, forEach, has, map, pluck, prop, uniqBy } from 'ramda'
+import { any, chain, compose, filter, forEach, has, map, prop, uniqBy } from 'ramda'
 
 import { LogLevel } from '../../../clients/Logger'
 import { GraphQLServiceContext } from '../typings'
@@ -13,8 +13,6 @@ const sender = process.env.VTEX_APP_ID
 
 const getSplunkQuery = (account: string, workspace: string) =>
   `Try this query at Splunk to retrieve error log: 'index=colossus key=log_error sender="${sender}" account=${account} workspace=${workspace}'`
-
-const parseMessage = pluck('message')
 
 const arrayHasError = any(has('errors'))
 

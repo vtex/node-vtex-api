@@ -66,7 +66,7 @@ export class MetricsAccumulator {
 
   private onFlushMetrics: Array<() => Metric | Metric[]>
 
-  constructor() {
+  public constructor() {
     this.metricsMillis = {}
     this.extensions = {}
     this.onFlushMetrics = []
@@ -142,7 +142,7 @@ export class MetricsAccumulator {
   private metricToAggregate = (value: any, key: string): AggregateMetric => {
     const aggregate: AggregateMetric = {
       name: key,
-      count: value.length, // tslint:disable-line:object-literal-sort-keys
+      count: value.length,
       max: Math.max(...value),
       mean: mean(value),
       median: median(value),

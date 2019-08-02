@@ -18,7 +18,7 @@ export class Logger {
   private operationId: string
   private requestId: string
 
-  constructor(ctx: Pick<IOContext, 'account'|'workspace'|'requestId'|'operationId'>) {
+  public constructor(ctx: Pick<IOContext, 'account'|'workspace'|'requestId'|'operationId'>) {
     this.account = ctx.account
     this.workspace = ctx.workspace
     this.requestId = ctx.requestId

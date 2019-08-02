@@ -84,7 +84,7 @@ export const routerCacheMiddleware = async (ctx: MiddlewareContext, next: () => 
   }
 }
 
-export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContext) => {
   const makeRequest = () => http.request(ctx.config)
 
   ctx.response = await (limit ? limit(makeRequest) : makeRequest())

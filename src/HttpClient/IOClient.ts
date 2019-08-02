@@ -11,7 +11,7 @@ export type IOClientConstructor = new (context: IOContext, options?: InstanceOpt
 export class IOClient {
   protected http: HttpClient
 
-  constructor(protected context: IOContext, protected options?: InstanceOptions) {
+  public constructor(protected context: IOContext, protected options?: InstanceOptions) {
     this.http = new HttpClient({
       name: this.constructor.name,
       ...context,

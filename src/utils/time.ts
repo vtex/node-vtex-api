@@ -1,7 +1,6 @@
 import { compose, forEach, keys, reduce, toPairs } from 'ramda'
 
 import { IOClients } from '../clients/IOClients'
-import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { RouteHandler, ServiceContext } from '../service/typings'
 
 export const hrToMillis = ([seconds, nanoseconds]: [number, number]) =>
@@ -102,16 +101,6 @@ export function timer<T extends IOClients, U, V>(middleware: RouteHandler<T, U, 
     } catch (e) {
       recordTimings(start, middleware.name, ctx.timings, ctx.metrics, false)
       throw e
-    }
-  }
-}
-
-declare global {
-  const metrics: MetricsAccumulator
-
-  namespace NodeJS {
-    interface Global {
-      metrics: MetricsAccumulator
     }
   }
 }

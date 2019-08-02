@@ -28,12 +28,16 @@ export class ResolverError extends Error {
    * @param {number} [status=500]
    * @param {string} [code='RESOLVER_ERROR']
    */
-  constructor(
+  public constructor(
     messageOrError: string | AxiosError | ErrorLike,
     public status: number = 500,
     public code: string = 'RESOLVER_ERROR'
   ) {
-    super(typeof messageOrError === 'string' ? messageOrError : messageOrError.message)
+    super(
+      typeof messageOrError === 'string'
+        ? messageOrError
+        : messageOrError.message
+    )
 
     if (typeof messageOrError === 'object') {
       // Copy original error properties without circular references

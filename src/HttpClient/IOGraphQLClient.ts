@@ -9,7 +9,10 @@ import { InstanceOptions } from './typings'
 export class IOGraphQLClient extends IOClient {
   protected graphql: GraphQLClient
 
-  constructor(protected context: IOContext, protected options?: InstanceOptions) {
+  public constructor(
+    protected context: IOContext,
+    protected options?: InstanceOptions
+  ) {
     super(context, options)
     this.graphql = new GraphQLClient(this.http)
   }

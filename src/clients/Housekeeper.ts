@@ -2,7 +2,7 @@ import { InfraClient, InstanceOptions } from '../HttpClient'
 import { HousekeeperStatesAndUpdates } from '../responses'
 import { IOContext } from '../service/typings'
 
-const createRoutes = ({account, workspace}: IOContext) => {
+const createRoutes = () => {
   const routes = {
     Apply: () => `v2/housekeeping/apply`,
     Perform: () => `v2/_housekeeping/perform`,
@@ -11,18 +11,16 @@ const createRoutes = ({account, workspace}: IOContext) => {
   return routes
 }
 
-
 export class Housekeeper extends InfraClient {
-  // tslint:disable-next-line: variable-name
   private _routes: ReturnType<typeof createRoutes>
 
-  private get routes () {
+  private get routes() {
     return this._routes
   }
 
-  constructor(context: IOContext, options?: InstanceOptions) {
+  public constructor(context: IOContext, options?: InstanceOptions) {
     super('housekeeper', context, options)
-    this._routes = createRoutes(context)
+    this._routes = createRoutes()
   }
 
   public apply = async (data: HousekeeperStatesAndUpdates) =>
@@ -33,5 +31,4 @@ export class Housekeeper extends InfraClient {
 
   public resolve = async (): Promise<HousekeeperStatesAndUpdates> =>
     this.http.get(this.routes.Resolve(), { metric: 'housekeeper-resolve' })
-
 }

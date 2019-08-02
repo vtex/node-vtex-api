@@ -1,4 +1,4 @@
-import { compose, find, head, isEmpty, map, reduce, split } from 'ramda'
+import { compose, find, head, isEmpty, map, split } from 'ramda'
 
 import { IOClients } from '../../../clients/IOClients'
 import { ServiceContext } from '../../typings'
@@ -46,7 +46,7 @@ export async function removeSetCookie<T extends IOClients, U, V> (ctx: ServiceCo
   const scope = findScopeInCacheControl(cacheControl)
   if (scope === 'public') {
     const indexedCookies = indexCookieByKeys(setCookie)
-    const cookies = reduce(
+    const cookies = indexedCookies.reduce<CookieAccumulator>(
       (acc, [key, payload]) => {
         if (BLACKLISTED_COOKIES.has(key)) {
           acc.droppedKeys.push(key)
@@ -58,8 +58,7 @@ export async function removeSetCookie<T extends IOClients, U, V> (ctx: ServiceCo
       {
         addedPayload: [],
         droppedKeys: [],
-      } as CookieAccumulator,
-      indexedCookies
+      }
     )
 
     if (cookies.droppedKeys.length > 0) {

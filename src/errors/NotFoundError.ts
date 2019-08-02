@@ -17,7 +17,7 @@ export class NotFoundError extends ResolverWarning {
    * Creates an instance of NotFoundError
    * @param {(string | AxiosError | ErrorLike)} messageOrError Either a message string or the complete original error object.
    */
-  constructor(messageOrError: string | AxiosError | ErrorLike) {
+  public constructor(messageOrError: string | AxiosError | ErrorLike) {
     super(messageOrError, 404, 'NOT_FOUND')
 
     if (typeof messageOrError === 'string' || !messageOrError.stack) {

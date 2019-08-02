@@ -11,7 +11,7 @@ export class DiskCache<V> implements CacheLayer<string, V>{
   private total = 0
   private lock: ReadWriteLock
 
-  constructor(private cachePath: string, private readFile=readJSON, private writeFile=outputJSON) {
+  public constructor(private cachePath: string, private readFile=readJSON, private writeFile=outputJSON) {
     this.lock = new ReadWriteLock()
   }
 

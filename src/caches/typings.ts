@@ -1,17 +1,17 @@
-// tslint:disable-next-line:interface-over-type-literal
+// eslint-disable-next-line @typescript-eslint/prefer-interface
 export type FetchResult<V> = {
   value: V,
   maxAge?: number,
 }
 
-// tslint:disable-next-line:interface-over-type-literal
+// eslint-disable-next-line @typescript-eslint/prefer-interface
 export type DiskStats = {
   hits: number,
   total: number,
   name: string,
 }
 
-// tslint:disable-next-line:interface-over-type-literal
+// eslint-disable-next-line @typescript-eslint/prefer-interface
 export type LRUStats = {
   itemCount: number,
   length: number,
@@ -23,7 +23,7 @@ export type LRUStats = {
   total: number,
 }
 
-// tslint:disable-next-line:interface-over-type-literal
+// eslint-disable-next-line @typescript-eslint/prefer-interface
 export type MultilayerStats = {
   hitRate: number | undefined,
   hits: number,
@@ -31,7 +31,7 @@ export type MultilayerStats = {
   name: string,
 }
 
-// tslint:disable-next-line:interface-over-type-literal
+// eslint-disable-next-line @typescript-eslint/prefer-interface
 export type LRUDiskCacheOptions = {
   /**
    * The maximum size of the cache, checked by applying the length

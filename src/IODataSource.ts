@@ -19,7 +19,7 @@ export abstract class IODataSource extends DataSource<ServiceContext> {
   private httpClient: HttpClient | void = undefined
   private initialized = false
 
-  constructor (
+  public constructor (
     protected context?: IOContext,
     private options: InstanceOptions = {}
   ) {
@@ -37,7 +37,7 @@ export abstract class IODataSource extends DataSource<ServiceContext> {
     this.initialized = true
   }
 
-  get http(): HttpClient {
+  public get http(): HttpClient {
     if (!this.initialized) {
       this.initialize({context: {vtex: this.context}} as any)
     }

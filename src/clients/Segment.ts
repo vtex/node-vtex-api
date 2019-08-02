@@ -97,6 +97,7 @@ export class Segment extends JanusClient {
       metric: token ? 'segment-get-token' : 'segment-get-new',
       params: {
         ...filteredQuery,
+        // eslint-disable-next-line @typescript-eslint/camelcase
         session_path: product || '',
       },
     }))

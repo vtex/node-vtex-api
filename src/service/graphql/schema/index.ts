@@ -26,7 +26,7 @@ let appTypeDefs: string | undefined
 
 try{
   appTypeDefs = readFileSync('./service/schema.graphql', 'utf8')
-// tslint:disable-next-line:no-empty
+// eslint-disable-next-line no-empty
 } catch (err) {}
 
 export const makeSchema = (ctx: GraphQLServiceContext) => {

@@ -15,7 +15,7 @@ export enum LogLevel {
 export class Logger extends InfraClient {
   private logger: IOLogger
 
-  constructor(context: IOContext, options?: InstanceOptions) {
+  public constructor(context: IOContext, options?: InstanceOptions) {
     super('colossus', {...context, recorder: undefined}, {...options, concurrency: 1})
     this.logger = context.logger!
   }
@@ -53,7 +53,7 @@ export interface ErrorLog {
   response?: {
     status: number
     data: string
-    headers: Record<string, string>,
+    headers: Record<string, string>
   }
   // You might add any other keys with extra information
   [key: string]: any

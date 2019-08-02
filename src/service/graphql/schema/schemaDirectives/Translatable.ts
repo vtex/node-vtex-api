@@ -11,7 +11,7 @@ export class Translatable extends SchemaDirectiveVisitor {
     const { resolve = defaultFieldResolver } = field
     const { behavior = 'FULL' } = this.args
     field.resolve = async (root, args, context, info) => {
-      const { clients: { segment }, clients } = context
+      const { clients } = context
       if (!context.loaders || !context.loaders.messages) {
         context.loaders = {
           ...context.loaders,
