@@ -1,0 +1,7 @@
+{
+  "extends": "vtex",
+  "env": {
+    "node": true,
+    "es6": true
+  }
+}
