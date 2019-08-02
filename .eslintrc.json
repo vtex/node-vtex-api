@@ -3,5 +3,23 @@
   "env": {
     "node": true,
     "es6": true
+  },
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-use-before-define": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      { "argsIgnorePattern": "^_+", "varsIgnorePattern": "^_+" }
+    ],
+    "@typescript-eslint/array-type": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/no-namespace": "off",
+    "@typescript-eslint/no-parameter-properties": "off",
+    "require-atomic-updates": "off",
+    "no-console": "off",
+    "prettier/prettier": "off"
+  },
+  "globals": {
+    "metrics": true
   }
 }
