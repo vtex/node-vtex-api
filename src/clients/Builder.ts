@@ -15,6 +15,7 @@ const routes = {
   Link: (app: string) => `${routes.Builder}/link/${app}`,
   Publish: (app: string) => `${routes.Builder}/publish/${app}`,
   Relink: (app: string) => `${routes.Builder}/relink/${app}`,
+  Test: (app: string) => `${routes.Builder}/test/${app}`,
 }
 
 export class Builder extends AppClient {
@@ -64,6 +65,10 @@ export class Builder extends AppClient {
     }
     const metric = 'bh-relink'
     return this.http.put<BuildResult>(routes.Relink(app), changes, {headers, metric, params})
+  }
+
+  public testApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}) => {
+    return this.zipAndSend(routes.Test(app), app, files, zipOptions, params)
   }
 
   private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky, stickyHint, zlib}: ZipOptions = {}, requestParams: RequestParams = {}) => {
