@@ -93,6 +93,7 @@ export interface InstanceOptions {
   serverTimings?: Record<string, string>
 }
 
+// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface IOResponse<T> {
   data: T
   headers: Record<string, string>

@@ -64,6 +64,7 @@ export interface DataSources {
   [name: string]: DataSource<ServiceContext>,
 }
 
+// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface IOContext {
   account: string
   // Identifies current app for the VTEX IO infrastructure.

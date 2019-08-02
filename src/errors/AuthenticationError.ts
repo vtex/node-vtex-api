@@ -17,7 +17,7 @@ export class AuthenticationError extends ResolverWarning {
    * Creates an instance of AuthenticationError
    * @param {(string | AxiosError | ErrorLike)} messageOrError Either a message string or the complete original error object.
    */
-  constructor(messageOrError: string | AxiosError | ErrorLike) {
+  public constructor(messageOrError: string | AxiosError | ErrorLike) {
     super(messageOrError, 401, 'UNAUTHENTICATED')
 
     if (typeof messageOrError === 'string' || !messageOrError.stack) {

@@ -2,12 +2,11 @@ import { AppClient, InstanceOptions } from '../HttpClient'
 import { IOContext } from '../service/typings'
 
 export class Billing extends AppClient {
-  constructor(context: IOContext, options?: InstanceOptions) {
+  public constructor(context: IOContext, options?: InstanceOptions) {
     super('vtex.billing', context, options)
   }
 
-  public status = () =>
-    this.http.get<ContractStatus>('/_v/contractStatus')
+  public status = () => this.http.get<ContractStatus>('/_v/contractStatus')
 }
 
 export enum ContractStatus {

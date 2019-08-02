@@ -40,7 +40,7 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
   }))
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     const start = process.hrtime()
-    let status: string = 'unknown'
+    let status = 'unknown'
 
     try {
       await next()

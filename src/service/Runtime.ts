@@ -28,11 +28,11 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
   public routes: Record<string, RouteHandler<ClientsT, StateT, CustomT>>
   public events: any
   public statusTrack: () => EnvMetric[]
-  public __is_service: true = true // tslint:disable-line
+  public __is_service: true = true // eslint-disable-line
 
-  constructor(
+  public constructor(
     service: Service<ClientsT, StateT, CustomT>,
-    // tslint:disable-next-line
+    // eslint-disable-next-line
     descriptor: ServiceDescriptor,
   ) {
     const {config} = service

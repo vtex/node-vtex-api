@@ -4,8 +4,12 @@ import { AppGraphQLClient, InstanceOptions } from '../HttpClient'
 import { IOContext } from '../service/typings'
 import { IOMessage } from '../utils/message'
 
-type IOMessageInput = Pick<IOMessage, 'id' | 'content' | 'description' | 'behavior'>
+type IOMessageInput = Pick<
+  IOMessage,
+  'id' | 'content' | 'description' | 'behavior'
+>
 
+// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface IOMessageSaveInput extends IOMessageInput {
   content: string
 }
@@ -29,31 +33,43 @@ interface TranslateResponse {
 }
 
 export class MessagesGraphQL extends AppGraphQLClient {
-  constructor(vtex: IOContext, options?: InstanceOptions) {
+  public constructor(vtex: IOContext, options?: InstanceOptions) {
     super('vtex.messages', vtex, options)
   }
 
-  public translate = async (args: Translate): Promise<string[]> => this.graphql.query<TranslateResponse, { args: Translate }>({
-    query: `
+  public translate = async (args: Translate): Promise<string[]> =>
+    this.graphql
+      .query<TranslateResponse, { args: Translate }>(
+        {
+          query: `
     query Translate($args: NewTranslateArgs!) {
       newTranslate(args: $args)
     }
     `,
-    variables: { args },
-  }, {
-    metric: 'messages-translate',
-  }).then(path(['data', 'newTranslate'])) as Promise<TranslateResponse['newTranslate']>
+          variables: { args },
+        },
+        {
+          metric: 'messages-translate',
+        }
+      )
+      .then(path(['data', 'newTranslate'])) as Promise<
+      TranslateResponse['newTranslate']
+    >
 
-  public save = (args: SaveArgs): Promise<boolean> => this.graphql.mutate<boolean, { args: SaveArgs }>({
-    mutate: `
+  public save = (args: SaveArgs): Promise<boolean> =>
+    this.graphql
+      .mutate<boolean, { args: SaveArgs }>(
+        {
+          mutate: `
     mutation Save($args: SaveArgs!) {
       save(args: $args)
     }
     `,
-    variables: { args },
-  }, {
-    metric: 'messages-save-translation',
-  }).then(path(['data', 'save'])) as Promise<boolean>
-
+          variables: { args },
+        },
+        {
+          metric: 'messages-save-translation',
+        }
+      )
+      .then(path(['data', 'save'])) as Promise<boolean>
 }
-

@@ -70,14 +70,13 @@ interface AppLocator {
 }
 
 export class Apps extends InfraClient {
-  // tslint:disable-next-line: variable-name
   private _routes: ReturnType<typeof createRoutes>
 
   private get routes () {
     return this._routes
   }
 
-  constructor(context: IOContext, options?: InstanceOptions) {
+  public constructor(context: IOContext, options?: InstanceOptions) {
     super('apps', context, options, true)
     this._routes = createRoutes(context)
   }
@@ -217,12 +216,14 @@ export class Apps extends InfraClient {
     const locator = parseAppId(app)
     const linked = !!locator.build
     const inflightKey = inflightURL
-    return this.http.get<T>(this.routes.File(locator, path), {
+    const config: IgnoreNotFoundRequestConfig = {
+      // @ts-ignore
       cacheable: linked ? CacheType.Memory : CacheType.Any,
       inflightKey,
       metric: linked ? 'apps-get-json' : 'registry-get-json',
       nullIfNotFound,
-    } as IgnoreNotFoundRequestConfig)
+    }
+    return this.http.get<T>(this.routes.File(locator, path), config)
   }
 
   public getAppFileStream = (app: string, path: string): Promise<IncomingMessage> => {

@@ -19,7 +19,7 @@ export class ResolverWarning extends ResolverError {
    * Creates an instance of ResolverWarning
    * @param {(string | AxiosError | ErrorLike)} messageOrError Either a message string or the complete original error object.
    */
-  constructor(
+  public constructor(
     messageOrError: string | AxiosError | ErrorLike,
     public status: number = 422,
     public code: string = 'RESOLVER_WARNING'

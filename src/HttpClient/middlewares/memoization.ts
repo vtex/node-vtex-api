@@ -29,17 +29,13 @@ export const memoizationMiddleware = ({memoizedCache}: MemoizationOptions) => {
       ctx.response = memoized.response
       return
     } else {
-      const promise = new Promise<Memoized>(async (resolve, reject) => {
-        try {
-          await next()
+      const promise = new Promise<Memoized>((resolve, reject) => {
+        next().then(() => {
           resolve({
             cacheHit: ctx.cacheHit!,
             response: ctx.response!,
           })
-        }
-        catch (err) {
-          reject(err)
-        }
+        }).catch(reject)
       })
       memoizedCache.set(key, promise)
       await promise

@@ -17,7 +17,7 @@ export class ForbiddenError extends ResolverWarning {
    * Creates an instance of ForbiddenError
    * @param {(string | AxiosError | ErrorLike)} messageOrError Either a message string or the complete original error object.
    */
-  constructor(messageOrError: string | AxiosError | ErrorLike) {
+  public constructor(messageOrError: string | AxiosError | ErrorLike) {
     super(messageOrError, 403, 'FORBIDDEN')
 
     if (typeof messageOrError === 'string' || !messageOrError.stack) {

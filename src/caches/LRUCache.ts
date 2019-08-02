@@ -10,7 +10,7 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
   private total: number
   private disposed: number
 
-  constructor (options: LRU.Options<K, V>) {
+  public constructor (options: LRU.Options<K, V>) {
     this.hits = 0
     this.total = 0
     this.disposed = 0

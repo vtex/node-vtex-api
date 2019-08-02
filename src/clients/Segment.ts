@@ -84,6 +84,7 @@ export class Segment extends JanusClient {
       metric: 'segment-get',
       params: {
         ...sanitizeParams(query),
+        // eslint-disable-next-line @typescript-eslint/camelcase
         session_path: product || '',
       },
     }))

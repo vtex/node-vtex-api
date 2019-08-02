@@ -1,5 +1,6 @@
 export const PROVIDER_SPACER = '::'
 
+// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface IOMessage {
   id: string
   content?: string

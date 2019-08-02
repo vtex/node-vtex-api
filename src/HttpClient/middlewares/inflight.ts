@@ -1,4 +1,3 @@
-import { createHash } from 'crypto'
 import { stringify } from 'qs'
 import { InflightKeyGenerator, MiddlewareContext, RequestConfig } from '../typings'
 
@@ -38,20 +37,18 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
     ctx.response = memoized.response
     return
   } else {
-    const promise = new Promise<Inflight>(async (resolve, reject) => {
-      try {
-        await next()
-        resolve({
-          cacheHit: ctx.cacheHit!,
-          response: ctx.response!,
+    const promise = new Promise<Inflight>((resolve, reject) => {
+      next()
+        .then(() => {
+          resolve({
+            cacheHit: ctx.cacheHit!,
+            response: ctx.response!,
+          })
+        }).catch((err) => {
+          reject(err)
+        }).finally (() => {
+          inflight.delete(key)
         })
-      }
-      catch (err) {
-        reject(err)
-      }
-      finally {
-        inflight.delete(key)
-      }
     })
     inflight.set(key, promise)
     await promise

@@ -17,7 +17,7 @@ export class UserInputError extends ResolverWarning {
    * Creates an instance of UserInputError
    * @param {(string | AxiosError | ErrorLike)} messageOrError Either a message string or the complete original error object.
    */
-  constructor(messageOrError: string | AxiosError | ErrorLike) {
+  public constructor(messageOrError: string | AxiosError | ErrorLike) {
     super(messageOrError, 400, 'BAD_USER_INPUT')
 
     if (typeof messageOrError === 'string' || !messageOrError.stack) {

@@ -1,4 +1,23 @@
-import { Apps, Billing, BillingMetrics, Builder, Events, ID, LicenseManager, Logger, Messages, MessagesGraphQL, Metadata, Registry, Router, Segment, Session, Settings, VBase, Workspaces } from '.'
+import {
+  Apps,
+  Billing,
+  BillingMetrics,
+  Builder,
+  Events,
+  ID,
+  LicenseManager,
+  Logger,
+  Messages,
+  MessagesGraphQL,
+  Metadata,
+  Registry,
+  Router,
+  Segment,
+  Session,
+  Settings,
+  VBase,
+  Workspaces,
+} from '.'
 import { InstanceOptions, IOClient, IOClientConstructor } from '../HttpClient'
 import { IOContext } from '../service/typings'
 
@@ -10,10 +29,10 @@ export type ClientsImplementation<T extends IOClients> = new (
 export class IOClients {
   private clients: Record<string, IOClient> = {}
 
-  constructor(
+  public constructor(
     private clientOptions: Record<string, InstanceOptions>,
     private ctx: IOContext
-  ) { }
+  ) {}
 
   public get apps() {
     return this.getOrSet('apps', Apps)
@@ -87,7 +106,10 @@ export class IOClients {
     return this.getOrSet('workspaces', Workspaces)
   }
 
-  protected getOrSet<TClient extends IOClientConstructor>(key: string, Implementation: TClient): InstanceType<TClient> {
+  protected getOrSet<TClient extends IOClientConstructor>(
+    key: string,
+    Implementation: TClient
+  ): InstanceType<TClient> {
     const options = {
       ...this.clientOptions.default,
       ...this.clientOptions[key],

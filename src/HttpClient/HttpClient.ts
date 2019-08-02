@@ -89,7 +89,7 @@ export class HttpClient {
     }
 
     if (authType && authToken) {
-      headers['Authorization'] = `${authType} ${authToken}` // tslint:disable-line
+      headers['Authorization'] = `${authType} ${authToken}`
     }
 
     const memoizedCache = new Map<string, Promise<Memoized>>()
