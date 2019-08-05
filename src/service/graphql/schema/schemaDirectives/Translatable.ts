@@ -28,15 +28,16 @@ export class Translatable extends SchemaDirectiveVisitor {
         ? {
           content: response,
           description: '',
+          field: '',
           from: undefined,
-          id: response,
+          vrn: response,
         }
         : response
-      const { content, from, id } = resObj
 
+      const { content, from, vrn, field: fieldResObj } = resObj
       const { cultureInfo: to } = await segment.getSegment()
 
-      if (content == null && id == null) {
+      if (content == null && vrn == null) {
         throw new Error(`@translatable directive needs a content or id to translate, but received ${JSON.stringify(response)}`)
       }
 
@@ -49,8 +50,11 @@ export class Translatable extends SchemaDirectiveVisitor {
         ...resObj,
         behavior,
         from,
+        id: this.toIOMessageId(fieldResObj, vrn),
         to,
       })
     }
   }
+  private toIOMessageId = (field: string, vrn: string) =>
+  (field? `${vrn}::${field}` : vrn)
 }
