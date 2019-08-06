@@ -9,7 +9,7 @@
     "watch": "tsc --watch",
     "build": "tsc",
     "gen": "typescript-json-schema tsconfig.json PublicAppManifest > gen/manifest.schema",
-    "lint": "tsc --noEmit && eslint --fix --ext ts src",
+    "lint": "tsc --noEmit && eslint --ext ts src",
     "prepublish": "run-s clean build gen",
     "prereleasy": "yarn prepublish"
   },
