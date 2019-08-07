@@ -41,6 +41,7 @@ export class Logger {
     /* tslint:disable:object-literal-sort-keys */
     console.log(JSON.stringify({
       __VTEX_IO_LOG: true,
+      level,
       app,
       account: this.account,
       workspace: this.workspace,
@@ -48,7 +49,6 @@ export class Logger {
       data: message || EMPTY_MESSAGE,
       operationId: this.operationId,
       requestId: this.requestId,
-      level,
     }))
   }
 }
