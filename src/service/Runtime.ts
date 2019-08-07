@@ -69,7 +69,6 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
 
     this.statusTrack = linked ? noop : global.metrics.statusTrack
 
-
     addProcessListeners()
   }
 }
