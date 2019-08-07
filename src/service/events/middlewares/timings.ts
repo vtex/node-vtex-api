@@ -10,11 +10,10 @@ const APP_ELAPSED_TIME_LOCATOR = shrinkTimings(formatTimingName({
 }))
 
 const log = <T extends IOClients, U>(
-  {event:{sender}, vtex: {account, workspace, route: {id}}}: EventContext<T, U>,
+  {event:{sender}, vtex: {account, workspace}}: EventContext<T, U>,
   millis: number
-) =>
-  // `${new Date().toISOString()}\t${account}/${workspace}:${id}\t${status}\t${method}\t${path}\t${millis}ms`
-  `${new Date().toISOString()}\t${account}/${workspace}:${id}\t${millis}ms\t caller: ${sender}`
+) => `${new Date().toISOString()}\t${account}/${workspace}\t${millis}ms\t caller: ${sender}`
+
 
 export async function timings<T extends IOClients, U> (ctx: EventContext<T,U>, next: () => Promise<any>) {
   const start = process.hrtime()
@@ -24,9 +23,8 @@ export async function timings<T extends IOClients, U> (ctx: EventContext<T,U>, n
   // Errors will be caught by the next middleware so we don't have to catch.
   await next()
 
-  const { vtex: { route: { id } } } = ctx
   const end = process.hrtime(start)
   const millis = hrToMillis(end)
   console.log(log(ctx, millis))
-  metrics.batch(`event-handler-${id}`, end)
+  metrics.batch(`event-handler`, end)
 }
