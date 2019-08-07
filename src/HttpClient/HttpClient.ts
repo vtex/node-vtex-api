@@ -5,7 +5,7 @@ import compose, { Middleware } from 'koa-compose'
 import pLimit from 'p-limit'
 
 import { CacheLayer } from '../caches/CacheLayer'
-import { BODY_HASH, PRODUCT_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../constants'
+import { BODY_HASH, LOCALE_HEADER, PRODUCT_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../constants'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { forExternal, forRoot, forWorkspace } from './factories'
 import { CacheableRequestConfig, Cached, cacheMiddleware, CacheType } from './middlewares/cache'
@@ -25,6 +25,7 @@ interface ClientOptions {
   authToken?: string
   userAgent: string
   baseURL?: string
+  locale?: string
   timeout?: number
   recorder?: Recorder
   metrics?: MetricsAccumulator
@@ -61,6 +62,7 @@ export class HttpClient {
       authType,
       memoryCache,
       diskCache,
+      locale,
       name,
       metrics,
       product,
@@ -86,6 +88,7 @@ export class HttpClient {
       ... segmentToken ? {[SEGMENT_HEADER]: segmentToken} : null,
       ... sessionToken ? {[SESSION_HEADER]: sessionToken} : null,
       ... product ? {[PRODUCT_HEADER]: product} : null,
+      ... locale ? {[LOCALE_HEADER]: locale} : null,
     }
 
     if (authType && authToken) {
