@@ -1,3 +1,4 @@
+process.env.FORCE_COLOR = '1'
 export * from './caches'
 export * from './clients'
 export * from './clients/IOClients'
