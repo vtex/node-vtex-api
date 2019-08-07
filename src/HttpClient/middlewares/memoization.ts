@@ -29,13 +29,17 @@ export const memoizationMiddleware = ({memoizedCache}: MemoizationOptions) => {
       ctx.response = memoized.response
       return
     } else {
-      const promise = new Promise<Memoized>((resolve, reject) => {
-        next().then(() => {
+      // eslint-disable-next-line no-async-promise-executor
+      const promise = new Promise<Memoized>(async (resolve, reject) => {
+        try {
+          await next()
           resolve({
             cacheHit: ctx.cacheHit!,
             response: ctx.response!,
           })
-        }).catch(reject)
+        } catch(error) {
+          reject(error)
+        }
       })
       memoizedCache.set(key, promise)
       await promise

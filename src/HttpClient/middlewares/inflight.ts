@@ -37,18 +37,19 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
     ctx.response = memoized.response
     return
   } else {
-    const promise = new Promise<Inflight>((resolve, reject) => {
-      next()
-        .then(() => {
-          resolve({
-            cacheHit: ctx.cacheHit!,
-            response: ctx.response!,
-          })
-        }).catch((err) => {
-          reject(err)
-        }).finally (() => {
-          inflight.delete(key)
+    // eslint-disable-next-line no-async-promise-executor
+    const promise = new Promise<Inflight>(async (resolve, reject) => {
+      try {
+        await next()
+        resolve({
+          cacheHit: ctx.cacheHit!,
+          response: ctx.response!,
         })
+      } catch(err) {
+        reject(err)
+      } finally {
+        inflight.delete(key)
+      }
     })
     inflight.set(key, promise)
     await promise
