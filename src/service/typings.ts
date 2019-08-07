@@ -22,6 +22,20 @@ export interface Context<T extends IOClients> {
   metrics: Record<string, [number, number]>
   serverTiming?: ServerTiming
 }
+interface EventBody {
+  sender: string,
+  subject: string,
+  key: string,
+}
+export interface EventContext<T extends IOClients, StateT = any> {
+  clients: T
+  state: StateT
+  vtex: IOContext
+  event: EventBody
+  body: any
+  timings: Record<string, [number, number]>
+  metrics: Record<string, [number, number]>
+}
 
 type KnownKeys<T> = {
   [K in keyof T]: string extends K ? never : number extends K ? never : K
@@ -34,6 +48,8 @@ interface Loaders {
 export type ServiceContext<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Pick<ParameterizedContext<StateT, Context<ClientsT>>, KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>> & CustomT & { loaders: Loaders }
 
 export type RouteHandler<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>
+
+export type EventHandler<ClientsT extends IOClients = IOClients, StateT = void> = Middleware<EventContext<ClientsT, StateT>>
 
 export type Resolver<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> =
   GraphQLFieldResolver<any, ServiceContext<ClientsT, StateT, CustomT>, any>

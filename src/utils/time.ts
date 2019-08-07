@@ -2,7 +2,7 @@ import { compose, forEach, keys, reduce, toPairs } from 'ramda'
 
 import { IOClients } from '../clients/IOClients'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
-import { RouteHandler, ServiceContext } from '../service/typings'
+import { EventContext, EventHandler, RouteHandler, ServiceContext } from '../service/typings'
 
 export const hrToMillis = ([seconds, nanoseconds]: [number, number]) =>
   Math.round((seconds * 1e3) + (nanoseconds / 1e6))
@@ -71,6 +71,38 @@ export function timer<T extends IOClients, U, V>(middleware: RouteHandler<T, U, 
     if (!ctx.serverTiming) {
       ctx.serverTiming = {}
     }
+    if (!ctx.timings) {
+      ctx.timings = {}
+    }
+    if (!ctx.metrics) {
+      ctx.metrics = {}
+    }
+    const start = process.hrtime()
+    try {
+      await middleware(ctx, async () => {
+        recordTimings(start, middleware.name, ctx.timings, ctx.metrics)
+        ctx.metrics = {}
+        if (next) {
+          await next()
+        }
+      })
+    } catch (e) {
+      recordTimings(start, middleware.name, ctx.timings, ctx.metrics)
+      throw e
+    }
+  }
+}
+
+export function timerForEvents<T extends IOClients, U>(middleware: EventHandler<T,U>): EventHandler<T,U> {
+  if ((middleware as any).skipTimer) {
+    return middleware
+  }
+
+  if (!middleware.name) {
+    console.warn('Please use a named function as handler for better metrics.', middleware.toString())
+  }
+
+  return async (ctx: EventContext<T, U>, next: () => Promise<any>) => {
     if (!ctx.timings) {
       ctx.timings = {}
     }
