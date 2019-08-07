@@ -1,4 +1,5 @@
 import { InfraClient, InstanceOptions } from '../HttpClient'
+import { Logger as IOLogger } from '../service/logger'
 import { IOContext } from '../service/typings'
 import { cleanError } from '../utils/error'
 
@@ -17,8 +18,11 @@ const routes = {
 }
 
 export class Logger extends InfraClient {
+  private logger: IOLogger
+
   constructor(context: IOContext, options?: InstanceOptions) {
     super('colossus', {...context, recorder: undefined}, {...options, concurrency: 1})
+    this.logger = context.logger
   }
 
   public debug = (message: any, subject: string = DEFAULT_SUBJECT) =>
@@ -34,6 +38,9 @@ export class Logger extends InfraClient {
     this.sendLog(subject, cleanError(error), LogLevel.Error)
 
   public sendLog = (subject: string, message: any, level: LogLevel) : Promise<void> => {
+    // Use stdout logger
+    this.logger.log(message, level)
+
     if (!message) {
       message = new Error('Logger.sendLog was called with null or undefined message')
       message.code = 'ERR_NIL_ERR'

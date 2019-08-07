@@ -10,6 +10,7 @@ import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { InstanceOptions } from '../HttpClient'
 import { Recorder } from '../HttpClient/middlewares/recorder'
 import { IOMessage } from '../utils/message'
+import { Logger } from './logger'
 
 type ServerTiming = Record<string, string>
 
@@ -90,6 +91,7 @@ export interface IOContext {
   // Admins may send a cookie in the request to indicate they should be routed to a specific environment, e.g. beta.
   janusEnv?: JanusEnv
   serverTiming?: ServerTiming
+  logger: Logger
 }
 
 export interface ServiceRoute {
