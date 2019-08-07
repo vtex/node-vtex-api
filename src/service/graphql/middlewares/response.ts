@@ -7,19 +7,20 @@ import { cacheControl } from '../utils/cacheControl'
 const DEV_FIELDS = ['data', 'errors', 'extensions']
 const PROD_FIELDS = ['data', 'errors']
 
-export async function response (ctx: GraphQLServiceContext, next: () => Promise<void>) {
-  const {responseInit, graphqlResponse} = ctx.graphql
-  const {production} = ctx.vtex
+export async function response(
+  ctx: GraphQLServiceContext,
+  next: () => Promise<void>
+) {
+  const { responseInit, graphqlResponse } = ctx.graphql
+  const { production } = ctx.vtex
 
-  const {
-    maxAge = '',
-    scope = '',
-    segment = null,
-  } = graphqlResponse ? cacheControl(graphqlResponse, ctx) : {}
+  const { maxAge = '', scope = '', segment = null } = graphqlResponse
+    ? cacheControl(graphqlResponse, ctx)
+    : {}
   const cacheControlHeader = reject(isEmpty, [maxAge, scope]).join(',')
 
   ctx.set({
-    ...responseInit && responseInit.headers,
+    ...(responseInit && responseInit.headers),
     'Cache-Control': cacheControlHeader,
   })
 

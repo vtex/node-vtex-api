@@ -1,29 +1,38 @@
 import { compose, forEach, path, reduce, replace, split, values } from 'ramda'
 
 import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
-import { formatTimingName, hrToMillis, parseTimingName, shrinkTimings } from '../../utils'
+import {
+  formatTimingName,
+  hrToMillis,
+  parseTimingName,
+  shrinkTimings,
+} from '../../utils'
 import { TIMEOUT_CODE } from '../../utils/retry'
 import { statusLabel } from '../../utils/status'
 import { MiddlewareContext } from '../typings'
 
-const parseServerTiming = (serverTimingsHeaderValue: string) => compose<string, string, string[], Array<[string, string]>>(
-  reduce((acc, rawHeader) => {
-    const [name, durStr] = rawHeader.split(';')
-    const [_, dur] = durStr ? durStr.split('=') : [null, null]
-    const {hopNumber, source, target} = parseTimingName(name)
-    const formatted = formatTimingName({
-      hopNumber: Number.isNaN(hopNumber as any) ? null : hopNumber! + 1,
-      source,
-      target,
-    })
-    if (dur && formatted) {
-      acc.push([formatted, dur])
-    }
-    return acc
-  }, [] as Array<[string, string]>),
-  split(','),
-  replace(/\s/g, '')
-)(serverTimingsHeaderValue)
+const parseServerTiming = (serverTimingsHeaderValue: string) =>
+  compose<string, string, string[], Array<[string, string]>>(
+    reduce(
+      (acc, rawHeader) => {
+        const [name, durStr] = rawHeader.split(';')
+        const [_, dur] = durStr ? durStr.split('=') : [null, null]
+        const { hopNumber, source, target } = parseTimingName(name)
+        const formatted = formatTimingName({
+          hopNumber: Number.isNaN(hopNumber as any) ? null : hopNumber! + 1,
+          source,
+          target,
+        })
+        if (dur && formatted) {
+          acc.push([formatted, dur])
+        }
+        return acc
+      },
+      [] as Array<[string, string]>
+    ),
+    split(','),
+    replace(/\s/g, '')
+  )(serverTimingsHeaderValue)
 
 interface MetricsOpts {
   metrics?: MetricsAccumulator
@@ -31,13 +40,19 @@ interface MetricsOpts {
   name?: string
 }
 
-export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) => {
+export const metricsMiddleware = ({
+  metrics,
+  serverTiming,
+  name,
+}: MetricsOpts) => {
   const serverTimingStart = process.hrtime()
-  const serverTimingLabel = shrinkTimings(formatTimingName({
-    hopNumber: 0,
-    source: process.env.VTEX_APP_NAME!,
-    target: name || 'unknown',
-  }))
+  const serverTimingLabel = shrinkTimings(
+    formatTimingName({
+      hopNumber: 0,
+      source: process.env.VTEX_APP_NAME!,
+      target: name || 'unknown',
+    })
+  )
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     const start = process.hrtime()
     let status = 'unknown'
@@ -51,11 +66,13 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
       if (ctx.config.metric) {
         if (err.code === 'ECONNABORTED') {
           status = 'aborted'
-        }
-        else if (err.response && err.response.data && err.response.data.code === TIMEOUT_CODE) {
+        } else if (
+          err.response &&
+          err.response.data &&
+          err.response.data.code === TIMEOUT_CODE
+        ) {
           status = 'timeout'
-        }
-        else if (err.response && err.response.status) {
+        } else if (err.response && err.response.status) {
           status = statusLabel(err.response.status)
         } else {
           status = 'error'
@@ -73,7 +90,7 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
         }
 
         if (ctx.config['axios-retry']) {
-          const {retryCount} = ctx.config['axios-retry'] as any
+          const { retryCount } = ctx.config['axios-retry'] as any
 
           if (retryCount && retryCount > 0) {
             extensions[`retry-${retryCount}`] = 1
@@ -85,23 +102,31 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
       if (serverTiming) {
         // Timings in the client's perspective
         const dur = hrToMillis(process.hrtime(serverTimingStart))
-        if (!serverTiming[serverTimingLabel] || Number(serverTiming[serverTimingLabel]) < dur) {
+        if (
+          !serverTiming[serverTimingLabel] ||
+          Number(serverTiming[serverTimingLabel]) < dur
+        ) {
           serverTiming[serverTimingLabel] = `${dur}`
         }
 
         // Forward server timings
-        const cacheHit = ctx.cacheHit && values(ctx.cacheHit).reduce((a, b) => a || b !== 0, false)
-        const serverTimingsHeader = path<string>(['response', 'headers', 'server-timing'], ctx)
+        const cacheHit =
+          ctx.cacheHit &&
+          values(ctx.cacheHit).reduce((a, b) => a || b !== 0, false)
+        const serverTimingsHeader = path<string>(
+          ['response', 'headers', 'server-timing'],
+          ctx
+        )
         if (!cacheHit && serverTimingsHeader) {
           const parsedServerTiming = parseServerTiming(serverTimingsHeader)
-          forEach(
-            ([timingsName, timingsDur]) => {
-              if (!serverTiming[timingsName] || Number(serverTiming[timingsName]) < Number(timingsDur)) {
-                serverTiming[timingsName] = timingsDur
-              }
-            },
-            parsedServerTiming
-          )
+          forEach(([timingsName, timingsDur]) => {
+            if (
+              !serverTiming[timingsName] ||
+              Number(serverTiming[timingsName]) < Number(timingsDur)
+            ) {
+              serverTiming[timingsName] = timingsDur
+            }
+          }, parsedServerTiming)
         }
       }
     }

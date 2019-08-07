@@ -19,16 +19,16 @@ export class Session extends JanusClient {
       headers: {
         'set-cookie': [setCookies],
       },
-    } = await this.http.getRaw<any>(routes.base, ({
+    } = await this.http.getRaw<any>(routes.base, {
       headers: {
         'Content-Type': 'application/json',
-        'Cookie': `vtex_session=${token};`,
+        Cookie: `vtex_session=${token};`,
       },
       metric: 'session-get',
       params: {
         items: items.join(','),
       },
-    }))
+    })
 
     const parsedCookie = parseCookie.parse(setCookies)
     const sessionToken = prop(SESSION_COOKIE, parsedCookie)
@@ -42,12 +42,17 @@ export class Session extends JanusClient {
   /**
    * Update the public portion of this session
    */
-  public updateSession = (key: string, value: any, items: string[], token: any) => {
+  public updateSession = (
+    key: string,
+    value: any,
+    items: string[],
+    token: any
+  ) => {
     const data = { public: { [key]: { value } } }
     const config = {
       headers: {
         'Content-Type': 'application/json',
-        'Cookie': `vtex_session=${token};`,
+        Cookie: `vtex_session=${token};`,
       },
       metric: 'session-update',
       params: {

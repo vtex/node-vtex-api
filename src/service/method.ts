@@ -30,7 +30,11 @@ type MethodOptions<
 
 const TEN_SECONDS_S = 10
 
-function methodNotAllowed<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void>(ctx: ServiceContext<ClientsT, StateT, CustomT>) {
+function methodNotAllowed<
+  ClientsT extends IOClients = IOClients,
+  StateT = void,
+  CustomT = void
+>(ctx: ServiceContext<ClientsT, StateT, CustomT>) {
   ctx.status = 405
   ctx.set('cache-control', `public, max-age=${TEN_SECONDS_S}`)
 }
@@ -49,7 +53,7 @@ export function method<
     >
   )
 
-  const inner = async function forMethod (
+  const inner = async function forMethod(
     ctx: ServiceContext<ClientsT, StateT, CustomT>,
     next: () => Promise<any>
   ) {

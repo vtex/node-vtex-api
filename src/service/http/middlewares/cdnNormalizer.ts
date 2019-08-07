@@ -26,10 +26,14 @@ export const cachingStrategies: CachingStrategy[] = [
   },
 ]
 
-
-export async function cdnNormalizer <T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
+export async function cdnNormalizer<T extends IOClients, U, V>(
+  ctx: ServiceContext<T, U, V>,
+  next: () => Promise<any>
+) {
   const { path } = ctx
-  const strategy = cachingStrategies.find(cachingStrategy => path.indexOf(cachingStrategy.path) === 0)
+  const strategy = cachingStrategies.find(
+    cachingStrategy => path.indexOf(cachingStrategy.path) === 0
+  )
 
   if (strategy) {
     strategy.forbidden.forEach(headerName => {

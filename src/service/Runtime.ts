@@ -4,7 +4,11 @@ import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { EnvMetric, MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { addProcessListeners } from '../utils/unhandled'
 
-import { createGraphQLRoute, GRAPHQL_ROUTE, GRAPHQL_ROUTE_LEGACY } from './graphql'
+import {
+  createGraphQLRoute,
+  GRAPHQL_ROUTE,
+  GRAPHQL_ROUTE_LEGACY,
+} from './graphql'
 import { createHttpRoute } from './http'
 import { Service } from './Service'
 import { ClientsConfig, RouteHandler, ServiceDescriptor } from './typings'
@@ -24,7 +28,11 @@ const defaultClients: ClientsConfig = {
   },
 }
 
-export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
+export class Runtime<
+  ClientsT extends IOClients = IOClients,
+  StateT = void,
+  CustomT = void
+> {
   public routes: Record<string, RouteHandler<ClientsT, StateT, CustomT>>
   public events: any
   public statusTrack: () => EnvMetric[]
@@ -35,19 +43,23 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
     // eslint-disable-next-line
     descriptor: ServiceDescriptor,
   ) {
-    const {config} = service
+    const { config } = service
     const clients = {
-      implementation: config.clients && config.clients.implementation || IOClients,
+      implementation:
+        (config.clients && config.clients.implementation) || IOClients,
       options: {
         ...defaultClients.options,
-        ...config.clients ? config.clients.options : null,
+        ...(config.clients ? config.clients.options : null),
       },
     }
 
     const Clients = clients.implementation as ClientsImplementation<ClientsT>
 
     this.routes = config.routes
-      ? map(createHttpRoute<ClientsT, StateT, CustomT>(Clients, clients.options), config.routes)
+      ? map(
+          createHttpRoute<ClientsT, StateT, CustomT>(Clients, clients.options),
+          config.routes
+        )
       : {}
 
     if (config.graphql) {
@@ -56,7 +68,11 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
         console.warn('Using legacy graphql route id', GRAPHQL_ROUTE_LEGACY)
         graphqlRoute = GRAPHQL_ROUTE_LEGACY
       }
-      this.routes[graphqlRoute] = createGraphQLRoute<ClientsT, StateT, CustomT>(config.graphql, Clients, clients.options)
+      this.routes[graphqlRoute] = createGraphQLRoute<ClientsT, StateT, CustomT>(
+        config.graphql,
+        Clients,
+        clients.options
+      )
     }
 
     this.events = config.events

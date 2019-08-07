@@ -21,8 +21,11 @@ const queryFromUrl = compose<string, Url, string, Record<string, any>>(
   partialRight(parse, [true])
 )
 
-export async function parseQuery (ctx: GraphQLServiceContext, next: () => Promise<void>) {
-  const {request, req} = ctx
+export async function parseQuery(
+  ctx: GraphQLServiceContext,
+  next: () => Promise<void>
+) {
+  const { request, req } = ctx
 
   let query: Record<string, any>
   if (request.is('multipart/form-data')) {
@@ -30,7 +33,7 @@ export async function parseQuery (ctx: GraphQLServiceContext, next: () => Promis
   } else if (request.method.toUpperCase() === 'POST') {
     query = await json(req)
   } else {
-    query = queryFromUrl(request.url) || await json(req)
+    query = queryFromUrl(request.url) || (await json(req))
   }
 
   ctx.graphql.query = query

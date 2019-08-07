@@ -21,4 +21,8 @@ export interface GraphQLContext {
   }
 }
 
-export type GraphQLServiceContext = ServiceContext<IOClients, any, GraphQLContext>
+export type GraphQLServiceContext = ServiceContext<
+  IOClients,
+  any,
+  GraphQLContext
+>

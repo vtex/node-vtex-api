@@ -16,8 +16,7 @@
     "@typescript-eslint/no-namespace": "off",
     "@typescript-eslint/no-parameter-properties": "off",
     "require-atomic-updates": "off",
-    "no-console": "off",
-    "prettier/prettier": "off"
+    "no-console": "off"
   },
   "globals": {
     "metrics": true

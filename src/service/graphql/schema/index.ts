@@ -6,7 +6,12 @@ import { any, keys, map, zipObj } from 'ramda'
 import { GraphQLServiceContext } from '../typings'
 import { messagesLoader } from './messagesLoader'
 import { nativeSchemaDirectives } from './schemaDirectives'
-import { nativeResolvers, nativeTypeDefs, scalarResolversMap, shouldNotCacheWhenSchemaHas } from './typeDefs'
+import {
+  nativeResolvers,
+  nativeTypeDefs,
+  scalarResolversMap,
+  shouldNotCacheWhenSchemaHas,
+} from './typeDefs'
 
 export type SchemaMetaData = Record<string, boolean>
 
@@ -24,16 +29,14 @@ const cache: Cache = {
 
 let appTypeDefs: string | undefined
 
-try{
+try {
   appTypeDefs = readFileSync('./service/schema.graphql', 'utf8')
-// eslint-disable-next-line no-empty
+  // eslint-disable-next-line no-empty
 } catch (err) {}
 
 export const makeSchema = (ctx: GraphQLServiceContext) => {
   const {
-    graphql: { resolvers: appResolvers,
-      schemaDirectives: appDirectives,
-    },
+    graphql: { resolvers: appResolvers, schemaDirectives: appDirectives },
     clients: { segment },
   } = ctx
 
@@ -75,10 +78,7 @@ export const makeSchema = (ctx: GraphQLServiceContext) => {
 
 const getOrSetTypeDefs = (schemaMetaData: SchemaMetaData) => {
   if (!cache.typeDefs) {
-    cache.typeDefs = [
-      appTypeDefs,
-      nativeTypeDefs(schemaMetaData),
-    ].join('\n\n')
+    cache.typeDefs = [appTypeDefs, nativeTypeDefs(schemaMetaData)].join('\n\n')
   }
   return cache.typeDefs
 }
@@ -95,4 +95,5 @@ const extractSchemaMetaData = (typeDefs: string) => {
   return cache.schemaMetaData
 }
 
-const isSchemaCacheable = (schemaMetaData: SchemaMetaData) => !any(scalar => schemaMetaData[scalar], shouldNotCacheWhenSchemaHas)
+const isSchemaCacheable = (schemaMetaData: SchemaMetaData) =>
+  !any(scalar => schemaMetaData[scalar], shouldNotCacheWhenSchemaHas)

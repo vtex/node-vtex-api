@@ -1,34 +1,34 @@
 // eslint-disable-next-line @typescript-eslint/prefer-interface
 export type FetchResult<V> = {
-  value: V,
-  maxAge?: number,
+  value: V
+  maxAge?: number
 }
 
 // eslint-disable-next-line @typescript-eslint/prefer-interface
 export type DiskStats = {
-  hits: number,
-  total: number,
-  name: string,
+  hits: number
+  total: number
+  name: string
 }
 
 // eslint-disable-next-line @typescript-eslint/prefer-interface
 export type LRUStats = {
-  itemCount: number,
-  length: number,
-  disposedItems: number,
-  hitRate: number | undefined,
-  hits: number,
-  max: number,
-  name: string,
-  total: number,
+  itemCount: number
+  length: number
+  disposedItems: number
+  hitRate: number | undefined
+  hits: number
+  max: number
+  name: string
+  total: number
 }
 
 // eslint-disable-next-line @typescript-eslint/prefer-interface
 export type MultilayerStats = {
-  hitRate: number | undefined,
-  hits: number,
-  total: number,
-  name: string,
+  hitRate: number | undefined
+  hits: number
+  total: number
+  name: string
 }
 
 // eslint-disable-next-line @typescript-eslint/prefer-interface
@@ -53,5 +53,5 @@ export type LRUDiskCacheOptions = {
    * return `undefined` when you try to get a stale entry,
    * as if it had already been deleted.
    */
-  stale?: boolean,
+  stale?: boolean
 }

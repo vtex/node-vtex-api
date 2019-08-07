@@ -7,13 +7,17 @@ import { AppMetaInfo } from '../clients/Apps'
 
 export const removeBuild = (id: string): string => id.split('+')[0]
 
-export const removeVersionFromAppId = (appId: string): string => appId.split('@')[0]
+export const removeVersionFromAppId = (appId: string): string =>
+  appId.split('@')[0]
 
-export const extractVersionFromAppId = (appId: string): string => appId.split('@').slice(-1)[0]
+export const extractVersionFromAppId = (appId: string): string =>
+  appId.split('@').slice(-1)[0]
 
-export const transformToLinkedLocator = (appId: string) => appId.replace(/\+build.*$/, '+linked')
+export const transformToLinkedLocator = (appId: string) =>
+  appId.replace(/\+build.*$/, '+linked')
 
-export const formatLocator = (name: string, versionAndBuild: string): string => `${name}@${removeBuild(versionAndBuild)}`
+export const formatLocator = (name: string, versionAndBuild: string): string =>
+  `${name}@${removeBuild(versionAndBuild)}`
 
 export const isLinkedApp = (app: AppMetaInfo) => app.id.includes('+build')
 
@@ -29,16 +33,18 @@ export const parseAppId = (appId: string): ParsedLocator => {
   }
 }
 
-export const formatAppId = ({locator, build}: ParsedLocator) => build ? `${locator}+${build}` : locator
+export const formatAppId = ({ locator, build }: ParsedLocator) =>
+  build ? `${locator}+${build}` : locator
 
 export const satisfies = (appId: string, version: string): boolean => {
-  const {version: appVer} = parseAppId(appId)
+  const { version: appVer } = parseAppId(appId)
   return semver.satisfies(appVer, version)
 }
 
 export const versionToMajor = (version: string): string => version.split('.')[0]
 
-export const versionToMajorRange = (version: string): string => `${versionToMajor(version)}.x`
+export const versionToMajorRange = (version: string): string =>
+  `${versionToMajor(version)}.x`
 
 export const formatMajorLocator = (name: string, version: string): string => {
   const majorRange = versionToMajorRange(version)
@@ -46,7 +52,7 @@ export const formatMajorLocator = (name: string, version: string): string => {
 }
 
 export const appIdToAppAtMajor = (appId: string): string => {
-  const {name, version} = parseAppId(appId)
+  const { name, version } = parseAppId(appId)
   const majorRange = versionToMajorRange(version)
   return `${name}@${majorRange}`
 }

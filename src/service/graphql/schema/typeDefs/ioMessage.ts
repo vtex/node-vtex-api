@@ -9,10 +9,15 @@ export interface NativeResolverContext {
   translationsLoader: DataLoader<IOMessage, string>
 }
 
-const serialize = (ctx: NativeResolverContext) => async (inputArgs: IOMessage | string) => {
-  const args = typeof inputArgs === 'string' ? {content: inputArgs, description: '', from: undefined, id: inputArgs} : inputArgs
-  const {content, from} = args
-  const {translationsLoader, getLocaleTo} = ctx
+const serialize = (ctx: NativeResolverContext) => async (
+  inputArgs: IOMessage | string
+) => {
+  const args =
+    typeof inputArgs === 'string'
+      ? { content: inputArgs, description: '', from: undefined, id: inputArgs }
+      : inputArgs
+  const { content, from } = args
+  const { translationsLoader, getLocaleTo } = ctx
   const to = await getLocaleTo()
 
   // If the message is already in the target locale, return the content.
@@ -34,17 +39,18 @@ const parseValue = (_: string) => {
   )
 }
 
-export const resolvers = (ctx: NativeResolverContext) => new GraphQLScalarType({
-  description: 'Internationalizeable String',
-  name: 'IOMessage',
-  parseLiteral(ast: ASTNode) {
-    switch (ast.kind) {
-      case Kind.STRING:
-        return ast.value
-      default:
-        return null
-    }
-  },
-  parseValue,
-  serialize: serialize(ctx),
-})
+export const resolvers = (ctx: NativeResolverContext) =>
+  new GraphQLScalarType({
+    description: 'Internationalizeable String',
+    name: 'IOMessage',
+    parseLiteral(ast: ASTNode) {
+      switch (ast.kind) {
+        case Kind.STRING:
+          return ast.value
+        default:
+          return null
+      }
+    },
+    parseValue,
+    serialize: serialize(ctx),
+  })

@@ -6,7 +6,7 @@ class IncomingRequestStats {
   public closed = 0
   public total = 0
 
-  public get () {
+  public get() {
     return {
       aborted: this.aborted,
       closed: this.closed,
@@ -14,7 +14,7 @@ class IncomingRequestStats {
     }
   }
 
-  public clear () {
+  public clear() {
     this.aborted = 0
     this.closed = 0
     this.total = 0
@@ -30,7 +30,10 @@ const requestAborted = () => {
   incomingRequestStats.aborted++
 }
 
-export async function trackIncomingRequestStats <T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
+export async function trackIncomingRequestStats<T extends IOClients, U, V>(
+  ctx: ServiceContext<T, U, V>,
+  next: () => Promise<any>
+) {
   ctx.req.on('close', requestClosed)
   ctx.req.on('aborted', requestAborted)
   incomingRequestStats.total++

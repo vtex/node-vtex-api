@@ -1,12 +1,21 @@
 import { stringify } from 'qs'
-import { InflightKeyGenerator, MiddlewareContext, RequestConfig } from '../typings'
+import {
+  InflightKeyGenerator,
+  MiddlewareContext,
+  RequestConfig,
+} from '../typings'
 
-export type Inflight = Required<Pick<MiddlewareContext, 'cacheHit' | 'response'>>
+export type Inflight = Required<
+  Pick<MiddlewareContext, 'cacheHit' | 'response'>
+>
 
 const inflight = new Map<string, Promise<Inflight>>()
 let metricsAdded = false
 
-export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+export const singleFlightMiddleware = async (
+  ctx: MiddlewareContext,
+  next: () => Promise<void>
+) => {
   const { inflightKey } = ctx.config
 
   if (!inflightKey) {
@@ -45,7 +54,7 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
           cacheHit: ctx.cacheHit!,
           response: ctx.response!,
         })
-      } catch(err) {
+      } catch (err) {
         reject(err)
       } finally {
         inflight.delete(key)
@@ -56,6 +65,16 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
   }
 }
 
-export const inflightURL: InflightKeyGenerator = ({baseURL, url}: RequestConfig) => baseURL! + url!
+export const inflightURL: InflightKeyGenerator = ({
+  baseURL,
+  url,
+}: RequestConfig) => baseURL! + url!
 
-export const inflightUrlWithQuery: InflightKeyGenerator = ({baseURL, url, params}: RequestConfig) => baseURL! + url! + stringify(params, {arrayFormat: 'repeat', addQueryPrefix: true})
+export const inflightUrlWithQuery: InflightKeyGenerator = ({
+  baseURL,
+  url,
+  params,
+}: RequestConfig) =>
+  baseURL! +
+  url! +
+  stringify(params, { arrayFormat: 'repeat', addQueryPrefix: true })

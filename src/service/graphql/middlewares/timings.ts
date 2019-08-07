@@ -4,21 +4,26 @@ import { GraphQLServiceContext } from '../typings'
 import { generatePathName } from '../utils/pathname'
 
 interface ResolverTracing {
-  duration: number,
-  fieldName: string,
-  parentType: string,
-  path: [string | number],
-  returnType: string,
-  startOffset: number,
+  duration: number
+  fieldName: string
+  parentType: string
+  path: [string | number]
+  returnType: string
+  startOffset: number
 }
 
-const nanoToMillis = (nanoseconds: number) => Math.round((nanoseconds / 1e6))
+const nanoToMillis = (nanoseconds: number) => Math.round(nanoseconds / 1e6)
 
 const hasErrorForPathName = (pathName: string, graphQLErrors?: any[]) => {
-  return graphQLErrors && any(propEq('pathName', pathName), graphQLErrors) || false
+  return (
+    (graphQLErrors && any(propEq('pathName', pathName), graphQLErrors)) || false
+  )
 }
 
-const batchResolversTracing = (resolvers: ResolverTracing[], graphQLErrors?: any[]) => {
+const batchResolversTracing = (
+  resolvers: ResolverTracing[],
+  graphQLErrors?: any[]
+) => {
   resolvers.forEach(resolver => {
     const pathName = generatePathName(resolver.path)
     const status = hasErrorForPathName(pathName, graphQLErrors)
@@ -31,22 +36,35 @@ const batchResolversTracing = (resolvers: ResolverTracing[], graphQLErrors?: any
       returnType: resolver.returnType,
     }
     if (resolver.parentType === 'Query') {
-      metrics.batchMetric(`graphql-resolver-${status}-${pathName}`, nanoToMillis(resolver.duration), extensions)
+      metrics.batchMetric(
+        `graphql-resolver-${status}-${pathName}`,
+        nanoToMillis(resolver.duration),
+        extensions
+      )
     }
   })
 }
 
-export async function timings (ctx: GraphQLServiceContext, next: () => Promise<void>) {
+export async function timings(
+  ctx: GraphQLServiceContext,
+  next: () => Promise<void>
+) {
   const start = process.hrtime()
 
   // Errors will be caught by the next middleware so we don't have to catch.
   await next()
 
   // Batch success or error metric for entire operation
-  metrics.batch(`graphql-operation-${ctx.graphql.status}`, process.hrtime(start))
+  metrics.batch(
+    `graphql-operation-${ctx.graphql.status}`,
+    process.hrtime(start)
+  )
 
   // Batch timings for individual resolvers
-  const resolverTimings = path<ResolverTracing[] | undefined>(['extensions', 'tracing', 'execution', 'resolvers'], ctx.graphql.graphqlResponse!)
+  const resolverTimings = path<ResolverTracing[] | undefined>(
+    ['extensions', 'tracing', 'execution', 'resolvers'],
+    ctx.graphql.graphqlResponse!
+  )
   if (resolverTimings) {
     batchResolversTracing(resolverTimings, ctx.graphql.graphQLErrors)
   }

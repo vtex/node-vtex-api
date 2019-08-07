@@ -5,13 +5,16 @@ import { outputJSON, pathExistsSync, readJSON } from 'fs-extra'
 import { join } from 'path'
 import ReadWriteLock from 'rwlock'
 
-export class DiskCache<V> implements CacheLayer<string, V>{
-
+export class DiskCache<V> implements CacheLayer<string, V> {
   private hits = 0
   private total = 0
   private lock: ReadWriteLock
 
-  public constructor(private cachePath: string, private readFile=readJSON, private writeFile=outputJSON) {
+  public constructor(
+    private cachePath: string,
+    private readFile = readJSON,
+    private writeFile = outputJSON
+  ) {
     this.lock = new ReadWriteLock()
   }
 
@@ -20,7 +23,7 @@ export class DiskCache<V> implements CacheLayer<string, V>{
     return pathExistsSync(pathKey)
   }
 
-  public getStats = (name='disk-cache'): DiskStats => {
+  public getStats = (name = 'disk-cache'): DiskStats => {
     const stats = {
       hits: this.hits,
       name,
@@ -31,7 +34,7 @@ export class DiskCache<V> implements CacheLayer<string, V>{
     return stats
   }
 
-  public get = async (key: string): Promise<V | void>  => {
+  public get = async (key: string): Promise<V | void> => {
     const pathKey = this.getPathKey(key)
     this.total += 1
     const data = await new Promise<V>(resolve => {

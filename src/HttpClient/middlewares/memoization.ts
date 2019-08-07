@@ -1,15 +1,22 @@
 import { MiddlewareContext } from '../typings'
 import { cacheKey, CacheType, isLocallyCacheable } from './cache'
 
-export type Memoized = Required<Pick<MiddlewareContext, 'cacheHit' | 'response'>>
+export type Memoized = Required<
+  Pick<MiddlewareContext, 'cacheHit' | 'response'>
+>
 
 interface MemoizationOptions {
   memoizedCache: Map<string, Promise<Memoized>>
 }
 
-export const memoizationMiddleware = ({memoizedCache}: MemoizationOptions) => {
+export const memoizationMiddleware = ({
+  memoizedCache,
+}: MemoizationOptions) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-    if (!isLocallyCacheable(ctx.config, CacheType.Any) || !ctx.config.memoizable) {
+    if (
+      !isLocallyCacheable(ctx.config, CacheType.Any) ||
+      !ctx.config.memoizable
+    ) {
       return await next()
     }
 
@@ -37,7 +44,7 @@ export const memoizationMiddleware = ({memoizedCache}: MemoizationOptions) => {
             cacheHit: ctx.cacheHit!,
             response: ctx.response!,
           })
-        } catch(error) {
+        } catch (error) {
           reject(error)
         }
       })

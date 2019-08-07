@@ -28,7 +28,8 @@ const sanitizeParams = (params?: Record<string, string>) => {
 
 const routes = {
   base: '/api/segments',
-  segments: (token?: string | null) => token ? `${routes.base}/${token}` : routes.base,
+  segments: (token?: string | null) =>
+    token ? `${routes.base}/${token}` : routes.base,
 }
 
 export class Segment extends JanusClient {
@@ -38,7 +39,9 @@ export class Segment extends JanusClient {
    * @memberof Segment
    */
   public segment = (query?: Record<string, string>, token?: string) =>
-    this.rawSegment(token || this.context!.segmentToken, query).then(prop('data'))
+    this.rawSegment(token || this.context!.segmentToken, query).then(
+      prop('data')
+    )
 
   /**
    * Get the segment data using the current `ctx.vtex.segmentToken`
@@ -56,7 +59,10 @@ export class Segment extends JanusClient {
   public getSegmentByToken = (token: string | null) =>
     this.rawSegment(token).then(prop('data'))
 
-  public getOrCreateSegment = async (query?: Record<string, string>, token?: string) => {
+  public getOrCreateSegment = async (
+    query?: Record<string, string>,
+    token?: string
+  ) => {
     const {
       data: segmentData,
       headers: {
@@ -71,10 +77,13 @@ export class Segment extends JanusClient {
     }
   }
 
-  private rawSegment = (token?: string | null, query?: Record<string, string>) => {
+  private rawSegment = (
+    token?: string | null,
+    query?: Record<string, string>
+  ) => {
     const { product } = this.context
 
-    return this.http.getRaw<SegmentData>(routes.segments(token), ({
+    return this.http.getRaw<SegmentData>(routes.segments(token), {
       forceMaxAge: SEGMENT_MAX_AGE_S,
       headers: {
         'Content-Type': 'application/json',
@@ -87,6 +96,6 @@ export class Segment extends JanusClient {
         // eslint-disable-next-line @typescript-eslint/camelcase
         session_path: product || '',
       },
-    }))
+    })
   }
 }

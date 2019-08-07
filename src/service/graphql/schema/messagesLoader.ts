@@ -1,12 +1,28 @@
 import DataLoader from 'dataloader'
-import { compose, map, mapObjIndexed, pick, pluck, sortBy, toPairs, values, zip } from 'ramda'
+import {
+  compose,
+  map,
+  mapObjIndexed,
+  pick,
+  pluck,
+  sortBy,
+  toPairs,
+  values,
+  zip,
+} from 'ramda'
 
 import { IOClients } from '../../../clients/IOClients'
-import { IOMessage, providerFromMessage, removeProviderFromId } from '../../../utils/message'
+import {
+  IOMessage,
+  providerFromMessage,
+  removeProviderFromId,
+} from '../../../utils/message'
 
-const sortByProvider = (indexedMessages: Array<[string, IOMessage]>) => sortBy(([_, message]) => providerFromMessage(message), indexedMessages)
+const sortByProvider = (indexedMessages: Array<[string, IOMessage]>) =>
+  sortBy(([_, message]) => providerFromMessage(message), indexedMessages)
 
-const sortByIndex = (indexedTranslations: Array<[string, string]>) => sortBy(([index, _]) => Number(index), indexedTranslations)
+const sortByIndex = (indexedTranslations: Array<[string, string]>) =>
+  sortBy(([index, _]) => Number(index), indexedTranslations)
 
 export const messagesLoader = (clients: IOClients) =>
   new DataLoader<IOMessage, string>(async (messages: IOMessage[]) => {
@@ -26,18 +42,18 @@ export const messagesLoader = (clients: IOClients) =>
 
         indexByProvider[provider] = []
       }
-      messagesByProvider[provider].push(pick(['id', 'content', 'description', 'behavior'], message))
+      messagesByProvider[provider].push(
+        pick(['id', 'content', 'description', 'behavior'], message)
+      )
       indexByProvider[provider].push(index)
     })
 
     const messagesInput = compose(
       values,
-      mapObjIndexed(
-        (messagesArray, provider) => ({
-          messages: map(removeProviderFromId, messagesArray),
-          provider,
-        })
-      )
+      mapObjIndexed((messagesArray, provider) => ({
+        messages: map(removeProviderFromId, messagesArray),
+        provider,
+      }))
     )(messagesByProvider)
 
     const translations = await clients.messagesGraphQL.translate({

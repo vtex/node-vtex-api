@@ -1,6 +1,10 @@
 import { DataSource } from 'apollo-datasource'
 import DataLoader from 'dataloader'
-import { GraphQLFieldConfig, GraphQLFieldResolver, GraphQLScalarType } from 'graphql'
+import {
+  GraphQLFieldConfig,
+  GraphQLFieldResolver,
+  GraphQLScalarType,
+} from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 import { ParameterizedContext } from 'koa'
 import { Middleware } from 'koa-compose'
@@ -24,18 +28,36 @@ export interface Context<T extends IOClients> {
 
 type KnownKeys<T> = {
   [K in keyof T]: string extends K ? never : number extends K ? never : K
-} extends { [_ in keyof T]: infer U } ? U : never
+} extends { [_ in keyof T]: infer U }
+  ? U
+  : never
 
 interface Loaders {
   messages?: DataLoader<IOMessage, string>
 }
 
-export type ServiceContext<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Pick<ParameterizedContext<StateT, Context<ClientsT>>, KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>> & CustomT & { loaders: Loaders }
+export type ServiceContext<
+  ClientsT extends IOClients = IOClients,
+  StateT = void,
+  CustomT = void
+> = Pick<
+  ParameterizedContext<StateT, Context<ClientsT>>,
+  KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>
+> &
+  CustomT & { loaders: Loaders }
 
-export type RouteHandler<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>
+export type RouteHandler<
+  ClientsT extends IOClients = IOClients,
+  StateT = void,
+  CustomT = void
+> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>
 
-export type Resolver<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> =
-  GraphQLFieldResolver<any, ServiceContext<ClientsT, StateT, CustomT>, any>
+export type Resolver<
+  ClientsT extends IOClients = IOClients,
+  StateT = void,
+  CustomT = void
+> =
+  | GraphQLFieldResolver<any, ServiceContext<ClientsT, StateT, CustomT>, any>
   | GraphQLFieldConfig<any, ServiceContext<ClientsT, StateT, CustomT>, any>
 
 export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
@@ -44,24 +66,39 @@ export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
 }
 
 export type DataSourcesGenerator = () => {
-  [name: string]: DataSource<ServiceContext>,
+  [name: string]: DataSource<ServiceContext>
 }
 
-export interface GraphQLOptions<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
-  resolvers: Record<string, Record<string, Resolver<ClientsT, StateT, CustomT>> | GraphQLScalarType>
+export interface GraphQLOptions<
+  ClientsT extends IOClients = IOClients,
+  StateT = void,
+  CustomT = void
+> {
+  resolvers: Record<
+    string,
+    Record<string, Resolver<ClientsT, StateT, CustomT>> | GraphQLScalarType
+  >
   dataSources?: DataSourcesGenerator
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>
 }
 
-export interface ServiceConfig<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
+export interface ServiceConfig<
+  ClientsT extends IOClients = IOClients,
+  StateT = void,
+  CustomT = void
+> {
   clients?: ClientsConfig<ClientsT>
-  events?: any,
-  graphql?: GraphQLOptions<ClientsT, StateT, CustomT>,
-  routes?: Record<string, RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>>
+  events?: any
+  graphql?: GraphQLOptions<ClientsT, StateT, CustomT>
+  routes?: Record<
+    string,
+    | RouteHandler<ClientsT, StateT, CustomT>
+    | Array<RouteHandler<ClientsT, StateT, CustomT>>
+  >
 }
 
 export interface DataSources {
-  [name: string]: DataSource<ServiceContext>,
+  [name: string]: DataSource<ServiceContext>
 }
 
 // eslint-disable-next-line @typescript-eslint/interface-name-prefix
@@ -94,26 +131,26 @@ export interface IOContext {
 }
 
 export interface ServiceRoute {
-  path: string,
-  method?: string[],
-  public?: boolean,
-  smartcache?: boolean,
+  path: string
+  method?: string[]
+  public?: boolean
+  smartcache?: boolean
 }
 
 export interface ServiceDescriptor {
-  stack: 'nodejs',
-  memory: number,
-  ttl?: number,
-  timeout?: number,
-  runtimeArgs?: string[],
-  routes?: Record<string, ServiceRoute>,
+  stack: 'nodejs'
+  memory: number
+  ttl?: number
+  timeout?: number
+  runtimeArgs?: string[]
+  routes?: Record<string, ServiceRoute>
   events: {
     [handler: string]: {
-      keys?: string[],
-      sender?: string,
-      subject?: string,
-    },
-  },
+      keys?: string[]
+      sender?: string
+      subject?: string
+    }
+  }
 }
 
 export type JanusEnv = string

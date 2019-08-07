@@ -4,7 +4,17 @@ import { pick } from 'ramda'
 import { cleanError } from '../../../utils/error'
 import { GraphQLServiceContext } from '../typings'
 
-const ERROR_FIELD_WHITELIST = ['message', 'path', 'stack', 'extensions', 'statusCode', 'name', 'headers', 'originalError', 'code']
+const ERROR_FIELD_WHITELIST = [
+  'message',
+  'path',
+  'stack',
+  'extensions',
+  'statusCode',
+  'name',
+  'headers',
+  'originalError',
+  'code',
+]
 
 // formatError overrides the default option in runHttpQuery, which
 // does not keep track of the error stack. All non-enumerable
@@ -14,7 +24,9 @@ const createFormatError = (details: any) => (error: any) => {
   const formattedError = pick(ERROR_FIELD_WHITELIST, error)
 
   if (formattedError.extensions && formattedError.extensions.exception) {
-    formattedError.extensions.exception = cleanError(formattedError.extensions.exception)
+    formattedError.extensions.exception = cleanError(
+      formattedError.extensions.exception
+    )
     if (formattedError.stack === formattedError.extensions.exception.stack) {
       delete formattedError.extensions.exception.stack
     }
@@ -32,32 +44,36 @@ const createFormatError = (details: any) => (error: any) => {
   return formattedError as any
 }
 
-const createFormatResponse = (formatter: (e: any) => any) => (response: any) => {
-  const {errors = null} = response || {}
+const createFormatResponse = (formatter: (e: any) => any) => (
+  response: any
+) => {
+  const { errors = null } = response || {}
 
   return {
     ...response,
-    errors: Array.isArray(errors) ? formatApolloErrors(errors, {formatter}) : undefined,
+    errors: Array.isArray(errors)
+      ? formatApolloErrors(errors, { formatter })
+      : undefined,
   }
 }
 
-export async function createFormatters (ctx: GraphQLServiceContext, next: () => Promise<void>) {
+export async function createFormatters(
+  ctx: GraphQLServiceContext,
+  next: () => Promise<void>
+) {
   const {
     headers: {
       'x-forwarded-host': forwardedHost,
       'x-forwarded-proto': forwardedProto,
       'x-vtex-platform': platform,
     },
-    vtex: {
-      operationId,
-      requestId,
-    },
+    vtex: { operationId, requestId },
   } = ctx
 
   // Do not log variables for file uploads
   const variables = ctx.request.is('multipart/form-data')
-  ? '[GraphQL Upload]'
-  : ctx.graphql.query && (ctx.graphql.query as any).variables
+    ? '[GraphQL Upload]'
+    : ctx.graphql.query && (ctx.graphql.query as any).variables
 
   const query = {
     ...ctx.graphql.query,

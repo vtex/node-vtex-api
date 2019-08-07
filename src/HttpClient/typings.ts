@@ -55,38 +55,38 @@ export { Recorder } from './middlewares/recorder'
 
 export interface InstanceOptions {
   authType?: AuthType
-  timeout?: number,
-  memoryCache?: CacheLayer<string, Cached>,
-  diskCache?: CacheLayer<string, Cached>,
-  baseURL?: string,
-  retries?: number,
+  timeout?: number
+  memoryCache?: CacheLayer<string, Cached>
+  diskCache?: CacheLayer<string, Cached>
+  baseURL?: string
+  retries?: number
   /**
    * @deprecated use retries instead.
    * @memberof InstanceOptions
    */
-  retryConfig?: void,
-  metrics?: MetricsAccumulator,
+  retryConfig?: void
+  metrics?: MetricsAccumulator
   /**
    * Maximum number of concurrent requests
    *
    * @type {number}
    * @memberof InstanceOptions
    */
-  concurrency?: number,
+  concurrency?: number
   /**
    * Default headers to be sent with every request
    *
    * @type {Record<string, string>}
    * @memberof InstanceOptions
    */
-  headers?: Record<string, string>,
+  headers?: Record<string, string>
   /**
    * Default query string parameters to be sent with every request
    *
    * @type {Record<string, string>}
    * @memberof InstanceOptions
    */
-  params?: Record<string, string>,
+  params?: Record<string, string>
   middlewares?: Array<Middleware<MiddlewareContext>>
   verbose?: boolean
   name?: string
