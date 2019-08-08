@@ -18,9 +18,7 @@ export class Translatable extends SchemaDirectiveVisitor {
           messages: messagesLoader(clients),
         }
       }
-
       const response = await resolve(root, args, context, info)
-
       const handler = handleSingleString(context, behavior)
       return Array.isArray(response) ? await map(response, handler) : await handler(response)
     }
@@ -32,7 +30,6 @@ const handleSingleString = (context: ServiceContext<IOClients, void, void>, beha
   if ((typeof response !== 'string' && typeof response !== 'object') || Array.isArray(response) || response == null) {
     return response
   }
-
   const resObj = typeof response === 'string'
     ? {
       content: response,
@@ -41,8 +38,8 @@ const handleSingleString = (context: ServiceContext<IOClients, void, void>, beha
       id: response,
     }
     : response
-  const { content, from, id } = resObj
 
+  const { content, from, id } = resObj
   const { clients: { segment }, vtex: { locale } } = context
   const to =
     locale != null
