@@ -9,7 +9,7 @@ export class Translatable extends SchemaDirectiveVisitor {
     const { resolve = defaultFieldResolver } = field
     const { behavior = 'FULL' } = this.args
     field.resolve = async (root, args, context, info) => {
-      const { clients: { segment }, clients } = context
+      const { clients: { segment }, clients, vtex: { locale } } = context
       if (!context.loaders || !context.loaders.messages) {
         context.loaders = {
           ...context.loaders,
@@ -34,7 +34,10 @@ export class Translatable extends SchemaDirectiveVisitor {
         : response
       const { content, from, id } = resObj
 
-      const { cultureInfo: to } = await segment.getSegment()
+      const to =
+        locale != null
+          ? locale
+          : (await segment.getSegment()).cultureInfo
 
       if (content == null && id == null) {
         throw new Error(`@translatable directive needs a content or id to translate, but received ${JSON.stringify(response)}`)

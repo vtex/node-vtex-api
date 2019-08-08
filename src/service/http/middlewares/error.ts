@@ -55,6 +55,7 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
         'x-vtex-caller': caller,
         'x-vtex-platform': platform,
         'x-vtex-product': product,
+        'x-vtex-locale': locale,
       },
     } = ctx
 
@@ -70,6 +71,7 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
       forwardedHost,
       forwardedPath,
       forwardedProto,
+      locale,
       method,
       operationId,
       params,
