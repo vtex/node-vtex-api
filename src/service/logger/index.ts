@@ -18,11 +18,11 @@ export class Logger {
   private operationId: string
   private requestId: string
 
-  constructor(ctx: Partial<IOContext>) {
-    this.account = ctx.account!
-    this.workspace = ctx.workspace!
-    this.requestId = ctx.requestId!
-    this.operationId = ctx.operationId!
+  constructor(ctx: Pick<IOContext, 'account'|'workspace'|'requestId'|'operationId'>) {
+    this.account = ctx.account
+    this.workspace = ctx.workspace
+    this.requestId = ctx.requestId
+    this.operationId = ctx.operationId
   }
 
   public debug = (message: any) =>
