@@ -39,7 +39,9 @@ export class Logger extends InfraClient {
 
   public sendLog = (subject: string, message: any, level: LogLevel) : Promise<void> => {
     // Use stdout logger
-    this.logger.log(message, level)
+    if (this.logger) {
+      this.logger.log(message, level)
+    }
 
     if (!message) {
       message = new Error('Logger.sendLog was called with null or undefined message')

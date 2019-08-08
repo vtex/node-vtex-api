@@ -92,7 +92,7 @@ export interface IOContext {
   // Admins may send a cookie in the request to indicate they should be routed to a specific environment, e.g. beta.
   janusEnv?: JanusEnv
   serverTiming?: ServerTiming
-  logger?: Logger
+  logger: Logger
 }
 
 export interface ServiceRoute {

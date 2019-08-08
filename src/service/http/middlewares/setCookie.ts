@@ -33,7 +33,7 @@ interface CookieAccumulator {
 }
 
 export async function removeSetCookie<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
-  const { clients: { logger } } = ctx
+  const { vtex: { logger } } = ctx
 
   await next()
 
@@ -65,10 +65,10 @@ export async function removeSetCookie<T extends IOClients, U, V> (ctx: ServiceCo
     if (cookies.droppedKeys.length > 0) {
       ctx.set('set-cookie', cookies.addedPayload)
       console.warn(warnMessage(cookies.droppedKeys))
-      logger.warn({
+      logger!.warn({
         cookieKeys: cookies.droppedKeys,
         message: 'Setting cookies in a public route!',
-      }).catch()
+      })
     }
   }
 }
