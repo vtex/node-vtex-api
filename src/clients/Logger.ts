@@ -22,7 +22,7 @@ export class Logger extends InfraClient {
 
   constructor(context: IOContext, options?: InstanceOptions) {
     super('colossus', {...context, recorder: undefined}, {...options, concurrency: 1})
-    this.logger = context.logger
+    this.logger = context.logger!
   }
 
   public debug = (message: any, subject: string = DEFAULT_SUBJECT) =>
