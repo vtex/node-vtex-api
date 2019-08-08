@@ -41,10 +41,12 @@ const handleSingleString = (context: ServiceContext<IOClients, void, void>, beha
 
   const { content, from, id } = resObj
   const { clients: { segment }, vtex: { locale } } = context
+
   const to =
     locale != null
     ? locale
     : (await segment.getSegment()).cultureInfo
+
   if (content == null && id == null) {
     throw new Error(`@translatable directive needs a content or id to translate, but received ${JSON.stringify(response)}`)
   }
