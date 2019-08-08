@@ -1,3 +1,5 @@
+import chalk from 'chalk'
+
 import { IOClients } from '../../../clients/IOClients'
 import { statusLabel } from '../../../utils/status'
 import { formatTimingName, hrToMillis, reduceTimings, shrinkTimings } from '../../../utils/time'
@@ -10,12 +12,15 @@ const APP_ELAPSED_TIME_LOCATOR = shrinkTimings(formatTimingName({
   target: '',
 }))
 
+const formatDate = (date: Date) => chalk.dim('[' + date.toISOString().split('T')[1] + ']')
+const formatStatus = (status: number) => status >= 500 ? chalk.red(status.toString()) : (status >=200 && status < 300 ? chalk.green(status.toString()) : status)
+const formatMillis = (millis: number) => millis >= 500 ? chalk.red(millis.toString()) : millis >= 200 ? chalk.yellow(millis.toString()) : chalk.green(millis.toString())
+
 const log = <T extends IOClients, U, V>(
-  {vtex: {account, workspace, route: {id}}, path, method, status, req: {headers}}: ServiceContext<T, U, V>,
+  {vtex: {account, workspace, route: {id}}, path, method, status}: ServiceContext<T, U, V>,
   millis: number
 ) =>
-  // `${new Date().toISOString()}\t${account}/${workspace}:${id}\t${status}\t${method}\t${path}\t${millis}ms`
-  `${new Date().toISOString()}\t${account}/${workspace}:${id}\t${status}\t${method}\t${path}\t${millis}ms\t caller: ${JSON.stringify(headers['user-agent'])}`
+  `${formatDate(new Date())}\t${account}/${workspace}:${id}\t${formatStatus(status)}\t${method}\t${path}\t${formatMillis(millis)} ms`
 
 export async function timings<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
   const start = process.hrtime()

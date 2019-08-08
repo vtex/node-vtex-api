@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "3.35.0",
+  "version": "3.36.1",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -34,6 +34,7 @@
     "axios": "^0.18.0",
     "axios-retry": "^3.1.2",
     "bluebird": "^3.5.4",
+    "chalk": "^2.4.2",
     "co-body": "^6.0.0",
     "cookie": "^0.3.1",
     "dataloader": "^1.4.0",
