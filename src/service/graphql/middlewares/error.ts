@@ -1,6 +1,7 @@
-import { any, chain, compose, filter, forEach, has, pluck, prop, uniqBy } from 'ramda'
+import { any, chain, compose, filter, forEach, has, map, pluck, prop, uniqBy } from 'ramda'
 
 import { LogLevel } from '../../../clients/Logger'
+import { cleanError } from '../../../utils/error'
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
 import { generatePathName } from '../utils/pathname'
@@ -79,6 +80,14 @@ export async function error (ctx: GraphQLServiceContext, next: () => Promise<voi
         }
         return e
       }, graphQLErrors)
+
+      // Reduce size of `variables` prop in the errors.
+      map((e) => {
+        if (e.query && e.query.variables) {
+          const stringifiedVariables = JSON.stringify(e.query.variables)
+          e.query.variables = stringifiedVariables.length <= 1024 ? stringifiedVariables : '[variables too long]'
+        }
+      }, uniqueErrors)
       console.error(`[node-vtex-api graphql errors] total=${graphQLErrors.length} unique=${uniqueErrors.length}`, uniqueErrors)
       ctx.graphql.status = 'error'
 
