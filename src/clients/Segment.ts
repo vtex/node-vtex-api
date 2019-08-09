@@ -1,5 +1,5 @@
 import parseCookie from 'cookie'
-import { pickBy, prop } from 'ramda'
+import { prop } from 'ramda'
 
 import { PRODUCT_HEADER } from '../constants'
 import { inflightUrlWithQuery, JanusClient } from '../HttpClient'
@@ -20,10 +20,22 @@ export interface SegmentData {
 }
 
 const SEGMENT_COOKIE = 'vtex_segment'
-const SEGMENT_MAX_AGE_S = 10 * 60 // 10 minutes - segment is actually immutable
+const SEGMENT_MAX_AGE_S = 60 * 60 // 60 minutes - segment is actually immutable
+const ALLOWED_QUERY_PREFIXES = ['utm', 'cultureInfo']
 
-const sanitizeParams = (params?: Record<string, string>) => {
-  return pickBy((_, key) => !!key, params || {})
+const filterAndSortQuery = (query?: Record<string, string>) => {
+  if (!query) {
+    return null
+  }
+
+  const filteredKeys = Object.keys(query)
+    .filter((k: string) => !!k && ALLOWED_QUERY_PREFIXES.some((prefix: string) => k.startsWith(prefix)))
+    .sort()
+
+  return filteredKeys.reduce((acc: Record<string, string>, val: string) => {
+    acc[val] = query[val]
+    return acc
+  }, {})
 }
 
 const routes = {
@@ -73,6 +85,7 @@ export class Segment extends JanusClient {
 
   private rawSegment = (token?: string | null, query?: Record<string, string>) => {
     const { product } = this.context
+    const filteredQuery = filterAndSortQuery(query)
 
     return this.http.getRaw<SegmentData>(routes.segments(token), ({
       forceMaxAge: SEGMENT_MAX_AGE_S,
@@ -81,9 +94,9 @@ export class Segment extends JanusClient {
         [PRODUCT_HEADER]: product || '',
       },
       inflightKey: inflightUrlWithQuery,
-      metric: 'segment-get',
+      metric: token ? 'segment-get-token' : 'segment-get-new',
       params: {
-        ...sanitizeParams(query),
+        ...filteredQuery,
         session_path: product || '',
       },
     }))
