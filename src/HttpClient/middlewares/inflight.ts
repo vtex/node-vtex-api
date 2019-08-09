@@ -1,4 +1,3 @@
-import { createHash } from 'crypto'
 import { stringify } from 'qs'
 import { InflightKeyGenerator, MiddlewareContext, RequestConfig } from '../typings'
 
@@ -23,18 +22,11 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
   }
 
   const key = inflightKey(ctx.config)
-  const isInflight = inflight.has(key) ? 1 : 0
-  ctx.cacheHit = {
-    ...ctx.cacheHit,
-    inflight: isInflight,
-  }
+  const isInflight = !!inflight.has(key)
 
   if (isInflight) {
     const memoized = await inflight.get(key)!
-    ctx.cacheHit = {
-      ...memoized.cacheHit,
-      inflight: 1,
-    }
+    ctx.inflightHit = isInflight
     ctx.response = memoized.response
     return
   } else {

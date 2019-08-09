@@ -63,22 +63,38 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
       }
       throw err
     } finally {
-      const end = process.hrtime(start)
       if (ctx.config.metric && metrics) {
-        const label = `http-client-${status}-${ctx.config.metric}`
+        const label = `http-client-${ctx.config.metric}`
         const extensions: Record<string, string | number> = {}
 
+        Object.assign(extensions, {[status]: 1})
+
         if (ctx.cacheHit) {
-          Object.assign(extensions, ctx.cacheHit)
+          Object.assign(extensions, ctx.cacheHit, {[`${status}-hit`]: 1})
+        } else {
+          // Lets us know how many calls passed through to origin
+          Object.assign(extensions, {[`${status}-miss`]: 1})
+        }
+
+        if (ctx.inflightHit) {
+          Object.assign(extensions, {[`${status}-inflight`]: 1})
+        }
+
+        if (ctx.memoizedHit) {
+          Object.assign(extensions, {[`${status}-memoized`]: 1})
         }
 
         if (ctx.config['axios-retry']) {
           const {retryCount} = ctx.config['axios-retry'] as any
 
           if (retryCount && retryCount > 0) {
-            extensions[`retry-${retryCount}`] = 1
+            extensions[`retry-${status}-${retryCount}`] = 1
           }
         }
+
+        const end = status === 'success' && !ctx.cacheHit && !ctx.inflightHit && !ctx.memoizedHit
+          ? process.hrtime(start)
+          : undefined
 
         metrics.batch(label, end, extensions)
       }

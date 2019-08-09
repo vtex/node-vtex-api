@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.39.0] - 2019-08-09
+
 ## [3.38.0] - 2019-08-08
 ### Added
 - Inside the class `Translatable`, allow `string` arrays to be translated too.

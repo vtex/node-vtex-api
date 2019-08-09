@@ -39,14 +39,14 @@ export interface CacheHit {
   memory?: 0 | 1
   revalidated?: 0 | 1
   router?: 0 | 1
-  memoized?: 0 | 1
-  inflight?: 0 | 1
 }
 
 export interface MiddlewareContext {
   config: RequestConfig
   response?: AxiosResponse
   cacheHit?: CacheHit
+  inflightHit?: boolean
+  memoizedHit?: boolean
 }
 
 export type CacheStorage = CacheLayer<string, Cached>
