@@ -86,8 +86,6 @@ export const cacheMiddleware = ({type, storage}: CacheOptions) => {
         }
         ctx.response = response as AxiosResponse
         ctx.cacheHit = {
-          inflight: 0,
-          memoized: 0,
           memory: 1,
           revalidated: 0,
           router: 0,
@@ -112,8 +110,6 @@ export const cacheMiddleware = ({type, storage}: CacheOptions) => {
     if (revalidated && cached) {
       ctx.response = cached.response as AxiosResponse
       ctx.cacheHit = {
-        inflight: 0,
-        memoized: 0,
         memory: 1,
         revalidated: 1,
         router: 0,
@@ -131,16 +127,6 @@ export const cacheMiddleware = ({type, storage}: CacheOptions) => {
     }
 
     const shouldCache = maxAge || etag
-
-    // Add false to cacheHits to indicate this _should_ be cached but was as miss.
-    if (!ctx.cacheHit && shouldCache) {
-      ctx.cacheHit = {
-        memoized: 0,
-        memory: 0,
-        revalidated: 0,
-        router: 0,
-      }
-    }
 
     if (shouldCache) {
       const {responseType, responseEncoding} = ctx.config

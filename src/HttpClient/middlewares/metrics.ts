@@ -70,7 +70,18 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
         Object.assign(extensions, {[status]: 1})
 
         if (ctx.cacheHit) {
-          Object.assign(extensions, ctx.cacheHit)
+          Object.assign(extensions, ctx.cacheHit, {[`${status}-hit`]: 1})
+        } else {
+          // Lets us know how many calls passed through to origin
+          Object.assign(extensions, {[`${status}-miss`]: 1})
+        }
+
+        if (ctx.inflightHit) {
+          Object.assign(extensions, {[`${status}-inflight`]: 1})
+        }
+
+        if (ctx.memoizedHit) {
+          Object.assign(extensions, {[`${status}-memoized`]: 1})
         }
 
         if (ctx.config['axios-retry']) {
@@ -81,7 +92,10 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
           }
         }
 
-        const end = status === 'success' ? process.hrtime(start) : undefined
+        const end = status === 'success' && !ctx.cacheHit && !ctx.inflightHit && !ctx.memoizedHit
+          ? process.hrtime(start)
+          : undefined
+
         metrics.batch(label, end, extensions)
       }
       if (serverTiming) {

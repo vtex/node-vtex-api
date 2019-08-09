@@ -77,8 +77,6 @@ export const routerCacheMiddleware = async (ctx: MiddlewareContext, next: () => 
   const status = path(ROUTER_RESPONSE_STATUS_PATH, ctx)
   if (routerCacheHit === ROUTER_CACHE_HIT || (routerCacheHit === ROUTER_CACHE_REVALIDATED && status !== 304)) {
     ctx.cacheHit = {
-      inflight: 0,
-      memoized: 0,
       memory: 0,
       revalidated: 0,
       ...ctx.cacheHit,
