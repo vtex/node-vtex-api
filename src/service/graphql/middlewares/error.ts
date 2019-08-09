@@ -1,7 +1,6 @@
 import { any, chain, compose, filter, forEach, has, map, pluck, prop, uniqBy } from 'ramda'
 
 import { LogLevel } from '../../../clients/Logger'
-import { cleanError } from '../../../utils/error'
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
 import { generatePathName } from '../utils/pathname'
