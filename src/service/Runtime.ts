@@ -9,6 +9,9 @@ import { createHttpRoute } from './http'
 import { Service } from './Service'
 import { ClientsConfig, RouteHandler, ServiceDescriptor } from './typings'
 
+const linked = !!process.env.VTEX_APP_LINK
+const noop = () => []
+
 const defaultClients: ClientsConfig = {
   options: {
     messages: {
@@ -60,15 +63,13 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
     }
 
     this.events = config.events
-    this.statusTrack = global.metrics.statusTrack
+    this.statusTrack = linked ? noop : global.metrics.statusTrack
 
     addProcessListeners()
   }
 }
 
-if (!global.metrics) {
-  global.metrics = new MetricsAccumulator()
-}
+global.metrics = new MetricsAccumulator()
 
 declare global {
   namespace NodeJS {
