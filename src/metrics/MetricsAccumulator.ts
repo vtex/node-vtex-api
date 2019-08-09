@@ -77,8 +77,8 @@ export class MetricsAccumulator {
    * @deprecated in favor of MetricsAccumulator.batch(name, diffNs, cacheHit)
    * @see batch
    */
-  public batchHrTimeMetricFromEnd = (name: string, end: [number, number]) => {
-    this.batchMetric(name, hrToMillis(end))
+  public batchHrTimeMetricFromEnd = (name: string, end?: [number, number]) => {
+    this.batchMetric(name, end ? hrToMillis(end) : undefined)
   }
 
   /**
@@ -89,12 +89,14 @@ export class MetricsAccumulator {
     this.batchMetric(name, hrToMillis(process.hrtime(start)))
   }
 
-  public batchMetric = (name: string, timeMillis: number, extensions?: Record<string, string | number>) => {
+  public batchMetric = (name: string, timeMillis?: number, extensions?: Record<string, string | number>) => {
     if (!this.metricsMillis[name]) {
       this.metricsMillis[name] = []
     }
 
-    this.metricsMillis[name].push(timeMillis)
+    if (timeMillis) {
+      this.metricsMillis[name].push(timeMillis)
+    }
 
     if (extensions) {
       if (!this.extensions[name]) {
@@ -121,8 +123,8 @@ export class MetricsAccumulator {
    *
    * @see https://nodejs.org/api/process.html#process_process_hrtime_time
    */
-  public batch = (name: string, diffNs: [number, number], extensions?: Record<string, string | number>) => {
-    this.batchMetric(name, hrToMillis(diffNs), extensions)
+  public batch = (name: string, diffNs?: [number, number], extensions?: Record<string, string | number>) => {
+    this.batchMetric(name, diffNs ? hrToMillis(diffNs) : undefined, extensions)
   }
 
   public addOnFlushMetric = (metricFn: () => Metric | Metric[]) => {
