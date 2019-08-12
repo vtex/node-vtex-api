@@ -106,9 +106,8 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
         }
 
         // Forward server timings
-        const cacheHit = ctx.cacheHit && values(ctx.cacheHit).reduce((a, b) => a || b !== 0, false)
         const serverTimingsHeader = path<string>(['response', 'headers', 'server-timing'], ctx)
-        if (!cacheHit && serverTimingsHeader) {
+        if (!ctx.cacheHit && !ctx.inflightHit && !ctx.memoizedHit && serverTimingsHeader) {
           const parsedServerTiming = parseServerTiming(serverTimingsHeader)
           forEach(
             ([timingsName, timingsDur]) => {
