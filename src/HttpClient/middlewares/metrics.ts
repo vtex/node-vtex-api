@@ -41,14 +41,24 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     const start = process.hrtime()
     let status: string = 'unknown'
+    let errorCode: any
+    let errorStatus: any
 
     try {
+
+      if (ctx.config.verbose && ctx.config.label) {
+        console.log(ctx.config.label, `start`)
+      }
+
       await next()
       if (ctx.config.metric && ctx.response && ctx.response.status) {
         status = statusLabel(ctx.response.status)
       }
     } catch (err) {
       if (ctx.config.metric) {
+        errorCode = err.code
+        errorStatus = err.response && err.response.status
+
         if (err.code === 'ECONNABORTED') {
           status = 'aborted'
         }
@@ -97,6 +107,20 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
           : undefined
 
         metrics.batch(label, end, extensions)
+
+        if (ctx.config.verbose) {
+          console.log(`VERBOSE: ${name}#${label}`, {
+            ...extensions,
+            ...errorCode || errorStatus ? {errorCode, errorStatus} : null,
+            millis: end ? hrToMillis(end) : '(from cache)',
+            status: ctx.response && ctx.response.status, // tslint:disable-next-line
+            headers: ctx.response && ctx.response.headers,
+          })
+        }
+      } else {
+        if (ctx.config.verbose) {
+          console.warn(`PROTIP: Please add a metric property to ${name} client request to get metrics in Splunk`, {baseURL: ctx.config.baseURL, url: ctx.config.url})
+        }
       }
       if (serverTiming) {
         // Timings in the client's perspective
