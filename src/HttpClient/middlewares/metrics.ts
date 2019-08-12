@@ -47,7 +47,7 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
     try {
 
       if (ctx.config.verbose && ctx.config.label) {
-        console.log(ctx.config.label, `start`)
+        console.log(`VERBOSE: ${name}.${ctx.config.label}`, `start`)
       }
 
       await next()
@@ -109,7 +109,7 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
         metrics.batch(label, end, extensions)
 
         if (ctx.config.verbose) {
-          console.log(`VERBOSE: ${name}#${label}`, {
+          console.log(`VERBOSE: ${name}.${ctx.config.label}`, {
             ...extensions,
             ...errorCode || errorStatus ? {errorCode, errorStatus} : null,
             millis: end
