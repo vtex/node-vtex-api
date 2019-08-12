@@ -112,7 +112,11 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
           console.log(`VERBOSE: ${name}#${label}`, {
             ...extensions,
             ...errorCode || errorStatus ? {errorCode, errorStatus} : null,
-            millis: end ? hrToMillis(end) : '(from cache)',
+            millis: end
+              ? hrToMillis(end)
+              : extensions.revalidated || extensions.router
+                ? hrToMillis(process.hrtime(start))
+                : '(from cache)',
             status: ctx.response && ctx.response.status, // tslint:disable-next-line
             headers: ctx.response && ctx.response.headers,
           })
