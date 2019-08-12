@@ -71,7 +71,7 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
 
         if (ctx.cacheHit) {
           Object.assign(extensions, ctx.cacheHit, {[`${status}-hit`]: 1})
-        } else {
+        } else if (!ctx.inflightHit && !ctx.memoizedHit) {
           // Lets us know how many calls passed through to origin
           Object.assign(extensions, {[`${status}-miss`]: 1})
         }
