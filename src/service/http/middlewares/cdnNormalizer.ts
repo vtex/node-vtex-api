@@ -21,7 +21,7 @@ export const cachingStrategies: CachingStrategy[] = [
   },
   {
     forbidden: [SESSION_HEADER],
-    path: '/_v/segment.',
+    path: '/_v/segment',
     vary: [SEGMENT_HEADER],
   },
 ]
