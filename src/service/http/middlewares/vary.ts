@@ -1,5 +1,5 @@
 import { IOClients } from '../../../clients/IOClients'
-import { SEGMENT_HEADER, SESSION_HEADER } from '../../../constants'
+import { LOCALE_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../../../constants'
 import { ServiceContext } from '../../typings'
 
 export async function vary <T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
@@ -11,6 +11,7 @@ export async function vary <T extends IOClients, U, V> (ctx: ServiceContext<T, U
     return
   }
 
+  ctx.vary(LOCALE_HEADER)
   if (ctx.get(SEGMENT_HEADER)) {
     ctx.vary(SEGMENT_HEADER)
   }

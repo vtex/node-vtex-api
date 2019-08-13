@@ -41,14 +41,24 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     const start = process.hrtime()
     let status: string = 'unknown'
+    let errorCode: any
+    let errorStatus: any
 
     try {
+
+      if (ctx.config.verbose && ctx.config.label) {
+        console.log(`VERBOSE: ${name}.${ctx.config.label}`, `start`)
+      }
+
       await next()
       if (ctx.config.metric && ctx.response && ctx.response.status) {
         status = statusLabel(ctx.response.status)
       }
     } catch (err) {
       if (ctx.config.metric) {
+        errorCode = err.code
+        errorStatus = err.response && err.response.status
+
         if (err.code === 'ECONNABORTED') {
           status = 'aborted'
         }
@@ -71,7 +81,7 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
 
         if (ctx.cacheHit) {
           Object.assign(extensions, ctx.cacheHit, {[`${status}-hit`]: 1})
-        } else {
+        } else if (!ctx.inflightHit && !ctx.memoizedHit) {
           // Lets us know how many calls passed through to origin
           Object.assign(extensions, {[`${status}-miss`]: 1})
         }
@@ -97,6 +107,24 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
           : undefined
 
         metrics.batch(label, end, extensions)
+
+        if (ctx.config.verbose) {
+          console.log(`VERBOSE: ${name}.${ctx.config.label}`, {
+            ...extensions,
+            ...errorCode || errorStatus ? {errorCode, errorStatus} : null,
+            millis: end
+              ? hrToMillis(end)
+              : extensions.revalidated || extensions.router
+                ? hrToMillis(process.hrtime(start))
+                : '(from cache)',
+            status: ctx.response && ctx.response.status, // tslint:disable-next-line
+            headers: ctx.response && ctx.response.headers,
+          })
+        }
+      } else {
+        if (ctx.config.verbose) {
+          console.warn(`PROTIP: Please add a metric property to ${name} client request to get metrics in Splunk`, {baseURL: ctx.config.baseURL, url: ctx.config.url})
+        }
       }
       if (serverTiming) {
         // Timings in the client's perspective
@@ -106,9 +134,8 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
         }
 
         // Forward server timings
-        const cacheHit = ctx.cacheHit && values(ctx.cacheHit).reduce((a, b) => a || b !== 0, false)
         const serverTimingsHeader = path<string>(['response', 'headers', 'server-timing'], ctx)
-        if (!cacheHit && serverTimingsHeader) {
+        if (!ctx.cacheHit && !ctx.inflightHit && !ctx.memoizedHit && serverTimingsHeader) {
           const parsedServerTiming = parseServerTiming(serverTimingsHeader)
           forEach(
             ([timingsName, timingsDur]) => {

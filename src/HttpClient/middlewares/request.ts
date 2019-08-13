@@ -7,7 +7,6 @@ import { mapObjIndexed, path, sum, toLower, values } from 'ramda'
 
 import { renameBy } from '../../utils/renameBy'
 import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../utils/retry'
-import { hrToMillis } from '../../utils/time'
 import { MiddlewareContext } from '../typings'
 
 const httpAgent = new Agent({
@@ -86,32 +85,7 @@ export const routerCacheMiddleware = async (ctx: MiddlewareContext, next: () => 
 }
 
 export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-  const makeRequest = () => {
-    let start: [number, number] | undefined
-
-    if (ctx.config.verbose && ctx.config.label) {
-      start = process.hrtime()
-      console.log(ctx.config.label, `start`)
-    }
-
-    return http.request(ctx.config).then((r) => {
-      if (start) {
-        const end = process.hrtime(start)
-        const millis = hrToMillis(end)
-        console.log(ctx.config.label, `millis=${millis} status=${r.status}`)
-      }
-
-      return r
-    }).catch((e) => {
-      if (start) {
-        const end = process.hrtime(start)
-        const millis = hrToMillis(end)
-        console.log(ctx.config.label, `millis=${millis} code=${e.code} ${e.response ? `status=${e.response.status}` : ''}`)
-      }
-
-      throw e
-    })
-  }
+  const makeRequest = () => http.request(ctx.config)
 
   ctx.response = await (limit ? limit(makeRequest) : makeRequest())
 }

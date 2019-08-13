@@ -47,7 +47,7 @@ const parseCacheHeaders = (headers: Record<string, string>) => {
 }
 
 export function isLocallyCacheable (arg: RequestConfig, type: CacheType): arg is CacheableRequestConfig {
-  return arg && !!arg.cacheable && !arg.headers[SESSION_HEADER]
+  return arg && !!arg.cacheable
     && (arg.cacheable === type || arg.cacheable === CacheType.Any || type === CacheType.Any)
 }
 
@@ -127,8 +127,8 @@ export const cacheMiddleware = ({type, storage}: CacheOptions) => {
     }
 
     const shouldCache = maxAge || etag
-
-    if (shouldCache) {
+    const varySession = ctx.response.headers.vary && ctx.response.headers.vary.includes(SESSION_HEADER)
+    if (shouldCache && !varySession) {
       const {responseType, responseEncoding} = ctx.config
       const currentAge = revalidated ? 0 : age
       const varySegment = ctx.response.headers.vary && ctx.response.headers.vary.includes(SEGMENT_HEADER)
