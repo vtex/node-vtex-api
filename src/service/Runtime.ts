@@ -4,11 +4,11 @@ import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { EnvMetric, MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { addProcessListeners } from '../utils/unhandled'
 
-import { createEventHandler } from './events';
+import { createEventHandler } from './events'
 import { createGraphQLRoute, GRAPHQL_ROUTE, GRAPHQL_ROUTE_LEGACY } from './graphql'
 import { createHttpRoute } from './http'
 import { Service } from './Service'
-import { ClientsConfig, RouteHandler, ServiceDescriptor, ServiceConfig } from './typings'
+import { ClientsConfig, RouteHandler, ServiceDescriptor } from './typings'
 
 const linked = !!process.env.VTEX_APP_LINK
 const noop = () => []
@@ -68,6 +68,7 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
       : {}
 
     this.statusTrack = linked ? noop : global.metrics.statusTrack
+
 
     addProcessListeners()
   }
