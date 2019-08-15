@@ -1,6 +1,5 @@
 import { IOClients } from '../../../clients/IOClients'
 import { formatTimingName, hrToMillis, reduceTimings, shrinkTimings } from '../../../utils/time'
-import { updateLastLogger } from '../../../utils/unhandled'
 import { EventContext } from '../../typings'
 
 const APP_ELAPSED_TIME_LOCATOR = shrinkTimings(formatTimingName({
@@ -17,8 +16,6 @@ const log = <T extends IOClients, U>(
 
 export async function timings<T extends IOClients, U> (ctx: EventContext<T,U>, next: () => Promise<any>) {
   const start = process.hrtime()
-
-  updateLastLogger(ctx.clients.logger)
 
   // Errors will be caught by the next middleware so we don't have to catch.
   await next()
