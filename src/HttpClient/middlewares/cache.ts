@@ -4,12 +4,14 @@ import { URL } from 'url'
 import { CacheLayer } from '../../caches/CacheLayer'
 import { SEGMENT_HEADER, SESSION_HEADER } from '../../constants'
 import { MiddlewareContext, RequestConfig } from '../typings'
+import { LOCALE_HEADER } from './../../constants'
 
 const RANGE_HEADER_QS_KEY = '__range_header'
 const cacheableStatusCodes = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501] // https://tools.ietf.org/html/rfc7231#section-6.1
 
 export const cacheKey = (config: AxiosRequestConfig) => {
   const {baseURL = '', url = '', params, headers} = config
+  const locale = headers[LOCALE_HEADER]
   const fullURL = [baseURL, url].filter(str => str).join('/')
   const urlObject = new URL(fullURL)
 
@@ -24,7 +26,7 @@ export const cacheKey = (config: AxiosRequestConfig) => {
   }
 
   // Replace forward slashes with backwards slashes for disk cache legibility
-  const encodedPath = `${urlObject.pathname}${urlObject.search}`.replace(/\//g, '\\\\')
+  const encodedPath = `${locale}/${urlObject.pathname}${urlObject.search}`.replace(/\//g, '\\\\')
   // Add hostname as top level directory on disk cache
   return `${urlObject.hostname}/${encodedPath}`
 }
