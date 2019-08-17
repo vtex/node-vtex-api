@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+- Deprecate Colossus logger completely, using stdout instead.
+
 ## [3.43.0] - 2019-08-19
 
 ### Changed
