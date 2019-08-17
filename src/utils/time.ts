@@ -78,18 +78,13 @@ export function timer<T extends IOClients, U, V>(middleware: RouteHandler<T, U, 
       ctx.metrics = {}
     }
     const start = process.hrtime()
-    try {
-      await middleware(ctx, async () => {
-        recordTimings(start, middleware.name, ctx.timings, ctx.metrics)
-        ctx.metrics = {}
-        if (next) {
-          await next()
-        }
-      })
-    } catch (e) {
+    await middleware(ctx, async () => {
       recordTimings(start, middleware.name, ctx.timings, ctx.metrics)
-      throw e
-    }
+      ctx.metrics = {}
+      if (next) {
+        await next()
+      }
+    })
   }
 }
 
