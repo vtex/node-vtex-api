@@ -4,17 +4,12 @@ import { IOContext } from '../service/typings'
 import { cleanError } from '../utils/error'
 
 const DEFAULT_SUBJECT = '-'
-const production = process.env.VTEX_PRODUCTION === 'true'
 
 export enum LogLevel {
   Debug = 'debug',
   Info = 'info',
   Warn = 'warn',
   Error = 'error',
-}
-
-const routes = {
-  Log: (level: LogLevel) => `/logs/${level}`,
 }
 
 export class Logger extends InfraClient {
@@ -37,27 +32,15 @@ export class Logger extends InfraClient {
   public error = (error: any, subject: string = DEFAULT_SUBJECT) =>
     this.sendLog(subject, cleanError(error), LogLevel.Error)
 
-  public sendLog = (subject: string, message: any, level: LogLevel) : Promise<void> => {
+  public sendLog = (_: string, message: any, level: LogLevel) : Promise<void> => {
     // Use stdout logger
     if (this.logger) {
       this.logger.log(message, level)
     }
 
-    if (!message) {
-      message = new Error('Logger.sendLog was called with null or undefined message')
-      message.code = 'ERR_NIL_ERR'
-      console.error(message)
-    }
-
-    if (typeof message === 'string' || message instanceof String) {
-      message = {message}
-    }
-
-    if (message && typeof message === 'object') {
-      message.production = production
-    }
-
-    return this.http.put(routes.Log(level), message, {params: {subject}, metric: 'logger-send'})
+    // Deprecate logging to colossus
+    console.warn('Logger in ctx.clients.logger is deprecated, please use ctx.vtex.logger instead.')
+    return Promise.resolve()
   }
 }
 
