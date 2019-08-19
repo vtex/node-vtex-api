@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.44.2] - 2019-08-19
+
 ## [3.44.1] - 2019-08-19
 ### Fixed
 - Truncate long GraphQL errors so they can be sent to Splunk.
