@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.42.0] - 2019-08-19
+
 ### Changed
 
 - Disable caching if response varies with session. (Before, we incorrectly disabled caching if _we had a session token_)
