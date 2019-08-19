@@ -6,7 +6,7 @@ import { IOMessage } from '../utils/message'
 
 type IOMessageInput = Pick<IOMessage, 'id' | 'content' | 'description' | 'behavior'>
 
-interface IOMessagesInput {
+interface MessagesInput {
   provider: string,
   messages: IOMessageInput[],
 }
@@ -16,7 +16,7 @@ export interface IOMessageSaveInput extends IOMessageInput {
 }
 
 export interface Translate {
-  messages: IOMessagesInput[]
+  messages: MessagesInput[]
   from?: string
   to: string
 }
