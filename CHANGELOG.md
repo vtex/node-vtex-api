@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- Properly times metrics, considering total elapsed and code run after `await next()`.
+- Avoid broken metrics when a middleware throws.
+- Do not batch metrics for unsuccessful handlers and middlewares.
+- Rename `http-handler-success-*` to `http-handler-*` and only count non-success statuses.
+
 ## [3.42.0] - 2019-08-19
 
 ### Changed
