@@ -22,17 +22,17 @@ const log = <T extends IOClients, U, V>(
   `${formatDate(new Date())}\t${account}/${workspace}:${id}\t${formatStatus(status)}\t${method}\t${path}\t${formatMillis(millis)} ms`
 
 export async function timings<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
-  const start = process.hrtime()
-
   // Errors will be caught by the next middleware so we don't have to catch.
   await next()
 
-  const { status, vtex: { route: { id } } } = ctx
-  const end = process.hrtime(start)
-  const millis = hrToMillis(end)
-  console.log(log(ctx, millis))
+  const { status: statusCode, vtex: { route: { id } }, timings: {total, overhead} } = ctx
+  const totalMillis = hrToMillis(total)
+  console.log(log(ctx, totalMillis))
 
-  metrics.batch(`http-handler-${statusLabel(status)}-${id}`, end, { [status]: 1 })
-  ctx.serverTiming![APP_ELAPSED_TIME_LOCATOR] = `${millis}`
+  const status = statusLabel(statusCode)
+  // Only batch successful responses so metrics don't consider errors
+  metrics.batch(`http-handler-${id}`, status === 'success' ? total : undefined, { [status]: 1 })
+  metrics.batch(`http-await-overhead`, overhead, { [status]: 1 })
+  ctx.serverTiming![APP_ELAPSED_TIME_LOCATOR] = `${totalMillis}`
   ctx.set('Server-Timing', reduceTimings(ctx.serverTiming!))
 }
