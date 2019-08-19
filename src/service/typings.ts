@@ -20,6 +20,7 @@ export interface Context<T extends IOClients> {
   dataSources?: DataSources
   timings: Record<string, [number, number]>
   metrics: Record<string, [number, number]>
+  previousTimerStart: [number, number]
   serverTiming?: ServerTiming
 }
 

@@ -38,19 +38,33 @@ export const reduceTimings = (timingsObj: Record<string, string>) => compose<Rec
   toPairs
 )(timingsObj)
 
-function recordTimings(start: [number, number], name: string, timings: Record<string, [number, number]>, middlewareMetrics: Record<string, [number, number]>) {
-  // Capture the total amount of time spent in this middleware
+function recordTimings(start: [number, number], name: string, timings: Record<string, [number, number]>, middlewareMetrics: Record<string, [number, number]>, success: boolean) {
+  // Capture the total amount of time spent in this middleware, which includes following middlewares
   const end = process.hrtime(start)
-  timings[name] = end
+  // Elapsed for this middleware must disconsider total so far
+  const elapsed: [number, number] = [
+    end[0] - timings.total[0],
+    end[1] - timings.total[1],
+  ]
+  // Only record successful executions
+  if (success) {
+    timings[name] = elapsed
+  }
+  // This middlewares end is now the total
+  timings.total = end
+
+  // Batch metric
   const label = `middleware-${name}`
-  metrics.batch(label, end)
+  metrics.batch(label, success ? elapsed : undefined, {success: success ? 1 : 0})
 
   // This middleware has added it's own metrics
   // Just add them to `timings` scoped by the middleware's name and batch them
   const middlewareMetricsKeys: string[] = keys(middlewareMetrics) as string[]
-  if (middlewareMetricsKeys.length > 0) {
+  if (success && middlewareMetricsKeys.length > 0) {
     forEach((k: string) => {
       const metricEnd = middlewareMetrics[k]
+      // Delete own metrics so next middleware can have empty state but still accumulate metrics batched after `await`
+      delete middlewareMetrics[k]
       const metricName = `${label}-${k}`
       timings[metricName] = metricEnd
       metrics.batch(metricName, metricEnd)
@@ -72,22 +86,31 @@ export function timer<T extends IOClients, U, V>(middleware: RouteHandler<T, U, 
       ctx.serverTiming = {}
     }
     if (!ctx.timings) {
-      ctx.timings = {}
+      ctx.timings = {
+        overhead: [0, 0],
+        total: [0, 0],
+      }
     }
     if (!ctx.metrics) {
       ctx.metrics = {}
     }
+    // Measure await overhead between last middleware and this one
+    if (ctx.previousTimerStart) {
+      const overhead = process.hrtime(ctx.previousTimerStart)
+      ctx.timings.overhead[0] += overhead[0]
+      ctx.timings.overhead[1] += overhead[1]
+    }
     const start = process.hrtime()
     try {
       await middleware(ctx, async () => {
-        recordTimings(start, middleware.name, ctx.timings, ctx.metrics)
-        ctx.metrics = {}
-        if (next) {
-          await next()
-        }
+        // Prepare overhead measurement for next middleware
+        ctx.previousTimerStart = process.hrtime()
+        await next()
       })
+      // At this point, this middleware *and all following ones* have executed
+      recordTimings(start, middleware.name, ctx.timings, ctx.metrics, true)
     } catch (e) {
-      recordTimings(start, middleware.name, ctx.timings, ctx.metrics)
+      recordTimings(start, middleware.name, ctx.timings, ctx.metrics, false)
       throw e
     }
   }
