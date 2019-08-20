@@ -87,26 +87,16 @@ export function timer<T extends IOClients, U, V>(middleware: RouteHandler<T, U, 
     }
     if (!ctx.timings) {
       ctx.timings = {
-        overhead: [0, 0],
         total: [0, 0],
       }
     }
     if (!ctx.metrics) {
       ctx.metrics = {}
     }
-    // Measure await overhead between last middleware and this one
-    if (ctx.previousTimerStart) {
-      const overhead = process.hrtime(ctx.previousTimerStart)
-      ctx.timings.overhead[0] += overhead[0]
-      ctx.timings.overhead[1] += overhead[1]
-    }
+
     const start = process.hrtime()
     try {
-      await middleware(ctx, async () => {
-        // Prepare overhead measurement for next middleware
-        ctx.previousTimerStart = process.hrtime()
-        await next()
-      })
+      await middleware(ctx, next)
       // At this point, this middleware *and all following ones* have executed
       recordTimings(start, middleware.name, ctx.timings, ctx.metrics, true)
     } catch (e) {
