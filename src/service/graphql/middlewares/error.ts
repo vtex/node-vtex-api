@@ -35,7 +35,7 @@ const parseErrorResponse = (response: any) => {
 
 const production = process.env.VTEX_PRODUCTION === 'true'
 
-export async function error (ctx: GraphQLServiceContext, next: () => Promise<void>) {
+export async function graphqlError (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {
     vtex: {
       account,

@@ -94,7 +94,7 @@ export class MetricsAccumulator {
       this.metricsMillis[name] = []
     }
 
-    if (timeMillis) {
+    if (timeMillis != null) {
       this.metricsMillis[name].push(timeMillis)
     }
 

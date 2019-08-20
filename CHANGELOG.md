@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.44.3] - 2019-08-20
+### Fixed
+- Stop ignoring 0ms metrics.
+- Rename GraphQL middlewares to resolve metrics conflict.
+
+### Changed
+- Stop measuring event-loop overhead.
+
 ## [3.44.2] - 2019-08-19
 
 ## [3.44.1] - 2019-08-19

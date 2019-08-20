@@ -2,13 +2,13 @@ import { ClientsImplementation, IOClients } from '../../clients/IOClients'
 import { InstanceOptions } from '../../HttpClient'
 import { createHttpRoute } from '../http'
 import { GraphQLOptions, RouteHandler } from '../typings'
-import { error } from './middlewares/error'
+import { graphqlError } from './middlewares/error'
 import { createFormatters } from './middlewares/formatters'
 import { parseQuery } from './middlewares/query'
 import { response } from './middlewares/response'
 import { run } from './middlewares/run'
 import { injectSchema } from './middlewares/schema'
-import { timings } from './middlewares/timings'
+import { graphqlTimings } from './middlewares/timings'
 import { upload } from './middlewares/upload'
 import { GraphQLContext, GraphQLServiceContext } from './typings'
 
@@ -28,8 +28,8 @@ export const createGraphQLRoute = <ClientsT extends IOClients, StateT, CustomT>(
 
     return createHttpRoute<ClientsT, StateT, CustomT & GraphQLContext>(Clients, options)([
       injectGraphql,
-      timings,
-      error,
+      graphqlTimings,
+      graphqlError,
       upload,
       parseQuery,
       createFormatters,

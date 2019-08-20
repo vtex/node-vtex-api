@@ -25,14 +25,13 @@ export async function timings<T extends IOClients, U, V> (ctx: ServiceContext<T,
   // Errors will be caught by the next middleware so we don't have to catch.
   await next()
 
-  const { status: statusCode, vtex: { route: { id } }, timings: {total, overhead} } = ctx
+  const { status: statusCode, vtex: { route: { id } }, timings: {total} } = ctx
   const totalMillis = hrToMillis(total)
   console.log(log(ctx, totalMillis))
 
   const status = statusLabel(statusCode)
   // Only batch successful responses so metrics don't consider errors
   metrics.batch(`http-handler-${id}`, status === 'success' ? total : undefined, { [status]: 1 })
-  metrics.batch(`http-await-overhead`, overhead, { [status]: 1 })
   ctx.serverTiming![APP_ELAPSED_TIME_LOCATOR] = `${totalMillis}`
   ctx.set('Server-Timing', reduceTimings(ctx.serverTiming!))
 }
