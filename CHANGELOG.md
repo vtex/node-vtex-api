@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Stop ignoring 0ms metrics.
+- Rename GraphQL middlewares to resolve metrics conflict.
+
+### Changed
+- Stop measuring event-loop overhead.
 
 ## [3.44.2] - 2019-08-19
 
