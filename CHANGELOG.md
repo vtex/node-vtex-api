@@ -7,41 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [3.45.0] - 2019-08-22
-
-## [3.44.3] - 2019-08-20
-### Fixed
-- Stop ignoring 0ms metrics.
-- Rename GraphQL middlewares to resolve metrics conflict.
-
-### Changed
-- Stop measuring event-loop overhead.
-
-## [3.44.2] - 2019-08-19
-
-## [3.44.1] - 2019-08-19
-### Fixed
-- Truncate long GraphQL errors so they can be sent to Splunk.
-
-## [3.44.0] - 2019-08-19
-
-### Changed
-- Deprecate Colossus logger completely, using stdout instead.
-
-## [3.43.0] - 2019-08-19
-
-### Changed
-
-- Properly times metrics, considering total elapsed and code run after `await next()`.
-- Avoid broken metrics when a middleware throws.
-- Do not batch metrics for unsuccessful handlers and middlewares.
-- Rename `http-handler-success-*` to `http-handler-*` and only count non-success statuses.
-
-## [3.42.0] - 2019-08-19
-
-### Changed
-
-- Disable caching if response varies with session. (Before, we incorrectly disabled caching if _we had a session token_)
+## [3.42.0-beta] - 2019-08-21
 
 ## [3.41.1] - 2019-08-15
 
