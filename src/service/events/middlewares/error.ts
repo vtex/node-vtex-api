@@ -18,12 +18,7 @@ export async function error<T extends IOClients, U> (ctx: EventContext<T, U>, ne
       vtex: {
         operationId,
         requestId,
-        route: {
-          id,
-          params,
-        },
       },
-      event:{sender},
     } = ctx
 
     // Grab level from originalError, default to "error" level.
@@ -35,10 +30,7 @@ export async function error<T extends IOClients, U> (ctx: EventContext<T, U>, ne
     const log = {
       ...err,
       operationId,
-      params,
       requestId,
-      routeId: id,
-      sender,
     }
 
     // Use sendLog directly to avoid cleaning error twice.

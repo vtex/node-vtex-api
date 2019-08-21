@@ -39,6 +39,7 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
     // tslint:disable-next-line
     descriptor: ServiceDescriptor,
   ) {
+
     const {config} = service
     const clients = {
       implementation: config.clients && config.clients.implementation || IOClients,
@@ -64,7 +65,7 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
     }
 
     this.events = config.events
-      ? map(createEventHandler<ClientsT, StateT>(Clients, clients.options), config.events)
+      ? map(createEventHandler<ClientsT, StateT, CustomT>(Clients, clients.options), config.events)
       : {}
 
     this.statusTrack = linked ? noop : global.metrics.statusTrack

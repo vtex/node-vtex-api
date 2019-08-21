@@ -118,8 +118,9 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
         if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
           level = LogLevel.Error
         }
-
-        ctx.vtex.logger!.log(log, level)
+        if (ctx.vtex.logger){
+          ctx.vtex.logger!.log(log, level)
+        }
       }, uniqueErrors)
 
       // Expose graphQLErrors with pathNames to timings middleware

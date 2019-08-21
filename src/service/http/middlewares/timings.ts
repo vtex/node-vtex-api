@@ -32,6 +32,10 @@ export async function timings<T extends IOClients, U, V> (ctx: ServiceContext<T,
   const status = statusLabel(statusCode)
   // Only batch successful responses so metrics don't consider errors
   metrics.batch(`http-handler-${id}`, status === 'success' ? total : undefined, { [status]: 1 })
-  ctx.serverTiming![APP_ELAPSED_TIME_LOCATOR] = `${totalMillis}`
-  ctx.set('Server-Timing', reduceTimings(ctx.serverTiming!))
+
+  if (ctx.serverTiming){
+    ctx.serverTiming![APP_ELAPSED_TIME_LOCATOR] = `${totalMillis}`
+    ctx.set('Server-Timing', reduceTimings(ctx.serverTiming!))
+  }
+
 }
