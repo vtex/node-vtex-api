@@ -7,5 +7,5 @@ import { EventHandler, RouteHandler } from '../typings'
 export const compose = <ClientsT extends IOClients, StateT, CustomT>(middlewares: Array<RouteHandler<ClientsT, StateT, CustomT>>) =>
   koaCompose(middlewares.map(timer))
 
-export const composeForEvents = <ClientsT extends IOClients, StateT>(middlewares: Array<EventHandler<ClientsT, StateT>>) =>
+export const composeForEvents = <ClientsT extends IOClients, StateT>(middlewares: Array<EventHandler<ClientsT, StateT> | any>) =>
   koaCompose(middlewares.map(timerForEvents))

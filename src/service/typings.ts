@@ -22,7 +22,7 @@ export interface Context<T extends IOClients> {
   metrics: Record<string, [number, number]>
   serverTiming?: ServerTiming
 }
-interface EventBody {
+export interface EventBody {
   sender: string,
   subject: string,
   key: string,
@@ -109,6 +109,7 @@ export interface IOContext {
   janusEnv?: JanusEnv
   serverTiming?: ServerTiming
   logger: Logger
+  eventInfo?: EventBody
 }
 
 export interface ServiceRoute {
