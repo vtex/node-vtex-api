@@ -8,7 +8,7 @@ export function clients<T extends IOClients, U, V>(ClientsImpl: ClientsImplement
       ctx.vtex.serverTiming = ctx.serverTiming
     }
     ctx.clients = new ClientsImpl(clientOptions, ctx.vtex)
-    console.log('context body in create clients: ', ctx.body )
+    // console.log('context body in create clients: ', ctx.body )
 
     await next()
   }
