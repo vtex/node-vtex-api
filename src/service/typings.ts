@@ -22,19 +22,17 @@ export interface Context<T extends IOClients> {
   metrics: Record<string, [number, number]>
   serverTiming?: ServerTiming
 }
-export interface EventBody {
-  sender: string,
-  subject: string,
-  key: string,
-}
+
 export interface EventContext<T extends IOClients, StateT = any> {
   clients: T
   state: StateT
   vtex: IOContext
-  event: EventBody
+  // event: EventBody
   body: any
   timings: Record<string, [number, number]>
   metrics: Record<string, [number, number]>
+  key: string
+  sender: string
 }
 
 type KnownKeys<T> = {
@@ -110,6 +108,12 @@ export interface IOContext {
   serverTiming?: ServerTiming
   logger: Logger
   eventInfo?: EventBody
+}
+
+export interface EventBody {
+  sender: string,
+  subject: string,
+  key: string,
 }
 
 export interface ServiceRoute {

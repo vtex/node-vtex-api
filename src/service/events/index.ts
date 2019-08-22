@@ -1,14 +1,11 @@
+import { merge, pick } from 'ramda'
 import { ClientsImplementation, IOClients } from '../../clients/IOClients'
 import { InstanceOptions } from '../../HttpClient'
 import { clients } from '../http/middlewares/clients'
-// import { error } from './middlewares/error'
 import { error } from '../http/middlewares/error'
-// import { timings } from './middlewares/timings'
 import { timings } from '../http/middlewares/timings'
-import { EventHandler, RouteHandler, EventContext, ServiceContext } from '../typings'
+import { EventHandler, ServiceContext } from '../typings'
 import { composeForEvents } from '../utils/compose'
-// tslint:disable-next-line:ordered-imports
-import { pick, merge } from 'ramda'
 
 export const createEventHandler = <ClientsT extends IOClients, StateT, CustomT>(
   Clients: ClientsImplementation<ClientsT>,
@@ -16,7 +13,6 @@ export const createEventHandler = <ClientsT extends IOClients, StateT, CustomT>(
 ) => {
   return (handler: EventHandler<ClientsT, StateT> | Array<EventHandler<ClientsT, StateT>>) => {
     const middlewares = Array.isArray(handler) ? handler : [handler]
-    // const pipeline = [clients(Clients, options), timings, error, contextAdapter<ClientsT, StateT, CustomT>(middlewares)]
     const pipeline = [clients(Clients, options), timings, error, contextAdapter<ClientsT, StateT, CustomT>(middlewares) ]
     return composeForEvents(pipeline)
   }
@@ -31,7 +27,6 @@ function contextAdapter<ClientsT extends IOClients, StateT, CustomT> (middleware
         sender: ctx.vtex.eventInfo? ctx.vtex.eventInfo.sender : '',
       }
     )
-
     await composeForEvents(middlewares)(ctxEvent)
   }
 }
