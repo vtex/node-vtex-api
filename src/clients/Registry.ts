@@ -14,7 +14,7 @@ const EMPTY_OBJECT = {}
 
 const routes = {
   App: (app: string) => `${routes.Registry}/${app}`,
-  AppBundle: (app: string, version: string, path: string) => {
+  AppBundle: (app: string, version: string, path?: string) => {
     return path ? `${routes.AppVersion(app, version)}/bundle/${path}` : `${routes.AppVersion(app, version)}/bundle`
   },
   AppFile: (app: string, version: string, path: string) => `${routes.AppFiles(app, version)}/${path}`,
