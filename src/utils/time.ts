@@ -125,14 +125,14 @@ export function timerForEvents<T extends IOClients, U>(middleware: EventHandler<
     const start = process.hrtime()
     try {
       await middleware(ctx, async () => {
-        recordTimings(start, middleware.name, ctx.timings, ctx.metrics)
+        recordTimings(start, middleware.name, ctx.timings, ctx.metrics, true)
         ctx.metrics = {}
         if (next) {
           await next()
         }
       })
     } catch (e) {
-      recordTimings(start, middleware.name, ctx.timings, ctx.metrics)
+      recordTimings(start, middleware.name, ctx.timings, ctx.metrics, false)
       throw e
     }
   }
