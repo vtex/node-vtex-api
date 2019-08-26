@@ -34,7 +34,7 @@ export async function timings<T extends IOClients, U, V> (ctx: ServiceContext<T,
   metrics.batch(`http-handler-${id}`, status === 'success' ? total : undefined, { [status]: 1 })
 
   if (ctx.serverTiming){
-    ctx.serverTiming![APP_ELAPSED_TIME_LOCATOR] = `${totalMillis}`
+    ctx.serverTiming[APP_ELAPSED_TIME_LOCATOR] = `${totalMillis}`
     ctx.set('Server-Timing', reduceTimings(ctx.serverTiming!))
   }
 

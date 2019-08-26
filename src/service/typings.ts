@@ -28,12 +28,12 @@ export interface EventContext<T extends IOClients, StateT = any> {
   clients: T
   state: StateT
   vtex: IOContext
-  // event: EventBody
   body: any
   timings: Record<string, [number, number]>
   metrics: Record<string, [number, number]>
   key: string
   sender: string
+  subject: string
 }
 
 type KnownKeys<T> = {
