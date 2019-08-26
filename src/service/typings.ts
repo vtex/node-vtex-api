@@ -24,6 +24,18 @@ export interface Context<T extends IOClients> {
   serverTiming?: ServerTiming
 }
 
+export interface EventContext<T extends IOClients, StateT = any> {
+  clients: T
+  state: StateT
+  vtex: IOContext
+  body: any
+  timings: Record<string, [number, number]>
+  metrics: Record<string, [number, number]>
+  key: string
+  sender: string
+  subject: string
+}
+
 type KnownKeys<T> = {
   [K in keyof T]: string extends K ? never : number extends K ? never : K
 } extends { [_ in keyof T]: infer U } ? U : never
@@ -35,6 +47,8 @@ interface Loaders {
 export type ServiceContext<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Pick<ParameterizedContext<StateT, Context<ClientsT>>, KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>> & CustomT & { loaders: Loaders }
 
 export type RouteHandler<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>
+
+export type EventHandler<ClientsT extends IOClients = IOClients, StateT = void> = Middleware<EventContext<ClientsT, StateT>>
 
 export type Resolver<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> =
   GraphQLFieldResolver<any, ServiceContext<ClientsT, StateT, CustomT>, any>
@@ -94,6 +108,13 @@ export interface IOContext {
   janusEnv?: JanusEnv
   serverTiming?: ServerTiming
   logger: Logger
+  eventInfo?: EventBody
+}
+
+export interface EventBody {
+  sender: string,
+  subject: string,
+  key: string,
 }
 
 export interface ServiceRoute {
