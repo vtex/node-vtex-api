@@ -27,6 +27,6 @@ function contextAdapter<ClientsT extends IOClients, StateT, CustomT> (middleware
         sender: ctx.vtex.eventInfo? ctx.vtex.eventInfo.sender : '',
       }
     )
-    return composeForEvents(middlewares)(ctxEvent)
+    await composeForEvents(middlewares)(ctxEvent)
   }
 }
