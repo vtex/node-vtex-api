@@ -107,6 +107,7 @@ export function timer<T extends IOClients, U, V>(middleware: RouteHandler<T, U, 
 }
 
 export function timerForEvents<T extends IOClients, U>(middleware: EventHandler<T,U>): EventHandler<T,U> {
+
   if ((middleware as any).skipTimer) {
     return middleware
   }
@@ -115,22 +116,24 @@ export function timerForEvents<T extends IOClients, U>(middleware: EventHandler<
     console.warn('Please use a named function as handler for better metrics.', middleware.toString())
   }
 
-  return async (ctx: EventContext<T, U>, next: () => Promise<any>) => {
+  return async (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) => {
+    if (!ctx.serverTiming) {
+      ctx.serverTiming = {}
+    }
     if (!ctx.timings) {
-      ctx.timings = {}
+      ctx.timings = {
+        total: [0, 0],
+      }
     }
     if (!ctx.metrics) {
       ctx.metrics = {}
     }
+
     const start = process.hrtime()
     try {
-      await middleware(ctx, async () => {
-        recordTimings(start, middleware.name, ctx.timings, ctx.metrics, true)
-        ctx.metrics = {}
-        if (next) {
-          await next()
-        }
-      })
+      await middleware(ctx, next)
+      // At this point, this middleware *and all following ones* have executed
+      recordTimings(start, middleware.name, ctx.timings, ctx.metrics, true)
     } catch (e) {
       recordTimings(start, middleware.name, ctx.timings, ctx.metrics, false)
       throw e
