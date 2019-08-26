@@ -119,7 +119,7 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
           level = LogLevel.Error
         }
         if (ctx.vtex.logger){
-          ctx.vtex.logger!.log(log, level)
+          ctx.vtex.logger.log(log, level)
         }
       }, uniqueErrors)
 
