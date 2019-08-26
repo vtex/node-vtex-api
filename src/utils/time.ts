@@ -116,10 +116,7 @@ export function timerForEvents<T extends IOClients, U>(middleware: EventHandler<
     console.warn('Please use a named function as handler for better metrics.', middleware.toString())
   }
 
-  return async (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) => {
-    if (!ctx.serverTiming) {
-      ctx.serverTiming = {}
-    }
+  return async (ctx: EventContext<T, U>, next: () => Promise<any>) => {
     if (!ctx.timings) {
       ctx.timings = {
         total: [0, 0],
