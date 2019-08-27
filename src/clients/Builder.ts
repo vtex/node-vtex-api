@@ -53,8 +53,8 @@ export class Builder extends AppClient {
     return this.zipAndSend(routes.Link(app), app, files, zipOptions, params)
   }
 
-  public publishApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}) => {
-    return this.zipAndSend(routes.Publish(app), app, files, zipOptions)
+  public publishApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}) => {
+    return this.zipAndSend(routes.Publish(app), app, files, zipOptions, params)
   }
 
   public relinkApp = (app: string, changes: Change[], params: RequestParams = {}) => {
@@ -103,6 +103,7 @@ export class Builder extends AppClient {
 
 interface RequestParams {
   tsErrorsAsWarnings?: boolean,
+  skipSemVerEnsure?: boolean,
 }
 
 interface ZipOptions {
