@@ -21,7 +21,7 @@ export interface SegmentData {
 
 const SEGMENT_COOKIE = 'vtex_segment'
 const SEGMENT_MAX_AGE_S = 60 * 60 // 60 minutes - segment is actually immutable
-const ALLOWED_QUERY_PREFIXES = ['utm', 'cultureInfo']
+const ALLOWED_QUERY_PREFIXES = ['utm', 'cultureInfo', 'supportedLocales']
 
 const filterAndSortQuery = (query?: Record<string, string>) => {
   if (!query) {
