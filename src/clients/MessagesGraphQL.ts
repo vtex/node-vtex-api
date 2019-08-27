@@ -5,18 +5,11 @@ import { IOContext } from '../service/typings'
 import { IOMessage } from '../utils/message'
 
 type IOMessageInput = Pick<IOMessage, 'id' | 'content' | 'description' | 'behavior'>
-type Behavior = 'USER_ONLY' | 'USER_AND_APP' | 'FULL'
+type IOMessageInput2 = Pick<IOMessage, 'context' | 'content' | 'description' | 'behavior'>
 
 interface MessagesInput {
   provider: string,
   messages: IOMessageInput[],
-}
-
-interface MessageInput {
-  context?: string
-  content: string
-  description?: string
-  behavior?: Behavior
 }
 
 export interface IOMessageSaveInput extends IOMessageInput {
@@ -30,7 +23,7 @@ export interface Translate {
 }
 
 export interface Translate2 {
-  messages: MessageInput[]
+  messages: IOMessageInput2[]
   from?: string
   to: string
 }

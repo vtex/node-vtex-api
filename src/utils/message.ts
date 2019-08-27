@@ -2,6 +2,7 @@ export const PROVIDER_SPACER = '::'
 
 export interface IOMessage {
   id: string
+  context?: string
   content?: string
   description?: string
   from?: string
