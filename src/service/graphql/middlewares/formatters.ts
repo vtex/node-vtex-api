@@ -28,7 +28,13 @@ const createFormatError = (details: any) => (error: any) => {
     if (!formattedError.extensions.exception) {
       formattedError.extensions.exception = formattedError.originalError
     } else {
-      const extendedException = {...formattedError.originalError, ...formattedError.extensions.exception}
+      const extendedException = {
+        message: formattedError.originalError.message,
+        name: formattedError.originalError.name,
+        stack: formattedError.originalError.stack,
+        ...formattedError.originalError,
+        ...formattedError.extensions.exception,
+      }
       formattedError.extensions.exception = cleanError(extendedException)
     }
 
