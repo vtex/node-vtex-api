@@ -4,7 +4,7 @@ import { SchemaDirectiveVisitor } from 'graphql-tools'
 
 import { IOClients } from '../../../../clients/IOClients'
 import { ServiceContext } from '../../../typings'
-import { messagesLoader2 } from '../messagesLoader'
+import { messagesLoader2 } from '../messagesLoader2'
 
 export class Translatable2 extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, ServiceContext>) {
@@ -12,15 +12,15 @@ export class Translatable2 extends SchemaDirectiveVisitor {
     const { behavior = 'FULL', context = 'default' } = this.args
     field.resolve = async (root, args, ctx, info) => {
       const { clients: { segment }, clients } = ctx
-      if (!ctx.loaders || !ctx.loaders.messages) {
+      if (!ctx.loaders || !ctx.loaders.messages2) {
         ctx.loaders = {
           ...ctx.loaders,
-          messages: messagesLoader2(clients),
+          messages2: messagesLoader2(clients),
         }
       }
       const response = await resolve(root, args, ctx, info)
       const handler = handleSingleString(ctx, behavior, context)
-      return Array.isArray(response) ? await map(response, handler) : await handler(response)
+      return Array.isArray(response) ? await  map(response, handler) : await handler(response)
     }
   }
 }
@@ -33,7 +33,6 @@ const handleSingleString = (ctx: ServiceContext<IOClients, void, void>, behavior
   const resObj = typeof response === 'string'
     ? {
       content: response,
-      context,
       description: '',
       from: undefined,
     }
@@ -56,10 +55,12 @@ const handleSingleString = (ctx: ServiceContext<IOClients, void, void>, behavior
     return content
   }
 
-  return ctx.loaders.messages!.load({
+  return ctx.loaders.messages2!.load({
     ...resObj,
     behavior,
+    context,
     from,
     to,
   })
 }
+

@@ -1,11 +1,17 @@
-import { path } from 'ramda'
+import { path, map } from 'ramda'
 
 import { AppGraphQLClient, InstanceOptions } from '../HttpClient'
 import { IOContext } from '../service/typings'
 import { IOMessage } from '../utils/message'
 
 type IOMessageInput = Pick<IOMessage, 'id' | 'content' | 'description' | 'behavior'>
-type IOMessageInput2 = Pick<IOMessage, 'context' | 'content' | 'description' | 'behavior'>
+// type IOMessageInput2 = Pick<IOMessage, 'context' | 'content' | 'description' | 'behavior'>
+interface IOMessageInput2 {
+  context?: string
+  content: string
+  description?: string
+  behavior?: string
+}
 
 interface MessagesInput {
   provider: string,
@@ -44,6 +50,19 @@ interface TranslateResponse2 {
   translate: string[]
 }
 
+export const newMessageInputToNewMessage = (
+  messages: IOMessage[]
+): IOMessageInput2[] =>
+  map(
+    (message) => ({
+      behavior: message.behavior,
+      content: message.content || '',
+      context: message.context,
+      description: message.description,
+    }),
+    messages
+  )
+
 export class MessagesGraphQL extends AppGraphQLClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
     super('vtex.messages', vtex, options)
@@ -60,16 +79,16 @@ export class MessagesGraphQL extends AppGraphQLClient {
     metric: 'messages-translate',
   }).then(path(['data', 'newTranslate'])) as Promise<TranslateResponse['newTranslate']>
 
-  public translate2 = async (args: Translate2): Promise<string[]> => this.graphql.query<TranslateResponse2, { args: Translate2 }>({
-    query: `
-    query Translate($args: TranslateArgs!) {
-      translate(args: $args)
-    }
-    `,
-    variables: { args },
-  }, {
-    metric: 'messages-translate',
-  }).then(path(['data', 'translate'])) as Promise<TranslateResponse2['translate']>
+  public translate2 = async (args: Translate2): Promise<string[]> => await this.graphql.query<TranslateResponse2, { args: Translate2 }>({
+      query: `
+      query Translate($args: TranslateArgs!) {
+        translate(args: $args)
+      }
+      `,
+      variables: { args },
+    }, {
+      metric: 'messages-translate',
+    }).then(path(['data', 'translate'])) as Promise<TranslateResponse2['translate']>
 
   public save = (args: SaveArgs): Promise<boolean> => this.graphql.mutate<boolean, { args: SaveArgs }>({
     mutate: `
