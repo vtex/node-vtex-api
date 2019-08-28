@@ -13,6 +13,7 @@ const routes = {
   Builder: '/_v/builder/0',
   Clean: (app: string) => `${routes.Builder}/clean/${app}`,
   Link: (app: string) => `${routes.Builder}/link/${app}`,
+  PinnedDependencies: () => `${routes.Builder}/pinneddeps`,
   Publish: (app: string) => `${routes.Builder}/publish/${app}`,
   Relink: (app: string) => `${routes.Builder}/relink/${app}`,
   Test: (app: string) => `${routes.Builder}/test/${app}`,
@@ -48,6 +49,10 @@ export class Builder extends AppClient {
     }
     const metric = 'bh-clean'
     return this.http.post<BuildResult>(routes.Clean(app), {headers, metric})
+  }
+
+  public getPinnedDependencies = () => {
+    return this.http.get(routes.PinnedDependencies())
   }
 
   public linkApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}) => {
