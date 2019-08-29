@@ -50,4 +50,3 @@ export const messagesLoader = (clients: IOClients) =>
     const translationsInOriginalOrder = sortByIndex(indexedTranslations)
     return pluck(1, translationsInOriginalOrder)
   })
-
