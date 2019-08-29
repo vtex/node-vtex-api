@@ -69,15 +69,15 @@ const destroyCircular = (from: any, seen: any[]) => {
       const headers = to[property] && to[property].headers
       if (headers) {
         const headerNames = keys(headers)
-        const authorization = findCaseInsensitive('authorization', headerNames)
+        const authorization = findCaseInsensitive('authorization', headerNames as string[])
         if (!!authorization) {
           delete headers[authorization]
         }
-        const proxyAuth = findCaseInsensitive('proxy-authorization', headerNames)
+        const proxyAuth = findCaseInsensitive('proxy-authorization', headerNames as string[])
         if (!!proxyAuth) {
           delete headers[proxyAuth]
         }
-        const vtexIdClientAutCookie = findCaseInsensitive('vtexidclientautcookie', headerNames)
+        const vtexIdClientAutCookie = findCaseInsensitive('vtexidclientautcookie', headerNames as string[])
         if (!!vtexIdClientAutCookie) {
           delete headers[vtexIdClientAutCookie]
         }
