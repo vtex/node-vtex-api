@@ -5,7 +5,6 @@ import { IOClients } from '../../../clients/IOClients'
 import { IOMessage, providerFromMessage, removeProviderFromId } from '../../../utils/message'
 
 const sortByProvider = (indexedMessages: Array<[string, IOMessage]>) => sortBy(([_, message]) => providerFromMessage(message), indexedMessages)
-const sortByContent = (indexedMessages: Array<[string, IOMessage]>) => sortBy(([_, message]) => message.content!, indexedMessages)
 
 const sortByIndex = (indexedTranslations: Array<[string, string]>) => sortBy(([index, _]) => Number(index), indexedTranslations)
 

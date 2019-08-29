@@ -1,11 +1,10 @@
-import { path, map } from 'ramda'
+import { map, path } from 'ramda'
 
 import { AppGraphQLClient, InstanceOptions } from '../HttpClient'
 import { IOContext } from '../service/typings'
 import { IOMessage } from '../utils/message'
 
 type IOMessageInput = Pick<IOMessage, 'id' | 'content' | 'description' | 'behavior'>
-// type IOMessageInput2 = Pick<IOMessage, 'context' | 'content' | 'description' | 'behavior'>
 interface IOMessageInput2 {
   context?: string
   content: string
