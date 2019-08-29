@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [3.47.0] - 2019-08-29
+## [3.47.1] - 2019-08-29
+### Fixed
+- Fix ramda typings errors.
 
+## [3.47.0] - 2019-08-29
+### Added
 - Add parameter `skipSemVerEnsure` in app publish.
 
 ## [3.46.0] - 2019-08-26
