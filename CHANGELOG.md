@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.47.0] - 2019-08-29
+
+- Add parameter `skipSemVerEnsure` in app publish.
+
 ## [3.46.0] - 2019-08-26
 
 ## [3.46.0-beta.2] - 2019-08-26
