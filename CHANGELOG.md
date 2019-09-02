@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Update missing changelog: remove if statements on existence of ctx.vtex.logger
 
-
 ## [3.47.1] - 2019-08-29
 ### Fixed
 - Fix ramda typings errors.
