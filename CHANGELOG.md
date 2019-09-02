@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.47.2] - 2019-09-02
+
 ### Fixed
 - Update missing changelog. 
 - Remove if statements on existence of ctx.vtex.logger
