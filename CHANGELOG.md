@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Fixed
-- Update missing changelog: remove if statements on existence of ctx.vtex.logger
+- Update missing changelog. 
+- Remove if statements on existence of ctx.vtex.logger
 
 ## [3.47.1] - 2019-08-29
 ### Fixed
@@ -19,6 +20,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Add parameter `skipSemVerEnsure` in app publish.
 
 ## [3.46.0] - 2019-08-26
+### Added
+- Create event handler similar to http requests, providing vtex clients, timings  and error logs.
 
 ## [3.46.0-beta.2] - 2019-08-26
 
