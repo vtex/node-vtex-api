@@ -15,6 +15,8 @@ const routes = {
   Link: (app: string) => `${routes.Builder}/link/${app}`,
   Publish: (app: string) => `${routes.Builder}/publish/${app}`,
   Relink: (app: string) => `${routes.Builder}/relink/${app}`,
+  TSConfig: () => `${routes.Builder}/tsconfig`,
+  Typings: () => `${routes.Builder}/typings`,
 }
 
 export class Builder extends AppClient {
@@ -22,6 +24,14 @@ export class Builder extends AppClient {
 
   constructor (ioContext: IOContext, opts?: InstanceOptions) {
     super('vtex.builder-hub', ioContext, opts)
+  }
+
+  public tsConfig = () => {
+    return this.http.get(routes.TSConfig())
+  }
+
+  public typingsInfo = () => {
+    return this.http.get(routes.Typings())
   }
 
   public availability = async (app: string, hintIndex: number) => {
