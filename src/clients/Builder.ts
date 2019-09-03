@@ -13,8 +13,10 @@ const routes = {
   Builder: '/_v/builder/0',
   Clean: (app: string) => `${routes.Builder}/clean/${app}`,
   Link: (app: string) => `${routes.Builder}/link/${app}`,
+  PinnedDependencies: () => `${routes.Builder}/pinneddeps`,
   Publish: (app: string) => `${routes.Builder}/publish/${app}`,
   Relink: (app: string) => `${routes.Builder}/relink/${app}`,
+  Test: (app: string) => `${routes.Builder}/test/${app}`,
 }
 
 export class Builder extends AppClient {
@@ -49,6 +51,10 @@ export class Builder extends AppClient {
     return this.http.post<BuildResult>(routes.Clean(app), {headers, metric})
   }
 
+  public getPinnedDependencies = () => {
+    return this.http.get(routes.PinnedDependencies())
+  }
+
   public linkApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}) => {
     return this.zipAndSend(routes.Link(app), app, files, zipOptions, params)
   }
@@ -64,6 +70,10 @@ export class Builder extends AppClient {
     }
     const metric = 'bh-relink'
     return this.http.put<BuildResult>(routes.Relink(app), changes, {headers, metric, params})
+  }
+
+  public testApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}) => {
+    return this.zipAndSend(routes.Test(app), app, files, zipOptions, params)
   }
 
   private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky, stickyHint, zlib}: ZipOptions = {}, requestParams: RequestParams = {}) => {
