@@ -3,7 +3,7 @@ import { SchemaDirectiveVisitor } from 'graphql-tools'
 
 import { maxAgeEnums } from '../../utils/maxAgeEnum'
 
-const ETAG_CONTROL_HEADER = 'x-vtex-etag-control'
+export const ETAG_CONTROL_HEADER = 'x-vtex-etag-control'
 
 interface Args {
   maxAge: keyof typeof maxAgeEnums | undefined
