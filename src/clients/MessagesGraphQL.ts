@@ -1,15 +1,20 @@
-import { map, path } from 'ramda'
+import { path } from 'ramda'
 
 import { AppGraphQLClient, InstanceOptions } from '../HttpClient'
 import { IOContext } from '../service/typings'
 import { IOMessage } from '../utils/message'
 
 type IOMessageInput = Pick<IOMessage, 'id' | 'content' | 'description' | 'behavior'>
-interface IOMessageInput2 {
-  context?: string
+
+export type IOMessageInputV2 = Pick<IOMessageV2, 'content' | 'context' | 'description' | 'behavior'>
+
+export interface IOMessageV2 extends IOMessageInputV2 {
   content: string
+  context?: string
   description?: string
   behavior?: string
+  from?: string
+  to?: string
 }
 
 interface MessagesInput {
@@ -27,8 +32,8 @@ export interface Translate {
   to: string
 }
 
-export interface Translate2 {
-  messages: IOMessageInput2[]
+export interface TranslateInputV2 {
+  messages: IOMessageInputV2[]
   from?: string
   to: string
 }
@@ -45,22 +50,9 @@ interface TranslateResponse {
   newTranslate: string[]
 }
 
-interface TranslateResponse2 {
+interface TranslatedV2 {
   translate: string[]
 }
-
-export const newMessageInputToNewMessage = (
-  messages: IOMessage[]
-): IOMessageInput2[] =>
-  map(
-    (message) => ({
-      behavior: message.behavior,
-      content: message.content || '',
-      context: message.context,
-      description: message.description,
-    }),
-    messages
-  )
 
 export class MessagesGraphQL extends AppGraphQLClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
@@ -78,7 +70,7 @@ export class MessagesGraphQL extends AppGraphQLClient {
     metric: 'messages-translate',
   }).then(path(['data', 'newTranslate'])) as Promise<TranslateResponse['newTranslate']>
 
-  public translate2 = async (args: Translate2): Promise<string[]> => await this.graphql.query<TranslateResponse2, { args: Translate2 }>({
+  public translateV2 = (args: TranslateInputV2) => this.graphql.query<TranslatedV2, { args: TranslateInputV2 }>({
       query: `
       query Translate($args: TranslateArgs!) {
         translate(args: $args)
@@ -87,7 +79,7 @@ export class MessagesGraphQL extends AppGraphQLClient {
       variables: { args },
     }, {
       metric: 'messages-translate',
-    }).then(path(['data', 'translate'])) as Promise<TranslateResponse2['translate']>
+    }).then(path(['data', 'translate'])) as Promise<TranslatedV2['translate']>
 
   public save = (args: SaveArgs): Promise<boolean> => this.graphql.mutate<boolean, { args: SaveArgs }>({
     mutate: `

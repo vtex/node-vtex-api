@@ -7,6 +7,7 @@ import { Middleware } from 'koa-compose'
 import { ParsedUrlQuery } from 'querystring'
 
 import { ClientsImplementation, IOClients } from '../clients/IOClients'
+import { IOMessageV2 } from '../clients/MessagesGraphQL'
 import { InstanceOptions } from '../HttpClient'
 import { Recorder } from '../HttpClient/middlewares/recorder'
 import { IOMessage } from '../utils/message'
@@ -42,7 +43,7 @@ type KnownKeys<T> = {
 
 interface Loaders {
   messages?: DataLoader<IOMessage, string>
-  messages2?: DataLoader<IOMessage, string>
+  messagesV2?: DataLoader<IOMessageV2, string>
 }
 
 export type ServiceContext<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Pick<ParameterizedContext<StateT, Context<ClientsT>>, KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>> & CustomT & { loaders: Loaders }
