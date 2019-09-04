@@ -13,10 +13,9 @@ const ERROR_FIELD_WHITELIST = ['message', 'path', 'stack', 'extensions', 'status
 const createFormatError = (details: any) => (error: any) => {
   const formattedError = pick(ERROR_FIELD_WHITELIST, error)
 
-  if (formattedError.extensions && formattedError.extensions.exception) {
-    formattedError.extensions.exception = cleanError(formattedError.extensions.exception)
-    if (formattedError.stack === formattedError.extensions.exception.stack) {
-      delete formattedError.extensions.exception.stack
+  if (!formattedError.extensions) {
+    formattedError.extensions = {
+      code: 'INTERNAL_SERVER_ERROR',
     }
   }
 
@@ -25,6 +24,27 @@ const createFormatError = (details: any) => (error: any) => {
     if (formattedError.stack === formattedError.originalError.stack) {
       delete formattedError.originalError.stack
     }
+
+    if (!formattedError.extensions.exception) {
+      formattedError.extensions.exception = {
+        message: formattedError.originalError.message,
+        name: formattedError.originalError.name,
+        stack: formattedError.originalError.stack,
+        ...formattedError.originalError,
+      }
+    } else {
+      const extendedException = {
+        message: formattedError.originalError.message,
+        name: formattedError.originalError.name,
+        stack: formattedError.originalError.stack,
+        ...formattedError.originalError,
+        ...formattedError.extensions.exception,
+      }
+      formattedError.extensions.exception = cleanError(extendedException)
+    }
+
+    // Make originalError not enumerable to prevent duplicated log and response information
+    Object.defineProperty(formattedError, 'originalError', {enumerable: false})
   }
 
   Object.assign(formattedError, details)
