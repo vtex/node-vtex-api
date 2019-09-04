@@ -31,5 +31,6 @@ function contextAdapter<ClientsT extends IOClients, StateT, CustomT> (middleware
       }
     )
     await composeForEvents(middlewares)(ctxEvent)
+    ctx.status = 204
   }
 }
