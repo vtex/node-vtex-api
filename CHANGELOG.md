@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.48.1] - 2019-09-04
+
+## [3.48.1-beta.0] - 2019-09-04
+
+## [3.48.1-beta] - 2019-09-03
+
 ## [3.48.0] - 2019-09-03
 ### Added
 - Route for testing apps on `builder-hub`.

@@ -19,15 +19,18 @@ export const createEventHandler = <ClientsT extends IOClients, StateT, CustomT>(
 }
 
 function contextAdapter<ClientsT extends IOClients, StateT, CustomT> (middlewares: Array<EventHandler<ClientsT, StateT>>) {
-  return  async function  middlewareCascate(ctx: ServiceContext<ClientsT, StateT, CustomT>){
+  return  async function  middlewareCascade(ctx: ServiceContext<ClientsT, StateT, CustomT>){
     const ctxEvent: any = merge(
-      pick(['clients', 'state', 'vtex', 'timings', 'metrics', 'body'], ctx),
+      pick(['clients', 'state', 'vtex', 'timings', 'metrics'], ctx),
       {
+        ...ctx.vtex,
+        body: (ctx.state as any).body,
         key: ctx.vtex.eventInfo? ctx.vtex.eventInfo.key : '',
         sender: ctx.vtex.eventInfo? ctx.vtex.eventInfo.sender : '',
         subject: ctx.vtex.eventInfo? ctx.vtex.eventInfo.subject : '',
       }
     )
     await composeForEvents(middlewares)(ctxEvent)
+    ctx.status = 204
   }
 }
