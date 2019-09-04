@@ -23,6 +23,7 @@ function contextAdapter<ClientsT extends IOClients, StateT, CustomT> (middleware
     const ctxEvent: any = merge(
       pick(['clients', 'state', 'vtex', 'timings', 'metrics'], ctx),
       {
+        ...ctx.vtex,
         body: (ctx.state as any).body,
         key: ctx.vtex.eventInfo? ctx.vtex.eventInfo.key : '',
         sender: ctx.vtex.eventInfo? ctx.vtex.eventInfo.sender : '',
