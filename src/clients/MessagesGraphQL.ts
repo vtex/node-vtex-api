@@ -6,13 +6,14 @@ import { IOMessage } from '../utils/message'
 
 type IOMessageInput = Pick<IOMessage, 'id' | 'content' | 'description' | 'behavior'>
 
-export type IOMessageInputV2 = Pick<IOMessageV2, 'content' | 'context' | 'description' | 'behavior'>
+export type IOMessageInputV2 = Pick<IOMessageV2, 'content' | 'context' | 'behavior'>
+
+type Behavior = 'FULL' | 'USER_ONLY' | 'USER_AND_APP'
 
 export interface IOMessageV2 extends IOMessageInputV2 {
   content: string
   context?: string
-  description?: string
-  behavior?: string
+  behavior?: Behavior
   from?: string
   to?: string
 }

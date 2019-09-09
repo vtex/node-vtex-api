@@ -7,7 +7,7 @@ import { IOMessageInputV2, IOMessageV2 } from './../../../clients/MessagesGraphQ
 const sortByContent = (indexedMessages: Array<[string, IOMessageV2]>) => sortBy(([_, message]) => message.content!, indexedMessages)
 const sortByIndex = (indexedTranslations: Array<[string, string]>) => sortBy(([index, _]) => Number(index), indexedTranslations)
 
-const newMessageInputToNewMessage = (
+const toInput = (
   messages: IOMessageV2[]
 ): IOMessageInputV2[] =>
   map(
@@ -15,7 +15,6 @@ const newMessageInputToNewMessage = (
       behavior: message.behavior,
       content: message.content,
       context: message.context,
-      description: message.description,
     }),
     messages
   )
@@ -30,7 +29,7 @@ export const messagesLoaderV2 = (clients: IOClients) =>
     const sortedMessages = pluck(1, sortedIndexedMessages) as IOMessageV2[]
     const translations = await clients.messagesGraphQL.translateV2({
       from,
-      messages: newMessageInputToNewMessage(sortedMessages),
+      messages: toInput(sortedMessages),
       to,
     })
     const indexedTranslations = zip(originalIndexes, translations)
