@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.48.3] - 2019-09-09
+
 ### Fixed
 - Added logger middleware to events pipeline.
 
