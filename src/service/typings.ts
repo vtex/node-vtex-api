@@ -85,8 +85,9 @@ export interface DataSources {
 }
 
 export interface Cancelation {
-  source: CancelTokenSource
   cancelable: boolean
+  canceled: boolean
+  source: CancelTokenSource
 }
 
 export interface IOContext {
