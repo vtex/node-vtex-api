@@ -4,6 +4,7 @@ import { any, compose, equals, isNil, min, path, pluck as rPluck, reduce, reject
 
 import { GraphQLServiceContext } from '../typings'
 import { maxAgeEnums } from '../utils/maxAgeEnum'
+import { PUBLIC_DOMAINS } from '../../../utils/domain'
 
 type CacheControlHintsFormat = CacheControlFormat['hints']
 
@@ -22,9 +23,6 @@ const publicRegExp = compose(
 )
 
 const VTEX_PUBLIC_ENDPOINT = process.env.VTEX_PUBLIC_ENDPOINT || ''
-const GOCOMMERCE_PUBLIC_ENDPOINT = 'mygocommerce.com'
-
-const GOCOMMERCE_REGEXP = publicRegExp(GOCOMMERCE_PUBLIC_ENDPOINT)
 const VTEX_REGEXP = publicRegExp(VTEX_PUBLIC_ENDPOINT)
 
 const pickCacheControlHints = (response: GraphQLResponse) => path<CacheControlHintsFormat>(
@@ -58,7 +56,7 @@ const isPublicEndpoint = ({request: {headers}}: GraphQLServiceContext) => {
   }
 
   const host = headers['x-forwarded-host'] || ''
-  return test(VTEX_REGEXP, host) || test(GOCOMMERCE_REGEXP, host)
+  return test(VTEX_REGEXP, host) || PUBLIC_DOMAINS.some(endpoint => test(publicRegExp(endpoint), host))
 }
 
 export const cacheControl = (response: GraphQLResponse, ctx: GraphQLServiceContext) => {
