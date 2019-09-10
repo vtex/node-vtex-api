@@ -13,6 +13,10 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
     return await next()
   }
 
+  // We cannot allow single flight requests to
+  // cancel any request
+  ctx.config.cancelToken = undefined
+
   if (!metricsAdded) {
     metrics.addOnFlushMetric(() => ({
       name: 'node-vtex-api-inflight-map-size',

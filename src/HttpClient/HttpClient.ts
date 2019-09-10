@@ -17,6 +17,8 @@ import { IOContext } from '../service/typings'
 import { formatTenantHeaderValue } from '../utils/tenant'
 import { forExternal, forRoot, forWorkspace } from './factories'
 import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
+import { cancelationToken } from './middlewares/cancelationToken'
+
 import { singleFlightMiddleware } from './middlewares/inflight'
 import { memoizationMiddleware, Memoized } from './middlewares/memoization'
 import { metricsMiddleware } from './middlewares/metrics'
@@ -62,6 +64,7 @@ export class HttpClient {
       params, operationId,
       tenant,
       verbose,
+      cancelation,
     } = opts
     this.name = name || baseURL || 'unknown'
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
@@ -89,6 +92,7 @@ export class HttpClient {
       metricsMiddleware({metrics, serverTiming, name}),
       memoizationMiddleware({memoizedCache}),
       ...recorder ? [recorderMiddleware(recorder)] : [],
+      cancelationToken(cancelation),
       singleFlightMiddleware,
       acceptNotFoundMiddleware,
       ...memoryCache ? [cacheMiddleware({type: CacheType.Memory, storage: memoryCache})] : [],
