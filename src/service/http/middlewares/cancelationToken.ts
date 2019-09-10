@@ -7,6 +7,7 @@ export async function cancelationToken<T extends IOClients, U, V>(ctx: ServiceCo
   if (ctx.method.toUpperCase() === 'GET') {
     ctx.vtex.cancelation = {
       cancelable: true,
+      canceled: false,
       source: axios.CancelToken.source(),
     }
   }
