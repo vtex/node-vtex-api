@@ -22,9 +22,6 @@ const publicRegExp = compose(
   replace('.', '\\.')
 )
 
-const VTEX_PUBLIC_ENDPOINT = process.env.VTEX_PUBLIC_ENDPOINT || ''
-const VTEX_REGEXP = publicRegExp(VTEX_PUBLIC_ENDPOINT)
-
 const pickCacheControlHints = (response: GraphQLResponse) => path<CacheControlHintsFormat>(
   ['extensions', 'cacheControl', 'hints'],
   response
@@ -56,7 +53,7 @@ const isPublicEndpoint = ({request: {headers}}: GraphQLServiceContext) => {
   }
 
   const host = headers['x-forwarded-host'] || ''
-  return test(VTEX_REGEXP, host) || PUBLIC_DOMAINS.some(endpoint => test(publicRegExp(endpoint), host))
+  return PUBLIC_DOMAINS.some(endpoint => test(publicRegExp(endpoint), host))
 }
 
 export const cacheControl = (response: GraphQLResponse, ctx: GraphQLServiceContext) => {

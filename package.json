@@ -27,6 +27,7 @@
   "dependencies": {
     "@types/koa": "^2.0.48",
     "@types/koa-compose": "^3.2.3",
+    "@wry/equality": "^0.1.9",
     "apollo-datasource": "^0.3.1",
     "apollo-server-core": "^2.4.8",
     "apollo-server-errors": "^2.2.1",
