@@ -6,10 +6,13 @@ import { IOClients } from '../../../../clients/IOClients'
 import { ServiceContext } from '../../../typings'
 import { messagesLoaderV2 } from '../messagesLoaderV2'
 
+const CONTEXT_LEFT_DELIMITER = '((('
+const CONTEXT_RIGHT_DELIMITER = ')))'
+
 export class TranslatableV2 extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, ServiceContext>) {
     const { resolve = defaultFieldResolver } = field
-    const { behavior = 'FULL', context = 'default' } = this.args
+    const { behavior = 'FULL'} = this.args
     field.resolve = async (root, args, ctx, info) => {
       if (!ctx.loaders || !ctx.loaders.messagesV2) {
         ctx.loaders = {
@@ -18,21 +21,38 @@ export class TranslatableV2 extends SchemaDirectiveVisitor {
         }
       }
       const response = await resolve(root, args, ctx, info)
-      const handler = handleSingleString(ctx, behavior, context)
+      const handler = handleSingleString(ctx, behavior)
       return Array.isArray(response) ? await map(response, handler) : await handler(response)
     }
   }
 }
 
-const handleSingleString = (ctx: ServiceContext<IOClients, void, void>, behavior: string, context: string) => async (response: any) => {
+const contextFromString = (tString: string) => {
+  const splitted = tString.split(CONTEXT_LEFT_DELIMITER)
+  if (splitted.length !== 2){
+    return undefined
+  }
+  const remaining = splitted[1].split(CONTEXT_RIGHT_DELIMITER)
+  if (remaining.length !== 2){
+    return undefined
+  }
+  return remaining[0]
+}
+
+const contentFromString = (tString: string) => {
+  const splitted = tString.split(CONTEXT_LEFT_DELIMITER)
+  return splitted[0]
+}
+
+const handleSingleString = (ctx: ServiceContext<IOClients, void, void>, behavior: string) => async (response: any) => {
   // Messages only knows how to process non empty strings.
   if ((typeof response !== 'string' && typeof response !== 'object') || Array.isArray(response) || response == null) {
     return response
   }
   const resObj = typeof response === 'string'
     ? {
-      content: response,
-      description: '',
+      content: contentFromString(response),
+      context: contextFromString(response),
       from: undefined,
     }
     : response
@@ -56,7 +76,6 @@ const handleSingleString = (ctx: ServiceContext<IOClients, void, void>, behavior
 
   return ctx.loaders.messagesV2!.load({
     behavior,
-    context,
     from,
     to,
     ...resObj,
