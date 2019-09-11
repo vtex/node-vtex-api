@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.50.0] - 2019-09-11
+
+## [3.50.0-beta] - 2019-09-11
+### Added
+- Add `platform` to `ctx`
+- Export list of all available public domains
+
 ## [3.49.0] - 2019-09-10
 
 ## [3.48.3] - 2019-09-09
@@ -29,7 +36,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [3.47.2] - 2019-09-02
 
 ### Fixed
-- Update missing changelog. 
+- Update missing changelog.
 - Remove if statements on existence of ctx.vtex.logger
 
 ## [3.47.1] - 2019-08-29
