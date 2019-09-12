@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Add `platform` to `ctx`
 
 ## [3.50.1] - 2019-09-11
 
@@ -13,7 +15,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [3.50.0-beta] - 2019-09-11
 ### Added
-- Add `platform` to `ctx`
 - Export list of all available public domains
 
 ## [3.49.0] - 2019-09-10
