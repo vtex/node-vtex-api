@@ -64,7 +64,7 @@ export class HttpClient {
       params, operationId,
       tenant,
       verbose,
-      cancelation,
+      cancellation,
     } = opts
     this.name = name || baseURL || 'unknown'
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
@@ -92,7 +92,7 @@ export class HttpClient {
       metricsMiddleware({metrics, serverTiming, name}),
       memoizationMiddleware({memoizedCache}),
       ...recorder ? [recorderMiddleware(recorder)] : [],
-      cancelationToken(cancelation),
+      cancelationToken(cancellation),
       singleFlightMiddleware,
       acceptNotFoundMiddleware,
       ...memoryCache ? [cacheMiddleware({type: CacheType.Memory, storage: memoryCache})] : [],

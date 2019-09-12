@@ -5,9 +5,9 @@ import { ServiceContext } from '../../typings'
 
 export async function cancelationToken<T extends IOClients, U, V>(ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
   if (ctx.method.toUpperCase() === 'GET') {
-    ctx.vtex.cancelation = {
+    ctx.vtex.cancellation = {
       cancelable: true,
-      canceled: false,
+      cancelled: false,
       source: axios.CancelToken.source(),
     }
   }
