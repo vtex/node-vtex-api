@@ -5,9 +5,9 @@ export const cancelationToken = (cancelation?: Cancelation) => async (ctx: Middl
   const { config: { method } } = ctx
 
   if (!cancelation) {
-    return await next()
+    await next()
+    return
   }
-
   if (method && method.toUpperCase() !== 'GET') {
     cancelation.cancelable = false
   }
