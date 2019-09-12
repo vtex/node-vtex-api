@@ -26,9 +26,9 @@ export const incomingRequestStats = new IncomingRequestStats()
 const requestClosed = <T extends IOClients, U, V>(ctx: ServiceContext<T, U, V>) => () => {
   incomingRequestStats.closed++
 
-  if (ctx.vtex.cancelation && ctx.vtex.cancelation.cancelable) {
-    ctx.vtex.cancelation.source.cancel()
-    ctx.vtex.cancelation.canceled = true
+  if (ctx.vtex.cancellation && ctx.vtex.cancellation.cancelable) {
+    ctx.vtex.cancellation.source.cancel()
+    ctx.vtex.cancellation.cancelled = true
   }
 }
 const requestAborted = () => {

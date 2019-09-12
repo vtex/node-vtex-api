@@ -86,7 +86,7 @@ export interface DataSources {
 
 export interface Cancelation {
   cancelable: boolean
-  canceled: boolean
+  cancelled: boolean
   source: CancelTokenSource
 }
 
@@ -122,7 +122,7 @@ export interface IOContext {
   eventInfo?: EventBody
   host?: string
   tenant?: Tenant
-  cancelation?: Cancelation
+  cancellation?: Cancelation
 }
 
 export interface EventBody {
