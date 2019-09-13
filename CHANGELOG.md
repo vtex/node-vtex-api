@@ -7,13 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.50.2] - 2019-09-13
+
+## [3.50.2-beta] - 2019-09-12
+### Added
+- Add `platform` to `ctx`
+
 ## [3.50.1] - 2019-09-11
 
 ## [3.50.0] - 2019-09-11
 
 ## [3.50.0-beta] - 2019-09-11
 ### Added
-- Add `platform` to `ctx`
 - Export list of all available public domains
 
 ## [3.49.0] - 2019-09-10
