@@ -112,6 +112,7 @@ export interface IOContext {
   serverTiming?: ServerTiming
   logger: Logger
   eventInfo?: EventBody
+  host?: string
 }
 
 export interface EventBody {

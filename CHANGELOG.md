@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.51.1] - 2019-09-13
+### Fixed
+- Add host to IOContext
+
+## [3.51.0] - 2019-09-13
+### Added
+- Forward x-forwarded-host header.
+- Add vary x-forwarded-host.
+
 ## [3.50.2] - 2019-09-13
 
 ## [3.50.2-beta] - 2019-09-12
