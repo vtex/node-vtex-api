@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.50.2] - 2019-09-13
+
 ## [3.50.2-beta] - 2019-09-12
 ### Added
 - Add `platform` to `ctx`
