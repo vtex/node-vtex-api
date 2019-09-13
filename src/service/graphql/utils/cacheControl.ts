@@ -2,9 +2,9 @@ import { CacheControlFormat, CacheScope } from 'apollo-cache-control'
 import { GraphQLResponse } from 'graphql-extensions'
 import { any, compose, equals, isNil, min, path, pluck as rPluck, reduce, reject, replace, test } from 'ramda'
 
+import { PUBLIC_DOMAINS } from '../../../utils/domain'
 import { GraphQLServiceContext } from '../typings'
 import { maxAgeEnums } from '../utils/maxAgeEnum'
-import { PUBLIC_DOMAINS } from '../../../utils/domain'
 
 type CacheControlHintsFormat = CacheControlFormat['hints']
 

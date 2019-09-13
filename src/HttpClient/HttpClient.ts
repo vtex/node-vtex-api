@@ -5,7 +5,7 @@ import compose, { Middleware } from 'koa-compose'
 import pLimit from 'p-limit'
 
 import { CacheLayer } from '../caches/CacheLayer'
-import { BODY_HASH, LOCALE_HEADER, PRODUCT_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../constants'
+import { BODY_HASH, FORWARDED_HOST_HEADER, LOCALE_HEADER, PRODUCT_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../constants'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { forExternal, forRoot, forWorkspace } from './factories'
 import { CacheableRequestConfig, Cached, cacheMiddleware, CacheType } from './middlewares/cache'
@@ -45,6 +45,7 @@ interface ClientOptions {
   verbose?: boolean
   name?: string
   product?: string
+  host?: string
 }
 
 export class HttpClient {
@@ -75,6 +76,7 @@ export class HttpClient {
       retries,
       concurrency,
       headers: defaultHeaders,
+      host,
       params, operationId,
       verbose,
     } = opts
@@ -84,11 +86,12 @@ export class HttpClient {
       ...defaultHeaders,
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
+      ... host ? {[FORWARDED_HOST_HEADER]: host} : null,
+      ... locale ? {[LOCALE_HEADER]: locale} : null,
       ... operationId ? {'x-vtex-operation-id': operationId} : null,
+      ... product ? {[PRODUCT_HEADER]: product} : null,
       ... segmentToken ? {[SEGMENT_HEADER]: segmentToken} : null,
       ... sessionToken ? {[SESSION_HEADER]: sessionToken} : null,
-      ... product ? {[PRODUCT_HEADER]: product} : null,
-      ... locale ? {[LOCALE_HEADER]: locale} : null,
     }
 
     if (authType && authToken) {
