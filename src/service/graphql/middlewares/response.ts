@@ -1,6 +1,6 @@
 import { isEmpty, pick, reject } from 'ramda'
 
-import { SEGMENT_HEADER } from '../../../constants'
+import { FORWARDED_HOST_HEADER, SEGMENT_HEADER } from '../../../constants'
 import { GraphQLServiceContext } from '../typings'
 import { cacheControl } from '../utils/cacheControl'
 
@@ -23,6 +23,7 @@ export async function response (ctx: GraphQLServiceContext, next: () => Promise<
     'Cache-Control': cacheControlHeader,
   })
 
+  ctx.vary(FORWARDED_HOST_HEADER)
   if (segment) {
     ctx.vary(SEGMENT_HEADER)
   }
