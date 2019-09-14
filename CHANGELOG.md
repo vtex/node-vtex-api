@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Add saveV2 method in MessagesGraphQL client
+
 ## [3.51.1] - 2019-09-13
 ### Fixed
 - Add host to IOContext
