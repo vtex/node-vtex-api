@@ -27,6 +27,13 @@ export interface IOMessageSaveInput extends IOMessageInput {
   content: string
 }
 
+export interface MessageSaveInputV2 {
+  srcMessage: string
+  context?: string
+  targetMessage: string
+  groupContext?: string
+}
+
 export interface Translate {
   messages: MessagesInput[]
   from?: string
@@ -45,6 +52,12 @@ export interface SaveArgs {
     messages: IOMessageSaveInput[]
     provider: string
   }>
+}
+
+export interface SaveArgsV2 {
+  to: string
+  messages: MessageSaveInputV2[]
+  from?: string
 }
 
 interface TranslateResponse {
@@ -92,6 +105,17 @@ export class MessagesGraphQL extends AppGraphQLClient {
   }, {
     metric: 'messages-save-translation',
   }).then(path(['data', 'save'])) as Promise<boolean>
+
+  public saveV2 = (args: SaveArgsV2): Promise<boolean> => this.graphql.mutate<boolean, { args: SaveArgsV2 }>({
+    mutate: `
+    mutation Save($args: SaveArgsV2!) {
+      saveV2(args: $args)
+    }
+    `,
+    variables: { args },
+  }, {
+    metric: 'messages-saveV2-translation',
+  }).then(path(['data', 'saveV2'])) as Promise<boolean>
 
 }
 
