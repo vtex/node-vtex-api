@@ -1,4 +1,3 @@
-import { TranslatableV2 } from './TranslatableV2';
 import { map } from 'bluebird'
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
@@ -10,6 +9,9 @@ import { messagesLoaderV2 } from '../messagesLoaderV2'
 
 const CONTEXT_LEFT_DELIMITER = '((('
 const CONTEXT_RIGHT_DELIMITER = ')))'
+const FROM_LEFT_DELIMITER = '<<<'
+const FROM_RIGHT_DELIMITER = '>>>'
+
 
 export class TranslatableV2 extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, ServiceContext>) {
@@ -29,31 +31,39 @@ export class TranslatableV2 extends SchemaDirectiveVisitor {
   }
 }
 
-export interface TranslatableStringV2 {
+export interface TranslatableMessageV2 {
+  from: string
+  tString: string
+}
+
+interface TranslatableMessageParsed {
   from: string
   content: string
   context?: string
 }
 
-const parseTranslatableStringV2 = (rawMessage: string): TranslatableStringV2 => {
+const parseTranslatableStringV2 = (rawMessage: string): TranslatableMessageParsed => {
   let context
   let content = rawMessage
   const splitted = rawMessage.split(CONTEXT_LEFT_DELIMITER)
 
   if (splitted.length === 2) {
-
-    context = splitted[1].replace(CONTEXT_RIGHT_DELIMITER, '')
     content = splitted[0]
+    context = splitted[1].substring(0,splitted[1].lastIndexOf(CONTEXT_RIGHT_DELIMITER))
   }
+
+  const from = rawMessage.substring(rawMessage.lastIndexOf(FROM_LEFT_DELIMITER)+FROM_LEFT_DELIMITER.length,
+  rawMessage.lastIndexOf(FROM_RIGHT_DELIMITER))
 
   return {
     content,
     context,
+    from,
   }
 }
 
-const formatTranslatableStringV2 = ({from, content, context}: TranslatableStringV2): string =>
-  `${content} (((${context || ''}))) |||${from}|||`
+export const formatTranslatableStringV2 = ({from, tString}: TranslatableMessageV2): string =>
+`${tString}${FROM_LEFT_DELIMITER}${from}${FROM_RIGHT_DELIMITER}`
 
 const handleSingleString = (ctx: ServiceContext<IOClients, void, void>, behavior: Behavior) => async (rawMessage: string | null) => {
   // Messages only knows how to process non empty strings.
@@ -61,7 +71,7 @@ const handleSingleString = (ctx: ServiceContext<IOClients, void, void>, behavior
     return rawMessage
   }
 
-  const { content, context } = parseTranslatableStringV2(rawMessage)
+  const { content, context, from } = parseTranslatableStringV2(rawMessage)
   const { clients: { segment }, vtex: { locale } } = ctx
 
   if (content == null) {
