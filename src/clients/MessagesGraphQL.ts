@@ -57,7 +57,7 @@ export interface SaveArgs {
 export interface SaveArgsV2 {
   to: string
   messages: MessageSaveInputV2[]
-  from?: string
+  from: string
 }
 
 interface TranslateResponse {
