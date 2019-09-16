@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.53.0] - 2019-09-16
+### Changed
+- TranslatableV2 support for context and from in message encoding
+
+### Changed
+- Resolve context in message at directive translatableV2
+
 ## [3.52.0] - 2019-09-16
 
 ### Added
