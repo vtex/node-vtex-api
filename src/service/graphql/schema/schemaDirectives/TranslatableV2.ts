@@ -1,17 +1,16 @@
 import { map } from 'bluebird'
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
+import { path, prop } from 'ramda'
 
-import { Behavior } from '../../../../clients'
+import { Behavior, Segment } from '../../../../clients'
 import { IOClients } from '../../../../clients/IOClients'
 import { ServiceContext } from '../../../typings'
 import { messagesLoaderV2 } from '../messagesLoaderV2'
 
-const CONTEXT_LEFT_DELIMITER = '((('
-const CONTEXT_RIGHT_DELIMITER = ')))'
-const FROM_LEFT_DELIMITER = '<<<'
-const FROM_RIGHT_DELIMITER = '>>>'
-
+const CONTEXT_REGEX = /\(\(\((?<context>(.)*)\)\)\)/
+const FROM_REGEX = /\<\<\<(?<from>(.)*)\>\>\>/
+const CONTENT_REGEX = /\(\(\((?<context>(.)*)\)\)\)|\<\<\<(?<from>(.)*)\>\>\>/g
 
 export class TranslatableV2 extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, ServiceContext>) {
@@ -32,42 +31,31 @@ export class TranslatableV2 extends SchemaDirectiveVisitor {
 }
 
 export interface TranslatableMessageV2 {
-  from: string
+  from?: string
   content: string
   context?: string
 }
 
-const parseTranslatableStringV2 = (rawMessage: string): TranslatableMessageV2 => {
-  let context
-  let content
-
-  const from = rawMessage.includes(FROM_LEFT_DELIMITER) && rawMessage.includes(FROM_RIGHT_DELIMITER)?
-  rawMessage.substring(rawMessage.lastIndexOf(FROM_LEFT_DELIMITER)+FROM_LEFT_DELIMITER.length,
-  rawMessage.lastIndexOf(FROM_RIGHT_DELIMITER))
-  : ''
-
-  const splitted = rawMessage.split(CONTEXT_LEFT_DELIMITER)
-  if (splitted.length === 2) {
-    content = splitted[0]
-    context = splitted[1].substring(0,splitted[1].lastIndexOf(CONTEXT_RIGHT_DELIMITER))
-  }
-  else{
-    content = rawMessage.substring(0,rawMessage.lastIndexOf(FROM_LEFT_DELIMITER))
-  }
+export const parseTranslatableStringV2 = (rawMessage: string): TranslatableMessageV2 => {
+  const context = path<string>(['groups', 'context'], rawMessage.match(CONTEXT_REGEX) || {})
+  const from = path<string>(['groups', 'from'], rawMessage.match(FROM_REGEX) || {})
+  const content = rawMessage.replace(CONTENT_REGEX, '')
 
   return {
-    content,
-    context,
-    from,
+    content: content && content.trim(),
+    context: context && context.trim(),
+    from: from && from.trim(),
   }
 }
 
-export const formatTranslatableStringV2 = ({from, content, context}: TranslatableMessageV2): string => {
-  if (context){
-    return `${content}${CONTEXT_LEFT_DELIMITER}${context}${CONTEXT_RIGHT_DELIMITER}${FROM_LEFT_DELIMITER}${from}${FROM_RIGHT_DELIMITER}`
-  }
-  return `${content}${FROM_LEFT_DELIMITER}${from}${FROM_RIGHT_DELIMITER}`
-}
+export const formatTranslatableStringV2 = ({from, content, context}: TranslatableMessageV2): string =>
+  `${content} ${context ? `(((${context})))` : ''} ${from ? `<<<${from}>>>` : ''}`
+
+export const localeFromTenant = (segment: Segment) =>
+  segment.getSegmentByToken(null).then(prop('cultureInfo'))
+
+export const localeFromSegment = (segment: Segment) =>
+  segment.getSegment().then(prop('cultureInfo'))
 
 const handleSingleString = (ctx: ServiceContext<IOClients, void, void>, behavior: Behavior) => async (rawMessage: string | null) => {
   // Messages only knows how to process non empty strings.
@@ -75,17 +63,16 @@ const handleSingleString = (ctx: ServiceContext<IOClients, void, void>, behavior
     return rawMessage
   }
 
-  const { content, context, from } = parseTranslatableStringV2(rawMessage)
+  const { content, context, from: maybeFrom } = parseTranslatableStringV2(rawMessage)
   const { clients: { segment }, vtex: { locale } } = ctx
 
   if (content == null) {
     throw new Error(`@translatable directive needs a content to translate, but received ${JSON.stringify(rawMessage)}`)
   }
 
-  const to =
-    locale != null
-    ? locale
-    : (await segment.getSegment()).cultureInfo
+  const toPromise = locale || localeFromSegment(segment)
+  const fromPromise = maybeFrom || localeFromTenant(segment)
+  const [to, from] = await Promise.all([toPromise, fromPromise])
 
   // If the message is already in the target locale, return the content.
   if (!to || from === to) {
