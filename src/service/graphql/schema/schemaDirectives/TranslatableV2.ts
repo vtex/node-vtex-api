@@ -33,27 +33,28 @@ export class TranslatableV2 extends SchemaDirectiveVisitor {
 
 export interface TranslatableMessageV2 {
   from: string
-  tString: string
+  content: string
 }
 
-interface TranslatableMessageParsed {
-  from: string
-  content: string
+interface TranslatableMessageParsed extends TranslatableMessageV2 {
   context?: string
 }
 
 const parseTranslatableStringV2 = (rawMessage: string): TranslatableMessageParsed => {
   let context
-  let content = rawMessage
-  const splitted = rawMessage.split(CONTEXT_LEFT_DELIMITER)
+  let content
 
+  const from = rawMessage.substring(rawMessage.lastIndexOf(FROM_LEFT_DELIMITER)+FROM_LEFT_DELIMITER.length,
+  rawMessage.lastIndexOf(FROM_RIGHT_DELIMITER))
+
+  const splitted = rawMessage.split(CONTEXT_LEFT_DELIMITER)
   if (splitted.length === 2) {
     content = splitted[0]
     context = splitted[1].substring(0,splitted[1].lastIndexOf(CONTEXT_RIGHT_DELIMITER))
   }
-
-  const from = rawMessage.substring(rawMessage.lastIndexOf(FROM_LEFT_DELIMITER)+FROM_LEFT_DELIMITER.length,
-  rawMessage.lastIndexOf(FROM_RIGHT_DELIMITER))
+  else{
+    content = rawMessage.substring(0,rawMessage.lastIndexOf(FROM_LEFT_DELIMITER))
+  }
 
   return {
     content,
@@ -62,7 +63,7 @@ const parseTranslatableStringV2 = (rawMessage: string): TranslatableMessageParse
   }
 }
 
-export const formatTranslatableStringV2 = ({from, tString}: TranslatableMessageV2): string =>
+export const formatTranslatableStringV2 = ({from, content: tString}: TranslatableMessageV2): string =>
 `${tString}${FROM_LEFT_DELIMITER}${from}${FROM_RIGHT_DELIMITER}`
 
 const handleSingleString = (ctx: ServiceContext<IOClients, void, void>, behavior: Behavior) => async (rawMessage: string | null) => {
