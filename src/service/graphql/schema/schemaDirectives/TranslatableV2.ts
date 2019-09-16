@@ -44,8 +44,10 @@ const parseTranslatableStringV2 = (rawMessage: string): TranslatableMessageParse
   let context
   let content
 
-  const from = rawMessage.substring(rawMessage.lastIndexOf(FROM_LEFT_DELIMITER)+FROM_LEFT_DELIMITER.length,
+  const from = rawMessage.includes(FROM_LEFT_DELIMITER) && rawMessage.includes(FROM_RIGHT_DELIMITER)?
+  rawMessage.substring(rawMessage.lastIndexOf(FROM_LEFT_DELIMITER)+FROM_LEFT_DELIMITER.length,
   rawMessage.lastIndexOf(FROM_RIGHT_DELIMITER))
+  : ''
 
   const splitted = rawMessage.split(CONTEXT_LEFT_DELIMITER)
   if (splitted.length === 2) {
