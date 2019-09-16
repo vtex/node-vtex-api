@@ -34,13 +34,10 @@ export class TranslatableV2 extends SchemaDirectiveVisitor {
 export interface TranslatableMessageV2 {
   from: string
   content: string
-}
-
-interface TranslatableMessageParsed extends TranslatableMessageV2 {
   context?: string
 }
 
-const parseTranslatableStringV2 = (rawMessage: string): TranslatableMessageParsed => {
+const parseTranslatableStringV2 = (rawMessage: string): TranslatableMessageV2 => {
   let context
   let content
 
@@ -65,8 +62,12 @@ const parseTranslatableStringV2 = (rawMessage: string): TranslatableMessageParse
   }
 }
 
-export const formatTranslatableStringV2 = ({from, content: tString}: TranslatableMessageV2): string =>
-`${tString}${FROM_LEFT_DELIMITER}${from}${FROM_RIGHT_DELIMITER}`
+export const formatTranslatableStringV2 = ({from, content, context}: TranslatableMessageV2): string => {
+  if (context){
+    return `${content}${CONTEXT_LEFT_DELIMITER}${context}${CONTEXT_RIGHT_DELIMITER}${FROM_LEFT_DELIMITER}${from}${FROM_RIGHT_DELIMITER}`
+  }
+  return `${content}${FROM_LEFT_DELIMITER}${from}${FROM_RIGHT_DELIMITER}`
+}
 
 const handleSingleString = (ctx: ServiceContext<IOClients, void, void>, behavior: Behavior) => async (rawMessage: string | null) => {
   // Messages only knows how to process non empty strings.
