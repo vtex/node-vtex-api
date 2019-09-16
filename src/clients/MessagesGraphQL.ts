@@ -108,7 +108,7 @@ export class MessagesGraphQL extends AppGraphQLClient {
 
   public saveV2 = (args: SaveArgsV2): Promise<boolean> => this.graphql.mutate<boolean, { args: SaveArgsV2 }>({
     mutate: `
-    mutation Save($args: SaveArgsV2!) {
+    mutation SaveV2($args: SaveArgsV2!) {
       saveV2(args: $args)
     }
     `,
