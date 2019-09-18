@@ -113,6 +113,9 @@ export interface IOContext {
   logger: Logger
   eventInfo?: EventBody
   host?: string
+  tenant?: {
+    locale: string
+  }
 }
 
 export interface EventBody {
