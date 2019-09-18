@@ -14,7 +14,6 @@ import {
   TENANT_HEADER,
 } from '../constants'
 import { IOContext } from '../service/typings'
-import { InstanceOptions } from './../../lib/HttpClient/typings.d'
 import { forExternal, forRoot, forWorkspace } from './factories'
 import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
 import { singleFlightMiddleware } from './middlewares/inflight'
@@ -23,7 +22,7 @@ import { metricsMiddleware } from './middlewares/metrics'
 import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewares/notFound'
 import { recorderMiddleware } from './middlewares/recorder'
 import { defaultsMiddleware, requestMiddleware, routerCacheMiddleware } from './middlewares/request'
-import { IOResponse, MiddlewareContext, RequestConfig } from './typings'
+import { InstanceOptions, IOResponse, MiddlewareContext, RequestConfig } from './typings'
 
 const DEFAULT_TIMEOUT_MS = 1000
 const noTransforms = [(data: any) => data]
