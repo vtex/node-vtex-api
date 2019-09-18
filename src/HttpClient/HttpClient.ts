@@ -1,52 +1,34 @@
 import { AxiosResponse } from 'axios'
 import { createHash } from 'crypto'
 import { IncomingMessage } from 'http'
-import compose, { Middleware } from 'koa-compose'
+import compose from 'koa-compose'
 import pLimit from 'p-limit'
 
-import { CacheLayer } from '../caches/CacheLayer'
-import { BODY_HASH, FORWARDED_HOST_HEADER, LOCALE_HEADER, PRODUCT_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../constants'
-import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
+import {
+  BODY_HASH,
+  FORWARDED_HOST_HEADER,
+  LOCALE_HEADER,
+  PRODUCT_HEADER,
+  SEGMENT_HEADER,
+  SESSION_HEADER,
+  TENANT_HEADER,
+} from '../constants'
+import { IOContext } from '../service/typings'
+import { InstanceOptions } from './../../lib/HttpClient/typings.d'
 import { forExternal, forRoot, forWorkspace } from './factories'
-import { CacheableRequestConfig, Cached, cacheMiddleware, CacheType } from './middlewares/cache'
+import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
 import { singleFlightMiddleware } from './middlewares/inflight'
 import { memoizationMiddleware, Memoized } from './middlewares/memoization'
 import { metricsMiddleware } from './middlewares/metrics'
 import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewares/notFound'
 import { recorderMiddleware } from './middlewares/recorder'
 import { defaultsMiddleware, requestMiddleware, routerCacheMiddleware } from './middlewares/request'
-import { AuthType, IOResponse, MiddlewareContext, Recorder, RequestConfig } from './typings'
+import { IOResponse, MiddlewareContext, RequestConfig } from './typings'
 
 const DEFAULT_TIMEOUT_MS = 1000
 const noTransforms = [(data: any) => data]
 
-interface ClientOptions {
-  authType?: AuthType
-  authToken?: string
-  userAgent: string
-  baseURL?: string
-  locale?: string
-  timeout?: number
-  recorder?: Recorder
-  metrics?: MetricsAccumulator
-  serverTiming?: Record<string, string>
-  memoryCache?: CacheLayer<string, Cached>
-  diskCache?: CacheLayer<string, Cached>
-  segmentToken?: string
-  sessionToken?: string
-  retries?: number
-  concurrency?: number
-  // Default headers to be sent on every request
-  headers?: Record<string, string>
-  // Default query string parameters to be sent on every request
-  params?: Record<string, string>
-  middlewares?: Array<Middleware<MiddlewareContext>>
-  operationId: string
-  verbose?: boolean
-  name?: string
-  product?: string
-  host?: string
-}
+type ClientOptions = IOContext & Partial<InstanceOptions>
 
 export class HttpClient {
   public static forWorkspace = forWorkspace
@@ -78,6 +60,7 @@ export class HttpClient {
       headers: defaultHeaders,
       host,
       params, operationId,
+      tenant,
       verbose,
     } = opts
     this.name = name || baseURL || 'unknown'
@@ -87,6 +70,7 @@ export class HttpClient {
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
       ... host ? {[FORWARDED_HOST_HEADER]: host} : null,
+      ... tenant ? {[TENANT_HEADER]: tenant.locale} : null,
       ... locale ? {[LOCALE_HEADER]: locale} : null,
       ... operationId ? {'x-vtex-operation-id': operationId} : null,
       ... product ? {[PRODUCT_HEADER]: product} : null,
