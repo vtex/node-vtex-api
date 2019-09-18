@@ -36,3 +36,5 @@ export const messagesLoaderV2 = (clients: IOClients) =>
     const translationsInOriginalOrder = sortByIndex(indexedTranslations)
     return pluck(1, translationsInOriginalOrder)
   })
+
+export type MessagesLoaderV2 = ReturnType<typeof messagesLoaderV2>
