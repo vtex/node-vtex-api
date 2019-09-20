@@ -23,6 +23,7 @@ import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewa
 import { recorderMiddleware } from './middlewares/recorder'
 import { defaultsMiddleware, requestMiddleware, routerCacheMiddleware } from './middlewares/request'
 import { InstanceOptions, IOResponse, MiddlewareContext, RequestConfig } from './typings'
+import { formatTenantHeaderValue } from '../utils/tenant'
 
 const DEFAULT_TIMEOUT_MS = 1000
 const noTransforms = [(data: any) => data]
@@ -69,7 +70,7 @@ export class HttpClient {
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
       ... host ? {[FORWARDED_HOST_HEADER]: host} : null,
-      ... tenant ? {[TENANT_HEADER]: tenant.locale} : null,
+      ... tenant ? {[TENANT_HEADER]: formatTenantHeaderValue(tenant)} : null,
       ... locale ? {[LOCALE_HEADER]: locale} : null,
       ... operationId ? {'x-vtex-operation-id': operationId} : null,
       ... product ? {[PRODUCT_HEADER]: product} : null,
