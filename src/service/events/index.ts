@@ -3,7 +3,6 @@ import { ClientsImplementation, IOClients } from '../../clients/IOClients'
 import { InstanceOptions } from '../../HttpClient'
 import { clients } from '../http/middlewares/clients'
 import { error } from '../http/middlewares/error'
-import { logger } from '../http/middlewares/logger'
 import { timings } from '../http/middlewares/timings'
 import { EventHandler, ServiceContext } from '../typings'
 import { composeForEvents } from '../utils/compose'
@@ -14,7 +13,7 @@ export const createEventHandler = <ClientsT extends IOClients, StateT, CustomT>(
 ) => {
   return (handler: EventHandler<ClientsT, StateT> | Array<EventHandler<ClientsT, StateT>>) => {
     const middlewares = Array.isArray(handler) ? handler : [handler]
-    const pipeline = [logger, clients(Clients, options), timings, error, contextAdapter<ClientsT, StateT, CustomT>(middlewares) ]
+    const pipeline = [clients(Clients, options), timings, error, contextAdapter<ClientsT, StateT, CustomT>(middlewares) ]
     return composeForEvents(pipeline)
   }
 }
