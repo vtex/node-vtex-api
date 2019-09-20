@@ -11,6 +11,7 @@ import { IOMessageV2 } from '../clients/MessagesGraphQL'
 import { InstanceOptions } from '../HttpClient'
 import { Recorder } from '../HttpClient/middlewares/recorder'
 import { IOMessage } from '../utils/message'
+import { Tenant } from '../utils/tenant'
 import { Logger } from './logger'
 
 type ServerTiming = Record<string, string>
@@ -113,6 +114,7 @@ export interface IOContext {
   logger: Logger
   eventInfo?: EventBody
   host?: string
+  tenant?: Tenant
 }
 
 export interface EventBody {
