@@ -26,6 +26,8 @@ interface Tenant {
   metadata: Record<string, string>
 }
 
+const TEN_MINUTES_S = 10 * 60
+
 export class TenantClient extends ExternalClient {
   constructor(ctx: IOContext, opts?: InstanceOptions) {
     super('http://portal.vtexcommercestable.com.br/api/tenant', ctx, {
@@ -36,5 +38,10 @@ export class TenantClient extends ExternalClient {
     })
   }
 
-  public info = () => this.http.get<Tenant>('/tenants')
+  public info = () => this.http.get<Tenant>('/tenants', {
+    forceMaxAge: TEN_MINUTES_S,
+    memoizeable: true,
+    metric: 'get-tenant-info',
+    nullIfNotFound: true,
+  })
 }
