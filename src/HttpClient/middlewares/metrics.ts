@@ -114,7 +114,7 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
             ...errorCode || errorStatus ? {errorCode, errorStatus} : null,
             millis: end
               ? hrToMillis(end)
-              : extensions.revalidated || extensions.router
+              : extensions.revalidated || extensions.router || status !== 'success'
                 ? hrToMillis(process.hrtime(start))
                 : '(from cache)',
             status: ctx.response && ctx.response.status, // tslint:disable-next-line

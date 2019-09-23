@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.54.1] - 2019-09-23
+### Added
+- Tenant client added
+
+## [3.54.0] - 2019-09-23
+### Changed
+- Logger client instantiated in service-node
+- `@translatableV2` directive uses language from context instead of making an IO 
+
 ## [3.53.0] - 2019-09-16
 ### Changed
 - TranslatableV2 support for context and from in message encoding
