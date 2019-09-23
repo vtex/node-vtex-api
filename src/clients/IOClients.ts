@@ -1,6 +1,26 @@
-import { Apps, Billing, BillingMetrics, Builder, Events, ID, LicenseManager, Logger, Messages, MessagesGraphQL, Metadata, Registry, Router, Segment, Session, Settings, VBase, Workspaces } from '.'
+import {
+  Apps,
+  Billing,
+  BillingMetrics,
+  Builder,
+  Events,
+  ID,
+  LicenseManager,
+  Logger,
+  Messages,
+  MessagesGraphQL,
+  Metadata,
+  Registry,
+  Router,
+  Segment,
+  Session,
+  Settings,
+  VBase,
+  Workspaces,
+} from '.'
 import { InstanceOptions, IOClient, IOClientConstructor } from '../HttpClient'
 import { IOContext } from '../service/typings'
+import { TenantClient } from './Tenant'
 
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: Record<string, InstanceOptions>,
@@ -77,6 +97,10 @@ export class IOClients {
 
   public get session() {
     return this.getOrSet('session', Session)
+  }
+
+  public get tenant() {
+    return this.getOrSet('tenant', TenantClient)
   }
 
   public get vbase() {
