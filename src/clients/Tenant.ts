@@ -1,5 +1,6 @@
+import { inflightUrlWithQuery } from '../HttpClient'
 import { ExternalClient } from '../HttpClient/ExternalClient'
-import { InstanceOptions } from '../HttpClient/typings'
+import { InstanceOptions, RequestConfig } from '../HttpClient/typings'
 import { IOContext } from '../service/typings'
 
 interface Binding {
@@ -26,8 +27,6 @@ interface Tenant {
   metadata: Record<string, string>
 }
 
-const TEN_MINUTES_S = 10 * 60
-
 export class TenantClient extends ExternalClient {
   constructor(ctx: IOContext, opts?: InstanceOptions) {
     super('http://portal.vtexcommercestable.com.br/api/tenant', ctx, {
@@ -38,10 +37,10 @@ export class TenantClient extends ExternalClient {
     })
   }
 
-  public info = () => this.http.get<Tenant>('/tenants', {
-    forceMaxAge: TEN_MINUTES_S,
+  public info = (config?: RequestConfig) => this.http.get<Tenant>('/tenants', {
+    inflightKey: inflightUrlWithQuery,
     memoizeable: true,
     metric: 'get-tenant-info',
-    nullIfNotFound: true,
+    ...config,
   })
 }
