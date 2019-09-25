@@ -14,6 +14,7 @@ const [runningAppName] = appId ? appId.split('@') : ['']
 
 const routes = {
   Bucket: (bucket: string) => `/buckets/${runningAppName}/${bucket}`,
+  Conflicts: (bucket: string) => `/buckets/${runningAppName}/${bucket}/conflicts`,
   File: (bucket: string, path: string) => `${routes.Bucket(bucket)}/files/${path}`,
   Files: (bucket: string) => `${routes.Bucket(bucket)}/files`,
 }
@@ -58,10 +59,19 @@ export class VBase extends InfraClient {
     return this.http.getBuffer(routes.File(bucket, path), {metric, inflightKey})
   }
 
-  public getJSON = <T>(bucket: string, path: string, nullIfNotFound?: boolean) => {
+  public getJSON = <T>(bucket: string, path: string, nullIfNotFound?: boolean, conflictsResolver?: ConflictsResolver) => {
+    const headers = conflictsResolver? {'X-Vtex-Detect-Conflicts': true}: {}
     const inflightKey = inflightURL
     const metric = 'vbase-get-json'
-    return this.http.get<T>(routes.File(bucket, path), {nullIfNotFound, metric, inflightKey} as IgnoreNotFoundRequestConfig)
+    return this.http.get<T>(routes.File(bucket, path), {nullIfNotFound, metric, inflightKey, headers} as IgnoreNotFoundRequestConfig).then((data)=>{
+      return data
+    }).catch(error =>{
+      const {response} = error
+      if(response.status === 409 && conflictsResolver){
+        return conflictsResolver.resolve()
+      }
+      throw Error(error)
+    })
   }
 
   public getFileStream = (bucket: string, path: string): Promise<IncomingMessage> => {
@@ -88,6 +98,19 @@ export class VBase extends InfraClient {
 
   public deleteFile = (bucket: string, path: string) => {
     return this.http.delete(routes.File(bucket, path), {metric: 'vbase-delete-file'})
+  }
+
+  public getConflicts = <T>(bucket: string) => {
+    return this.http.get<T>(routes.Conflicts(bucket), {metric: 'vbase-get-conflicts'})
+  }
+
+  public resolveConflict = <T>(bucket: string, path: string, content: any) => {
+    const data = [{ 
+      op: 'replace',
+      path,
+      value: content,
+    }]
+    return this.http.patch<T>(routes.Conflicts(bucket), data,  {metric: 'vbase-resolve-conflicts'})
   }
 
   private saveContent = (bucket: string, path: string, stream: Readable, opts: VBaseSaveOptions = {}) => {
@@ -129,4 +152,23 @@ export interface VBaseSaveOptions {
   gzip?: boolean,
   unzip?: boolean,
   ttl?: number,
+}
+
+export interface VBaseConflictData{
+  path: string,
+  base: VBaseConflict,
+  master: VBaseConflict,
+  mine: VBaseConflict
+}
+
+export interface VBaseConflict{
+  contentOmitted: boolean,
+  deleted: boolean,
+  mimeType: string,
+  parsedContent?: any,
+  content: string,
+}
+
+export interface ConflictsResolver{
+  resolve: () => {}
 }
