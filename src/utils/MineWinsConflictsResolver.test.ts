@@ -35,6 +35,16 @@ describe('MineWinsConflictsResolver', () => {
     expect(result).toEqual(expected)
   })
 
+  it('Should only add master object to mine if it wasn deleted', async () => {
+    const master = { b: 1 }
+    const base = { b: 1 }
+    const mine = {}
+    const expected = {}
+
+    const result = resolver.mergeMineWins(base, master, mine)
+    expect(result).toEqual(expected)
+  })
+
   it('Should delete object from mine when it is deleted from master and there is no conflict', async () => {
     const master = {}
     const base = { a: 1 }
@@ -77,7 +87,7 @@ describe('MineWinsConflictsResolver', () => {
 
   it('Should keep mine array values in case of conflicts on comparableKeys', async () => {
     const master = [{ a: 1, c: 3 }, { b: 2 }]
-    const base = [{}]
+    const base = [] as any
     const mine = [{ a: 1 }]
     const expected = [{ a: 1 }, { b: 2 }]
 
@@ -90,6 +100,16 @@ describe('MineWinsConflictsResolver', () => {
     const base = [{ a: 1 }]
     const mine = [{ a: 1 }, { b: 2 }]
     const expected = [{ b: 2 }]
+
+    const result = resolver.mergeMineWins(base, master, mine)
+    expect(result).toEqual(expected)
+  })
+
+  it('Should only append array value to mine if it wasnt deleted from it', async () => {
+    const master = [{ b: 1 }]
+    const base = [{ b: 1 }]
+    const mine = [] as any
+    const expected = [] as any
 
     const result = resolver.mergeMineWins(base, master, mine)
     expect(result).toEqual(expected)

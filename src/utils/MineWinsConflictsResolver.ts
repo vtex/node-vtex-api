@@ -25,7 +25,7 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
   }
 
   public async resolve() {
-    return await this.client.getConflicts<AxiosResponse<VBaseConflictData[]>>(this.bucket).then((data) => {
+    return await this.client.getConflicts<AxiosResponse<VBaseConflictData[]>>(this.bucket).then(data => {
       const { data: conflicts }: { data: VBaseConflictData[] } = data
       const selectedConflict = conflicts.find(conflict => conflict.path === this.filePath)
       if (!selectedConflict) {
@@ -86,12 +86,20 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
     return mine.parsedContent
   }
 
-  private mergeMineWinsObject(base: Record<string, object | object[]>, master: Record<string, object | object[]>, mine: Record<string, object | object[]>) {
+  private mergeMineWinsObject(
+    base: Record<string, object | object[]>,
+    master: Record<string, object | object[]>,
+    mine: Record<string, object | object[]>
+  ) {
     const merged = { ...master, ...mine }
+
     Object.entries(merged).forEach(([key, value]) => {
       if (master[key] == null && base[key] != null && equals(value, base[key])) {
         delete merged[key] // value deleted from master with no conflict
-      } else if (isArray(value)) {
+      }else if(base[key] && master[key] && !mine[key]){
+        delete merged[key] // value deleted from mine
+      }
+      else if (isArray(value)) {
         this.mergeMineWinsArray(base[key] as object[], master[key] as object[], value)
       } else if (isObject(value)) {
         this.mergeMineWins(base[key] as Configuration, master[key] as Configuration, value as Configuration)
@@ -102,7 +110,7 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
 
   private mergeMineWinsArray(base: object[], master: object[], mine: object[]) {
     this.removeMasterDeletedElements(base, master, mine)
-    this.appendMasterAddedElements(master, mine)
+    this.appendMasterAddedElements(base, master, mine)
     return mine
   }
 
@@ -122,17 +130,22 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
     return array.find(item => equals(item, obj))
   }
 
-  private appendMasterAddedElements(master: object[], mine: object[]) {
+  private appendMasterAddedElements(base: object[], master: object[], mine: object[]) {
     master.forEach(item => {
-      if (this.shouldAddToArray(item, mine)) {
+      if (this.shouldAddToMine(item, base, mine)) {
         mine.push(item)
       }
     })
   }
 
-  private shouldAddToArray(item: object, array: object[]) {
-    return this.comparableKeys
-      ? !array.some(mineItem => this.comparableKeys!.some(key => eqProps(key, item, mineItem)))
-      : !array.some(mineItem => equals(mineItem, item))
+  private shouldAddToMine(item: object, base: object[], mine: object[]) {
+    if (this.comparableKeys) {
+      return (
+        !mine.some(mineItem => this.comparableKeys!.some(key => eqProps(key, item, mineItem))) &&
+        !base.some(baseItem => this.comparableKeys!.some(key => eqProps(key, item, baseItem)))
+      )
+    }
+
+    return !mine.some(mineItem => equals(mineItem, item)) && !base.some(baseItem => equals(baseItem, item))
   }
 }
