@@ -25,26 +25,13 @@ const createFormatError = (details: any) => (error: any) => {
       delete formattedError.originalError.stack
     }
 
-    if (!formattedError.extensions.exception) {
-      formattedError.extensions.exception = {
-        message: formattedError.originalError.message,
-        name: formattedError.originalError.name,
-        stack: formattedError.originalError.stack,
-        ...formattedError.originalError,
-      }
-    } else {
-      const extendedException = {
-        message: formattedError.originalError.message,
-        name: formattedError.originalError.name,
-        stack: formattedError.originalError.stack,
-        ...formattedError.originalError,
-        ...formattedError.extensions.exception,
-      }
-      formattedError.extensions.exception = cleanError(extendedException)
+    formattedError.extensions.exception = {
+      ...cleanError(formattedError.extensions.exception),
+      message: formattedError.originalError.message,
+      name: formattedError.originalError.name,
+      stack: formattedError.originalError.stack,
+      ...formattedError.originalError,
     }
-
-    // Make originalError not enumerable to prevent duplicated log and response information
-    Object.defineProperty(formattedError, 'originalError', {enumerable: false})
   }
 
   Object.assign(formattedError, details)
