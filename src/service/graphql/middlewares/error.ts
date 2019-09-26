@@ -74,8 +74,8 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
   finally {
     if (graphQLErrors) {
       const uniqueErrors = uniqBy((e) => {
-        if (e.originalError && e.originalError.request) {
-          return e.originalError.request.path
+        if (e.extensions.exception && e.extensions.exception.request) {
+          return e.extensions.exception.request.path
         }
         return e
       }, graphQLErrors)
@@ -114,7 +114,7 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
         }
 
         // Grab level from originalError, default to "error" level.
-        let level = err.originalError && err.originalError.level as LogLevel
+        let level = err.extensions.exception && err.extensions.exception.level as LogLevel
         if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
           level = LogLevel.Error
         }
