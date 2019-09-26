@@ -17,8 +17,7 @@ import { IOContext } from '../service/typings'
 import { formatTenantHeaderValue } from '../utils/tenant'
 import { forExternal, forRoot, forWorkspace } from './factories'
 import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
-import { cancelationToken } from './middlewares/cancelationToken'
-
+import { cancellationToken } from './middlewares/cancellationToken'
 import { singleFlightMiddleware } from './middlewares/inflight'
 import { memoizationMiddleware, Memoized } from './middlewares/memoization'
 import { metricsMiddleware } from './middlewares/metrics'
@@ -92,7 +91,7 @@ export class HttpClient {
       metricsMiddleware({metrics, serverTiming, name}),
       memoizationMiddleware({memoizedCache}),
       ...recorder ? [recorderMiddleware(recorder)] : [],
-      cancelationToken(cancellation),
+      cancellationToken(cancellation),
       singleFlightMiddleware,
       acceptNotFoundMiddleware,
       ...memoryCache ? [cacheMiddleware({type: CacheType.Memory, storage: memoryCache})] : [],
