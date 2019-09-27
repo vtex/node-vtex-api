@@ -6,16 +6,21 @@ import { IOMessage } from '../utils/message'
 
 type IOMessageInput = Pick<IOMessage, 'id' | 'content' | 'description' | 'behavior'>
 
+export interface IndexedMessageV2 {
+  messages: IOMessageInputV2[]
+  from: string
+}
+
 export interface IOMessageInputV2 {
   content: string
   context?: string
   behavior?: Behavior
-  from: string
 }
 
 export type Behavior = 'FULL' | 'USER_ONLY' | 'USER_AND_APP'
 
 export interface IOMessageV2 extends IOMessageInputV2 {
+  from: string
   to: string
 }
 
@@ -42,7 +47,7 @@ export interface Translate {
 }
 
 export interface TranslateInputV2 {
-  messages: IOMessageInputV2[]
+  indexedByFrom: IndexedMessageV2[]
   to: string
 }
 
