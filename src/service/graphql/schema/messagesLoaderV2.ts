@@ -4,7 +4,11 @@ import { pluck, sortBy, toPairs, zip } from 'ramda'
 import { IOClients } from '../../../clients/IOClients'
 import { IndexedMessageV2, IOMessageV2 } from './../../../clients/MessagesGraphQL'
 
-const sortByContentAndFrom = (indexedMessages: Array<[string, IOMessageV2]>) => sortBy(([_, {content, from}]) => from+content, indexedMessages)
+const sortByContentAndFrom = (indexedMessages: Array<[string, IOMessageV2]>) => sortBy(
+  ([_, {content, from}]) => `__from:${from}__content:${content}`,
+  indexedMessages
+)
+
 const sortByIndex = (indexedTranslations: Array<[string, string]>) => sortBy(([index, _]) => Number(index), indexedTranslations)
 
 const indexMessagesByFrom = (messages: IOMessageV2[]) => messages.reduce(
