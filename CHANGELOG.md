@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - New getAppMetaInfos function with diskCache fallback
+- New getAppFiles with fallback strategies
 
 ## [3.55.4-beta] - 2019-10-09
 
