@@ -15,7 +15,7 @@ const createRoutes = ({account, workspace}: IOContext) => {
   const routes = {
     Acknowledge: (app: string, service: string) => `${routes.App(app)}/acknowledge/${service}`,
     App: (app: string) => `${routes.Apps()}/${app}`,
-    AppBundle: (locator: AppLocator, path: string) => `${routes.AppOrRegistry(locator)}/bundle/${path}`,
+    AppBundle: (locator: AppLocator, path: string) => `${routes.AppOrRegistry(locator)}/bundle/${path}` + (path ? `/${path}` : ""),
     AppOrRegistry: ({name, version, build}: AppLocator) => build
       ? `${routes.Apps()}/${name}@${version}+${build}`
       : `${routes.Registry()}/${name}/${version}`,
