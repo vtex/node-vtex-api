@@ -36,7 +36,7 @@ const getFallbackFile = async (app: string, path: string, cacheStorage: CacheLay
       .then(prop('data'))
       .then(toString)
   }
-  return Promise.resolve('')
+  return ''
 }
 
 export const getAppFile = async (apps: Apps, app: string, path: string, cacheStorage: CacheLayer<string, string>, logger: Logger): Promise<string> => {
