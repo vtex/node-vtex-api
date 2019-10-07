@@ -1,11 +1,8 @@
-import AwaitLock from 'await-lock'
 import crypto from 'crypto'
 
-import { AppMetaInfo, Apps, DiskCache, IOContext } from '../..'
+import { AppMetaInfo, Apps, IOContext } from '../..'
+import { CacheLayer } from '../../caches'
 import { Logger } from '../../service/logger'
-
-const diskCacheStorage = new DiskCache<AppMetaInfo[]>('/cache')
-metrics.trackCache('apps-guard-disk', diskCacheStorage)
 
 const getKey = (account: string) => `${account}-meta-infos`
 
@@ -15,48 +12,34 @@ const hashMD5 = (text: string) =>
     .update(text)
     .digest('hex')
 
-const locks: Record<string, AwaitLock> = {}
-
-const updateCache = async (account: string, workspace: string, dependencies: AppMetaInfo[], logger: Logger) => {
-  if (workspace !== 'fox2') {
+const updateCache = async (cacheStorage: CacheLayer<string, AppMetaInfo[]>, account: string, workspace: string, dependencies: AppMetaInfo[], logger: Logger) => {
+  if (workspace !== 'fox') {
     return
   }
   const key = getKey(account)
   const hash = hashMD5(dependencies.toString())
 
   try {
-    const storedDependencies = await diskCacheStorage.get(key) || ''
-      if (hash !== hashMD5(storedDependencies.toString())) {
-        await diskCacheStorage.set(key, dependencies)
-      }
+    const storedDependencies = await cacheStorage.get(key) || ''
+    if (hash !== hashMD5(storedDependencies.toString())) {
+      await cacheStorage.set(key, dependencies)
+    }
   } catch (error) {
     logger.error({error, message: 'Apps disk cache update failed'})
   }
-
   return
 }
 
-export const getAppsMetaInfo = async (apps: Apps, ioContext: IOContext): Promise<AppMetaInfo[]> => {
+export const getAppsMetaInfo = async (apps: Apps, ioContext: IOContext, cacheStorage: CacheLayer<string, AppMetaInfo[]>): Promise<AppMetaInfo[]> => {
   const { account, workspace, logger } = ioContext
-
-  if (!locks[account]) {
-    locks[account] = new AwaitLock()
-  }
-
-  const lock = locks[account]
   try {
     const dependencies = await apps.getAppsMetaInfos()
-    await lock.acquireAsync()
-    updateCache(account, workspace, dependencies, logger)
+    updateCache(cacheStorage, account, workspace, dependencies, logger)
     return dependencies
   } catch (error) {
-    if (workspace !== 'fox2') {
+    if (workspace !== 'fox') {
       return []
     }
-    await lock.acquireAsync()
-    const dependencies = await diskCacheStorage.get(getKey(account)) || []
-    return dependencies
-  } finally {
-    lock.release()
+    return await cacheStorage.get(getKey(account)) || []
   }
 }
