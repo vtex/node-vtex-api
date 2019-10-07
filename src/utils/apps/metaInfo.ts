@@ -13,7 +13,7 @@ const hashMD5 = (text: string) =>
     .digest('hex')
 
 const updateCache = async (cacheStorage: CacheLayer<string, AppMetaInfo[]>, account: string, workspace: string, dependencies: AppMetaInfo[], logger: Logger) => {
-  if (workspace !== 'fox') {
+  if (workspace !== 'master') {
     return
   }
   const key = getKey(account)
@@ -37,7 +37,7 @@ export const getAppsMetaInfo = async (apps: Apps, ioContext: IOContext, cacheSto
     updateCache(cacheStorage, account, workspace, dependencies, logger)
     return dependencies
   } catch (error) {
-    if (workspace !== 'fox') {
+    if (workspace !== 'master') {
       return []
     }
     return await cacheStorage.get(getKey(account)) || []
