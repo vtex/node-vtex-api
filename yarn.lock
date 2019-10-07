@@ -509,11 +509,6 @@ async@^2.0.0:
   dependencies:
     lodash "^4.17.10"
 
-await-lock@^2.0.0:
-  version "2.0.0"
-  resolved "https://registry.yarnpkg.com/await-lock/-/await-lock-2.0.0.tgz#c00f7e150fd51561c09d7f51ddda905c5692428f"
-  integrity sha512-8dVrh3PGrDHO0sVdMwXgbNkYq3dLU4hAA3jKi6SgrqcX19uCEwlDB3ZzwQ5QI7DlEm2ml35X8TETvtU/P1IMbg==
-
 axios-retry@^3.1.2:
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/axios-retry/-/axios-retry-3.1.2.tgz#4f4dcbefb0b434e22b72bd5e28a027d77b8a3458"
