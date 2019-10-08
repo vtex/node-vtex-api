@@ -49,7 +49,7 @@ export const saveVersion = async (app: string, cacheStorage: CacheLayer<string, 
   }
 }
 
-export const getFallbackFile = async (app: string, path: string, cacheStorage: CacheLayer<string, string>, apps: Apps) => {
+export const getFallbackFile = async (app: string, path: string, cacheStorage: CacheLayer<string, string>, apps: Apps): Promise<{data: Buffer, headers: any }> => {
   const [appName, version] = app.split('@')
   const major = head(version.split('.')) || ''
   const fallbackKey = getFallbackKey(appName, major)
