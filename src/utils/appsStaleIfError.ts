@@ -59,6 +59,7 @@ export const getFallbackFile = async (app: string, path: string, cacheStorage: C
     const appFallbackVersion = `${appName}@${fallbackVersion}`
     return apps.getAppFile(appFallbackVersion, path)
   }
+  throw Error('Fallback version was not found')
 }
 
 
