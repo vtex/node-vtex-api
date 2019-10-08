@@ -5,13 +5,12 @@ import { Readable, Writable } from 'stream'
 import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
 
-import { CacheLayer } from '..'
 import { CacheType, inflightURL, inflightUrlWithQuery, InfraClient, InstanceOptions } from '../HttpClient'
 import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
 import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
 import { IOContext } from '../service/typings'
 import { parseAppId, removeVersionFromAppId } from '../utils'
-import { getMetaInfoKey, updateMetaInfoCache, saveVersion, getFallbackFile } from '../utils/appsStaleIfError'
+import { getFallbackFile, getMetaInfoKey, saveVersion, updateMetaInfoCache } from '../utils/appsStaleIfError'
 
 const createRoutes = ({account, workspace}: IOContext) => {
   const routes = {
