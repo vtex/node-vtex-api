@@ -1,6 +1,8 @@
 import { Cancellation } from '../../service/typings'
 import { MiddlewareContext } from '../typings'
 
+const production = process.env.VTEX_PRODUCTION === 'true'
+
 export const cancellationToken = (cancellation?: Cancellation) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
   const { config: { method } } = ctx
 
@@ -12,7 +14,11 @@ export const cancellationToken = (cancellation?: Cancellation) => async (ctx: Mi
     cancellation.cancelable = false
   }
   else if (cancellation.source) {
-    ctx.config.cancelToken = cancellation.source.token
+    if (!cancellation.source.token.throwIfRequested && !production) {
+      throw new Error('Missing cancellation function. Are you trying to use HttpClient via workers threads?')
+    } else {
+      ctx.config.cancelToken = cancellation.source.token
+    }
   }
 
   await next()
