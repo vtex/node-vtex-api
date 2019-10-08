@@ -1,6 +1,8 @@
 import crypto from 'crypto'
+import { head } from 'ramda'
+import * as semver from 'semver'
 
-import { AppMetaInfo } from '..'
+import { AppMetaInfo, Apps } from '..'
 import { CacheLayer } from '../caches'
 import { Logger } from '../service/logger'
 
@@ -29,3 +31,34 @@ export const updateMetaInfoCache = async (cacheStorage: CacheLayer<string, AppMe
   }
   return
 }
+
+const getFallbackKey = (appName: string, major: string) => `${appName}@${major}`
+
+export const saveVersion = async (app: string, cacheStorage: CacheLayer<string, string>) => {
+  const [appName, version] = app.split('@')
+  const major = head(version.split('.')) || ''
+
+  const fallbackKey = getFallbackKey(appName, major)
+  if (cacheStorage.has(fallbackKey)) {
+    const savedVersion = await cacheStorage.get(fallbackKey)
+    if (savedVersion && semver.gt(version, savedVersion)) {
+      await cacheStorage.set(fallbackKey, version)
+    }
+  } else {
+    await cacheStorage.set(fallbackKey, version)
+  }
+}
+
+export const getFallbackFile = async (app: string, path: string, cacheStorage: CacheLayer<string, string>, apps: Apps) => {
+  const [appName, version] = app.split('@')
+  const major = head(version.split('.')) || ''
+  const fallbackKey = getFallbackKey(appName, major)
+
+  const fallbackVersion = await cacheStorage.get(fallbackKey)
+  if (fallbackVersion) {
+    const appFallbackVersion = `${appName}@${fallbackVersion}`
+    return apps.getAppFile(appFallbackVersion, path)
+  }
+}
+
+

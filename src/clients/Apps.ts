@@ -11,7 +11,7 @@ import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
 import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
 import { IOContext } from '../service/typings'
 import { parseAppId, removeVersionFromAppId } from '../utils'
-import { getMetaInfoKey, updateMetaInfoCache } from '../utils/appsStaleIfError'
+import { getMetaInfoKey, updateMetaInfoCache, saveVersion, getFallbackFile } from '../utils/appsStaleIfError'
 
 const createRoutes = ({account, workspace}: IOContext) => {
   const routes = {
@@ -208,15 +208,28 @@ export class Apps extends InfraClient {
     return this.http.get<string[]>(this.routes.Links(), {metric: 'apps-list-links', inflightKey})
   }
 
-  public getAppFile = (app: string, path: string) => {
+  public getAppFile = (app: string, path: string, staleIfError?: boolean) => {
+    const { logger } = this.context
     const locator = parseAppId(app)
     const linked = !!locator.build
     const inflightKey = inflightURL
-    return this.http.getBuffer(this.routes.File(locator, path), {
-      cacheable: linked ? CacheType.Memory : CacheType.Disk,
-      inflightKey,
-      metric: linked ? 'apps-get-file' : 'registry-get-file',
-    })
+
+    if (staleIfError && this.memoryCache) {
+      saveVersion(app, this.memoryCache)
+    }
+
+    try {
+      return this.http.getBuffer(this.routes.File(locator, path), {
+        cacheable: linked ? CacheType.Memory : CacheType.Disk,
+        inflightKey,
+        metric: linked ? 'apps-get-file' : 'registry-get-file',
+      })
+    } catch (error) {
+      logger.error({ error, message: 'getAppFile failed', app, path })
+      if (staleIfError && this.memoryCache) {
+        return getFallbackFile(app, path, this.memoryCache, this)
+      }
+    }
   }
 
   public getAppJSON = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
