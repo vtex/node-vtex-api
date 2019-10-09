@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.55.4-beta] - 2019-10-09
+
 ## [3.55.3] - 2019-10-09
 ### Fixed
 - Messages Save v2 interface
