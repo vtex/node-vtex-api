@@ -34,6 +34,7 @@ export interface IOMessageSaveInput extends IOMessageInput {
 }
 
 export interface MessageSaveInputV2 {
+  srcLang: string
   srcMessage: string
   context?: string
   targetMessage: string
@@ -62,7 +63,6 @@ export interface SaveArgs {
 export interface SaveArgsV2 {
   to: string
   messages: MessageSaveInputV2[]
-  from: string
 }
 
 interface TranslateResponse {
