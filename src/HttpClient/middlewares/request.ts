@@ -1,6 +1,6 @@
+import Agent from 'agentkeepalive'
 import axios from 'axios'
 import retry, { exponentialDelay } from 'axios-retry'
-import { Agent } from 'http'
 import { Limit } from 'p-limit'
 import { stringify } from 'qs'
 import { mapObjIndexed, path, sum, toLower, values } from 'ramda'
@@ -10,6 +10,7 @@ import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../utils/retry'
 import { MiddlewareContext } from '../typings'
 
 const httpAgent = new Agent({
+  freeSocketTimeout: 15 * 1000,
   keepAlive: true,
   maxFreeSockets: 50,
 })
