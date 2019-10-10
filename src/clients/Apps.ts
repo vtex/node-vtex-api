@@ -1,3 +1,4 @@
+import { PICKED_AXIOS_PROPS } from './../utils/error';
 import archiver from 'archiver'
 import { IncomingMessage } from 'http'
 import { filter as ramdaFilter, path as ramdaPath, prop } from 'ramda'
@@ -5,11 +6,13 @@ import { Readable, Writable } from 'stream'
 import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
 
+import { CacheLayer } from '..'
 import { CacheType, inflightURL, inflightUrlWithQuery, InfraClient, InstanceOptions } from '../HttpClient'
 import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
 import { AppBundleLinked, AppFilesList, AppManifest } from '../responses'
 import { IOContext } from '../service/typings'
 import { parseAppId, removeVersionFromAppId } from '../utils'
+import { getFallbackFile, getMetaInfoKey, saveVersion, updateMetaInfoCache } from '../utils/appsStaleIfError'
 
 const createRoutes = ({account, workspace}: IOContext) => {
   const routes = {
@@ -72,6 +75,8 @@ interface AppLocator {
 export class Apps extends InfraClient {
   // tslint:disable-next-line: variable-name
   private _routes: ReturnType<typeof createRoutes>
+  private diskCache: CacheLayer<string, any> | undefined
+  private memoryCache: CacheLayer<string, any> | undefined
 
   private get routes () {
     return this._routes
@@ -79,6 +84,8 @@ export class Apps extends InfraClient {
 
   constructor(context: IOContext, options?: InstanceOptions) {
     super('apps', context, options, true)
+    this.diskCache = options && options.diskCache
+    this.memoryCache = options && options.diskCache
     this._routes = createRoutes(context)
   }
 
@@ -202,15 +209,29 @@ export class Apps extends InfraClient {
     return this.http.get<string[]>(this.routes.Links(), {metric: 'apps-list-links', inflightKey})
   }
 
-  public getAppFile = (app: string, path: string) => {
+  public getAppFile = (app: string, path: string, staleIfError?: boolean) => {
+    const { logger } = this.context
     const locator = parseAppId(app)
     const linked = !!locator.build
     const inflightKey = inflightURL
-    return this.http.getBuffer(this.routes.File(locator, path), {
-      cacheable: linked ? CacheType.Memory : CacheType.Disk,
-      inflightKey,
-      metric: linked ? 'apps-get-file' : 'registry-get-file',
-    })
+
+    if (staleIfError && this.memoryCache) {
+      saveVersion(app, this.memoryCache)
+    }
+
+    try {
+      return this.http.getBuffer(this.routes.File(locator, path), {
+        cacheable: linked ? CacheType.Memory : CacheType.Disk,
+        inflightKey,
+        metric: linked ? 'apps-get-file' : 'registry-get-file',
+      })
+    } catch (error) {
+      logger.error({ error, message: 'getAppFile failed', app, path })
+      if (staleIfError && this.memoryCache) {
+        return getFallbackFile(app, path, this.memoryCache, this)
+      }
+      throw error
+    }
   }
 
   public getAppJSON = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
@@ -275,14 +296,25 @@ export class Apps extends InfraClient {
       )
   }
 
-  public getAppsMetaInfos = async (filter?: string) => {
+  public getAppsMetaInfos = async (filter?: string, staleIfError?: boolean) => {
+    const { account, workspace, logger } = this.context
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
-    const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey}).then(prop('apps'))
-    if (filter) {
-      return ramdaFilter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfos)
+    try {
+      const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey}).then(prop('apps'))
+      if (staleIfError && this.diskCache) {
+        updateMetaInfoCache(this.diskCache, account, workspace, appsMetaInfos, logger)
+      }
+      if (filter) {
+        return ramdaFilter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfos)
+      }
+      return appsMetaInfos
+    } catch (error) {
+      if (staleIfError && workspace === 'master' && this.diskCache) {
+        return await this.diskCache.get(getMetaInfoKey(account)) || []
+      }
+      return []
     }
-    return appsMetaInfos
   }
 
   public getDependencies = (filter: string = '') => {
