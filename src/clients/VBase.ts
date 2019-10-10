@@ -63,15 +63,14 @@ export class VBase extends InfraClient {
     const headers = conflictsResolver? {'X-Vtex-Detect-Conflicts': true}: {}
     const inflightKey = inflightURL
     const metric = 'vbase-get-json'
-    return this.http.get<T>(routes.File(bucket, path), {nullIfNotFound, metric, inflightKey, headers} as IgnoreNotFoundRequestConfig).then((data)=>{
-      return data
-    }).catch(error =>{
-      const {response} = error
-      if(response.status === 409 && conflictsResolver){
-        return conflictsResolver.resolve()
-      }
-      throw Error(error)
-    })
+    return this.http.get<T>(routes.File(bucket, path), { nullIfNotFound, metric, inflightKey, headers } as IgnoreNotFoundRequestConfig)
+      .catch(error => {
+        const { response } = error
+        if (response.status === 409 && conflictsResolver) {
+          return conflictsResolver.resolve()
+        }
+        throw error
+      })
   }
 
   public getFileStream = (bucket: string, path: string): Promise<IncomingMessage> => {
