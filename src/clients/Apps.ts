@@ -90,18 +90,21 @@ export class Apps extends InfraClient {
   }
 
   public installApp = (descriptor: string) => {
-    return this.http.post(this.routes.Apps(), {id: descriptor}, {metric: 'apps-install'})
+    if (descriptor.startsWith('infra:service-')) {
+      return this.installRuntime(descriptor)
+    }
+    return this.http.post(this.routes.Apps(), { id: descriptor }, { metric: 'apps-install' })
   }
 
   public uninstallApp = (app: string) => {
-    return this.http.delete(this.routes.App(app), {metric: 'apps-uninstall'})
+    return this.http.delete(this.routes.App(app), { metric: 'apps-uninstall' })
   }
 
   public acknowledgeApp = (app: string, service: string) => {
-    return this.http.put(this.routes.Acknowledge(app, service), null, {metric: 'apps-ack'})
+    return this.http.put(this.routes.Acknowledge(app, service), null, { metric: 'apps-ack' })
   }
 
-  public link = async (app: string, files: Change[], {zlib}: ZipOptions = {}) => {
+  public link = async (app: string, files: Change[], { zlib }: ZipOptions = {}) => {
     if (!(files[0] && files[0].path)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -111,21 +114,21 @@ export class Apps extends InfraClient {
       throw new Error(`Missing content for paths: ${emptyChanges.map(e => e.path).join('; ')}`)
     }
 
-    const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
+    const indexOfManifest = files.findIndex(({ path }) => path === 'manifest.json')
     if (indexOfManifest === -1) {
       throw new Error('No manifest.json file found in files.')
     }
-    const zip = archiver('zip', {zlib})
+    const zip = archiver('zip', { zlib })
     // Throw stream errors so they reject the promise chain.
     zip.on('error', (e) => {
       throw e
     })
     const request = this.http.put<AppBundleLinked>(this.routes.Link(app), zip, {
-      headers: {'Content-Type': 'application/zip'},
+      headers: { 'Content-Type': 'application/zip' },
       metric: 'apps-link',
     })
 
-    files.forEach(({content, path}) => zip.append(content, {name: path}))
+    files.forEach(({ content, path }) => zip.append(content, { name: path }))
     const finalize = zip.finalize()
 
     try {
@@ -138,7 +141,7 @@ export class Apps extends InfraClient {
     }
   }
 
-  public patch = async (app: string, changes: Change[], {zlib}: ZipOptions = {}) => {
+  public patch = async (app: string, changes: Change[], { zlib }: ZipOptions = {}) => {
     if (!(changes[0] && changes[0].path)) {
       throw new Error('Argument changes must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -149,18 +152,18 @@ export class Apps extends InfraClient {
       .map(change => change.path)
       .join(':')
 
-    const zip = archiver('zip', {zlib})
+    const zip = archiver('zip', { zlib })
     // Throw stream errors so they reject the promise chain.
     zip.on('error', (e) => {
       throw e
     })
     const request = this.http.patch(this.routes.Link(app), zip, {
-      headers: {'Content-Type': 'application/zip'},
+      headers: { 'Content-Type': 'application/zip' },
       metric: 'apps-patch',
-      params: {deletedFiles},
+      params: { deletedFiles },
     })
 
-    files.forEach(({content, path}) => zip.append(content, {name: path}))
+    files.forEach(({ content, path }) => zip.append(content, { name: path }))
     const finalize = zip.finalize()
 
     const [response] = await Promise.all([request, finalize])
@@ -345,6 +348,19 @@ export class Apps extends InfraClient {
     return this.http.post<Record<string, string[]>>(this.routes.ResolveDependenciesWithManifest(), manifest, {params, metric})
   }
 
+  private installRuntime = (descriptor: string) => {
+    const { account, workspace } = this.context
+    const [name, version] = descriptor.split('@')
+    return this.http.patch(
+      `http://apps.aws-us-east-1.vtex.io/${account}/${workspace}/apps`,
+      [
+        {
+          name,
+          version,
+        },
+      ]
+    )
+  }
 }
 
 interface ZipOptions {
