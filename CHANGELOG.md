@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.56.0] - 2019-10-10
 ### Added
 - New getAppMetaInfos function with diskCache fallback
 - Add MineWinsConflict resolver logic to VBase client
