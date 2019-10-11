@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.57.1] - 2019-10-11
+## Added
+- Apps install accepts `infra:service-*` apps
+
 ## [3.56.0] - 2019-10-10
 ### Added
 - New getAppMetaInfos function with diskCache fallback
