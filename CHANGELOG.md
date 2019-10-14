@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.58.0] - 2019-10-14
+### Added
+- **environment** arg to `JanusClient`.
+
 ## [3.57.1] - 2019-10-11
 ## Added
 - Apps install accepts `infra:service-*` apps
@@ -25,7 +29,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [3.55.2] - 2019-10-01
-
 ### Fixed
 - Warnings logged as errors
 
