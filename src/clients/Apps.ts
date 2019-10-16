@@ -249,6 +249,21 @@ export class Apps extends InfraClient {
     } as IgnoreNotFoundRequestConfig)
   }
 
+  public getAppJSONByVendor = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
+    const locator = parseAppId(app)
+    const linked = !!locator.build
+    const inflightKey = inflightURL
+    console.log('[locator, linked, inflightKey, app, path]', JSON.stringify([locator, linked, inflightKey, app, path], null, 2))
+    console.log('this.routes.File(locator, path)', JSON.stringify(this.routes.File(locator, path), null, 2))
+    return linked? this.getAppJSON(app, path, nullIfNotFound): 
+      this.http.get<T>(this.routes.File(locator, path), {
+        cacheable: linked ? CacheType.Memory : CacheType.Any,
+        inflightKey,
+        metric: linked ? 'apps-get-json' : 'registry-get-json',
+        nullIfNotFound,
+      } as IgnoreNotFoundRequestConfig)
+  }
+
   public getAppFileStream = (app: string, path: string): Promise<IncomingMessage> => {
     const locator = parseAppId(app)
     const metric = locator.build ? 'apps-get-file-s' : 'registry-get-file-s'

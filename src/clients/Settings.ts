@@ -6,6 +6,7 @@ import { IOContext } from '../service/typings'
 import { isLinkedApp } from '../utils/app'
 
 import { AppMetaInfo } from './Apps'
+import { isArray } from 'util'
 
 const LINKED_ROUTE = 'linked'
 
@@ -55,5 +56,17 @@ export class Settings extends AppClient {
       metric: 'settings-get',
       params,
     })
+  }
+
+  public async getSettingsByVendor(dependencies: AppMetaInfo[], appAtMajor: string, params?: SettingsParams) {
+    const filtered = this.getFilteredDependencies(appAtMajor, dependencies)
+    
+    return filtered.map(dependency =>
+      this.http.get(`/settings_by_vendor/${dependency}`, {
+        inflightKey: inflightUrlWithQuery,
+        metric: 'settings-get-by-vendor',
+        params,
+      })
+    )
   }
 }
