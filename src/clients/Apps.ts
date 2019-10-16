@@ -85,7 +85,7 @@ export class Apps extends InfraClient {
   constructor(context: IOContext, options?: InstanceOptions) {
     super('apps', context, options, true)
     this.diskCache = options && options.diskCache
-    this.memoryCache = options && options.diskCache
+    this.memoryCache = options && options.memoryCache
     this._routes = createRoutes(context)
   }
 
@@ -247,21 +247,6 @@ export class Apps extends InfraClient {
       metric: linked ? 'apps-get-json' : 'registry-get-json',
       nullIfNotFound,
     } as IgnoreNotFoundRequestConfig)
-  }
-
-  public getAppJSONByVendor = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
-    const locator = parseAppId(app)
-    const linked = !!locator.build
-    const inflightKey = inflightURL
-    console.log('[locator, linked, inflightKey, app, path]', JSON.stringify([locator, linked, inflightKey, app, path], null, 2))
-    console.log('this.routes.File(locator, path)', JSON.stringify(this.routes.File(locator, path), null, 2))
-    return linked? this.getAppJSON(app, path, nullIfNotFound): 
-      this.http.get<T>(this.routes.File(locator, path), {
-        cacheable: linked ? CacheType.Memory : CacheType.Any,
-        inflightKey,
-        metric: linked ? 'apps-get-json' : 'registry-get-json',
-        nullIfNotFound,
-      } as IgnoreNotFoundRequestConfig)
   }
 
   public getAppFileStream = (app: string, path: string): Promise<IncomingMessage> => {
