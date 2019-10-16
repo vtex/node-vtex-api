@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "3.58.0",
+  "version": "3.59.0",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -79,6 +79,7 @@
     "@types/cookie": "^0.3.2",
     "@types/fs-extra": "^5.0.0",
     "@types/graphql": "0.13.x",
+    "@types/graphql-upload": "^8.0.3",
     "@types/jest": "^24.0.18",
     "@types/js-base64": "^2.3.1",
     "@types/lru-cache": "^5.1.0",

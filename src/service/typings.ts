@@ -1,4 +1,5 @@
 import { DataSource } from 'apollo-datasource'
+import { CancelTokenSource } from 'axios'
 import DataLoader from 'dataloader'
 import { GraphQLFieldConfig, GraphQLFieldResolver, GraphQLScalarType } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
@@ -83,6 +84,12 @@ export interface DataSources {
   [name: string]: DataSource<ServiceContext>,
 }
 
+export interface Cancellation {
+  cancelable: boolean
+  cancelled: boolean
+  source: CancelTokenSource
+}
+
 export interface IOContext {
   account: string
   platform: string
@@ -115,6 +122,7 @@ export interface IOContext {
   eventInfo?: EventBody
   host?: string
   tenant?: Tenant
+  cancellation?: Cancellation
 }
 
 export interface EventBody {

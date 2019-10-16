@@ -1,10 +1,10 @@
-import { PICKED_AXIOS_PROPS } from './../utils/error';
 import archiver from 'archiver'
 import { IncomingMessage } from 'http'
 import { filter as ramdaFilter, path as ramdaPath, prop } from 'ramda'
 import { Readable, Writable } from 'stream'
 import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
+import { PICKED_AXIOS_PROPS } from './../utils/error'
 
 import { CacheLayer } from '..'
 import { CacheType, inflightURL, inflightUrlWithQuery, InfraClient, InstanceOptions } from '../HttpClient'

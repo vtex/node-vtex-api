@@ -23,15 +23,20 @@ class IncomingRequestStats {
 
 export const incomingRequestStats = new IncomingRequestStats()
 
-const requestClosed = () => {
+const requestClosed = <T extends IOClients, U, V>(ctx: ServiceContext<T, U, V>) => () => {
   incomingRequestStats.closed++
+
+  if (ctx.vtex.cancellation && ctx.vtex.cancellation.cancelable) {
+    ctx.vtex.cancellation.source.cancel()
+    ctx.vtex.cancellation.cancelled = true
+  }
 }
 const requestAborted = () => {
   incomingRequestStats.aborted++
 }
 
 export async function trackIncomingRequestStats <T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
-  ctx.req.on('close', requestClosed)
+  ctx.req.on('close', requestClosed(ctx))
   ctx.req.on('aborted', requestAborted)
   incomingRequestStats.total++
   await next()
