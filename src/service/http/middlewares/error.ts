@@ -1,5 +1,6 @@
 import { IOClients } from '../../../clients/IOClients'
 import { LogLevel } from '../../../clients/Logger'
+import { cancelledRequestStatus, RequestCancelledError } from '../../../errors/RequestCancelledError'
 import { cleanError } from '../../../utils/error'
 import { ServiceContext } from '../../typings'
 
@@ -13,6 +14,10 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
   try {
     await next()
   } catch (e) {
+    if (e instanceof RequestCancelledError) {
+      ctx.status = cancelledRequestStatus
+      return
+    }
     console.error('[node-vtex-api error]', e)
     const err = cleanError(e)
 
