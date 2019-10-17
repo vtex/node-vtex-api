@@ -1,6 +1,8 @@
 import { compose, forEach, path, reduce, replace, split, values } from 'ramda'
 
+import { RequestCancelledError } from '../../errors/RequestCancelledError'
 import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
+import { cancelMessage } from '../../service/http/middlewares/requestStats'
 import { formatTimingName, hrToMillis, parseTimingName, shrinkTimings } from '../../utils'
 import { TIMEOUT_CODE } from '../../utils/retry'
 import { statusLabel } from '../../utils/status'
@@ -67,6 +69,10 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
         }
         else if (err.response && err.response.status) {
           status = statusLabel(err.response.status)
+        }
+        else if (err.message === cancelMessage) {
+          status = 'cancelled'
+          throw new RequestCancelledError(err.message)
         } else {
           status = 'error'
         }
