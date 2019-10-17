@@ -1,6 +1,6 @@
 import { contains, filter, isEmpty, map, pick as ramdaPick, zipObj } from 'ramda'
 
-import { AppMetaInfo, CacheLayer } from '..'
+import { AppMetaInfo } from '..'
 import { CacheType, inflightURL, InfraClient, InstanceOptions } from '../HttpClient'
 import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
 import { IOContext } from '../service/typings'
@@ -22,12 +22,12 @@ const useBuildJson = (app: AppMetaInfo, appVendorName: string) => {
   return buildFeatures && buildFeatures[appVendorName] && contains('build.json', buildFeatures[appVendorName])
 }
 
-export interface SettingsParams {
+export interface AssetsParams {
   files?: string[]
   pick?: string[]
 }
 
-export class Apps extends InfraClient {
+export class Assets extends InfraClient {
   private route: (scope: string, locator: ParsedLocator, path: string) => string
 
   constructor(context: IOContext, options?: InstanceOptions) {
@@ -35,11 +35,11 @@ export class Apps extends InfraClient {
     this.route = this.fileRoute(this.context.workspace)
   }
 
-  public async getSettings (dependencies: AppMetaInfo[], appAtMajor: string, params?: SettingsParams) {
+  public async getSettings (dependencies: AppMetaInfo[], appAtMajor: string, params: AssetsParams = {}) {
     const filtered = this.getFilteredDependencies(appAtMajor, dependencies)
     const {pick, files} = params
 
-    return filtered.map(dependency => {
+    return await Promise.all(filtered.map(dependency => {
       const [appVendorName] = appAtMajor.split('@')
       const buildJson = useBuildJson(dependency, appVendorName)
 
@@ -47,14 +47,13 @@ export class Apps extends InfraClient {
         ? this.getBuildJSONForApp(dependency, appVendorName, pick)
         : this.getSettingsFromFilesForApp(dependency, files)
     }
-    )
+    ))
   }
 
   public async getBuildJSONForApp(app: AppMetaInfo, appVendorName: string, pick: string | string[] = []): Promise<Record<string, any>> {
     const pickArray = Array.isArray(pick) ? pick : [pick]
-    const buildJson = await this.getJSON(app.id, `/dist/${appVendorName}/build.json`)
+    const buildJson = await this.getJSON(app.id, `/dist/${appVendorName}/build.json`) as Record<string, any>
     const result = !isEmpty(pickArray) ? ramdaPick(pickArray, buildJson) : buildJson
-    debugger
 
     result.declarer = app.id
     return result
@@ -64,8 +63,7 @@ export class Apps extends InfraClient {
     // If there's no support for build.json, then fetch individual files and zip them into an {[file]: content} object.
     const filesArray = Array.isArray(files) ? files : [files]
     const fetched = await Promise.all(map((file) => this.getJSON(app.id, file, true), filesArray as string[]))
-    const result = zipObj(filesArray as string[], fetched)
-    debugger
+    const result = zipObj(filesArray as string[], fetched) as Record<string, any>
 
     result.declarer = app.id
     return result
