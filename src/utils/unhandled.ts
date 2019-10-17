@@ -1,5 +1,6 @@
 import { constants } from 'os'
 
+import { RequestCancelledError } from '../errors/RequestCancelledError'
 import { Logger } from '../service/logger'
 
 const logger = new Logger({account: 'unhandled', workspace: 'unhandled', requestId: 'unhandled', operationId: 'unhandled'})
@@ -31,6 +32,9 @@ export const addProcessListeners = () => {
   })
 
   process.on('unhandledRejection', (reason: Error | any, promise: Promise<void>)  => {
+    if (reason instanceof RequestCancelledError) {
+      return
+    }
     console.error('unhandledRejection', reason, promise)
     if (reason && logger) {
       reason.type = 'unhandledRejection'
