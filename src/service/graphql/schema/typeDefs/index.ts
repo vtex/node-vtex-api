@@ -6,10 +6,12 @@ import { SchemaMetaData } from '..'
 
 import { NativeResolverContext, resolvers as ioMessageResolvers } from './ioMessage'
 import { resolvers as ioUploadResolvers } from './ioUpload'
+import { resolvers as sanitizedStringResolvers } from './sanitizedString'
 
 export const scalarResolversMap = {
   'IOMessage': ioMessageResolvers,
   'IOUpload': ioUploadResolvers,
+  'SanitizedString': sanitizedStringResolvers,
   'Upload': GraphQLUpload as GraphQLScalarType,
 }
 
@@ -18,6 +20,7 @@ export const shouldNotCacheWhenSchemaHas = ['IOMessage']
 export const nativeResolvers = (ctx: NativeResolverContext) => ({
   'IOMessage': scalarResolversMap.IOMessage(ctx),
   'IOUpload': scalarResolversMap.IOUpload,
+  'SanitizedString': scalarResolversMap.SanitizedString,
   'Upload': scalarResolversMap.Upload,
 })
 
