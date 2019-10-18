@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.59.1] - 2019-10-18
+### Fixed
+- Correctly handle errors caused by requests cancelled with cancellation token
+
 ## [3.59.0] - 2019-10-16
 
 ## [3.58.0] - 2019-10-14
