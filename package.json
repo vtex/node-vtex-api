@@ -70,7 +70,8 @@
     "rwlock": "^5.0.0",
     "semver": "^5.5.1",
     "stats-lite": "vtex/node-stats-lite#dist",
-    "tar-fs": "^2.0.0"
+    "tar-fs": "^2.0.0",
+    "xss": "^1.0.6"
   },
   "devDependencies": {
     "@types/archiver": "^2.0.1",
