@@ -114,4 +114,14 @@ describe('MineWinsConflictsResolver', () => {
     const result = resolver.mergeMineWins(base, master, mine)
     expect(result).toEqual(expected)
   })
+
+  it('Should work with nullable inner objects', async () => {
+    const master = { a: [{ b: 1 } ] }
+    const base = {}
+    const mine = {} as any
+    const expected = { a: [{ b: 1 } ] } as any
+
+    const result = resolver.mergeMineWins(base, master, mine)
+    expect(result).toEqual(expected)
+  })
 })

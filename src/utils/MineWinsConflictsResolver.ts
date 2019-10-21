@@ -4,7 +4,7 @@ import { eqProps, equals } from 'ramda'
 import { isArray, isObject } from 'util'
 import { ConflictsResolver, VBase, VBaseConflict, VBaseConflictData } from '../clients/VBase'
 
-type Configuration = Record<string, object | object[]> | object[]
+type Configuration = Record<string, object | object[] | null> | object[]
 
 export class MineWinsConflictsResolver implements ConflictsResolver {
   /***
@@ -42,9 +42,9 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
 
   protected mergeMineWins(base: Configuration, master: Configuration, mine: Configuration) {
     if (isArray(master)) {
-      return this.mergeMineWinsArray(base as object[], master, mine as object[])
+      return this.mergeMineWinsArray(base as object[] || [], master, mine as object[] || [])
     } else if (isObject(master)) {
-      return this.mergeMineWinsObject(base as Record<string, object | object[]>, master, mine as Record<string, object | object[]>)
+      return this.mergeMineWinsObject(base as Record<string, object | object[] | null>, master || {}, mine as Record<string, object | object[] | null>)
     }
     return mine ? mine : master
   }
@@ -87,9 +87,9 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
   }
 
   private mergeMineWinsObject(
-    base: Record<string, object | object[]>,
-    master: Record<string, object | object[]>,
-    mine: Record<string, object | object[]>
+    base: Record<string, object | object[] | null>,
+    master: Record<string, object | object[] | null>,
+    mine: Record<string, object | object[] | null>
   ) {
     const merged = { ...master, ...mine }
 
@@ -100,9 +100,9 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
         delete merged[key] // value deleted from mine
       }
       else if (isArray(value)) {
-        this.mergeMineWinsArray(base[key] as object[], master[key] as object[], value)
+        merged[key] = this.mergeMineWinsArray(base[key] as object[] || [], master[key] as object[] || [], value)
       } else if (isObject(value)) {
-        this.mergeMineWins(base[key] as Configuration, master[key] as Configuration, value as Configuration)
+        merged[key] = this.mergeMineWins(base[key] as Configuration, master[key] as Configuration, value as Configuration)
       }
     })
     return merged
@@ -146,6 +146,9 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
       )
     }
 
-    return !mine.some(mineItem => equals(mineItem, item)) && !base.some(baseItem => equals(baseItem, item))
+    return (
+      !mine.some(mineItem => equals(mineItem, item)) &&
+      !base.some(baseItem => equals(baseItem, item))
+    )
   }
 }
