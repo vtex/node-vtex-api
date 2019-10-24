@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.59.2] - 2019-10-24
+### Fixed
+- Handle nullable arrays passed to MineWinsConflictsResolver
+
 ## [3.59.1] - 2019-10-18
 ### Fixed
 - Correctly handle errors caused by requests cancelled with cancellation token
