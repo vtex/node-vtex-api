@@ -1,4 +1,4 @@
-import { contains, filter, isEmpty, map, pick as ramdaPick, zipObj } from 'ramda'
+import { contains, filter, isEmpty, pick as ramdaPick, zipObj } from 'ramda'
 
 import { AppMetaInfo } from '..'
 import { CacheType, inflightURL, InfraClient, InstanceOptions } from '../HttpClient'
@@ -35,11 +35,11 @@ export class Assets extends InfraClient {
     this.route = this.fileRoute(this.context.workspace)
   }
 
-  public async getSettings (dependencies: AppMetaInfo[], appAtMajor: string, params: AssetsParams = {}) {
+  public getSettings (dependencies: AppMetaInfo[], appAtMajor: string, params: AssetsParams = {}) {
     const filtered = this.getFilteredDependencies(appAtMajor, dependencies)
     const {pick, files} = params
 
-    return await Promise.all(filtered.map(dependency => {
+    return Promise.all(filtered.map(dependency => {
       const [appVendorName] = appAtMajor.split('@')
       const buildJson = useBuildJson(dependency, appVendorName)
 
@@ -52,7 +52,7 @@ export class Assets extends InfraClient {
 
   public async getBuildJSONForApp(app: AppMetaInfo, appVendorName: string, pick: string | string[] = []): Promise<Record<string, any>> {
     const pickArray = Array.isArray(pick) ? pick : [pick]
-    const buildJson = await this.getJSON(app.id, `/dist/${appVendorName}/build.json`) as Record<string, any>
+    const buildJson = await this.getFile(app.id, `/dist/${appVendorName}/build.json`) as Record<string, any>
     const result = !isEmpty(pickArray) ? ramdaPick(pickArray, buildJson) : buildJson
 
     result.declarer = app.id
@@ -62,21 +62,21 @@ export class Assets extends InfraClient {
   public async getSettingsFromFilesForApp(app: AppMetaInfo, files: string | string[] = []): Promise<Record<string, any>> {
     // If there's no support for build.json, then fetch individual files and zip them into an {[file]: content} object.
     const filesArray = Array.isArray(files) ? files : [files]
-    const fetched = await Promise.all(map((file) => this.getJSON(app.id, file, true), filesArray as string[]))
-    const result = zipObj(filesArray as string[], fetched) as Record<string, any>
+    const fetched = await Promise.all(filesArray.map(file => this.getFile(app.id, file, true)))
+    const result: Record<string, any> = zipObj(filesArray, fetched)
 
     result.declarer = app.id
     return result
   }
 
-  public async getJSON(appId: string, file: string, nullIfNotFound?: boolean) {
+  public async getFile(appId: string, file: string, nullIfNotFound?: boolean) {
     const locator = parseAppId(appId)
     const linked = !!locator.build
 
     if (linked) {
-      return this.getAppJSON(appId, file, nullIfNotFound)
+      return this.getAppFileByAccount(appId, file, nullIfNotFound)
     }
-    return this.getAppJSONByVendor(appId, file, nullIfNotFound)
+    return this.getAppFileByVendor(appId, file, nullIfNotFound)
   }
 
   public getFilteredDependencies(appAtMajor: string, dependencies: AppMetaInfo[]): AppMetaInfo[] {
@@ -84,28 +84,25 @@ export class Assets extends InfraClient {
     return filter(depends, dependencies)
   }
 
-  public getAppJSON = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
+  protected getAppFileByAccount = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
     const locator = parseAppId(app)
-    const linked = !!locator.build
     const inflightKey = inflightURL
     return this.http.get<T>(this.route(this.context.account, locator, path), {
-      cacheable: linked ? CacheType.Memory : CacheType.Any,
+      cacheable: CacheType.Memory,
       inflightKey,
-      metric: linked ? 'apps-get-assets-json' : 'registry-get-assets-json',
+      metric: 'assets-get-json-by-account',
       nullIfNotFound,
     } as IgnoreNotFoundRequestConfig)
   }
 
-  public getAppJSONByVendor = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
+  protected getAppFileByVendor = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
     const locator = parseAppId(app)
     const vendor = locator.name.split('.')[0]
-    const linked = !!locator.build
     const inflightKey = inflightURL
-    return linked? this.getAppJSON(app, path, nullIfNotFound):
-      this.http.get<T>(this.route(vendor, locator, path), {
+    return this.http.get<T>(this.route(vendor, locator, path), {
         cacheable: CacheType.Any,
         inflightKey,
-        metric: 'registry-get-assets-json-by-vendor',
+        metric: 'assets-get-json-by-vendor',
         nullIfNotFound,
       } as IgnoreNotFoundRequestConfig)
   }
