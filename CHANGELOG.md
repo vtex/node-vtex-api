@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.60.0] - 2019-10-28
+
 ## [3.59.2] - 2019-10-24
 ### Fixed
 - Handle nullable arrays passed to MineWinsConflictsResolver
