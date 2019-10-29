@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- New scalar type and directive to sanitize strings
+
 ### Fixed
 - Handle error without response in VBase getJSON calls
 
@@ -57,7 +60,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [3.54.0] - 2019-09-23
 ### Changed
 - Logger client instantiated in service-node
-- `@translatableV2` directive uses language from context instead of making an IO 
+- `@translatableV2` directive uses language from context instead of making an IO
 
 ## [3.53.0] - 2019-09-16
 ### Changed
