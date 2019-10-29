@@ -1,5 +1,6 @@
 import {
   Apps,
+  Assets,
   Billing,
   BillingMetrics,
   Builder,
@@ -37,6 +38,10 @@ export class IOClients {
 
   public get apps() {
     return this.getOrSet('apps', Apps)
+  }
+
+  public get assets() {
+    return this.getOrSet('assets', Assets)
   }
 
   public get billing() {

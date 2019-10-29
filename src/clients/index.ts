@@ -1,4 +1,5 @@
 export * from './Apps'
+export * from './Assets'
 export * from './Billing'
 export * from './BillingMetrics'
 export * from './Builder'
