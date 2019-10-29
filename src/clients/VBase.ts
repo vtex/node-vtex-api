@@ -4,6 +4,7 @@ import { basename } from 'path'
 import { Readable } from 'stream'
 import { createGzip } from 'zlib'
 
+import { AxiosError } from 'axios'
 import { inflightURL, inflightUrlWithQuery, InfraClient, InstanceOptions } from '../HttpClient'
 import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
 import { BucketMetadata, FileListItem } from '../responses'
@@ -64,9 +65,9 @@ export class VBase extends InfraClient {
     const inflightKey = inflightURL
     const metric = 'vbase-get-json'
     return this.http.get<T>(routes.File(bucket, path), { nullIfNotFound, metric, inflightKey, headers } as IgnoreNotFoundRequestConfig)
-      .catch(error => {
+      .catch((error: AxiosError) => {
         const { response } = error
-        if (response.status === 409 && conflictsResolver) {
+        if (response && response.status === 409 && conflictsResolver) {
           return conflictsResolver.resolve()
         }
         throw error
