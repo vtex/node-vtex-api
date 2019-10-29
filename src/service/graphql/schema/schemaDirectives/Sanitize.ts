@@ -1,7 +1,7 @@
 import { GraphQLArgument, GraphQLField, GraphQLInputField, GraphQLNonNull, GraphQLScalarType } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 
-import { SanitizedStringType, SanitizeOptions } from '../typeDefs/sanitizedString'
+import { IOSanitizedStringType, SanitizeOptions } from '../typeDefs/sanitizedString'
 
 export class SanitizeDirective extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, any>) {
@@ -19,9 +19,9 @@ export class SanitizeDirective extends SchemaDirectiveVisitor {
   public wrapType(field: any) {
     const options = this.args as SanitizeOptions
     if (field.type instanceof GraphQLNonNull && field.type.ofType instanceof GraphQLScalarType) {
-      field.type = new GraphQLNonNull(new SanitizedStringType(options))
+      field.type = new GraphQLNonNull(new IOSanitizedStringType(options))
     } else if (field.type instanceof GraphQLScalarType) {
-      field.type = new SanitizedStringType(options)
+      field.type = new IOSanitizedStringType(options)
     } else {
       throw new Error('Can not apply @sanitize directive to non-scalar GraphQL type')
     }
