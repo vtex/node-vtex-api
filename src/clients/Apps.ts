@@ -316,7 +316,7 @@ export class Apps extends InfraClient {
       if (staleIfError && workspace === 'master' && this.diskCache) {
         return await this.diskCache.get(getMetaInfoKey(account)) || []
       }
-      return []
+      throw error
     }
   }
 
