@@ -1,7 +1,7 @@
 import { GraphQLScalarType, Kind } from 'graphql'
 import {filterXSS, IFilterXSSOptions, IWhiteList} from 'xss'
 
-const defaultName = 'SanitizedString'
+const defaultName = 'IOSanitizedString'
 
 export const scalar = defaultName
 
@@ -20,7 +20,7 @@ const parseValue = (value: string, options?: IFilterXSSOptions) => {
   return filterXSS(value, options)
 }
 
-export class SanitizedStringType extends GraphQLScalarType {
+export class IOSanitizedStringType extends GraphQLScalarType {
   constructor(options?: SanitizeOptions) {
     const allowHTMLTags = options && options.allowHTMLTags
     const stripIgnoreTag = !options || options.stripIgnoreTag !== false
@@ -46,4 +46,4 @@ export class SanitizedStringType extends GraphQLScalarType {
   }
 }
 
-export const resolvers = new SanitizedStringType()
+export const resolvers = new IOSanitizedStringType()

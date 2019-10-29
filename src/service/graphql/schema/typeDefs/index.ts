@@ -10,8 +10,8 @@ import { resolvers as sanitizedStringResolvers } from './sanitizedString'
 
 export const scalarResolversMap = {
   'IOMessage': ioMessageResolvers,
+  'IOSanitizedString': sanitizedStringResolvers,
   'IOUpload': ioUploadResolvers,
-  'SanitizedString': sanitizedStringResolvers,
   'Upload': GraphQLUpload as GraphQLScalarType,
 }
 
@@ -19,8 +19,8 @@ export const shouldNotCacheWhenSchemaHas = ['IOMessage']
 
 export const nativeResolvers = (ctx: NativeResolverContext) => ({
   'IOMessage': scalarResolversMap.IOMessage(ctx),
+  'IOSanitizedString': scalarResolversMap.IOSanitizedString,
   'IOUpload': scalarResolversMap.IOUpload,
-  'SanitizedString': scalarResolversMap.SanitizedString,
   'Upload': scalarResolversMap.Upload,
 })
 
