@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.62.0] - 2019-10-29
+### Added
+- New scalar type and directive to sanitize strings
+
+### Fixed
+- Handle error without response in VBase getJSON calls
+
 ## [3.61.1] - 2019-10-29
 ### Fixed
 - Throw error in `getAppsMetaInfos` method if `staleIfError`` is false.

@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "3.61.1",
+  "version": "3.62.0",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -70,7 +70,8 @@
     "rwlock": "^5.0.0",
     "semver": "^5.5.1",
     "stats-lite": "vtex/node-stats-lite#dist",
-    "tar-fs": "^2.0.0"
+    "tar-fs": "^2.0.0",
+    "xss": "^1.0.6"
   },
   "devDependencies": {
     "@types/archiver": "^2.0.1",
