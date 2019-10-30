@@ -41,7 +41,7 @@ export const saveVersion = async (app: string, cacheStorage: CacheLayer<string, 
   const fallbackKey = getFallbackKey(appName, major)
   if (cacheStorage.has(fallbackKey)) {
     const savedVersion = await cacheStorage.get(fallbackKey)
-    if (savedVersion && semver.gt(version, savedVersion)) {
+    if (savedVersion && (version === `${major}.x` || semver.gt(version, savedVersion))) {
       await cacheStorage.set(fallbackKey, version)
     }
   } else {
