@@ -94,7 +94,7 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
     const merged = { ...master, ...mine }
 
     Object.entries(merged).forEach(([key, value]) => {
-      if (master[key] == null && base[key] != null && equals(value, base[key])) {
+      if (master[key] == null && base && base[key] != null && equals(value, base[key])) {
         delete merged[key] // value deleted from master with no conflict
       }else if(base[key] && master[key] && !mine[key]){
         delete merged[key] // value deleted from mine
@@ -102,7 +102,7 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
       else if (isArray(value)) {
         merged[key] = this.mergeMineWinsArray(base[key] as object[] || [], master[key] as object[] || [], value)
       } else if (isObject(value)) {
-        merged[key] = this.mergeMineWins(base[key] as Configuration, master[key] as Configuration, value as Configuration)
+        merged[key] = this.mergeMineWins((base[key] || {}) as Configuration, (master[key] || {}) as Configuration, (value || {}) as Configuration)
       }
     })
     return merged

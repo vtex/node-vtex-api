@@ -116,12 +116,28 @@ describe('MineWinsConflictsResolver', () => {
   })
 
   it('Should work with nullable inner objects', async () => {
-    const master = { a: [{ b: 1 } ] }
+    const master = { a: [{ b: 1 }] }
     const base = {}
-    const mine = {} as any
-    const expected = { a: [{ b: 1 } ] } as any
+    const mine = {}
+    const expected = { a: [{ b: 1 }] }
 
     const result = resolver.mergeMineWins(base, master, mine)
     expect(result).toEqual(expected)
+
+    const master2 = { a: { b: 1 } }
+    const base2 = {}
+    const mine2 = {}
+    const expected2 = { a: { b: 1 } }
+
+    const result2 = resolver.mergeMineWins(base2, master2, mine2)
+    expect(result2).toEqual(expected2)
+
+    const master3 = { a: { b: 1 } }
+    const base3 = { a: {} }
+    const mine3 = {}
+    const expected3 = {}
+
+    const result3 = resolver.mergeMineWins(base3, master3, mine3)
+    expect(result3).toEqual(expected3)
   })
 })
