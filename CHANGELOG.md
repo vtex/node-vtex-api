@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.62.3] - 2019-10-30
+### Fixed 
+- stale getAppFile accepts MAJOR.x app name
+
 ## [3.62.2] - 2019-10-30
 ### Fixed
 - Handle nullable nested objects in MineWinsConflictsResolver
