@@ -4,7 +4,8 @@ import { eqProps, equals } from 'ramda'
 import { isArray, isObject } from 'util'
 import { ConflictsResolver, VBase, VBaseConflict, VBaseConflictData } from '../clients/VBase'
 
-type Configuration = Record<string, object | object[] | null> | object[]
+type Configuration = Record<string, ConfigurationData | ConfigurationData[] | object> | ConfigurationData[]
+type ConfigurationData = Record<string, object>
 
 export class MineWinsConflictsResolver implements ConflictsResolver {
   /***
@@ -42,9 +43,9 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
 
   protected mergeMineWins(base: Configuration, master: Configuration, mine: Configuration) {
     if (isArray(master)) {
-      return this.mergeMineWinsArray(base as object[] || [], master, mine as object[] || [])
+      return this.mergeMineWinsArray((base || []) as ConfigurationData[], master, (mine || []) as ConfigurationData[])
     } else if (isObject(master)) {
-      return this.mergeMineWinsObject(base as Record<string, object | object[] | null>, master || {}, mine as Record<string, object | object[] | null>)
+      return this.mergeMineWinsObject((base || {}) as ConfigurationData, master, (mine || {}) as ConfigurationData)
     }
     return mine ? mine : master
   }
@@ -87,34 +88,34 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
   }
 
   private mergeMineWinsObject(
-    base: Record<string, object | object[] | null>,
-    master: Record<string, object | object[] | null>,
-    mine: Record<string, object | object[] | null>
+    base: ConfigurationData,
+    master: ConfigurationData,
+    mine: ConfigurationData
   ) {
     const merged = { ...master, ...mine }
 
     Object.entries(merged).forEach(([key, value]) => {
-      if (master[key] == null && base[key] != null && equals(value, base[key])) {
+      if (master[key] == null && base && base[key] != null && equals(value, base[key])) {
         delete merged[key] // value deleted from master with no conflict
       }else if(base[key] && master[key] && !mine[key]){
         delete merged[key] // value deleted from mine
       }
       else if (isArray(value)) {
-        merged[key] = this.mergeMineWinsArray(base[key] as object[] || [], master[key] as object[] || [], value)
+        merged[key] = this.mergeMineWinsArray((base[key] || []) as ConfigurationData[] , (master[key] || []) as ConfigurationData[], value)
       } else if (isObject(value)) {
-        merged[key] = this.mergeMineWins(base[key] as Configuration, master[key] as Configuration, value as Configuration)
+        merged[key] = this.mergeMineWins((base[key] || {}) as Configuration, (master[key] || {}) as Configuration, (value || {}) as Configuration)
       }
     })
     return merged
   }
 
-  private mergeMineWinsArray(base: object[], master: object[], mine: object[]) {
+  private mergeMineWinsArray(base: ConfigurationData[], master: ConfigurationData[], mine: ConfigurationData[]) {
     this.removeMasterDeletedElements(base, master, mine)
     this.appendMasterAddedElements(base, master, mine)
     return mine
   }
 
-  private removeMasterDeletedElements(base: object[], master: object[], mine: object[]) {
+  private removeMasterDeletedElements(base: ConfigurationData[], master: ConfigurationData[], mine: ConfigurationData[]) {
     base.forEach(baseItem => {
       const foundInMaster = this.isObjectInArray(baseItem, master)
       if (!foundInMaster) {
@@ -126,11 +127,11 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
     })
   }
 
-  private isObjectInArray(obj: object, array: object[]) {
+  private isObjectInArray(obj: Configuration, array: ConfigurationData[]) {
     return array.find(item => equals(item, obj))
   }
 
-  private appendMasterAddedElements(base: object[], master: object[], mine: object[]) {
+  private appendMasterAddedElements(base: ConfigurationData[], master: ConfigurationData[], mine: ConfigurationData[]) {
     master.forEach(item => {
       if (this.shouldAddToMine(item, base, mine)) {
         mine.push(item)
@@ -138,7 +139,7 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
     })
   }
 
-  private shouldAddToMine(item: object, base: object[], mine: object[]) {
+  private shouldAddToMine(item: Configuration, base: ConfigurationData[], mine: ConfigurationData[]) {
     if (this.comparableKeys) {
       return (
         !mine.some(mineItem => this.comparableKeys!.some(key => eqProps(key, item, mineItem))) &&

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.62.2] - 2019-10-30
+### Fixed
+- Handle nullable nested objects in MineWinsConflictsResolver
+
 ## [3.62.1] - 2019-10-29
 ### Fixed
 - Export error type RequestCancelledError in index
