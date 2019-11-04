@@ -4,11 +4,9 @@ import { LRUCache } from '../../../caches'
 import { GraphQLServiceContext } from '../typings'
 import { defaultMaxAgeFromCtx } from '../utils/maxAgeEnum'
 
-const cacheStorage = new LRUCache<string, string>({
+export const cacheStorage = new LRUCache<string, string>({
   max: 100,
 })
-
-// metrics.trackCache('graphql-runtime', cacheStorage)
 
 const persistedQueries = {
   cache: cacheStorage,
