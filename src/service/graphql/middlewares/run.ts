@@ -4,11 +4,8 @@ import { LRUCache } from '../../../caches'
 import { GraphQLServiceContext } from '../typings'
 import { defaultMaxAgeFromCtx } from '../utils/maxAgeEnum'
 
-const ONE_HOUR_MS = 60 * 60 * 1e3
-
 const cacheStorage = new LRUCache<string, string>({
-  max: 50,
-  maxAge: ONE_HOUR_MS,
+  max: 100,
 })
 
 metrics.trackCache('graphql-runtime', cacheStorage)
