@@ -28,7 +28,7 @@ export const incomingRequestStats = new IncomingRequestStats()
 const requestClosed = <T extends IOClients, U, V>(ctx: ServiceContext<T, U, V>) => () => {
   incomingRequestStats.closed++
 
-  if (ctx.vtex.cancellation && ctx.vtex.cancellation.cancelable) {
+  if (ctx.vtex.cancellation && ctx.vtex.cancellation.cancelable && !ctx.res.finished) {
     ctx.vtex.cancellation.source.cancel(cancelMessage)
     ctx.vtex.cancellation.cancelled = true
   }
