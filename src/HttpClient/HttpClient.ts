@@ -17,7 +17,7 @@ import { IOContext } from '../service/typings'
 import { formatTenantHeaderValue } from '../utils/tenant'
 import { forExternal, forRoot, forWorkspace } from './factories'
 import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
-import { cancellationToken } from './middlewares/cancellationToken'
+import { cancellationPromise, cancellationToken } from './middlewares/cancellationToken'
 import { singleFlightMiddleware } from './middlewares/inflight'
 import { memoizationMiddleware, Memoized } from './middlewares/memoization'
 import { metricsMiddleware } from './middlewares/metrics'
@@ -98,6 +98,7 @@ export class HttpClient {
       ...diskCache ? [cacheMiddleware({type: CacheType.Disk, storage: diskCache})] : [],
       notFoundFallbackMiddleware,
       routerCacheMiddleware,
+      cancellationPromise,
       requestMiddleware(limit),
     ])
   }
