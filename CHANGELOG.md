@@ -6,13 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Fix "socket hang up" by preventing client request abortion after server response is finished or client response is completed.
+- Fix cancellation error not being thrown if the request does not have metric.
 
 ## [3.62.4] - 2019-11-04
 ### Changed
 - Removes tracing from graphql runtime
 
 ## [3.62.3] - 2019-10-30
-### Fixed 
+### Fixed
 - stale getAppFile accepts MAJOR.x app name
 
 ## [3.62.2] - 2019-10-30
