@@ -38,3 +38,5 @@ export const createGraphQLRoute = <ClientsT extends IOClients, StateT, CustomT>(
       response,
     ]) as RouteHandler<ClientsT, StateT, CustomT>
 }
+
+export { graphqlRuntimeCacheStorage } from './middlewares/run'

@@ -4,20 +4,20 @@ import { LRUCache } from '../../../caches'
 import { GraphQLServiceContext } from '../typings'
 import { defaultMaxAgeFromCtx } from '../utils/maxAgeEnum'
 
-const ONE_HOUR_MS = 60 * 60 * 1e3
+export const graphqlRuntimeCacheStorage = new LRUCache<string, string>({
+  max: 100,
+})
 
 const persistedQueries = {
-  cache: new LRUCache<string, string>({
-    max: 500,
-    maxAge: ONE_HOUR_MS,
-  }),
+  cache: graphqlRuntimeCacheStorage,
 }
+
+const linked = !!process.env.VTEX_APP_LINK
 
 export async function run (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {
     method,
     graphql,
-    vtex: {production},
     request,
   } = ctx
 
@@ -48,12 +48,16 @@ export async function run (ctx: GraphQLServiceContext, next: () => Promise<void>
         },
         context: ctx,
         dataSources,
-        debug: !production,
+        debug: linked,
+        documentStore: graphqlRuntimeCacheStorage,
         formatError,
         formatResponse,
+        parseOptions: {
+          noLocation: !linked,
+        },
         persistedQueries,
         schema,
-        tracing: true,
+        tracing: linked,
       } as any,
       query: query!,
       request,
