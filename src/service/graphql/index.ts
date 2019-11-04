@@ -6,7 +6,7 @@ import { graphqlError } from './middlewares/error'
 import { createFormatters } from './middlewares/formatters'
 import { parseQuery } from './middlewares/query'
 import { response } from './middlewares/response'
-import { run, cacheStorage } from './middlewares/run'
+import { run } from './middlewares/run'
 import { injectSchema } from './middlewares/schema'
 import { graphqlTimings } from './middlewares/timings'
 import { upload } from './middlewares/upload'
@@ -39,4 +39,4 @@ export const createGraphQLRoute = <ClientsT extends IOClients, StateT, CustomT>(
     ]) as RouteHandler<ClientsT, StateT, CustomT>
 }
 
-export { cacheStorage } from './middlewares/run'
+export { graphqlRuntimeCacheStorage } from './middlewares/run'
