@@ -13,6 +13,8 @@ const persistedQueries = {
   }),
 }
 
+const linked = !!process.env.VTEX_APP_LINK
+
 export async function run (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {
     method,
@@ -48,12 +50,12 @@ export async function run (ctx: GraphQLServiceContext, next: () => Promise<void>
         },
         context: ctx,
         dataSources,
-        debug: !production,
+        debug: linked,
         formatError,
         formatResponse,
         persistedQueries,
         schema,
-        tracing: true,
+        tracing: linked,
       } as any,
       query: query!,
       request,
