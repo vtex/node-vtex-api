@@ -53,7 +53,7 @@ export async function run (ctx: GraphQLServiceContext, next: () => Promise<void>
         formatError,
         formatResponse,
         parseOptions: {
-          noLocation: true,
+          noLocation: !linked,
         },
         persistedQueries,
         schema,
