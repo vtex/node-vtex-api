@@ -6,11 +6,15 @@ import { defaultMaxAgeFromCtx } from '../utils/maxAgeEnum'
 
 const ONE_HOUR_MS = 60 * 60 * 1e3
 
+const cacheStorage = new LRUCache<string, string>({
+  max: 50,
+  maxAge: ONE_HOUR_MS,
+})
+
+metrics.trackCache('graphql-runtime', cacheStorage)
+
 const persistedQueries = {
-  cache: new LRUCache<string, string>({
-    max: 500,
-    maxAge: ONE_HOUR_MS,
-  }),
+  cache: cacheStorage,
 }
 
 const linked = !!process.env.VTEX_APP_LINK
@@ -19,7 +23,6 @@ export async function run (ctx: GraphQLServiceContext, next: () => Promise<void>
   const {
     method,
     graphql,
-    vtex: {production},
     request,
   } = ctx
 
@@ -51,8 +54,12 @@ export async function run (ctx: GraphQLServiceContext, next: () => Promise<void>
         context: ctx,
         dataSources,
         debug: linked,
+        documentStore: cacheStorage,
         formatError,
         formatResponse,
+        parseOptions: {
+          noLocation: true,
+        },
         persistedQueries,
         schema,
         tracing: linked,
