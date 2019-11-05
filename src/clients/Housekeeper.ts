@@ -21,7 +21,7 @@ export class Housekeeper extends InfraClient {
   }
 
   constructor(context: IOContext, options?: InstanceOptions) {
-    super('housekeeper', context, options)
+    super('housekeeper@0.x', context, options)
     this._routes = createRoutes(context)
   }
 
