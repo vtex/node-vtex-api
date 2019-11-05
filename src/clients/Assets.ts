@@ -31,7 +31,7 @@ export class Assets extends InfraClient {
   private route: (scope: string, locator: ParsedLocator, path: string) => string
 
   constructor(context: IOContext, options?: InstanceOptions) {
-    super('apps', context, options, true)
+    super('apps@0.x', context, options, true)
     this.route = this.fileRoute(this.context.workspace)
   }
 

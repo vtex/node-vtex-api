@@ -5,7 +5,7 @@ const eventRoute = (route: string) => `/events/${route}`
 
 export class Events extends InfraClient {
   constructor(context: IOContext, options?: InstanceOptions) {
-    super('colossus', {...context, recorder: undefined}, options)
+    super('colossus@0.x', {...context, recorder: undefined}, options)
   }
 
   public sendEvent = (subject: string, route: string, message?: any) => {

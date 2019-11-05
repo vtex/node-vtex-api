@@ -26,7 +26,7 @@ const isVBaseOptions = (opts?: string | VBaseOptions): opts is VBaseOptions => {
 
 export class VBase extends InfraClient {
   constructor (context: IOContext, options?: InstanceOptions) {
-    super('vbase', context, options)
+    super('vbase@2.x', context, options)
     if (runningAppName === '') {
       throw new Error(`Invalid path to access VBase. Variable VTEX_APP_ID is not available.`)
     }
@@ -105,7 +105,7 @@ export class VBase extends InfraClient {
   }
 
   public resolveConflict = <T>(bucket: string, path: string, content: any) => {
-    const data = [{ 
+    const data = [{
       op: 'replace',
       path,
       value: content,

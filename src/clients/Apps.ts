@@ -83,7 +83,7 @@ export class Apps extends InfraClient {
   }
 
   constructor(context: IOContext, options?: InstanceOptions) {
-    super('apps', context, options, true)
+    super('apps@0.x', context, options, true)
     this.diskCache = options && options.diskCache
     this.memoryCache = options && options.memoryCache
     this._routes = createRoutes(context)

@@ -3,7 +3,7 @@ import { IOContext } from '../service/typings'
 
 export class BillingMetrics extends InfraClient {
   constructor(context: IOContext, options?: InstanceOptions) {
-    super('colossus', context, options)
+    super('colossus0.x', context, options)
   }
 
   public sendMetric = (metric: BillingMetric) =>
