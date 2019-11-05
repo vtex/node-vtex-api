@@ -76,7 +76,7 @@ interface TranslatedV2 {
 
 export class MessagesGraphQL extends AppGraphQLClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
-    super('vtex.messages', vtex, options)
+    super('vtex.messages@1.x', vtex, options)
   }
 
   public translate = async (args: Translate): Promise<string[]> => this.graphql.query<TranslateResponse, { args: Translate }>({
