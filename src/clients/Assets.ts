@@ -52,7 +52,7 @@ export class Assets extends InfraClient {
 
   public async getBuildJSONForApp(app: AppMetaInfo, appVendorName: string, pick: string | string[] = []): Promise<Record<string, any>> {
     const pickArray = Array.isArray(pick) ? pick : [pick]
-    const buildJson = await this.getFile(app.id, `/dist/${appVendorName}/build.json`) as Record<string, any>
+    const buildJson = await this.getFile(app.id, `dist/${appVendorName}/build.json`) as Record<string, any>
     const result = !isEmpty(pickArray) ? ramdaPick(pickArray, buildJson) : buildJson
 
     result.declarer = app.id
