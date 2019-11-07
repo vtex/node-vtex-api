@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Upgrades new error query format for splunk 72
+
 ### Fixed
 - Fix "socket hang up" by preventing client request abortion after server response is finished or client response is completed.
 - Fix cancellation error not being thrown if the request does not have metric.
