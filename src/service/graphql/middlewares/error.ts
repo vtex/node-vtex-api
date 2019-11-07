@@ -13,7 +13,7 @@ const TWO_SECONDS_S = 2
 const sender = process.env.VTEX_APP_ID
 
 const getSplunkQuery = (account: string, workspace: string) =>
-  `Try this query at Splunk to retrieve error log: 'index=colossus key=log_error sender="${sender}" account=${account} workspace=${workspace}'`
+  `Try this query at Splunk to retrieve error log: 'index=io_vtex_logs app="${sender}" account=${account} workspace=${workspace} level=error '`
 
 const parseMessage = pluck('message')
 
