@@ -10,10 +10,6 @@ const CACHE_CONTROL_HEADER = 'cache-control'
 const META_HEADER = 'x-vtex-meta'
 const ETAG_HEADER = 'etag'
 const TWO_SECONDS_S = 2
-const sender = process.env.VTEX_APP_ID
-
-const getSplunkQuery = (account: string, workspace: string) =>
-  `Try this query at Splunk to retrieve error log: 'index=colossus key=log_error sender="${sender}" account=${account} workspace=${workspace}'`
 
 const parseMessage = pluck('message')
 
@@ -34,13 +30,10 @@ const parseErrorResponse = (response: any) => {
   return null
 }
 
-const production = process.env.VTEX_PRODUCTION === 'true'
-
 export async function graphqlError (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {
     vtex: {
-      account,
-      workspace,
+      production,
       route: {
         id,
       },
@@ -128,11 +121,6 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
 
       // Expose graphQLErrors with pathNames to timings middleware
       ctx.graphql.graphQLErrors = uniqueErrors
-
-      // Show message in development environment
-      if (!production) {
-        console.log(getSplunkQuery(account, workspace))
-      }
     } else {
       ctx.graphql.status = 'success'
     }
