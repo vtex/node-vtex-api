@@ -52,8 +52,12 @@ export const cancellationToken = (cancellation?: Cancellation) => async (ctx: Mi
     return await next()
   }
 
-  if (!cancellation.source.token.throwIfRequested && !production) {
-    throw new Error('Missing cancellation function. Are you trying to use HttpClient via workers threads?')
+  if (!cancellation.source.token.throwIfRequested) {
+    if (!production) {
+      throw new Error('Missing cancellation function. Are you trying to use HttpClient via workers threads?')
+    } else {
+      return await next()
+    }
   }
 
   const {onRequestFinish, cancelToken} = handleCancellation(ctx, cancellation)
