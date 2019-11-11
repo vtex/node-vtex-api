@@ -1,7 +1,7 @@
 import { any, chain, compose, filter, forEach, has, map, pluck, prop, uniqBy } from 'ramda'
 
 import { LogLevel } from '../../../clients/Logger'
-import { cancelledRequestStatus, RequestCancelledError } from '../../../errors/RequestCancelledError'
+import { cancelledErrorCode, cancelledRequestStatus, RequestCancelledError } from '../../../errors/RequestCancelledError'
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
 import { generatePathName } from '../utils/pathname'
@@ -48,7 +48,7 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
     graphQLErrors = parseErrorResponse(ctx.graphql.graphqlResponse || {})
   }
   catch (e) {
-    if (e instanceof RequestCancelledError) {
+    if (e.code === cancelledErrorCode) {
       ctx.status = cancelledRequestStatus
       return
     }
