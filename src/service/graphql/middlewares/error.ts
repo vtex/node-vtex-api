@@ -1,7 +1,7 @@
-import { any, chain, compose, filter, forEach, has, map, pluck, prop, uniqBy } from 'ramda'
+import { any, chain, compose, filter, forEach, has, map, prop, uniqBy } from 'ramda'
 
 import { LogLevel } from '../../../clients/Logger'
-import { cancelledErrorCode, cancelledRequestStatus, RequestCancelledError } from '../../../errors/RequestCancelledError'
+import { cancelledErrorCode, cancelledRequestStatus } from '../../../errors/RequestCancelledError'
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
 import { generatePathName } from '../utils/pathname'
@@ -10,8 +10,6 @@ const CACHE_CONTROL_HEADER = 'cache-control'
 const META_HEADER = 'x-vtex-meta'
 const ETAG_HEADER = 'etag'
 const TWO_SECONDS_S = 2
-
-const parseMessage = pluck('message')
 
 const arrayHasError = any(has('errors'))
 
@@ -101,6 +99,11 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
 
       // Log each error to splunk individually
       forEach((err: any) => {
+        // Prevent logging cancellation error (it's not an error)
+        if (err.extensions.exception && err.extensions.exception.code === cancelledErrorCode) {
+          return
+        }
+
         // Add pathName to each error
         if (err.path) {
           err.pathName = generatePathName(err.path)
