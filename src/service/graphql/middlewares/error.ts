@@ -1,7 +1,7 @@
-import { any, chain, compose, filter, forEach, has, map, pluck, prop, uniqBy } from 'ramda'
+import { any, chain, compose, filter, forEach, has, map, prop, uniqBy } from 'ramda'
 
 import { LogLevel } from '../../../clients/Logger'
-import { cancelledRequestStatus, RequestCancelledError } from '../../../errors/RequestCancelledError'
+import { cancelledErrorCode, cancelledRequestStatus } from '../../../errors/RequestCancelledError'
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
 import { generatePathName } from '../utils/pathname'
@@ -10,12 +10,6 @@ const CACHE_CONTROL_HEADER = 'cache-control'
 const META_HEADER = 'x-vtex-meta'
 const ETAG_HEADER = 'etag'
 const TWO_SECONDS_S = 2
-const sender = process.env.VTEX_APP_ID
-
-const getSplunkQuery = (account: string, workspace: string) =>
-  `Try this query at Splunk to retrieve error log: 'index=colossus key=log_error sender="${sender}" account=${account} workspace=${workspace}'`
-
-const parseMessage = pluck('message')
 
 const arrayHasError = any(has('errors'))
 
@@ -34,13 +28,10 @@ const parseErrorResponse = (response: any) => {
   return null
 }
 
-const production = process.env.VTEX_PRODUCTION === 'true'
-
 export async function graphqlError (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {
     vtex: {
-      account,
-      workspace,
+      production,
       route: {
         id,
       },
@@ -55,7 +46,7 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
     graphQLErrors = parseErrorResponse(ctx.graphql.graphqlResponse || {})
   }
   catch (e) {
-    if (e instanceof RequestCancelledError) {
+    if (e.code === cancelledErrorCode) {
       ctx.status = cancelledRequestStatus
       return
     }
@@ -108,6 +99,11 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
 
       // Log each error to splunk individually
       forEach((err: any) => {
+        // Prevent logging cancellation error (it's not an error)
+        if (err.extensions.exception && err.extensions.exception.code === cancelledErrorCode) {
+          return
+        }
+
         // Add pathName to each error
         if (err.path) {
           err.pathName = generatePathName(err.path)
@@ -128,11 +124,6 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
 
       // Expose graphQLErrors with pathNames to timings middleware
       ctx.graphql.graphQLErrors = uniqueErrors
-
-      // Show message in development environment
-      if (!production) {
-        console.log(getSplunkQuery(account, workspace))
-      }
     } else {
       ctx.graphql.status = 'success'
     }

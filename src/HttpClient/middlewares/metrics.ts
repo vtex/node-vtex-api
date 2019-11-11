@@ -57,6 +57,7 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
         status = statusLabel(ctx.response.status)
       }
     } catch (err) {
+      const isCancelled = (err.message === cancelMessage)
       if (ctx.config.metric) {
         errorCode = err.code
         errorStatus = err.response && err.response.status
@@ -70,14 +71,16 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
         else if (err.response && err.response.status) {
           status = statusLabel(err.response.status)
         }
-        else if (err.message === cancelMessage) {
+        else if (isCancelled) {
           status = 'cancelled'
-          throw new RequestCancelledError(err.message)
         } else {
           status = 'error'
         }
       }
-      throw err
+
+      throw isCancelled
+        ? new RequestCancelledError(err.message)
+        : err
     } finally {
       if (ctx.config.metric && metrics) {
         const label = `http-client-${ctx.config.metric}`
