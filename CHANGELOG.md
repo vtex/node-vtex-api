@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.62.6] - 2019-11-14
+### Fixed
+- Removes `ctx.graphql` object sharing and make it have a request cycle duration
+
 ## [3.62.5] - 2019-11-11
 ### Changed
 - Upgrades new error query format for splunk 72
