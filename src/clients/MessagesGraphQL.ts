@@ -61,6 +61,7 @@ export interface SaveArgs {
 }
 
 export interface SaveArgsV2 {
+  fireEvent: boolean
   to: string
   messages: MessageSaveInputV2[]
 }
