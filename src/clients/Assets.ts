@@ -41,8 +41,9 @@ export class Assets extends InfraClient {
 
   public getSettings (dependencies: AppMetaInfo[], appAtMajor: string, params: AssetsParams = {}) {
     const {pick, files} = params
+    const filtered = this.getFilteredDependencies(appAtMajor, dependencies)
 
-    return Promise.all(dependencies.map(dependency => {
+    return Promise.all(filtered.map(dependency => {
       const [appVendorName] = appAtMajor.split('@')
       const buildJson = useBuildJson(dependency, appVendorName)
 
