@@ -1,6 +1,7 @@
 import { IOClients } from '../../../clients/IOClients'
 import { LogLevel } from '../../../clients/Logger'
 import { cancelledRequestStatus, RequestCancelledError } from '../../../errors/RequestCancelledError'
+import { TooManyRequestsError, tooManyRequestsStatus } from '../../../errors/TooManyRequestsError'
 import { cleanError } from '../../../utils/error'
 import { ServiceContext } from '../../typings'
 
@@ -16,6 +17,10 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
   } catch (e) {
     if (e instanceof RequestCancelledError) {
       ctx.status = cancelledRequestStatus
+      return
+    }
+    if (e instanceof TooManyRequestsError) {
+      ctx.status = tooManyRequestsStatus
       return
     }
     console.error('[node-vtex-api error]', e)
