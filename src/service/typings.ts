@@ -11,6 +11,7 @@ import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { IOMessageV2 } from '../clients/MessagesGraphQL'
 import { InstanceOptions } from '../HttpClient'
 import { Recorder } from '../HttpClient/middlewares/recorder'
+import { Binding } from '../utils/binding'
 import { IOMessage } from '../utils/message'
 import { Tenant } from '../utils/tenant'
 import { Logger } from './logger'
@@ -122,6 +123,7 @@ export interface IOContext {
   eventInfo?: EventBody
   host?: string
   tenant?: Tenant
+  binding?: Binding
   cancellation?: Cancellation
 }
 

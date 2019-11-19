@@ -5,6 +5,7 @@ import compose from 'koa-compose'
 import pLimit from 'p-limit'
 
 import {
+  BINDING_HEADER,
   BODY_HASH,
   FORWARDED_HOST_HEADER,
   LOCALE_HEADER,
@@ -14,6 +15,7 @@ import {
   TENANT_HEADER,
 } from '../constants'
 import { IOContext } from '../service/typings'
+import { formatBindingHeaderValue } from '../utils/binding'
 import { formatTenantHeaderValue } from '../utils/tenant'
 import { forExternal, forRoot, forWorkspace } from './factories'
 import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
@@ -62,6 +64,7 @@ export class HttpClient {
       host,
       params, operationId,
       tenant,
+      binding,
       verbose,
       cancellation,
     } = opts
@@ -73,6 +76,7 @@ export class HttpClient {
       'User-Agent': userAgent,
       ... host ? {[FORWARDED_HOST_HEADER]: host} : null,
       ... tenant ? {[TENANT_HEADER]: formatTenantHeaderValue(tenant)} : null,
+      ... binding ? {[BINDING_HEADER]: formatBindingHeaderValue(binding)} : null,
       ... locale ? {[LOCALE_HEADER]: locale} : null,
       ... operationId ? {'x-vtex-operation-id': operationId} : null,
       ... product ? {[PRODUCT_HEADER]: product} : null,
