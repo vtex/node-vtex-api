@@ -27,7 +27,7 @@ const routes = {
 
 export class Registry extends InfraClient {
   constructor(context: IOContext, options?: InstanceOptions) {
-    super('apps', {...context, workspace: DEFAULT_WORKSPACE}, options)
+    super('apps@0.x', {...context, workspace: DEFAULT_WORKSPACE}, options)
   }
 
   public publishApp = async (files: File[], tag?: string, {zlib}: ZipOptions = {}) => {

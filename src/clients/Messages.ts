@@ -16,7 +16,7 @@ interface LocalesByProvider {
 
 export class Messages extends AppClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
-    super('vtex.messages', vtex, options)
+    super('vtex.messages@1.x', vtex, options)
   }
 
   public translate = (to: string, data: IOMessage[]): Promise<string[]> => this.http.get('/_v/translations', {

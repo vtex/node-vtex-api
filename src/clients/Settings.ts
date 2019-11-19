@@ -30,7 +30,7 @@ export interface SettingsParams {
 
 export class Settings extends AppClient {
   constructor (context: IOContext, options?: InstanceOptions) {
-    super('vtex.settings-server', context, options)
+    super('vtex.settings-server@0.x', context, options)
   }
 
   public getFilteredDependencies(appAtMajor: string, dependencies: AppMetaInfo[]): AppMetaInfo[] {

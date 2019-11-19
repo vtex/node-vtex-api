@@ -3,7 +3,7 @@ import { IOContext } from '../service/typings'
 
 export class Billing extends AppClient {
   constructor(context: IOContext, options?: InstanceOptions) {
-    super('vtex.billing', context, options)
+    super('vtex.billing@0.x', context, options)
   }
 
   public status = () =>

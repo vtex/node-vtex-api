@@ -16,7 +16,7 @@ export class Logger extends InfraClient {
   private logger: IOLogger
 
   constructor(context: IOContext, options?: InstanceOptions) {
-    super('colossus', {...context, recorder: undefined}, {...options, concurrency: 1})
+    super('colossus@0.x', {...context, recorder: undefined}, {...options, concurrency: 1})
     this.logger = context.logger!
   }
 

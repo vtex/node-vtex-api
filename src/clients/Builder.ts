@@ -23,7 +23,7 @@ export class Builder extends AppClient {
   private stickyHost!: string
 
   constructor (ioContext: IOContext, opts?: InstanceOptions) {
-    super('vtex.builder-hub', ioContext, opts)
+    super('vtex.builder-hub@0.x', ioContext, opts)
   }
 
   public availability = async (app: string, hintIndex: number) => {
