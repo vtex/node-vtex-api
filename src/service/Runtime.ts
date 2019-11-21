@@ -8,7 +8,6 @@ import {
   createGraphQLRoute,
   GRAPHQL_ROUTE,
   GRAPHQL_ROUTE_LEGACY,
-  graphqlRuntimeCacheStorage,
 } from './graphql'
 import { createHttpRoute } from './http'
 import { Service } from './Service'
@@ -78,8 +77,6 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
 }
 
 global.metrics = new MetricsAccumulator()
-
-metrics.trackCache('graphql-runtime', graphqlRuntimeCacheStorage)
 
 declare global {
   namespace NodeJS {

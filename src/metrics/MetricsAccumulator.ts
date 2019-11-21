@@ -73,22 +73,6 @@ export class MetricsAccumulator {
     this.cacheMap = {}
   }
 
-  /**
-   * @deprecated in favor of MetricsAccumulator.batch(name, diffNs, cacheHit)
-   * @see batch
-   */
-  public batchHrTimeMetricFromEnd = (name: string, end?: [number, number]) => {
-    this.batchMetric(name, end ? hrToMillis(end) : undefined)
-  }
-
-  /**
-   * @deprecated in favor of MetricsAccumulator.batch(name, diffNs, cacheHit)
-   * @see batch
-   */
-  public batchHrTimeMetric = (name: string, start: [number, number]) => {
-    this.batchMetric(name, hrToMillis(process.hrtime(start)))
-  }
-
   public batchMetric = (name: string, timeMillis?: number, extensions?: Record<string, string | number>) => {
     if (!this.metricsMillis[name]) {
       this.metricsMillis[name] = []
