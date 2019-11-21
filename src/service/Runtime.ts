@@ -2,7 +2,7 @@ import { map } from 'ramda'
 
 import { ClientsImplementation, IOClients } from '../clients/IOClients'
 import { EnvMetric, MetricsAccumulator } from '../metrics/MetricsAccumulator'
-import { addProcessListeners, logger } from '../utils/unhandled'
+import { addProcessListeners } from '../utils/unhandled'
 import { createEventHandler } from './events'
 import {
   createGraphQLRoute,
@@ -10,7 +10,7 @@ import {
   GRAPHQL_ROUTE_LEGACY,
 } from './graphql'
 import { createHttpRoute } from './http'
-import { LogLevel } from './logger'
+import { LogLevel, logOnceToDevConsole } from './logger'
 import { Service } from './Service'
 import { ClientsConfig, RouteHandler, ServiceDescriptor } from './typings'
 
@@ -61,7 +61,7 @@ export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, Cust
     if (config.graphql) {
       let graphqlRoute = GRAPHQL_ROUTE
       if (descriptor.routes && descriptor.routes[GRAPHQL_ROUTE_LEGACY]) {
-        logger.logOnce(`Using legacy graphql route id ${GRAPHQL_ROUTE_LEGACY}`, LogLevel.Warn)
+        logOnceToDevConsole(`Using legacy graphql route id ${GRAPHQL_ROUTE_LEGACY}`, LogLevel.Warn)
         graphqlRoute = GRAPHQL_ROUTE_LEGACY
       }
       this.routes[graphqlRoute] = createGraphQLRoute<ClientsT, StateT, CustomT>(config.graphql, Clients, clients.options)

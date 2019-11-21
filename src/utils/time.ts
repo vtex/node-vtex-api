@@ -2,7 +2,7 @@ import { compose, forEach, keys, reduce, toPairs } from 'ramda'
 
 import { IOClients } from '../clients/IOClients'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
-import { LogLevel } from '../service/logger'
+import { LogLevel, logOnceToDevConsole } from '../service/logger'
 import {
   EventContext,
   EventHandler,
@@ -85,7 +85,7 @@ export function timer<T extends IOClients, U, V>(middleware: RouteHandler<T, U, 
   }
 
   if (!middleware.name) {
-    logger.logOnce(`Please use a named function as handler for better metrics. ${middleware.toString()}`, LogLevel.Warn)
+    logOnceToDevConsole(`Please use a named function as handler for better metrics. ${middleware.toString()}`, LogLevel.Warn)
   }
 
   return async (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) => {
@@ -120,7 +120,7 @@ export function timerForEvents<T extends IOClients, U>(middleware: EventHandler<
   }
 
   if (!middleware.name) {
-    logger.logOnce(`Please use a named function as handler for better metrics. ${middleware.toString()}`, LogLevel.Warn)
+    logOnceToDevConsole(`Please use a named function as handler for better metrics. ${middleware.toString()}`, LogLevel.Warn)
   }
 
   return async (ctx: EventContext<T, U>, next: () => Promise<any>) => {
