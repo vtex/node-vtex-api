@@ -1,4 +1,4 @@
-import { ForbiddenError, UserInputError } from 'apollo-server-core'
+import { ForbiddenError, UserInputError } from 'apollo-server-errors'
 import axios from 'axios'
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
@@ -73,3 +73,10 @@ export class Auth extends SchemaDirectiveVisitor {
     }
   }
 }
+
+export const authDirectiveTypeDefs = `
+directive @auth(
+  productCode: String
+  resourceCode: String
+) on FIELD_DEFINITION
+`

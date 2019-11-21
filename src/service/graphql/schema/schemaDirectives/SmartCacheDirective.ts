@@ -1,12 +1,12 @@
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 
-import { maxAgeEnums } from '../../utils/maxAgeEnum'
+import { MAX_AGE } from '../../../../constants'
 
 const ETAG_CONTROL_HEADER = 'x-vtex-etag-control'
 
 interface Args {
-  maxAge: keyof typeof maxAgeEnums | undefined
+  maxAge: keyof typeof MAX_AGE | undefined
 }
 
 const DEFAULT_ARGS: Args = {
@@ -17,7 +17,7 @@ export class SmartCacheDirective extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, any>) {
     const {resolve = defaultFieldResolver} = field
     const { maxAge } = this.args as Args || DEFAULT_ARGS
-    const maxAgeS = maxAge && maxAgeEnums[maxAge]
+    const maxAgeS = maxAge && MAX_AGE[maxAge]
     field.resolve = (root, args, context, info) => {
       if (maxAgeS) {
         context.set(ETAG_CONTROL_HEADER, maxAgeS)
@@ -27,3 +27,9 @@ export class SmartCacheDirective extends SchemaDirectiveVisitor {
     }
   }
 }
+
+export const smartCacheDirectiveTypeDefs = `
+directive @smartcache(
+  maxAge: String
+) on FIELD_DEFINITION
+`

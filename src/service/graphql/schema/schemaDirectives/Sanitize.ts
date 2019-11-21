@@ -1,7 +1,16 @@
-import { GraphQLArgument, GraphQLField, GraphQLInputField, GraphQLNonNull, GraphQLScalarType } from 'graphql'
+import {
+  GraphQLArgument,
+  GraphQLField,
+  GraphQLInputField,
+  GraphQLNonNull,
+  GraphQLScalarType,
+} from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 
-import { IOSanitizedStringType, SanitizeOptions } from '../typeDefs/sanitizedString'
+import {
+  IOSanitizedStringType,
+  SanitizeOptions,
+} from '../typeDefs/sanitizedString'
 
 export class SanitizeDirective extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, any>) {
@@ -27,3 +36,10 @@ export class SanitizeDirective extends SchemaDirectiveVisitor {
     }
   }
 }
+
+export const sanitizeDirectiveTypeDefs = `
+directive @sanitize(
+  allowHTMLTags: Boolean
+  stripIgnoreTag: Boolean
+) on FIELD_DEFINITION | INPUT_FIELD_DEFINITION | ARGUMENT_DEFINITION
+`

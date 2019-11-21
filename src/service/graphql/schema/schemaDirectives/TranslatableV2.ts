@@ -88,3 +88,6 @@ const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2 , behav
   })
 }
 
+export const translatableV2DirectiveTypeDefs = `
+directive @translatableV2 on FIELD_DEFINITION
+`

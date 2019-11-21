@@ -1,7 +1,10 @@
 import { IOClients } from '../../../clients/IOClients'
-import { LogLevel } from '../../../clients/Logger'
-import { cancelledRequestStatus, RequestCancelledError } from '../../../errors/RequestCancelledError'
+import {
+  cancelledRequestStatus,
+  RequestCancelledError,
+} from '../../../errors/RequestCancelledError'
 import { cleanError } from '../../../utils/error'
+import { LogLevel } from '../../logger'
 import { ServiceContext } from '../../typings'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
