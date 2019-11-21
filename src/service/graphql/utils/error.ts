@@ -4,6 +4,17 @@ import { cleanError } from '../../../utils/error'
 import { GraphQLServiceContext } from '../typings'
 
 const ERROR_FIELD_WHITELIST = ['message', 'path', 'stack', 'extensions', 'statusCode', 'name', 'headers', 'originalError', 'code']
+const QUERY_FIELDS = ['query', 'operationName', 'variables']
+
+const trimVariables = (variables: object) => {
+  if (variables) {
+    const stringifiedVariables = JSON.stringify(variables)
+    return stringifiedVariables.length <= 1024
+      ? stringifiedVariables
+      : `${stringifiedVariables.slice(0, 992)} [Truncated: variables too long]`
+  }
+  return ''
+}
 
 const detailsFromCtx = (ctx: GraphQLServiceContext) => {
   const {
@@ -18,13 +29,12 @@ const detailsFromCtx = (ctx: GraphQLServiceContext) => {
     },
   } = ctx
 
-  // Do not log variables for file uploads
+  const queryRest = pick<any>(QUERY_FIELDS, ctx.graphql.query || {})
   const variables = ctx.request.is('multipart/form-data')
-  ? '[GraphQL Upload]'
-  : ctx.graphql.query && ctx.graphql.query.variables
-
+    ? '[GraphQL Upload]'
+    : trimVariables(queryRest.variables)
   const query = {
-    ...ctx.graphql.query,
+    ...queryRest,
     variables,
   }
 
