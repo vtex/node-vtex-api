@@ -1,4 +1,6 @@
 import { IOClients } from '../clients/IOClients'
+import { logger } from '../utils/unhandled'
+import { LogLevel } from './logger'
 import { ServiceConfig } from './typings'
 
 /**
@@ -15,7 +17,7 @@ import { ServiceConfig } from './typings'
 export class Service<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void>{
   constructor(public config: ServiceConfig<ClientsT, StateT, CustomT>) {
     if (config.routes && config.routes.graphql) {
-      console.warn('Route id "graphql" is reserved and apps containing this routes will stop working in the near future. To create a GraphQL app, export a "graphql" key with {resolvers}.')
+      logger.logOnce(`Route id "graphql" is reserved and apps containing this routes will stop working in the near future. To create a GraphQL app, export a "graphql" key with {resolvers}.`, LogLevel.Warn)
     }
   }
 }
