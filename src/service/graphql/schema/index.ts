@@ -1,102 +1,53 @@
 import { readFileSync } from 'fs-extra'
-import { GraphQLSchema } from 'graphql'
 import { makeExecutableSchema } from 'graphql-tools'
-import { any, keys, map, zipObj } from 'ramda'
+import { keys, map, zipObj } from 'ramda'
 
-import { GraphQLServiceContext } from '../typings'
-import { messagesLoader } from './messagesLoader'
-import { nativeSchemaDirectives } from './schemaDirectives'
-import { nativeResolvers, nativeTypeDefs, scalarResolversMap, shouldNotCacheWhenSchemaHas } from './typeDefs'
+import { IOClients } from '../../../clients/IOClients'
+import { GraphQLOptions } from '../../typings'
+import {
+  nativeSchemaDirectives,
+  nativeSchemaDirectivesTypeDefs,
+} from './schemaDirectives'
+import { nativeResolvers, nativeTypeDefs } from './typeDefs'
 
 export type SchemaMetaData = Record<string, boolean>
 
-interface Cache {
-  executableSchema: GraphQLSchema | null
-  schemaMetaData: SchemaMetaData | null
-  typeDefs: string | null
-}
-
-const cache: Cache = {
-  executableSchema: null,
-  schemaMetaData: null,
-  typeDefs: null,
-}
-
-let appTypeDefs: string | undefined
-
-try{
-  appTypeDefs = readFileSync('./service/schema.graphql', 'utf8')
-// tslint:disable-next-line:no-empty
-} catch (err) {}
-
-export const makeSchema = (ctx: GraphQLServiceContext) => {
-  const {
-    graphql: { resolvers: appResolvers,
-      schemaDirectives: appDirectives,
-    },
-    clients: { segment },
-    vtex: { locale },
-  } = ctx
-
-  if (cache.executableSchema) {
-    return cache.executableSchema
-  }
-
-  const schemaMetaData = extractSchemaMetaData(appTypeDefs!)
-
-  // The target translation locale is only necessary if this GraphQL app uses the `IOMessage` resolver.
-  const getLocaleTo = async () => {
-    if (locale) {
-      return locale
-    }
-    const { cultureInfo } = await segment.getSegment()
-    return cultureInfo
-  }
-
-  const resolverContext = {
-    getLocaleTo,
-    translationsLoader: messagesLoader(ctx.clients),
-  }
-
-  const executableSchema = makeExecutableSchema({
-    resolvers: {
-      ...appResolvers,
-      ...nativeResolvers(resolverContext),
-    },
-    schemaDirectives: {
-      ...appDirectives,
-      ...nativeSchemaDirectives,
-    },
-    typeDefs: getOrSetTypeDefs(schemaMetaData),
-  })
-
-  if (isSchemaCacheable(schemaMetaData)) {
-    cache.executableSchema = executableSchema
-  }
-
-  return executableSchema
-}
-
-const getOrSetTypeDefs = (schemaMetaData: SchemaMetaData) => {
-  if (!cache.typeDefs) {
-    cache.typeDefs = [
-      appTypeDefs,
-      nativeTypeDefs(schemaMetaData),
-    ].join('\n\n')
-  }
-  return cache.typeDefs
-}
+const mergeTypeDefs = (appTypeDefs: string, schemaMetaData: SchemaMetaData) => [
+    appTypeDefs,
+    nativeTypeDefs(schemaMetaData),
+    nativeSchemaDirectivesTypeDefs,
+  ].join('\n\n')
 
 const hasScalar = (typeDefs: string) => (scalar: string) =>
   new RegExp(`scalar(\\s)+${scalar}(\\s\\n)+`).test(typeDefs)
 
 const extractSchemaMetaData = (typeDefs: string) => {
-  if (!cache.schemaMetaData) {
-    const scalars = keys(scalarResolversMap)
-    const scalarsPresentInSchema = map(hasScalar(typeDefs), scalars)
-    cache.schemaMetaData = zipObj(scalars, scalarsPresentInSchema)
-  }
-  return cache.schemaMetaData
+  const scalars = keys(nativeResolvers)
+  const scalarsPresentInSchema = map(hasScalar(typeDefs), scalars)
+  return zipObj(scalars, scalarsPresentInSchema)
 }
 
-const isSchemaCacheable = (schemaMetaData: SchemaMetaData) => !any(scalar => schemaMetaData[scalar], shouldNotCacheWhenSchemaHas)
+export const makeSchema = <ClientsT extends IOClients = IOClients, StateT = void, CustomT = void>(options: GraphQLOptions<ClientsT, StateT, CustomT>) => {
+  const {
+    resolvers: appResolvers,
+    schemaDirectives: appDirectives,
+  } = options
+
+  const appTypeDefs = readFileSync('./service/schema.graphql', 'utf8')
+
+  const schemaMetaData = extractSchemaMetaData(appTypeDefs!)
+
+  const executableSchema = makeExecutableSchema({
+    resolvers: {
+      ...appResolvers,
+      ...nativeResolvers,
+    },
+    schemaDirectives: {
+      ...appDirectives,
+      ...nativeSchemaDirectives,
+    },
+    typeDefs: mergeTypeDefs(appTypeDefs, schemaMetaData),
+  })
+
+  return executableSchema
+}

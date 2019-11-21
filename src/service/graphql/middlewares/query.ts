@@ -1,30 +1,52 @@
 import { json } from 'co-body'
-import { compose, partialRight, prop } from 'ramda'
-import { parse, Url } from 'url'
+import {
+  DocumentNode,
+  GraphQLSchema,
+  parse as gqlParse,
+  validate,
+} from 'graphql'
+import { parse } from 'url'
 
 import { BODY_HASH } from '../../../constants'
-import { GraphQLServiceContext } from '../typings'
+import { GraphQLServiceContext, Query } from '../typings'
+import { LRUCache } from './../../../caches/LRUCache'
 
-const parseVariables = (query: any) => {
-  if (query && query[BODY_HASH]) {
+const documentStorage = new LRUCache<string, DocumentNode>({
+  max: 500,
+})
+
+const queryFromUrl = (url: string) => {
+  const parsedUrl = parse(url, true)
+  const { query: querystringObj } = parsedUrl
+
+  // Having a BODY_HASH means the query is in the body
+  if (querystringObj && querystringObj[BODY_HASH]) {
     return null
   }
-  if (query && typeof query.variables === 'string') {
-    query.variables = JSON.parse(query.variables)
+
+  // We need to JSON.parse the variables since they are a stringified
+  // in the querystring
+  if (querystringObj && typeof querystringObj.variables === 'string') {
+    querystringObj.variables = JSON.parse(querystringObj.variables)
   }
-  return query
+
+  return querystringObj
 }
 
-const queryFromUrl = compose<string, Url, string, Record<string, any>>(
-  parseVariables,
-  prop<any, any>('query'),
-  partialRight(parse, [true])
-)
+const parseAndValidateQueryToSchema = (query: string, schema: GraphQLSchema) => {
+  const document = gqlParse(query)
+  const validation = validate(schema, document)
+  if (Array.isArray(validation) && validation.length > 0) {
+    throw validation
+  }
+  return document
+}
 
-export async function parseQuery (ctx: GraphQLServiceContext, next: () => Promise<void>) {
-  const {request, req} = ctx
+export const extractQuery = (schema: GraphQLSchema) =>
+async function parseAndValidateQuery (ctx: GraphQLServiceContext, next: () => Promise<void>) {
+  const { request, req } = ctx
 
-  let query: Record<string, any>
+  let query: Query & { query: string }
   if (request.is('multipart/form-data')) {
     query = (request as any).body
   } else if (request.method.toUpperCase() === 'POST') {
@@ -33,7 +55,16 @@ export async function parseQuery (ctx: GraphQLServiceContext, next: () => Promis
     query = queryFromUrl(request.url) || await json(req)
   }
 
+  // Assign the query before setting the query.document because if the
+  // validation fails we don't loose the query in our error log
   ctx.graphql.query = query
+
+  query.document = await documentStorage.getOrSet(
+    query.query,
+    async () => ({
+      value: parseAndValidateQueryToSchema(query.query, schema),
+    })
+  ) as DocumentNode
 
   await next()
 }

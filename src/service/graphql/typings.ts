@@ -1,24 +1,31 @@
-import { CacheScope } from 'apollo-cache-control'
-import { HttpQueryRequest } from 'apollo-server-core'
-import { HttpQueryResponse } from 'apollo-server-core/dist/runHttpQuery'
-import { GraphQLSchema } from 'graphql'
-import { GraphQLResponse } from 'graphql-extensions'
+import { DocumentNode, execute } from 'graphql'
 
 import { IOClients } from '../../clients/IOClients'
-import { GraphQLOptions, ServiceContext } from '../typings'
+import { ServiceContext } from '../typings'
+
+export interface Query {
+  variables?: Record<string, any>
+  operationName?: string
+  document: DocumentNode
+}
+
+type TypeFromPromise<T> = T extends Promise<infer U> ? U : T
+
+export type GraphQLResponse = TypeFromPromise<ReturnType<typeof execute>>
+
+export interface GraphQLCacheControl {
+  maxAge: number
+  scope: 'private' | 'public' | 'segment'
+  noCache: boolean
+  noStore: boolean
+}
 
 export interface GraphQLContext {
-  graphql: GraphQLOptions<IOClients, any, any> & {
-    schema?: GraphQLSchema
-    query?: HttpQueryRequest['query']
+  graphql: {
+    query?: Query
     graphqlResponse?: GraphQLResponse
-    responseInit?: HttpQueryResponse['responseInit']
-    status?: 'success' | 'error'
-    graphQLErrors?: any[]
-    formatters?: {
-      formatError: <T>(e: T) => T
-      formatResponse: <T>(r: T) => T
-    }
+    status: 'success' | 'error'
+    cacheControl: GraphQLCacheControl
   }
 }
 

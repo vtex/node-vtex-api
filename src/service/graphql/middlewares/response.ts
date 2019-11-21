@@ -1,34 +1,38 @@
-import { isEmpty, pick, reject } from 'ramda'
-
-import { FORWARDED_HOST_HEADER, SEGMENT_HEADER } from '../../../constants'
+import {
+  CACHE_CONTROL_HEADER,
+  ETAG_HEADER,
+  FORWARDED_HOST_HEADER,
+  META_HEADER,
+  SEGMENT_HEADER,
+} from '../../../constants'
 import { GraphQLServiceContext } from '../typings'
-import { cacheControl } from '../utils/cacheControl'
-
-const DEV_FIELDS = ['data', 'errors', 'extensions']
-const PROD_FIELDS = ['data', 'errors']
+import { cacheControlHTTP } from './../utils/cacheControl'
 
 export async function response (ctx: GraphQLServiceContext, next: () => Promise<void>) {
-  const {responseInit, graphqlResponse} = ctx.graphql
-  const {production} = ctx.vtex
+
+  await next()
 
   const {
-    maxAge = '',
-    scope = '',
-    segment = null,
-  } = graphqlResponse ? cacheControl(graphqlResponse, ctx) : {}
-  const cacheControlHeader = reject(isEmpty, [maxAge, scope]).join(',')
+    cacheControl,
+    status,
+    graphqlResponse,
+  } = ctx.graphql
 
-  ctx.set({
-    ...responseInit && responseInit.headers,
-    'Cache-Control': cacheControlHeader,
-  })
+  const cacheControlHeader = cacheControlHTTP(ctx)
+
+  ctx.set(CACHE_CONTROL_HEADER, cacheControlHeader)
+
+  if (status === 'error') {
+    // Do not generate etag for errors
+    ctx.remove(META_HEADER)
+    ctx.remove(ETAG_HEADER)
+    delete ctx.vtex.recorder
+  }
 
   ctx.vary(FORWARDED_HOST_HEADER)
-  if (segment) {
+  if (cacheControl.scope === 'segment') {
     ctx.vary(SEGMENT_HEADER)
   }
 
-  const fields = production ? PROD_FIELDS : DEV_FIELDS
-  ctx.body = pick(fields, graphqlResponse!)
-  await next()
+  ctx.body = graphqlResponse
 }
