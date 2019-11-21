@@ -149,7 +149,7 @@ export interface ServiceDescriptor {
   },
   minReplicas?: number,
   maxReplicas?: number,
-  workers?: 'automatic' | number
+  workers?: number
 }
 
 export type JanusEnv = string
