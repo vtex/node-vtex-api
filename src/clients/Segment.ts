@@ -45,14 +45,6 @@ const routes = {
 
 export class Segment extends JanusClient {
   /**
-   * @deprecated Please use `getSegment` or `getSegmentByToken` instead.
-   *
-   * @memberof Segment
-   */
-  public segment = (query?: Record<string, string>, token?: string) =>
-    this.rawSegment(token || this.context!.segmentToken, query).then(prop('data'))
-
-  /**
    * Get the segment data using the current `ctx.vtex.segmentToken`
    *
    * @memberof Segment
