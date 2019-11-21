@@ -140,13 +140,16 @@ export interface ServiceDescriptor {
   timeout?: number,
   runtimeArgs?: string[],
   routes?: Record<string, ServiceRoute>,
-  events: {
+  events?: {
     [handler: string]: {
       keys?: string[],
       sender?: string,
       subject?: string,
     },
   },
+  minReplicas?: number,
+  maxReplicas?: number,
+  workers?: 'automatic' | number
 }
 
 export type JanusEnv = string
