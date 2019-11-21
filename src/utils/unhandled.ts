@@ -3,7 +3,7 @@ import { constants } from 'os'
 import { RequestCancelledError } from '../errors/RequestCancelledError'
 import { Logger } from '../service/logger'
 
-const logger = new Logger({account: 'unhandled', workspace: 'unhandled', requestId: 'unhandled', operationId: 'unhandled', production: process.env.VTEX_PRODUCTION === 'true'})
+export const logger = new Logger({account: 'unhandled', workspace: 'unhandled', requestId: 'unhandled', operationId: 'unhandled', production: process.env.VTEX_PRODUCTION === 'true'})
 let watched: NodeJS.Process
 
 // Remove the any typings once we move to nodejs 10.x
