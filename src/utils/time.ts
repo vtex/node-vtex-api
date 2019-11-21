@@ -2,7 +2,14 @@ import { compose, forEach, keys, reduce, toPairs } from 'ramda'
 
 import { IOClients } from '../clients/IOClients'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
-import { EventContext, EventHandler, RouteHandler, ServiceContext } from '../service/typings'
+import { LogLevel } from '../service/logger'
+import {
+  EventContext,
+  EventHandler,
+  RouteHandler,
+  ServiceContext,
+} from '../service/typings'
+import { logger } from './unhandled'
 
 export const hrToMillis = ([seconds, nanoseconds]: [number, number]) =>
   Math.round((seconds * 1e3) + (nanoseconds / 1e6))
@@ -78,7 +85,7 @@ export function timer<T extends IOClients, U, V>(middleware: RouteHandler<T, U, 
   }
 
   if (!middleware.name) {
-    console.warn('Please use a named function as handler for better metrics.', middleware.toString())
+    logger.logOnce(`Please use a named function as handler for better metrics. ${middleware.toString()}`, LogLevel.Warn)
   }
 
   return async (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) => {
@@ -113,7 +120,7 @@ export function timerForEvents<T extends IOClients, U>(middleware: EventHandler<
   }
 
   if (!middleware.name) {
-    console.warn('Please use a named function as handler for better metrics.', middleware.toString())
+    logger.logOnce(`Please use a named function as handler for better metrics. ${middleware.toString()}`, LogLevel.Warn)
   }
 
   return async (ctx: EventContext<T, U>, next: () => Promise<any>) => {
