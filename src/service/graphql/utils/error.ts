@@ -80,13 +80,6 @@ const formatError = (error: any, details?: any) => {
   return formattedError as any
 }
 
-//
-// TODO: check if the following statement is still valid
-//
-// formatError overrides the default option in runHttpQuery, which
-// does not keep track of the error stack. All non-enumerable
-// properties of Error (including stack) need to be returned
-// explicitly, otherwise will not show up after a JSON.stringify call
 export const createFormatError = (ctx: GraphQLServiceContext) => {
   const details = detailsFromCtx(ctx)
   return (error: any) => formatError(error, details)
