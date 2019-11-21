@@ -61,11 +61,6 @@ export interface InstanceOptions {
   diskCache?: CacheLayer<string, Cached>,
   baseURL?: string,
   retries?: number,
-  /**
-   * @deprecated use retries instead.
-   * @memberof InstanceOptions
-   */
-  retryConfig?: void,
   metrics?: MetricsAccumulator,
   /**
    * Maximum number of concurrent requests

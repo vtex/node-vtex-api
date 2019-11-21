@@ -1,7 +1,10 @@
-import { DataSource } from 'apollo-datasource'
 import { CancelTokenSource } from 'axios'
 import DataLoader from 'dataloader'
-import { GraphQLFieldConfig, GraphQLFieldResolver, GraphQLScalarType } from 'graphql'
+import {
+  GraphQLFieldConfig,
+  GraphQLFieldResolver,
+  GraphQLScalarType,
+} from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 import { ParameterizedContext } from 'koa'
 import { Middleware } from 'koa-compose'
@@ -20,7 +23,6 @@ type ServerTiming = Record<string, string>
 export interface Context<T extends IOClients> {
   clients: T
   vtex: IOContext
-  dataSources?: DataSources
   timings: Record<string, [number, number]>
   metrics: Record<string, [number, number]>
   previousTimerStart: [number, number]
@@ -63,13 +65,8 @@ export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
   options: Record<string, InstanceOptions>
 }
 
-export type DataSourcesGenerator = () => {
-  [name: string]: DataSource<ServiceContext>,
-}
-
 export interface GraphQLOptions<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
   resolvers: Record<string, Record<string, Resolver<ClientsT, StateT, CustomT>> | GraphQLScalarType>
-  dataSources?: DataSourcesGenerator
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>
 }
 
@@ -78,10 +75,6 @@ export interface ServiceConfig<ClientsT extends IOClients = IOClients, StateT = 
   events?: any,
   graphql?: GraphQLOptions<ClientsT, StateT, CustomT>,
   routes?: Record<string, RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>>
-}
-
-export interface DataSources {
-  [name: string]: DataSource<ServiceContext>,
 }
 
 export interface Cancellation {

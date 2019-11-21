@@ -7,8 +7,6 @@ import {
   Events,
   ID,
   LicenseManager,
-  Logger,
-  Messages,
   MessagesGraphQL,
   Metadata,
   Registry,
@@ -66,14 +64,6 @@ export class IOClients {
 
   public get licenseManager() {
     return this.getOrSet('licenseManager', LicenseManager)
-  }
-
-  public get logger() {
-    return this.getOrSet('logger', Logger)
-  }
-
-  public get messages() {
-    return this.getOrSet('messages', Messages)
   }
 
   public get messagesGraphQL() {
