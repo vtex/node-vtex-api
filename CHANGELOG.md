@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.65.1] - 2019-11-21
+
+## [3.65.1-beta] - 2019-11-21
+### Fixed
+- Uses http in old routes
+
 ## [3.65.0] - 2019-11-21
 ### Added
 - Error type `TooManyRequestsError` that returns status code 429
