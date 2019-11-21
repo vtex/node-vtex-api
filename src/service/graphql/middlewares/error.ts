@@ -1,65 +1,90 @@
-import { any, chain, compose, filter, forEach, has, map, prop, uniqBy } from 'ramda'
+import { formatApolloErrors } from 'apollo-server-errors'
+import { uniqBy } from 'ramda'
 
-import { LogLevel } from '../../../clients/Logger'
-import { cancelledErrorCode, cancelledRequestStatus } from '../../../errors/RequestCancelledError'
+import {
+  cancelledErrorCode,
+  cancelledRequestStatus,
+} from '../../../errors/RequestCancelledError'
+import { LogLevel } from '../../logger'
+import { IOContext } from '../../typings'
 import { GraphQLServiceContext } from '../typings'
-import { toArray } from '../utils/array'
 import { generatePathName } from '../utils/pathname'
+import { createFormatError } from './../utils/error'
 
-const CACHE_CONTROL_HEADER = 'cache-control'
-const META_HEADER = 'x-vtex-meta'
-const ETAG_HEADER = 'etag'
 const TWO_SECONDS_S = 2
 
-const arrayHasError = any(has('errors'))
+const uniqErrorsByPath = (errors: any[]) => uniqBy(
+  e => e.extensions && e.extensions.exception && e.extensions.exception.request
+    ? e.extensions.exception.request.path
+    : e,
+  errors
+)
 
-const filterErrors = filter(has('errors')) as (x: ReadonlyArray<{}>) => ReadonlyArray<{}>
-
-const chainErrors = chain(prop<any, any>('errors'))
-
-const hasError = compose(arrayHasError, toArray)
-
-const parseError = compose(chainErrors, filterErrors, toArray)
-
-const parseErrorResponse = (response: any) => {
-  if (hasError(response)) {
-    return parseError(response)
+const trimVariables = (e: any) => {
+  if (e.query && e.query.variables) {
+    const stringifiedVariables = JSON.stringify(e.query.variables)
+    e.query.variables = stringifiedVariables.length <= 1024
+      ? stringifiedVariables
+      : `${stringifiedVariables.slice(0, 992)} [Truncated: variables too long]`
   }
-  return null
+}
+
+const createLogErrorToSplunk = (vtex: IOContext) => (err: any) => {
+  const {
+    route: { id },
+    logger,
+  } = vtex
+
+  // Prevent logging cancellation error (it's not an error)
+  if (err.extensions && err.extensions.exception && err.extensions.exception.code === cancelledErrorCode) {
+    return
+  }
+
+  // Add pathName to each error
+  if (err.path) {
+    err.pathName = generatePathName(err.path)
+  }
+
+  const log = {
+    ...err,
+    routeId: id,
+  }
+
+  // Grab level from originalError, default to "error" level.
+  let level = err.extensions && err.extensions.exception && err.extensions.exception.level as LogLevel
+  if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
+    level = LogLevel.Error
+  }
+  logger.log(log, level)
 }
 
 export async function graphqlError (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {
-    vtex: {
-      production,
-      route: {
-        id,
-      },
-    },
+    vtex: { production },
   } = ctx
 
-  let graphQLErrors: any[] | null = null
+  let graphQLErrors: any = null
 
   try {
     await next()
 
-    graphQLErrors = parseErrorResponse(ctx.graphql.graphqlResponse || {})
+    const response = ctx.graphql.graphqlResponse
+
+    if (response && Array.isArray(response.errors)) {
+      const formatter = createFormatError(ctx)
+      graphQLErrors = formatApolloErrors(response.errors, { formatter })
+    }
   }
   catch (e) {
     if (e.code === cancelledErrorCode) {
       ctx.status = cancelledRequestStatus
       return
     }
-    const formatError = ctx.graphql.formatters!.formatError
 
-    if (e.isGraphQLError) {
-      const response = JSON.parse(e.message)
-      graphQLErrors = parseError(response)
-      ctx.body = response
-    } else {
-      graphQLErrors = [formatError(e)]
-      ctx.body = {errors: graphQLErrors}
-    }
+    const formatError = createFormatError(ctx)
+    graphQLErrors = Array.isArray(e)
+      ? e.map(formatError)
+      : [formatError(e)]
 
     // Add response
     ctx.status = e.statusCode || 500
@@ -69,63 +94,32 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
   }
   finally {
     if (graphQLErrors) {
-      const uniqueErrors = uniqBy((e) => {
-        if (e.extensions.exception && e.extensions.exception.request) {
-          return e.extensions.exception.request.path
-        }
-        return e
-      }, graphQLErrors)
-
-      // Reduce size of `variables` prop in the errors.
-      map((e) => {
-        if (e.query && e.query.variables) {
-          const stringifiedVariables = JSON.stringify(e.query.variables)
-          e.query.variables = stringifiedVariables.length <= 1024 ? stringifiedVariables : '[variables too long]'
-        }
-      }, uniqueErrors)
-      console.error(`[node-vtex-api graphql errors] total=${graphQLErrors.length} unique=${uniqueErrors.length}`, uniqueErrors)
       ctx.graphql.status = 'error'
 
-      // Do not generate etag for errors
-      ctx.remove(META_HEADER)
-      ctx.remove(ETAG_HEADER)
+      // Filter errors from the same path in the query. This should
+      // avoid logging multiple errors from an array for example
+      const uniqueErrors = uniqErrorsByPath(graphQLErrors)
+
+      // Reduce the size of `variables` prop in the errors.
+      uniqueErrors.forEach(trimVariables)
+
+      // Log each error to splunk individually
+      const logToSplunk = createLogErrorToSplunk(ctx.vtex)
+      uniqueErrors.forEach(logToSplunk)
 
       // In production errors, add two second cache
       if (production) {
-        ctx.set(CACHE_CONTROL_HEADER, `public, max-age=${TWO_SECONDS_S}`)
+        ctx.graphql.cacheControl.maxAge = TWO_SECONDS_S
       } else {
-        ctx.set(CACHE_CONTROL_HEADER, `no-cache, no-store`)
+        ctx.graphql.cacheControl.noCache = true
+        ctx.graphql.cacheControl.noStore = true
       }
 
-      // Log each error to splunk individually
-      forEach((err: any) => {
-        // Prevent logging cancellation error (it's not an error)
-        if (err.extensions.exception && err.extensions.exception.code === cancelledErrorCode) {
-          return
-        }
+      ctx.graphql.graphqlResponse = {
+        ...ctx.graphql.graphqlResponse,
+        errors: uniqueErrors,
+      }
 
-        // Add pathName to each error
-        if (err.path) {
-          err.pathName = generatePathName(err.path)
-        }
-
-        const log = {
-          ...err,
-          routeId: id,
-        }
-
-        // Grab level from originalError, default to "error" level.
-        let level = err.extensions.exception && err.extensions.exception.level as LogLevel
-        if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
-          level = LogLevel.Error
-        }
-        ctx.vtex.logger.log(log, level)
-      }, uniqueErrors)
-
-      // Expose graphQLErrors with pathNames to timings middleware
-      ctx.graphql.graphQLErrors = uniqueErrors
-    } else {
-      ctx.graphql.status = 'success'
     }
   }
 }
