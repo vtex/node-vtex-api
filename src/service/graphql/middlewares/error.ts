@@ -20,15 +20,6 @@ const uniqErrorsByPath = (errors: any[]) => uniqBy(
   errors
 )
 
-const trimVariables = (e: any) => {
-  if (e.query && e.query.variables) {
-    const stringifiedVariables = JSON.stringify(e.query.variables)
-    e.query.variables = stringifiedVariables.length <= 1024
-      ? stringifiedVariables
-      : `${stringifiedVariables.slice(0, 992)} [Truncated: variables too long]`
-  }
-}
-
 const createLogErrorToSplunk = (vtex: IOContext) => (err: any) => {
   const {
     route: { id },
@@ -99,9 +90,6 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
       // Filter errors from the same path in the query. This should
       // avoid logging multiple errors from an array for example
       const uniqueErrors = uniqErrorsByPath(graphQLErrors)
-
-      // Reduce the size of `variables` prop in the errors.
-      uniqueErrors.forEach(trimVariables)
 
       // Log each error to splunk individually
       const logToSplunk = createLogErrorToSplunk(ctx.vtex)
