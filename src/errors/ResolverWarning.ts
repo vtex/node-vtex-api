@@ -1,8 +1,8 @@
 import { AxiosError } from 'axios'
 
-import { LogLevel } from '../clients/Logger'
-
+import { LogLevel } from '../service/logger'
 import { ErrorLike, ResolverError } from './ResolverError'
+
 
 /**
  * Indicates a non-fatal error occurred and was handled.

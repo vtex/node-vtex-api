@@ -17,7 +17,6 @@ import {
 import { IOContext } from '../service/typings'
 import { formatBindingHeaderValue } from '../utils/binding'
 import { formatTenantHeaderValue } from '../utils/tenant'
-import { forExternal, forRoot, forWorkspace } from './factories'
 import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
 import { cancellationToken } from './middlewares/cancellationToken'
 import { singleFlightMiddleware } from './middlewares/inflight'
@@ -34,9 +33,6 @@ const noTransforms = [(data: any) => data]
 type ClientOptions = IOContext & Partial<InstanceOptions>
 
 export class HttpClient {
-  public static forWorkspace = forWorkspace
-  public static forRoot = forRoot
-  public static forExternal = forExternal
   public name: string
 
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>

@@ -1,6 +1,6 @@
 import { AxiosError } from 'axios'
 
-import { LogLevel } from '../clients/Logger'
+import { LogLevel } from '../service/logger'
 import { cleanError } from '../utils/error'
 
 export interface ErrorLike {
