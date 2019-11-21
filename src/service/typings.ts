@@ -1,3 +1,4 @@
+import { ClientsConfig } from './typings';
 import { CancelTokenSource } from 'axios'
 import DataLoader from 'dataloader'
 import {
@@ -150,6 +151,10 @@ export interface ServiceDescriptor {
   minReplicas?: number,
   maxReplicas?: number,
   workers?: number
+}
+
+export interface ParsedServiceDescriptor extends ServiceDescriptor {
+  workers: number
 }
 
 export type JanusEnv = string
