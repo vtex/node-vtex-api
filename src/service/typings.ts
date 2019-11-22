@@ -1,4 +1,3 @@
-import { ClientsConfig } from './typings';
 import { CancelTokenSource } from 'axios'
 import DataLoader from 'dataloader'
 import {
