@@ -35,7 +35,7 @@ describe('MineWinsConflictsResolver', () => {
     expect(result).toEqual(expected)
   })
 
-  it('Should only add master object to mine if it wasn deleted', async () => {
+  it('Should only add master object to mine if it wasn\'t deleted', async () => {
     const master = { b: 1 }
     const base = { b: 1 }
     const mine = {}
@@ -66,33 +66,18 @@ describe('MineWinsConflictsResolver', () => {
   })
 
   it('Should append master array values to mine arrays when they dont already exist', async () => {
-    const master = [{ a: 1 }]
-    const base = [{}]
-    const mine = [{ b: 2 }]
-    const expected = [{ b: 2 }, { a: 1 }]
-    const result = resolver.mergeMineWins(base, master, mine)
-    expect(result).toEqual(expected)
+    const master4 = { b: [{ z: [{ stuff0: 0 }, { stuff1: 1 }] }] }
+    const base4 = { b: [{ z: [{ stuff0: 0 }] }] }
+    const mine4 = { b: [{ z: [{ stuff0: 1 }] }] }
+    const expected4 = { b: [{ z: [{ stuff0: 1 }, { stuff1: 1 }] }] }
 
-    const master1 = { a: [{ z: [{ stuff0: 0 }, { stuff1: 1 }] }] }
-    const base1 = { a: [{ z: [{ stuff0: 0 }] }] }
-    const mine1 = { a: [{ z: [{ stuff0: 0 }] }] }
-    const expected1 = { a: [{ z: [{ stuff0: 0 }, { stuff1: 1 }] }] }
-
-    const result1 = resolver.mergeMineWins(base1, master1, mine1)
-    expect(result1).toEqual(expected1)
-
-    const master2 = { b: [{ z: [{ stuff0: 0 }, { stuff1: 1 }] }] }
-    const base2 = { b: [{ z: [{ stuff0: 0 }] }] }
-    const mine2 = { b: [{ z: [{ stuff0: 0 }] }] }
-    const expected2 = { b: [{ z: [{ stuff0: 0 }, { stuff1: 1 }] }] }
-
-    const result2 = resolver.mergeMineWins(base2, master2, mine2)
-    expect(result2).toEqual(expected2)
+    const result4 = resolver.mergeMineWins(base4, master4, mine4)
+    expect(result4).toEqual(expected4)
   })
 
   it('Should not append master array values when they already exist in mine', async () => {
-    const master = [{ a: 1 }, { b: 2 }]
-    const base = [{}]
+    const master = [{ b: 2 }, { a: 1 }]
+    const base = [] as any
     const mine = [{ b: 2 }]
     const expected = [{ b: 2 }, { a: 1 }]
 
@@ -101,10 +86,10 @@ describe('MineWinsConflictsResolver', () => {
   })
 
   it('Should keep mine array values in case of conflicts on comparableKeys', async () => {
-    const master = [{ a: 1, c: 3 }, { b: 2 }]
+    const master = [{ a: 2, c: 3 }, { b: 2 }]
     const base = [] as any
     const mine = [{ a: 1 }]
-    const expected = [{ a: 1 }, { b: 2 }]
+    const expected = [{ a: 1, c: 3}, { b: 2 }]
 
     const result = resolver.mergeMineWins(base, master, mine)
     expect(result).toEqual(expected)

@@ -1,7 +1,15 @@
 import { AxiosResponse } from 'axios'
+import { applyChange, applyDiff, diff, Diff, DiffArray, DiffNew } from 'deep-diff'
 import { Base64 } from 'js-base64'
-import { eqProps, equals } from 'ramda'
-import { isArray, isObject } from 'util'
+import { equals, lensPath, view } from 'ramda'
+
+enum Change {
+  EDIT = 'E',
+  NEW = 'N',
+  DELETE = 'D',
+  ARRAY = 'A',
+}
+
 import { ConflictsResolver, VBase, VBaseConflict, VBaseConflictData } from '../clients/VBase'
 
 type Configuration = Record<string, ConfigurationData | ConfigurationData[] | object> | ConfigurationData[]
@@ -10,7 +18,7 @@ type ConfigurationData = Record<string, object>
 export class MineWinsConflictsResolver implements ConflictsResolver {
   /***
    * Take mine and merge with master keys that have no conflict
-   * We use base to decide wether a key was deleted or not
+   * We use base to decide whether a key was deleted or not
    */
 
   private client: VBase
@@ -42,12 +50,51 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
   }
 
   protected mergeMineWins(base: Configuration, master: Configuration, mine: Configuration) {
-    if (isArray(master)) {
-      return this.mergeMineWinsArray((base || []) as ConfigurationData[], master, (mine || []) as ConfigurationData[])
-    } else if (isObject(master)) {
-      return this.mergeMineWinsObject((base || {}) as ConfigurationData, master, (mine || {}) as ConfigurationData)
+    const baseCopy = JSON.parse(JSON.stringify(base))
+    applyDiff(baseCopy, master)
+    const difference = diff(mine, baseCopy)
+
+    if (difference) {
+      difference.forEach(change => {
+        if (change.kind === Change.EDIT || change.kind === Change.DELETE) {
+          this.applyEdit(change, change.path!, baseCopy, base, mine)
+        } else if (change.kind === Change.NEW) {
+          this.applyAdd(change, change.path!, baseCopy, base, mine)
+        } else if (change.kind === Change.ARRAY) {
+          this.applyArrayChange(change, baseCopy, base, mine)
+        }
+      })
     }
-    return mine ? mine : master
+    return mine
+  }
+
+  private applyAdd<T>(change: Diff<T, any>, path: Array<string | number>, source: T, base: T, mine: T) {
+    const baseValue = view(lensPath(path), base)
+    const mineValue = view(lensPath(path), mine)
+    const sourceValue = view(lensPath(path), source)
+    if (baseValue == null && !this.hasSameComparableKeyAndValue(path, sourceValue, mineValue)) {
+      applyChange(mine, source, change)
+    }
+  }
+
+  private hasSameComparableKeyAndValue<T>(path: Array<string | number>, sourceValue: T, comparableValue: T) {
+    return this.comparableKeys && path.some(key => this.comparableKeys!.includes(key.toString())) && equals(sourceValue, comparableValue)
+  }
+
+  private applyEdit<T>(change: Diff<T, any>, path: string | number[], source: T, base: T, mine: T) {
+    const baseValue = view(lensPath(path), base)
+    const mineValue = view(lensPath(path), mine)
+    if (equals(baseValue, mineValue)) {
+      applyChange(mine, source, change)
+    }
+  }
+
+  private applyArrayChange<T>(change: DiffArray<T, any>, source: T, base: T, mine: T) {
+    if (change.item.kind === Change.EDIT || change.item.kind === Change.DELETE) {
+      this.applyEdit(change, [change.index], source, base, mine)
+    } else if (change.item.kind === Change.NEW) {
+      this.applyAdd(change, [change.index], source, base, mine)
+    }
   }
 
   private parseConflict(conflict: VBaseConflict) {
@@ -85,68 +132,5 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
     this.client.resolveConflict(this.bucket, path, mergedContent)
 
     return mine.parsedContent
-  }
-
-  private mergeMineWinsObject(
-    base: ConfigurationData,
-    master: ConfigurationData,
-    mine: ConfigurationData
-  ) {
-    const merged = { ...master, ...mine}
-
-    Object.entries(merged).forEach(([key, value]) => {
-      if (master[key] == null && base && base[key] != null && equals(value, base[key])) {
-        delete merged[key] // value deleted from master with no conflict
-      }else if(base[key] && master[key] && !mine[key]){
-        delete merged[key] // value deleted from mine
-      }
-      else if (isArray(value)) {
-        merged[key] = this.mergeMineWinsArray((base[key] || []) as ConfigurationData[] , (master[key] || []) as ConfigurationData[], value)
-      } else if (isObject(value)) {
-        merged[key] = this.mergeMineWins((base[key] || {}) as Configuration, (master[key] || {}) as Configuration, (value || {}) as Configuration)
-      }
-    })
-    return merged
-  }
-
-  private mergeMineWinsArray(base: ConfigurationData[], master: ConfigurationData[], mine: ConfigurationData[]) {
-    this.removeMasterDeletedElements(base, master, mine)
-    this.appendMasterAddedElements(base, master, mine)
-    return mine
-  }
-
-  private removeMasterDeletedElements(base: ConfigurationData[], master: ConfigurationData[], mine: ConfigurationData[]) {
-    base.forEach(baseItem => {
-      const foundInMaster = this.isObjectInArray(baseItem, master)
-      if (!foundInMaster) {
-        const foundInMine = mine.findIndex(mineItem => equals(mineItem, baseItem))
-        if (foundInMine > -1) {
-          mine.splice(foundInMine, 1)
-        }
-      }
-    })
-  }
-
-  private isObjectInArray(obj: Configuration, array: ConfigurationData[]) {
-    return array.find(item => equals(item, obj))
-  }
-
-  private appendMasterAddedElements(base: ConfigurationData[], master: ConfigurationData[], mine: ConfigurationData[]) {
-    master.forEach(item => {
-      if (this.shouldAddToMine(item, base, mine)) {
-        mine.push(item)
-      }
-    })
-  }
-
-  private shouldAddToMine(item: ConfigurationData, base: ConfigurationData[], mine: ConfigurationData[]) {
-    if (this.comparableKeys && Object.keys(item).some(key => this.comparableKeys!.includes(key))) {  
-      return (
-        !mine.some(mineItem => this.comparableKeys!.some(key => eqProps(key, item, mineItem))) &&
-        !base.some(baseItem => this.comparableKeys!.some(key => eqProps(key, item, baseItem)))
-      )
-    }
-
-    return !mine.some(mineItem => equals(mineItem, item)) && !base.some(baseItem => equals(baseItem, item))
   }
 }
