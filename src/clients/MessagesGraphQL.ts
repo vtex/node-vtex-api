@@ -50,6 +50,7 @@ export interface Translate {
 export interface TranslateInputV2 {
   indexedByFrom: IndexedMessageV2[]
   to: string
+  depTree?: string
 }
 
 export interface SaveArgs {
