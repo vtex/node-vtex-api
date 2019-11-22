@@ -27,7 +27,7 @@ const createLogErrorToSplunk = (vtex: IOContext) => (err: any) => {
   } = vtex
 
   // Prevent logging cancellation error (it's not an error)
-  if (err.extensions && err.extensions.exception && err.extensions.exception.code === cancelledErrorCode) {
+  if (err?.extensions?.exception?.code === cancelledErrorCode) {
     return
   }
 
@@ -42,7 +42,7 @@ const createLogErrorToSplunk = (vtex: IOContext) => (err: any) => {
   }
 
   // Grab level from originalError, default to "error" level.
-  let level = err.extensions && err.extensions.exception && err.extensions.exception.level as LogLevel
+  let level = err?.extensions?.exception?.level as LogLevel
   if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
     level = LogLevel.Error
   }

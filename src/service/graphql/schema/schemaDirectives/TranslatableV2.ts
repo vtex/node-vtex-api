@@ -1,7 +1,6 @@
 import { map } from 'bluebird'
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
-import { path } from 'ramda'
 
 import { Behavior } from '../../../../clients'
 import { IOContext, ServiceContext } from '../../../typings'
@@ -37,14 +36,14 @@ export interface TranslatableMessageV2 {
 }
 
 export const parseTranslatableStringV2 = (rawMessage: string): TranslatableMessageV2 => {
-  const context = path<string>(['groups', 'context'], rawMessage.match(CONTEXT_REGEX) || {})
-  const from = path<string>(['groups', 'from'], rawMessage.match(FROM_REGEX) || {})
+  const context = rawMessage.match(CONTEXT_REGEX)?.groups?.context
+  const from = rawMessage.match(FROM_REGEX)?.groups?.from
   const content = rawMessage.replace(CONTENT_REGEX, '')
 
   return {
-    content: content && content.trim(),
-    context: context && context.trim(),
-    from: from && from.trim(),
+    content: content?.trim(),
+    context: context?.trim(),
+    from: from?.trim(),
   }
 }
 
