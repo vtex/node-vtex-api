@@ -19,7 +19,9 @@ export class AppClient extends IOClient {
       const [major] = appVersion.split('.')
       baseURL = `${protocol}://app.io.vtex.com/${vendor}.${name}/v${major}/${account}/${workspace}`
     } else {
-      context.logger.warn(`${account} in ${workspace} is using old routing for ${app}`)
+      if (typeof context.logger.warn === 'function') {
+        context.logger.warn(`${account} in ${workspace} is using old routing for ${app}`)
+      }
       const service = [name, vendor].join('.') // messages.vtex
       baseURL = `http://${service}.${region}.vtex.io/${account}/${workspace}`
     }
