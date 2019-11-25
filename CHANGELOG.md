@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.65.3] - 2019-11-25
+## Added
+- Allows filter dependencies from app list
+
 ## [3.65.2] - 2019-11-25
 ### Added 
 - New attribute to messages API

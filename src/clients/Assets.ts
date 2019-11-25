@@ -6,15 +6,19 @@ import { IgnoreNotFoundRequestConfig } from '../HttpClient/middlewares/notFound'
 import { IOContext } from '../service/typings'
 import { parseAppId, ParsedLocator } from '../utils'
 
-const dependsOnApp = (appAtMajor: string) => (a: AppMetaInfo) => {
-  const [name, major] = appAtMajor.split('@')
-  const version = a._resolvedDependencies[name]
-  if (!version) {
-    return false
-  }
-
-  const [depMajor] = version.split('.')
-  return major === depMajor
+const dependsOnApp = (appsAtMajor: string[]) => (a: AppMetaInfo) => {
+  let dependsOn = false
+  appsAtMajor.forEach(appAtMajor => {
+    const [name, major] = appAtMajor.split('@')
+    const version = a._resolvedDependencies[name]
+    if (version) {
+      const [depMajor] = version.split('.')
+      if (major === depMajor) {
+        dependsOn = true
+      }
+    }
+  })
+  return dependsOn
 }
 
 const useBuildJson = (app: AppMetaInfo, appVendorName: string) => {
@@ -36,8 +40,8 @@ export class Assets extends InfraClient {
   }
 
   public getSettings (dependencies: AppMetaInfo[], appAtMajor: string, params: AssetsParams = {}) {
-    const filtered = this.getFilteredDependencies(appAtMajor, dependencies)
     const {pick, files} = params
+    const filtered = this.getFilteredDependencies(appAtMajor, dependencies)
 
     return Promise.all(filtered.map(dependency => {
       const [appVendorName] = appAtMajor.split('@')
@@ -52,7 +56,7 @@ export class Assets extends InfraClient {
 
   public async getBuildJSONForApp(app: AppMetaInfo, appVendorName: string, pick: string | string[] = []): Promise<Record<string, any>> {
     const pickArray = Array.isArray(pick) ? pick : [pick]
-    const buildJson = await this.getFile(app.id, `/dist/${appVendorName}/build.json`) as Record<string, any>
+    const buildJson = await this.getFile(app.id, `dist/${appVendorName}/build.json`) as Record<string, any>
     const result = !isEmpty(pickArray) ? ramdaPick(pickArray, buildJson) : buildJson
 
     result.declarer = app.id
@@ -79,8 +83,9 @@ export class Assets extends InfraClient {
     return this.getAppFileByVendor(appId, file, nullIfNotFound)
   }
 
-  public getFilteredDependencies(appAtMajor: string, dependencies: AppMetaInfo[]): AppMetaInfo[] {
-    const depends = dependsOnApp(appAtMajor)
+  public getFilteredDependencies(apps: string | string[], dependencies: AppMetaInfo[]): AppMetaInfo[] {
+    const appsAtMajor: string[] = typeof(apps) === 'string' ? [apps] : apps
+    const depends = dependsOnApp(appsAtMajor)
     return filter(depends, dependencies)
   }
 
