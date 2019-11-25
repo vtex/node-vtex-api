@@ -70,9 +70,24 @@ describe('MineWinsConflictsResolver', () => {
     const base = [{}]
     const mine = [{ b: 2 }]
     const expected = [{ b: 2 }, { a: 1 }]
-
     const result = resolver.mergeMineWins(base, master, mine)
     expect(result).toEqual(expected)
+
+    const master1 = { a: [{ z: [{ stuff0: 0 }, { stuff1: 1 }] }] }
+    const base1 = { a: [{ z: [{ stuff0: 0 }] }] }
+    const mine1 = { a: [{ z: [{ stuff0: 0 }] }] }
+    const expected1 = { a: [{ z: [{ stuff0: 0 }, { stuff1: 1 }] }] }
+
+    const result1 = resolver.mergeMineWins(base1, master1, mine1)
+    expect(result1).toEqual(expected1)
+
+    const master2 = { b: [{ z: [{ stuff0: 0 }, { stuff1: 1 }] }] }
+    const base2 = { b: [{ z: [{ stuff0: 0 }] }] }
+    const mine2 = { b: [{ z: [{ stuff0: 0 }] }] }
+    const expected2 = { b: [{ z: [{ stuff0: 0 }, { stuff1: 1 }] }] }
+
+    const result2 = resolver.mergeMineWins(base2, master2, mine2)
+    expect(result2).toEqual(expected2)
   })
 
   it('Should not append master array values when they already exist in mine', async () => {

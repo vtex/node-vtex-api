@@ -92,7 +92,7 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
     master: ConfigurationData,
     mine: ConfigurationData
   ) {
-    const merged = { ...master, ...mine }
+    const merged = { ...master, ...mine}
 
     Object.entries(merged).forEach(([key, value]) => {
       if (master[key] == null && base && base[key] != null && equals(value, base[key])) {
@@ -139,17 +139,14 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
     })
   }
 
-  private shouldAddToMine(item: Configuration, base: ConfigurationData[], mine: ConfigurationData[]) {
-    if (this.comparableKeys) {
+  private shouldAddToMine(item: ConfigurationData, base: ConfigurationData[], mine: ConfigurationData[]) {
+    if (this.comparableKeys && Object.keys(item).some(key => this.comparableKeys!.includes(key))) {  
       return (
         !mine.some(mineItem => this.comparableKeys!.some(key => eqProps(key, item, mineItem))) &&
         !base.some(baseItem => this.comparableKeys!.some(key => eqProps(key, item, baseItem)))
       )
     }
 
-    return (
-      !mine.some(mineItem => equals(mineItem, item)) &&
-      !base.some(baseItem => equals(baseItem, item))
-    )
+    return !mine.some(mineItem => equals(mineItem, item)) && !base.some(baseItem => equals(baseItem, item))
   }
 }
