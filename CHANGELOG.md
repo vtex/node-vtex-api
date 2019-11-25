@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.66.0] - 2019-11-25
+### Added
+- Add binding information to HttpClient requests
+
 ## [3.65.4] - 2019-11-25
 ### Fixed
 - Conflicts Resolver only use `comparableKeys` when objects owns them
