@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.0.0-beta.12] - 2019-11-26
+
 ## [3.66.3] - 2019-11-26
 ### Removed
 - Splunk log in clients to console.log only
