@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.66.3] - 2019-11-26
+### Removed
+- Splunk log in clients to console.log only
+
 ## [3.66.2] - 2019-11-26
 ### Fixed
 - Flag `fireEvent` in Messages `saveV2` should be optional

@@ -19,9 +19,7 @@ export class InfraClient extends IOClient {
     } else if (app === 'router') {
       baseURL = `${protocol}://platform.io.vtex.com/${isRoot ? '' : `/${account}/${workspace}`}`
     } else {
-      if (typeof context.logger.warn === 'function') {
-        context.logger.warn(`${account} in ${workspace} is using old routing for ${app}`)
-      }
+      console.warn(`${account} in ${workspace} is using old routing for ${app}. This will stop working soon`)
       baseURL = `http://${app}.${region}.vtex.io${isRoot ? '' : `/${account}/${workspace}`}`
     }
 
