@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.0.0-beta.11] - 2019-11-26
+
 ## [3.66.2] - 2019-11-26
 ### Fixed
 - Flag `fireEvent` in Messages `saveV2` should be optional
