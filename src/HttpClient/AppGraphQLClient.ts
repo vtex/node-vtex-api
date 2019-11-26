@@ -17,7 +17,7 @@ export class AppGraphQLClient extends IOGraphQLClient {
       const [major] = appVersion.split('.')
       baseURL = `${protocol}://app.io.vtex.com/${vendor}.${name}/v${major}/${account}/${workspace}/_v/graphql`
     } else {
-      console.warn(`${account} in ${workspace} is using old routing for ${app}. Please change vendor.app to vendor.app@major in client ${options && options.name}`)
+      console.warn(`${account} in ${workspace} is using old routing for ${app}. Please change vendor.app to vendor.app@major in client ${(options && options.name) || ''}`)
       const service = [name, vendor].join('.') // messages.vtex
       baseURL = `http://${service}.${region}.vtex.io/${account}/${workspace}/_v/graphql`
     }
