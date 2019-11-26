@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.66.2] - 2019-11-26
+### Fixed
+- Flag `fireEvent` in Messages `saveV2` should be optional
+
 ## [3.66.1] - 2019-11-25
 ### Fixed
 - Checks if logger.warn is a function before calling it
