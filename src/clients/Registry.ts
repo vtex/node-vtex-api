@@ -20,7 +20,7 @@ const routes = {
   AppFile: (app: string, version: string, path: string) => `${routes.AppFiles(app, version)}/${path}`,
   AppFiles: (app: string, version: string) => `${routes.AppVersion(app, version)}/files`,
   AppVersion: (app: string, version: string) => `${routes.App(app)}/${version}`,
-  Publish: '/v2/registry',
+  Publish: '/v2/registry/rc',
   Registry: '/registry',
   ResolveDependenciesWithManifest: '/v2/registry/_resolve',
 }
