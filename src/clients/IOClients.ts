@@ -16,7 +16,6 @@ import {
   Segment,
   Session,
   Settings,
-  Sphinx,
   VBase,
   Workspaces,
 } from '.'
@@ -103,10 +102,6 @@ export class IOClients {
 
   public get session() {
     return this.getOrSet('session', Session)
-  }
-
-  public get sphinx() {
-    return this.getOrSet('sphinx', Sphinx)
   }
 
   public get tenant() {
