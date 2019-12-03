@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.67.0] - 2019-12-03
+
+
+## [3.67.0] - 2019-12-03
+### Added
+- New sphinx client for policy validation
+
 ## [3.66.3] - 2019-11-26
 ### Removed
 - Splunk log in clients to console.log only
