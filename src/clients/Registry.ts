@@ -20,7 +20,8 @@ const routes = {
   AppFile: (app: string, version: string, path: string) => `${routes.AppFiles(app, version)}/${path}`,
   AppFiles: (app: string, version: string) => `${routes.AppVersion(app, version)}/files`,
   AppVersion: (app: string, version: string) => `${routes.App(app)}/${version}`,
-  Publish: '/v2/registry/rc',
+  Publish: '/v2/registry',
+  PublishRc: '/v2/registry/rc',
   Registry: '/registry',
   ResolveDependenciesWithManifest: '/v2/registry/_resolve',
 }
@@ -30,7 +31,15 @@ export class Registry extends InfraClient {
     super('apps@0.x', {...context, workspace: DEFAULT_WORKSPACE}, options)
   }
 
-  public publishApp = async (files: File[], tag?: string, {zlib}: ZipOptions = {}) => {
+  public publishApp = (files: File[], tag?: string, {zlib}: ZipOptions = {}) => {
+    return this.publish(routes.Publish, files, tag, {zlib})
+  }
+
+  public publishAppRc = (files: File[], tag?: string, {zlib}: ZipOptions = {}) => {
+    return this.publish(routes.PublishRc, files, tag, {zlib})
+  }
+
+  private publish = async (route: string, files: File[], tag?: string, {zlib}: ZipOptions = {}) => {
     if (!(files[0] && files[0].path && files[0].content)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -44,7 +53,7 @@ export class Registry extends InfraClient {
       throw e
     })
     const metric = 'registry-publish'
-    const request = this.http.post<AppBundlePublished>(routes.Publish, zip, {
+    const request = this.http.post<AppBundlePublished>(route, zip, {
       headers: {'Content-Type': 'application/zip'},
       metric,
       params: tag ? {tag} : EMPTY_OBJECT,
