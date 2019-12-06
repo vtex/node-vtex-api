@@ -1,4 +1,5 @@
 import { map } from 'bluebird'
+import DataLoader from 'dataloader' // eslint-disable-line no-unused-vars
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 import { path } from 'ramda'
@@ -14,12 +15,12 @@ const CONTENT_REGEX = /\(\(\((?<context>(.)*)\)\)\)|\<\<\<(?<from>(.)*)\>\>\>/g
 export class TranslatableV2 extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, ServiceContext>) {
     const { resolve = defaultFieldResolver } = field
-    const { behavior = 'FULL' } = this.args
+    const { behavior = 'FULL', withAppsMetaInfo = true} = this.args
     field.resolve = async (root, args, ctx, info) => {
       if (!ctx.loaders || !ctx.loaders.messagesV2) {
         ctx.loaders = {
           ...ctx.loaders,
-          messagesV2: messagesLoaderV2(ctx.clients),
+          messagesV2: messagesLoaderV2(ctx.clients, withAppsMetaInfo),
         }
       }
       const response = await resolve(root, args, ctx, info) as string | string[] | null
@@ -51,7 +52,7 @@ export const parseTranslatableStringV2 = (rawMessage: string): TranslatableMessa
 export const formatTranslatableStringV2 = ({from, content, context}: TranslatableMessageV2): string =>
   `${content} ${context ? `(((${context})))` : ''} ${from ? `<<<${from}>>>` : ''}`
 
-const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2 , behavior: Behavior) => async (rawMessage: string | null) => {
+export const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2, behavior: Behavior) => async (rawMessage: string | null) => {
   // Messages only knows how to process non empty strings.
   if (rawMessage == null) {
     return rawMessage
