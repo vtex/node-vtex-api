@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.67.1] - 2019-12-06
+### Changed
+- Update publish endpoint to the new Apps API
+- Update methods to deprecate, undeprecate an app
+- Create method to validate a release of an app
+
 ## [3.67.0] - 2019-12-03
 
 
