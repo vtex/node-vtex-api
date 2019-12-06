@@ -1,9 +1,16 @@
-import { compose, forEach, path, reduce, replace, split, values } from 'ramda'
+import { compose, forEach, path, reduce, replace, split } from 'ramda'
 
 import { RequestCancelledError } from '../../errors/RequestCancelledError'
 import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
-import { cancelMessage } from '../../service/http/middlewares/requestStats'
-import { formatTimingName, hrToMillis, parseTimingName, shrinkTimings } from '../../utils'
+import {
+  cancelMessage,
+} from '../../service/worker/runtime/http/middlewares/requestStats'
+import {
+  formatTimingName,
+  hrToMillis,
+  parseTimingName,
+  shrinkTimings,
+} from '../../utils'
 import { TIMEOUT_CODE } from '../../utils/retry'
 import { statusLabel } from '../../utils/status'
 import { MiddlewareContext } from '../typings'

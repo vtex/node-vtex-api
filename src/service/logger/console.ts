@@ -3,9 +3,19 @@ import { isMaster, isWorker } from 'cluster'
 import { LRUCache } from '../../caches'
 import { LogLevel } from './logger'
 
+export interface LogMessage {
+  cmd: typeof LOG_ONCE
+  message: string,
+  level: LogLevel
+}
+
 const history = new LRUCache<string, boolean>({
   max: 42,
 })
+
+export const LOG_ONCE = 'logOnce'
+
+export const isLog = (message: any): message is LogMessage => message?.cmd === LOG_ONCE
 
 export const log = (message: any, level: LogLevel) => {
   const logger = console[level]
@@ -27,11 +37,12 @@ export const logOnceToDevConsole = (message: any, level: LogLevel): void => {
       log(message, level)
     }
     else if (isWorker && process.send) {
-      process.send({
-        cmd: 'logOnce',
+      const logMessage: LogMessage = {
+        cmd: LOG_ONCE,
         level,
         message,
-      })
+      }
+      process.send(logMessage)
     }
   }
 }

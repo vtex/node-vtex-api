@@ -1,25 +1,20 @@
+import { InstanceOptions } from '../HttpClient'
+import { IOContext } from '../service/worker/runtime/typings'
+import { Billing, Builder, MessagesGraphQL, Settings } from './apps'
+import { ID } from './external'
 import {
   Apps,
   Assets,
-  Billing,
   BillingMetrics,
-  Builder,
   Events,
-  ID,
-  LicenseManager,
-  MessagesGraphQL,
   Metadata,
   Registry,
   Router,
-  Segment,
-  Session,
-  Settings,
   VBase,
   Workspaces,
-} from '.'
-import { InstanceOptions, IOClient, IOClientConstructor } from '../HttpClient'
-import { IOContext } from '../service/typings'
-import { TenantClient } from './Tenant'
+} from './infra'
+import { IOClient, IOClientConstructor } from './IOClient'
+import { LicenseManager, Segment, Session, TenantClient } from './janus'
 
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: Record<string, InstanceOptions>,

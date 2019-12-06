@@ -2,9 +2,8 @@ import { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { URL } from 'url'
 
 import { CacheLayer } from '../../caches/CacheLayer'
-import { SEGMENT_HEADER, SESSION_HEADER } from '../../constants'
+import { LOCALE_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../../constants'
 import { MiddlewareContext, RequestConfig } from '../typings'
-import { LOCALE_HEADER } from './../../constants'
 
 const RANGE_HEADER_QS_KEY = '__range_header'
 const cacheableStatusCodes = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501] // https://tools.ietf.org/html/rfc7231#section-6.1

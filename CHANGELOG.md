@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.1.0-beta.1] - 2019-12-06
+
 ## [6.0.0] - 2019-11-27
 
 ## [6.0.0-beta.12] - 2019-11-26
@@ -73,7 +75,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [3.62.4] - 2019-11-04
 ### Changed
-- Removes tracing from graphql runtime
+- Removes tracing from graphqlruntime
 
 ## [3.62.3] - 2019-10-30
 ### Fixed

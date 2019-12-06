@@ -1,5 +1,6 @@
 import * as TypeMoq from 'typemoq'
-import { VBase } from '../clients/VBase'
+
+import { VBase } from '../clients/infra/VBase'
 import { MineWinsConflictsResolver } from './MineWinsConflictsResolver'
 
 describe('MineWinsConflictsResolver', () => {

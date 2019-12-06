@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { Cancellation } from '../../service/typings'
+import { Cancellation } from '../../service/worker/runtime/typings'
 import { MiddlewareContext } from '../typings'
 
 const production = process.env.VTEX_PRODUCTION === 'true'
