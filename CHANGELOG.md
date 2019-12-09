@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.69.0] - 2019-12-09
+### Added
+- Adds getBundle in assets client
+
 ## [3.68.0] - 2019-12-09
 ### Changed
 - Translate directive call messages without Apps

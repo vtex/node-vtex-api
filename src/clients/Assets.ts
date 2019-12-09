@@ -1,4 +1,5 @@
 import { contains, filter, isEmpty, pick as ramdaPick, zipObj } from 'ramda'
+import { Readable } from 'stream'
 
 import { AppMetaInfo } from '..'
 import { CacheType, inflightURL, InfraClient, InstanceOptions } from '../HttpClient'
@@ -31,12 +32,22 @@ export interface AssetsParams {
   pick?: string[]
 }
 
+const appOrRegistry = (workspace: string, { name, version, build }: ParsedLocator) =>
+    build
+      ? `${workspace}/apps/${name}@${version}+${build}`
+      : `master/registry/${name}/${version}`
+
+const createRoutes = (workspace: string) => ({
+  Bundle: (scope: string, locator: ParsedLocator, path: string) => `/${scope}/${appOrRegistry(workspace, locator)}/bundle/${path}`,
+  Files: (scope: string, locator: ParsedLocator, path: string) => `/${scope}/${appOrRegistry(workspace, locator)}/files/${path}`,
+})
+
 export class Assets extends InfraClient {
-  private route: (scope: string, locator: ParsedLocator, path: string) => string
+  private routes: ReturnType<typeof createRoutes>
 
   constructor(context: IOContext, options?: InstanceOptions) {
     super('apps@0.x', context, options, true)
-    this.route = this.fileRoute(this.context.workspace)
+    this.routes = createRoutes(this.context.workspace)
   }
 
   public getSettings (dependencies: AppMetaInfo[], appAtMajor: string, params: AssetsParams = {}) {
@@ -73,14 +84,14 @@ export class Assets extends InfraClient {
     return result
   }
 
-  public async getFile(appId: string, file: string, nullIfNotFound?: boolean) {
+  public async getFile<T extends object | null>(appId: string, file: string, nullIfNotFound?: boolean) {
     const locator = parseAppId(appId)
     const linked = !!locator.build
 
     if (linked) {
-      return this.getAppFileByAccount(appId, file, nullIfNotFound)
+      return this.getAppFileByAccount<T>(appId, file, nullIfNotFound)
     }
-    return this.getAppFileByVendor(appId, file, nullIfNotFound)
+    return this.getAppFileByVendor<T>(appId, file, nullIfNotFound)
   }
 
   public getFilteredDependencies(apps: string | string[], dependencies: AppMetaInfo[]): AppMetaInfo[] {
@@ -89,10 +100,24 @@ export class Assets extends InfraClient {
     return filter(depends, dependencies)
   }
 
+  public getAppBundleByVendor = (app: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
+    const locator = parseAppId(app)
+    const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
+    const metric = locator.build ? 'apps-get-bundle' : 'registry-get-bundle'
+    return this.http.getStream(this.routes.Bundle(this.context.account, locator, bundlePath), {
+      headers: {
+        Accept: 'application/x-gzip',
+        'Accept-Encoding': 'gzip',
+      },
+      metric,
+      params,
+    })
+  }
+
   protected getAppFileByAccount = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
     const locator = parseAppId(app)
     const inflightKey = inflightURL
-    return this.http.get<T>(this.route(this.context.account, locator, path), {
+    return this.http.get<T>(this.routes.Files(this.context.account, locator, path), {
       cacheable: CacheType.Memory,
       inflightKey,
       metric: 'assets-get-json-by-account',
@@ -104,20 +129,12 @@ export class Assets extends InfraClient {
     const locator = parseAppId(app)
     const vendor = locator.name.split('.')[0]
     const inflightKey = inflightURL
-    return this.http.get<T>(this.route(vendor, locator, path), {
+    return this.http.get<T>(this.routes.Files(vendor, locator, path), {
         cacheable: CacheType.Any,
         inflightKey,
         metric: 'assets-get-json-by-vendor',
         nullIfNotFound,
       } as IgnoreNotFoundRequestConfig)
-  }
-
-  private fileRoute(workspace: string) {
-    const appOrRegistry = ({ name, version, build }: ParsedLocator) => build
-      ? `${workspace}/apps/${name}@${version}+${build}`
-      : `master/registry/${name}/${version}`
-
-    return (scope: string, locator: ParsedLocator, path: string) => `/${scope}/${appOrRegistry(locator)}/files/${path}`
   }
 }
 
