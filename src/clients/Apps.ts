@@ -306,9 +306,7 @@ export class Apps extends InfraClient {
     const key = getMetaInfoKey(account)
 
     const cachedResponse: {appsMetaInfo: AppMetaInfo[], headers: any} | undefined = this.diskCache && await this.diskCache.get(key)
-    if (!this.context.recorder) {
-      logger.warn('Context without recorder, the etag will not be recorded')
-    } else if (cachedResponse){
+    if (cachedResponse && this.context.recorder) {
       this.context.recorder(cachedResponse.headers)
     }
 
