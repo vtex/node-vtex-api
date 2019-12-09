@@ -15,6 +15,7 @@ export interface IOMessageInputV2 {
   content: string
   context?: string
   behavior?: Behavior
+  withAppsMetaInfo?: boolean
 }
 
 export type Behavior = 'FULL' | 'USER_ONLY' | 'USER_AND_APP'
