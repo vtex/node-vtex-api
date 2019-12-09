@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.68.0] - 2019-12-09
 ### Changed
 - Translate directive call messages without Apps
 - TranslateV2 directive call messages depending on Apps
