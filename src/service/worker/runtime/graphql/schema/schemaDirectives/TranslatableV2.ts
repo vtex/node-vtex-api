@@ -13,12 +13,12 @@ const CONTENT_REGEX = /\(\(\((?<context>(.)*)\)\)\)|\<\<\<(?<from>(.)*)\>\>\>/g
 export class TranslatableV2 extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, ServiceContext>) {
     const { resolve = defaultFieldResolver } = field
-    const { behavior = 'FULL' } = this.args
+    const { behavior = 'FULL', withAppsMetaInfo = false } = this.args
     field.resolve = async (root, args, ctx, info) => {
       if (!ctx.loaders || !ctx.loaders.messagesV2) {
         ctx.loaders = {
           ...ctx.loaders,
-          messagesV2: messagesLoaderV2(ctx.clients),
+          messagesV2: messagesLoaderV2(ctx.clients, withAppsMetaInfo),
         }
       }
       const response = await resolve(root, args, ctx, info) as string | string[] | null
