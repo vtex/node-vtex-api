@@ -1,5 +1,4 @@
 import { map } from 'bluebird'
-import DataLoader from 'dataloader' // eslint-disable-line no-unused-vars
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 import { path } from 'ramda'
@@ -52,7 +51,7 @@ export const parseTranslatableStringV2 = (rawMessage: string): TranslatableMessa
 export const formatTranslatableStringV2 = ({from, content, context}: TranslatableMessageV2): string =>
   `${content} ${context ? `(((${context})))` : ''} ${from ? `<<<${from}>>>` : ''}`
 
-export const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2, behavior: Behavior) => async (rawMessage: string | null) => {
+const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2, behavior: Behavior) => async (rawMessage: string | null) => {
   // Messages only knows how to process non empty strings.
   if (rawMessage == null) {
     return rawMessage
