@@ -1,5 +1,5 @@
-import { IOContext } from '../../service/typings'
 import { cleanError } from '../../utils/error'
+import { IOContext } from '../worker/runtime/typings'
 import { logOnceToDevConsole } from './console'
 
 const linked = !!process.env.VTEX_APP_LINK

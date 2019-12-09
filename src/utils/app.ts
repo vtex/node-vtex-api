@@ -1,6 +1,6 @@
 import semver from 'semver'
 
-import { AppMetaInfo } from '../clients/Apps'
+import { AppMetaInfo } from '../clients/infra/Apps'
 
 // Note: The name that composes the part of the appId that precedes the
 // character '@' includes the name given to the app and the vendor name.

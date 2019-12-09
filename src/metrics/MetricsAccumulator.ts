@@ -2,21 +2,15 @@ import { assoc, flatten, map, mapObjIndexed, values } from 'ramda'
 import { mean, median, percentile } from 'stats-lite'
 
 import { httpAgentStats } from '../HttpClient/middlewares/request'
-import { incomingRequestStats } from '../service/http/middlewares/requestStats'
+import {
+  incomingRequestStats,
+} from '../service/worker/runtime/http/middlewares/requestStats'
+import { EnvMetric, NamedMetric } from '../service/worker/runtime/statusTrack'
 import { hrToMillis } from '../utils/time'
 
 export interface Metric {
   name: string
   [key: string]: number | string | null,
-}
-
-interface NamedMetric {
-  name: string,
-  [key: string]: any
-}
-
-export interface EnvMetric extends NamedMetric {
-  production: boolean,
 }
 
 // Production pods never handle development workspaces and vice-versa.
@@ -56,7 +50,7 @@ function getIncomingRequestStats () {
   return stats
 }
 
-export type StatusTrack = () => EnvMetric[]
+
 
 export class MetricsAccumulator {
   private metricsMillis: Record<string, number[]>
