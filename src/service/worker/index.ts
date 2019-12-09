@@ -12,20 +12,22 @@ import { addProcessListeners, logger } from '../../utils/unhandled'
 import { getService } from '../loaders'
 import { logOnceToDevConsole } from '../logger/console'
 import { LogLevel } from '../logger/logger'
+import {
+  healthcheckHandler,
+  metricsLoggerHandler,
+  whoAmIHandler,
+} from './runtime/builtIn/handlers'
+import {
+  addMetricsLoggerMiddleware,
+  prometheusLoggerMiddleware,
+  recorderMiddleware,
+} from './runtime/builtIn/middlewares'
 import { createEventHandler } from './runtime/events'
 import { routerFromEventHandlers } from './runtime/events/router'
 import { createGraphQLRoute, GRAPHQL_ROUTE } from './runtime/graphql'
 import { createPrivateHttpRoute, createPublicHttpRoute } from './runtime/http'
 import { routerFromPublicHttpHandlers } from './runtime/http/router'
 import { logAvailableRoutes } from './runtime/http/routes'
-import {
-  addMetricsLoggerMiddleware,
-  healthcheckHandler,
-  metricsLoggerHandler,
-  prometheusLoggerMiddleware,
-  recorderMiddleware,
-  whoAmIHandler,
-} from './runtime/middlewares'
 import { Service } from './runtime/Service'
 import {
   isStatusTrack,
