@@ -299,30 +299,8 @@ export class Apps extends InfraClient {
       )
   }
 
-  public getAppsMetaInfos = async (filter?: string, staleIfError?: boolean) => {
-    const { account, workspace, logger } = this.context
-    const metric = 'get-apps-meta'
-    const inflightKey = inflightURL
-
-    try {
-      const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey}).then(prop('apps'))
-      if (staleIfError && this.diskCache) {
-        updateMetaInfoCache(this.diskCache, account, workspace, appsMetaInfos, logger)
-      }
-      if (filter) {
-        return ramdaFilter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfos)
-      }
-      return appsMetaInfos
-    } catch (error) {
-      if (staleIfError && workspace === 'master' && this.diskCache) {
-        return await this.diskCache.get(getMetaInfoKey(account)) || []
-      }
-      throw error
-    }
-  }
-
-  public getStaleAppsMetaInfos = async (filter?: string) => {
-    const { account, workspace, logger } = this.context
+  public getAppsMetaInfos = async (filter?: string, staleWhileRevalidate: boolean = true) => {
+    const { account, logger, production} = this.context
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
     const key = getMetaInfoKey(account)
@@ -348,8 +326,9 @@ export class Apps extends InfraClient {
         return response
       })
 
-    const appsMetaInfo: AppMetaInfo[] = cachedResponse
-      ? cachedResponse.appsMetaInfo
+    const useCachedResponse = cachedResponse && production && staleWhileRevalidate
+    const appsMeteaInfo: AppMetaInfo[] = useCachedResponse
+      ? cachedResponse!.appsMetaInfo
       : await metaInfoPromise.then(response => response.data.apps)
 
     if (filter) {
