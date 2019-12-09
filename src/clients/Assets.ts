@@ -100,8 +100,7 @@ export class Assets extends InfraClient {
     return filter(depends, dependencies)
   }
 
-
-  public getAppBundle = (app: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
+  public getAppBundleByVendor = (app: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
     const locator = parseAppId(app)
     const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
     const metric = locator.build ? 'apps-get-bundle' : 'registry-get-bundle'
@@ -114,7 +113,6 @@ export class Assets extends InfraClient {
       params,
     })
   }
-
 
   protected getAppFileByAccount = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
     const locator = parseAppId(app)
