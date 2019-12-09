@@ -12,7 +12,9 @@ export class Translatable extends SchemaDirectiveVisitor {
     const { behavior = 'FULL' } = this.args
     field.resolve = async (root, args, context, info) => {
       const { clients: { segment }, clients, vtex: { logger }} = context
-      logger.warn(`Translatable directive in use by: ${context.vtex.account} (Operation Id: ${context.vtex.operationId})`)
+      if (Math.random() < 0.1) {
+        logger.warn(`Translatable directive in use by: ${context.vtex.account} (Operation Id: ${context.vtex.operationId})`)
+      }
       if (!context.loaders || !context.loaders.messages) {
         context.loaders = {
           ...context.loaders,
