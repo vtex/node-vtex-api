@@ -305,11 +305,7 @@ export class Apps extends InfraClient {
     const inflightKey = inflightURL
     const key = getMetaInfoKey(account)
 
-    if (!this.diskCache) {
-      throw Error('Apps client without diskCache')
-    }
-
-    const cachedResponse: {appsMetaInfo: AppMetaInfo[], headers: any} | undefined = await this.diskCache.get(key)
+    const cachedResponse: {appsMetaInfo: AppMetaInfo[], headers: any} | undefined = this.diskCache && await this.diskCache.get(key)
     if (!this.context.recorder) {
       logger.warn('Context without recorder, the etag will not be recorded')
     } else if (cachedResponse){
@@ -319,15 +315,17 @@ export class Apps extends InfraClient {
     const metaInfoPromise = this.http.getRaw<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey})
       .then((response) => {
         const {data, headers: responseHeaders} = response
-        this.diskCache!.set(key, {
-          appsMetaInfo: data.apps || [],
-          headers: responseHeaders,
-        })
+        if (this.diskCache) {
+          this.diskCache.set(key, {
+            appsMetaInfo: data.apps || [],
+            headers: responseHeaders,
+          })
+        }
         return response
       })
 
     const useCachedResponse = cachedResponse && production && staleWhileRevalidate
-    const appsMeteaInfo: AppMetaInfo[] = useCachedResponse
+    const appsMetaInfo: AppMetaInfo[] = useCachedResponse
       ? cachedResponse!.appsMetaInfo
       : await metaInfoPromise.then(response => response.data.apps)
 
