@@ -300,7 +300,7 @@ export class Apps extends InfraClient {
   }
 
   public getAppsMetaInfos = async (filter?: string, staleWhileRevalidate: boolean = true) => {
-    const { account, logger, production} = this.context
+    const { account, production} = this.context
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
     const key = getMetaInfoKey(account)
