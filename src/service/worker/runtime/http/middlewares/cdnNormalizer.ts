@@ -1,6 +1,10 @@
 import { IOClients } from '../../../../../clients/IOClients'
-import { SEGMENT_HEADER, SESSION_HEADER, VaryHeaders } from '../../../../../constants'
-import { ServiceContext } from '../../typings'
+import {
+  SEGMENT_HEADER,
+  SESSION_HEADER,
+  VaryHeaders,
+} from '../../../../../constants'
+import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
 
 export interface CachingStrategy {
   forbidden: VaryHeaders[]
@@ -27,7 +31,11 @@ export const cachingStrategies: CachingStrategy[] = [
 ]
 
 
-export async function cdnNormalizer <T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
+export async function cdnNormalizer <
+  T extends IOClients,
+  U extends RecorderState,
+  V extends ParamsContext
+> (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
   const { path } = ctx
   const strategy = cachingStrategies.find(cachingStrategy => path.indexOf(cachingStrategy.path) === 0)
 

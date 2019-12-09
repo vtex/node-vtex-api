@@ -9,7 +9,12 @@ import {
   reduceTimings,
   shrinkTimings,
 } from '../../../../../utils/time'
-import { IOContext, ServiceContext } from '../../typings'
+import {
+  IOContext,
+  ParamsContext,
+  RecorderState,
+  ServiceContext,
+} from '../../typings'
 
 const APP_ELAPSED_TIME_LOCATOR = shrinkTimings(formatTimingName({
   hopNumber: 0,
@@ -22,7 +27,11 @@ const formatDate = (date: Date) => chalk.dim('[' + date.toISOString().split('T')
 const formatStatus = (status: number) => status >= 500 ? chalk.red(status.toString()) : (status >=200 && status < 300 ? chalk.green(status.toString()) : status)
 const formatMillis = (millis: number) => millis >= 500 ? chalk.red(millis.toString()) : millis >= 200 ? chalk.yellow(millis.toString()) : chalk.green(millis.toString())
 
-const log = <T extends IOClients, U, V>(
+const log = <
+  T extends IOClients,
+  U extends RecorderState,
+  V extends ParamsContext
+>(
   { vtex: { account, workspace, route: { id } }, path, method, status }: ServiceContext<T, U, V>,
   millis: number
 ) =>
@@ -45,7 +54,11 @@ const logBillingInfo = (
   'workspace': workspace,
 })
 
-export async function timings<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
+export async function timings <
+  T extends IOClients,
+  U extends RecorderState,
+  V extends ParamsContext
+> (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
   // Errors will be caught by the next middleware so we don't have to catch.
   await next()
 

@@ -31,7 +31,7 @@ export default new Service({
 This allows you to define middlewares that receive a `Context` param which contains all IO Clients in the `clients` property:
 
 ```javascript
-export const example = async (ctx: Context, next: () => Promise<any>) => {
+export const example = async (ctx: Context, next: () => Promise<void>) => {
   const {state: {code}, clients: {apps}} = ctx
   console.log('Received code:', code)
 

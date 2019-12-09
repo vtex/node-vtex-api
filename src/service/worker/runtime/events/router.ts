@@ -1,16 +1,16 @@
 import { LogLevel } from '../../../logger'
+import { RouteHandler, ServiceContext } from '../typings'
 import { logOnceToDevConsole } from './../../../logger/console'
-import { ServiceRuntimeContext } from './../typings'
 
-export const routerFromEventHandlers = (events: Record<string, any>) => {
-  return async (ctx: ServiceRuntimeContext, next: () => Promise<any>) => {
+export const routerFromEventHandlers = (events: Record<string, RouteHandler> | null) => {
+  return async (ctx: ServiceContext, next: () => Promise<void>) => {
     const {
       headers: {
         EVENT_HANDLER_ID_HEADER: handlerId,
       },
     } = ctx
 
-    if (!handlerId) {
+    if (!handlerId || !events) {
       return next()
     }
 

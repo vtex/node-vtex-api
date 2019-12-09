@@ -3,7 +3,7 @@ import { makeExecutableSchema } from 'graphql-tools'
 import { keys, map, zipObj } from 'ramda'
 
 import { IOClients } from '../../../../../clients/IOClients'
-import { GraphQLOptions } from '../../typings'
+import { GraphQLOptions, ParamsContext, RecorderState } from '../../typings'
 import {
   nativeSchemaDirectives,
   nativeSchemaDirectivesTypeDefs,
@@ -27,7 +27,11 @@ const extractSchemaMetaData = (typeDefs: string) => {
   return zipObj(scalars, scalarsPresentInSchema)
 }
 
-export const makeSchema = <ClientsT extends IOClients = IOClients, StateT = void, CustomT = void>(options: GraphQLOptions<ClientsT, StateT, CustomT>) => {
+export const makeSchema = <
+  ClientsT extends IOClients = IOClients,
+  StateT extends RecorderState = RecorderState,
+  CustomT extends ParamsContext = ParamsContext
+>(options: GraphQLOptions<ClientsT, StateT, CustomT>) => {
   const {
     resolvers: appResolvers,
     schemaDirectives: appDirectives,

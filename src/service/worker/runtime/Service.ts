@@ -1,6 +1,6 @@
 import { IOClients } from '../../../clients/IOClients'
 import { LogLevel, logOnceToDevConsole } from '../../logger'
-import { ServiceConfig } from './typings'
+import { ParamsContext, RecorderState, ServiceConfig } from './typings'
 
 /**
  * This is the client definition to allow type checking on code editors.
@@ -13,8 +13,12 @@ import { ServiceConfig } from './typings'
  * @template StateT The state bag in `ctx.state`
  * @template CustomT Any custom fields in `ctx`. THIS IS NOT RECOMMENDED. Use StateT instead.
  */
-export class Service<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void>{
-  constructor(public config: ServiceConfig<ClientsT, StateT, CustomT>) {
+export class Service<
+  T extends IOClients,
+  U extends RecorderState,
+  V extends ParamsContext
+>{
+  constructor(public config: ServiceConfig<T, U, V>) {
     if (config.routes && config.routes.graphql) {
       logOnceToDevConsole(`Route id "graphql" is reserved and apps containing this routes will stop working in the near future. To create a GraphQL app, export a "graphql" key with {resolvers}.`, LogLevel.Warn)
     }

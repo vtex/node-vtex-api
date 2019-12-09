@@ -31,8 +31,8 @@ export const createEventHandler = <T extends IOClients, U extends RecorderState,
   return compose(pipeline)
 }
 
-function contextAdapter<ClientsT extends IOClients, StateT, CustomT> (middlewares: Array<EventHandler<ClientsT, StateT>>) {
-  return  async function  middlewareCascade(ctx: ServiceContext<ClientsT, StateT, CustomT>) {
+function contextAdapter<T extends IOClients, U extends RecorderState, V extends ParamsContext> (middlewares: Array<EventHandler<T, U>>) {
+  return  async function  middlewareCascade(ctx: ServiceContext<T, U, V>) {
     const ctxEvent = {
       body: (ctx.state as any).body,
       clients: ctx.clients,
@@ -44,7 +44,7 @@ function contextAdapter<ClientsT extends IOClients, StateT, CustomT> (middleware
       timings: ctx.timings,
       vtex: ctx.vtex,
     }
-    await composeForEvents<ClientsT, StateT>(middlewares)(ctxEvent)
+    await composeForEvents<T, U>(middlewares)(ctxEvent)
     ctx.status = 204
   }
 }

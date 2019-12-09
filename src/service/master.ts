@@ -1,7 +1,7 @@
 import cluster, { Worker } from 'cluster'
 
 import { LINKED, UP_SIGNAL } from '../constants'
-import { logger } from '../utils/unhandled'
+import { addProcessListeners, logger } from '../utils/unhandled'
 import { isLog, logOnceToDevConsole } from './logger'
 import {
   broadcastStatusTrack,
@@ -49,6 +49,8 @@ const onOnline = (worker: Worker) => {
 }
 
 export const startMaster = (service: ServiceJSON) => {
+  addProcessListeners()
+
   const { workers: numWorkers } = service
 
   console.log(`Spawning ${numWorkers} workers`)

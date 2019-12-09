@@ -1,7 +1,12 @@
 import { mapObjIndexed } from 'ramda'
 
 import { IOClients } from '../../../clients/IOClients'
-import { RouteHandler, ServiceContext } from './typings'
+import {
+  ParamsContext,
+  RecorderState,
+  RouteHandler,
+  ServiceContext,
+} from './typings'
 import { compose } from './utils/compose'
 
 type HTTPMethods =
@@ -18,8 +23,8 @@ type HTTPMethods =
 
 type MethodOptions<
   ClientsT extends IOClients = IOClients,
-  StateT = void,
-  CustomT = void
+  StateT extends RecorderState = RecorderState,
+  CustomT extends ParamsContext = ParamsContext
 > = Partial<
   Record<
     HTTPMethods,
@@ -30,28 +35,32 @@ type MethodOptions<
 
 const TEN_SECONDS_S = 10
 
-function methodNotAllowed<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void>(ctx: ServiceContext<ClientsT, StateT, CustomT>) {
+function methodNotAllowed<
+  T extends IOClients,
+  U extends RecorderState,
+  V extends ParamsContext
+>(ctx: ServiceContext<T, U, V>) {
   ctx.status = 405
   ctx.set('cache-control', `public, max-age=${TEN_SECONDS_S}`)
 }
 
 export function method<
-  ClientsT extends IOClients = IOClients,
-  StateT = void,
-  CustomT = void
->(options: MethodOptions<ClientsT, StateT, CustomT>) {
+  T extends IOClients,
+  U extends RecorderState,
+  V extends ParamsContext
+>(options: MethodOptions<T, U, V>) {
   const handlers = mapObjIndexed(
     handler => compose(Array.isArray(handler) ? handler : [handler]),
     options as Record<
       string,
-      | RouteHandler<ClientsT, StateT, CustomT>
-      | Array<RouteHandler<ClientsT, StateT, CustomT>>
+      | RouteHandler<T, U, V>
+      | Array<RouteHandler<T, U, V>>
     >
   )
 
   const inner = async function forMethod (
-    ctx: ServiceContext<ClientsT, StateT, CustomT>,
-    next: () => Promise<any>
+    ctx: ServiceContext<T, U, V>,
+    next: () => Promise<void>
   ) {
     const verb = ctx.method.toUpperCase()
     const handler = handlers[verb] || handlers.DEFAULT || methodNotAllowed

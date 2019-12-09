@@ -3,10 +3,14 @@ import {
   IOClients,
 } from '../../../../../clients/IOClients'
 import { InstanceOptions } from '../../../../../HttpClient'
-import { ServiceContext } from '../../typings'
+import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
 
-export function clients<T extends IOClients, U, V>(ClientsImpl: ClientsImplementation<T>, clientOptions: Record<string, InstanceOptions>) {
-  return async function withClients(ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
+export function clients<
+  T extends IOClients,
+  U extends RecorderState,
+  V extends ParamsContext
+>(ClientsImpl: ClientsImplementation<T>, clientOptions: Record<string, InstanceOptions>) {
+  return async function withClients(ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
     if (ctx.serverTiming){
       ctx.vtex.serverTiming = ctx.serverTiming
     }

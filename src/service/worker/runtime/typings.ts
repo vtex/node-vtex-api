@@ -56,19 +56,22 @@ interface Loaders {
 
 export type ServiceRuntimeContext = ServiceContext<IOClients, RecorderState, ParamsContext>
 
-export type ServiceContext<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Pick<ParameterizedContext<StateT, Context<ClientsT>>, KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>> & CustomT & { loaders: Loaders }
+export type ServiceContext<ClientsT extends IOClients = IOClients, StateT extends RecorderState = RecorderState, CustomT extends ParamsContext = ParamsContext> = Pick<ParameterizedContext<StateT, Context<ClientsT>>, KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>> & CustomT & { loaders: Loaders }
 
-export type RouteHandler<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>
+export type RouteHandler<ClientsT extends IOClients = IOClients, StateT extends RecorderState = RecorderState, CustomT extends ParamsContext = ParamsContext> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>
 
 export type EventHandler<ClientsT extends IOClients = IOClients, StateT = void> = Middleware<EventContext<ClientsT, StateT>>
 
-export type Resolver<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> =
+export type Resolver<ClientsT extends IOClients = IOClients, StateT extends RecorderState = RecorderState, CustomT extends ParamsContext = ParamsContext> =
   GraphQLFieldResolver<any, ServiceContext<ClientsT, StateT, CustomT>, any>
   | GraphQLFieldConfig<any, ServiceContext<ClientsT, StateT, CustomT>, any>
 
 export type Handler = RouteHandler<IOClients, RecorderState, ParamsContext>
 
-export type HandlerByRoutes = Record<string, Handler>
+export interface HttpRoute {
+  handler: RouteHandler
+  path: string
+}
 
 export interface RecorderState {
   recorder: any
@@ -85,12 +88,12 @@ export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
   options: Record<string, InstanceOptions>
 }
 
-export interface GraphQLOptions<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
+export interface GraphQLOptions<ClientsT extends IOClients = IOClients, StateT extends RecorderState = RecorderState, CustomT extends ParamsContext = ParamsContext> {
   resolvers: Record<string, Record<string, Resolver<ClientsT, StateT, CustomT>> | GraphQLScalarType>
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>
 }
 
-export interface ServiceConfig<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
+export interface ServiceConfig<ClientsT extends IOClients = IOClients, StateT extends RecorderState = RecorderState, CustomT extends ParamsContext = ParamsContext> {
   clients?: ClientsConfig<ClientsT>
   events?: Record<string, EventHandler<ClientsT, StateT> | Array<EventHandler<ClientsT, StateT>>>,
   graphql?: GraphQLOptions<ClientsT, StateT, CustomT>,

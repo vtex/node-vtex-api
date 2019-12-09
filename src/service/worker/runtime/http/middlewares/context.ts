@@ -14,7 +14,7 @@ import {
 } from './../../typings'
 
 export const createPvtContextMiddleware = (routeId: string, { smartcache }: ServiceRoute) => {
-  return async function pvtContext <T extends IOClients, U extends RecorderState, V extends ParamsContext>(ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
+  return async function pvtContext <T extends IOClients, U extends RecorderState, V extends ParamsContext>(ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
     const { params, request: { header } } = ctx
     ctx.vtex = {
       ...prepareHandlerCtx(header),
@@ -30,7 +30,7 @@ export const createPvtContextMiddleware = (routeId: string, { smartcache }: Serv
 }
 
 export const createPubContextMiddleware = (routeId: string, { smartcache }: ServiceRoute) => {
-  return async function pubContext <T extends IOClients, U extends RecorderState, V extends ParamsContext>(ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
+  return async function pubContext <T extends IOClients, U extends RecorderState, V extends ParamsContext>(ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
     const { request: { header } } = ctx
     ctx.vtex = {
       ...prepareHandlerCtx(header),

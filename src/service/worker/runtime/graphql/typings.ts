@@ -1,7 +1,7 @@
 import { DocumentNode, execute } from 'graphql'
 
 import { IOClients } from '../../../../clients/IOClients'
-import { ServiceContext } from '../typings'
+import { ParamsContext, RecorderState, ServiceContext } from '../typings'
 
 export interface Query {
   variables?: Record<string, any>
@@ -20,7 +20,7 @@ export interface GraphQLCacheControl {
   noStore: boolean
 }
 
-export interface GraphQLContext {
+export interface GraphQLContext extends ParamsContext {
   graphql: {
     query?: Query
     graphqlResponse?: GraphQLResponse
@@ -29,4 +29,4 @@ export interface GraphQLContext {
   }
 }
 
-export type GraphQLServiceContext = ServiceContext<IOClients, any, GraphQLContext>
+export type GraphQLServiceContext = ServiceContext<IOClients, RecorderState, GraphQLContext>

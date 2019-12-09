@@ -10,7 +10,7 @@ const graphqlUpload = graphqlUploadKoa({
 
 function graphqlUploadKoaMiddleware(
   ctx: GraphQLServiceContext,
-  next: () => Promise<any>
+  next: () => Promise<void>
 ): Promise<void> {
   return graphqlUpload(ctx as any, next)
 }

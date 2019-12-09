@@ -1,9 +1,9 @@
 import { LogLevel } from '../../../logger'
+import { ServiceContext } from '../typings'
 import { logOnceToDevConsole } from './../../../logger/console'
-import { ServiceRuntimeContext } from './../typings'
 
 export const routerFromPublicHttpHandlers = (routes: Record<string, any>) => {
-  return async (ctx: ServiceRuntimeContext, next: () => Promise<any>) => {
+  return async (ctx: ServiceContext, next: () => Promise<void>) => {
     const {
       headers: {
         COLOSSUS_ROUTE_ID_HEADER: routeId,

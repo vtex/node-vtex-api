@@ -1,5 +1,5 @@
 import { IOClients } from '../../../../../clients/IOClients'
-import { ServiceContext } from '../../typings'
+import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
 
 export const cancelMessage = 'Request cancelled'
 
@@ -28,7 +28,11 @@ export const incomingRequestStats = new IncomingRequestStats()
 const requestClosed = () => {
   incomingRequestStats.closed++
 }
-const requestAborted = <T extends IOClients, U, V>(ctx: ServiceContext<T, U, V>) => () => {
+const requestAborted = <
+  T extends IOClients,
+  U extends RecorderState,
+  V extends ParamsContext
+>(ctx: ServiceContext<T, U, V>) => () => {
   incomingRequestStats.aborted++
 
   if (ctx.vtex.cancellation && ctx.vtex.cancellation.cancelable) {
@@ -37,7 +41,11 @@ const requestAborted = <T extends IOClients, U, V>(ctx: ServiceContext<T, U, V>)
   }
 }
 
-export async function trackIncomingRequestStats <T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
+export async function trackIncomingRequestStats <
+  T extends IOClients,
+  U extends RecorderState,
+  V extends ParamsContext
+> (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
   ctx.req.on('close', requestClosed)
   ctx.req.on('aborted', requestAborted(ctx))
   incomingRequestStats.total++

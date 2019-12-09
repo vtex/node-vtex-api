@@ -1,7 +1,7 @@
 import { compose, find, head, isEmpty, map, reduce, split } from 'ramda'
 
 import { IOClients } from '../../../../../clients/IOClients'
-import { ServiceContext } from '../../typings'
+import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
 
 const BLACKLISTED_COOKIES = new Set<string>(['checkout.vtex.com'])
 
@@ -32,7 +32,11 @@ interface CookieAccumulator {
   droppedKeys: string[]
 }
 
-export async function removeSetCookie<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
+export async function removeSetCookie<
+  T extends IOClients,
+  U extends RecorderState,
+  V extends ParamsContext
+> (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
   const { vtex: { logger } } = ctx
 
   await next()

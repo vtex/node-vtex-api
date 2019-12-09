@@ -32,7 +32,13 @@ import {
   statusTrackHandler,
   trackStatus,
 } from './runtime/statusTrack'
-import { ParamsContext, RecorderState, ServiceJSON } from './runtime/typings'
+import {
+  HttpRoute,
+  ParamsContext,
+  RecorderState,
+  RouteHandler,
+  ServiceJSON,
+} from './runtime/typings'
 
 const upSignal = () => {
   const data = JSON.stringify({ statusTrack: true })
@@ -70,52 +76,61 @@ const onMessage = (service: ServiceJSON) => (message: any) => {
   }
 }
 
+interface HttpHandlerByScope {
+  pub?: Record<string, HttpRoute>
+  pvt?: Record<string, HttpRoute>
+}
+
 const createAppHttpHandlers = (
-  { config: { routes, clients }}: Service<IOClients, RecorderState, ParamsContext>,
+  { config: { routes, clients } }: Service<IOClients, RecorderState, ParamsContext>,
   serviceJSON: ServiceJSON
-) => Object.keys(routes || {}).reduce(
-  (acc, routeId) => {
-    const serviceRoute = serviceJSON.routes?.[routeId]
+) => {
+  if (routes && clients) {
+    return Object.keys(routes).reduce(
+      (acc, routeId) => {
+        const serviceRoute = serviceJSON.routes?.[routeId]
 
-    if (!serviceRoute) {
-      throw new Error(`Could not find route: ${routeId}. Please add ${routeId} route in your service.json file`)
-    }
+        if (!serviceRoute) {
+          throw new Error(`Could not find route: ${routeId}. Please add ${routeId} route in your service.json file`)
+        }
 
-    const {
-      path: servicePath,
-      public: publicRoute = false,
-    } = serviceRoute
+        const {
+          path: servicePath,
+          public: publicRoute = false,
+        } = serviceRoute
 
-    if (publicRoute) {
-      acc.pub[routeId] = {
-        handler: createPublicHttpRoute(clients!, routes![routeId], serviceRoute, routeId),
-        path: servicePath,
-      }
-    } else {
-      acc.pvt[routeId] = {
-        handler: createPrivateHttpRoute(clients!, routes![routeId], serviceRoute, routeId),
-        path: `/:account/:workspace${servicePath.replace(/\*([^/]*)/g, ':$1*')}`,
-      }
-    }
+        if (publicRoute) {
+          acc.pub[routeId] = {
+            handler: createPublicHttpRoute(clients, routes[routeId], serviceRoute, routeId),
+            path: servicePath,
+          }
+        } else {
+          acc.pvt[routeId] = {
+            handler: createPrivateHttpRoute(clients, routes[routeId], serviceRoute, routeId),
+            path: `/:account/:workspace${servicePath.replace(/\*([^/]*)/g, ':$1*')}`,
+          }
+        }
 
-    return acc
-  },
-  {
-    // TODO: fix this before shipping 🚢🚢🚢
-    pub: {} as Record<string, any>,
-    pvt: {} as Record<string, any>,
+        return acc
+      },
+      {
+        pub: {},
+        pvt: {},
+      } as Required<HttpHandlerByScope>
+    )
   }
-)
+  return null
+}
 
-const routerFromPrivateHttpHandlers = (routes: Record<string, any>) => Object.values(routes).reduce(
-  (router, { handler, path }) => router.all(path, handler),
+const routerFromPrivateHttpHandlers = (routes: Record<string, HttpRoute>) => Object.values(routes).reduce(
+  (router, { handler, path }) => router.all(path, handler as any),
   new Router()
 )
 
 const createAppGraphQLHandler = (
   { config: { graphql, clients } }: Service<IOClients, RecorderState, ParamsContext>,
   { routes }: ServiceJSON
-) => {
+): HttpHandlerByScope | null => {
   const route = routes?.[GRAPHQL_ROUTE]
   if (graphql && route && clients) {
     return {
@@ -127,20 +142,25 @@ const createAppGraphQLHandler = (
       },
     }
   }
-  return {}
+  return null
 }
 
 const createAppEventHandlers = (
   { config: { events, clients } }: Service<IOClients, RecorderState, ParamsContext>
-) => Object.keys(events || {}).reduce(
-  (acc, eventId) => {
-    acc[eventId] = createEventHandler(clients!, events![eventId])
-    return acc
-  },
-  {} as Record<string, any>
-)
+) => {
+  if (events && clients) {
+    return Object.keys(events).reduce(
+      (acc, eventId) => {
+        acc[eventId] = createEventHandler(clients, events[eventId])
+        return acc
+      },
+      {} as Record<string, RouteHandler>
+    )
+  }
+  return null
+}
 
-const createRuntimeHttpHandlers = (appEventHandlers: Record<string, any>, serviceJSON: ServiceJSON) => ({
+const createRuntimeHttpHandlers = (appEventHandlers: Record<string, RouteHandler> | null, serviceJSON: ServiceJSON): HttpHandlerByScope => ({
   pvt: {
     __events: {
       handler: routerFromEventHandlers(appEventHandlers),
@@ -178,40 +198,44 @@ const scaleClientCaches = (
 })
 
 export const startWorker = (serviceJSON: ServiceJSON) => {
+  addProcessListeners()
+
   const app = new Koa()
   app.proxy = true
+  app
+    .use(prometheusLoggerMiddleware())
+    .use(addMetricsLoggerMiddleware())
+    .use(compress())
+    .use(recorderMiddleware)
 
   const service = getService()
-  const { config: { clients, events } } = service
-  const { options } = clients!
-  scaleClientCaches(serviceJSON.workers, options)
+
+  const { config: { clients } } = service
+  if (clients) {
+    scaleClientCaches(serviceJSON.workers, clients.options)
+  }
 
   const appHttpHandlers = createAppHttpHandlers(service, serviceJSON)
   const appGraphQLHandlers = createAppGraphQLHandler(service, serviceJSON)
   const appEventHandlers = createAppEventHandlers(service)
   const runtimeHttpHandlers = createRuntimeHttpHandlers(appEventHandlers, serviceJSON)
-
-  // TODO: remove this any before shipping 🚢🚢🚢
   const httpHandlers = [
     appHttpHandlers,
     appGraphQLHandlers,
     runtimeHttpHandlers,
   ].reduce(mergeDeepRight)
 
-  // TODO: fix this before shipping 🚢🚢🚢
-  const privateHandlersRouter = routerFromPrivateHttpHandlers((httpHandlers as any).pvt)
-  const publicHandlersRouter = routerFromPublicHttpHandlers((httpHandlers as any).pub)
+  if (httpHandlers?.pub) {
+    const publicHandlersRouter = routerFromPublicHttpHandlers(httpHandlers.pub)
+    app.use(publicHandlersRouter)
+  }
 
-  addProcessListeners()
+  if (httpHandlers?.pvt) {
+    const privateHandlersRouter = routerFromPrivateHttpHandlers(httpHandlers.pvt)
+    app.use(privateHandlersRouter.routes())
+  }
+
   process.on('message', onMessage(serviceJSON))
-
-  app
-    .use(prometheusLoggerMiddleware())
-    .use(addMetricsLoggerMiddleware())
-    .use(compress())
-    .use(recorderMiddleware)
-    .use(publicHandlersRouter)
-    .use(privateHandlersRouter.routes())
 
   return app
 }

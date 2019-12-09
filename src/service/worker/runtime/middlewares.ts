@@ -3,10 +3,10 @@ import { collectDefaultMetrics, Gauge, Registry } from 'prom-client'
 import gcStats from 'prometheus-gc-stats'
 
 import { MetricsLogger } from '../../logger/metricsLogger'
-import { ServiceJSON, ServiceRuntimeContext } from './typings'
+import { ServiceContext, ServiceJSON, ServiceRuntimeContext } from './typings'
 import { createRecorder } from './utils/recorder'
 
-export function recorderMiddleware (ctx: Koa.Context, next: () => Promise<any>) {
+export function recorderMiddleware (ctx: Koa.Context, next: () => Promise<void>) {
   ctx.state.recorder = createRecorder(ctx)
   return next()
 }
@@ -14,34 +14,34 @@ export function recorderMiddleware (ctx: Koa.Context, next: () => Promise<any>) 
 export const whoAmIHandler = ({
   events,
   routes,
-}: ServiceJSON) => (ctx: ServiceRuntimeContext) => {
-  ctx.response.status = 200
-  ctx.response.body = {
+}: ServiceJSON) => (ctx: ServiceContext) => {
+  ctx.status = 200
+  ctx.body = {
     events,
     routes,
   }
-  ctx.response.set('Cache-Control', 'public, max-age=86400') // cache for 24 hours
+  ctx.set('Cache-Control', 'public, max-age=86400') // cache for 24 hours
 }
 
 export const healthcheckHandler = ({
   events,
   routes,
-}: ServiceJSON) => (ctx: ServiceRuntimeContext) => {
-  ctx.response.status = 200
-  ctx.response.body = {
+}: ServiceJSON) => (ctx: ServiceContext) => {
+  ctx.status = 200
+  ctx.body = {
     events,
     routes,
   }
 }
 
 export const metricsLoggerHandler = (ctx: ServiceRuntimeContext) => {
-  ctx.response.status = 200
-  ctx.response.body = ctx.metricsLogger.getSummaries()
+  ctx.status = 200
+  ctx.body = ctx.metricsLogger.getSummaries()
 }
 
 export const addMetricsLoggerMiddleware = () => {
   const metricsLogger = new MetricsLogger()
-  return (ctx: ServiceRuntimeContext, next: () => Promise<any>) => {
+  return (ctx: ServiceRuntimeContext, next: () => Promise<void>) => {
     ctx.metricsLogger = metricsLogger
     return next()
   }
@@ -54,15 +54,15 @@ export const prometheusLoggerMiddleware = () => {
   collectDefaultMetrics({ register })
   const startGcStats = gcStats(register)
   startGcStats()
-  return async (ctx: ServiceRuntimeContext, next: () => Promise<any>) => {
+  return async (ctx: ServiceRuntimeContext, next: () => Promise<void>) => {
     if (ctx.request.path !== '/metrics') {
       gauge.inc(1)
       await next()
       gauge.dec(1)
       return
     }
-    ctx.response.set('Content-Type', register.contentType)
-    ctx.response.body = register.metrics()
-    ctx.response.status = 200
+    ctx.set('Content-Type', register.contentType)
+    ctx.body = register.metrics()
+    ctx.status = 200
   }
 }

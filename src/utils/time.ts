@@ -6,10 +6,11 @@ import { LogLevel, logOnceToDevConsole } from '../service/logger'
 import {
   EventContext,
   EventHandler,
+  ParamsContext,
+  RecorderState,
   RouteHandler,
   ServiceContext,
 } from '../service/worker/runtime/typings'
-import { logger } from './unhandled'
 
 export const hrToMillis = ([seconds, nanoseconds]: [number, number]) =>
   Math.round((seconds * 1e3) + (nanoseconds / 1e6))
@@ -79,7 +80,11 @@ function recordTimings(start: [number, number], name: string, timings: Record<st
   }
 }
 
-export function timer<T extends IOClients, U, V>(middleware: RouteHandler<T, U, V>): RouteHandler<T, U, V> {
+export function timer<
+  T extends IOClients,
+  U extends RecorderState,
+  V extends ParamsContext
+>(middleware: RouteHandler<T, U, V>): RouteHandler<T, U, V> {
   if ((middleware as any).skipTimer) {
     return middleware
   }
@@ -88,7 +93,7 @@ export function timer<T extends IOClients, U, V>(middleware: RouteHandler<T, U, 
     logOnceToDevConsole(`Please use a named function as handler for better metrics. ${middleware.toString()}`, LogLevel.Warn)
   }
 
-  return async (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) => {
+  return async (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) => {
     if (!ctx.serverTiming) {
       ctx.serverTiming = {}
     }
@@ -123,7 +128,7 @@ export function timerForEvents<T extends IOClients, U>(middleware: EventHandler<
     logOnceToDevConsole(`Please use a named function as handler for better metrics. ${middleware.toString()}`, LogLevel.Warn)
   }
 
-  return async (ctx: EventContext<T, U>, next: () => Promise<any>) => {
+  return async (ctx: EventContext<T, U>, next: () => Promise<void>) => {
     if (!ctx.timings) {
       ctx.timings = {
         total: [0, 0],

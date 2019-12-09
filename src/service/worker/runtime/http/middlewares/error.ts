@@ -9,7 +9,7 @@ import {
 } from '../../../../../errors/TooManyRequestsError'
 import { cleanError } from '../../../../../utils/error'
 import { LogLevel } from '../../../../logger'
-import { ServiceContext } from '../../typings'
+import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
 const META_HEADER = 'x-vtex-meta'
@@ -17,7 +17,11 @@ const ETAG_HEADER = 'etag'
 const TWO_SECONDS_S = 2
 const production = process.env.VTEX_PRODUCTION === 'true'
 
-export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
+export async function error<
+  T extends IOClients,
+  U extends RecorderState,
+  V extends ParamsContext
+> (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
   try {
     await next()
   } catch (e) {
