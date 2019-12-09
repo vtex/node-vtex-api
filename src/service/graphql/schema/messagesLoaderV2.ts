@@ -1,5 +1,5 @@
 import DataLoader from 'dataloader'
-import { pluck, sortBy, toPairs, zip } from 'ramda'
+import { any, pluck, sortBy, toPairs, zip } from 'ramda'
 
 import { IOClients } from '../../../clients/IOClients'
 import { IndexedMessageV2, IOMessageV2 } from './../../../clients/MessagesGraphQL'
@@ -32,7 +32,7 @@ const indexMessagesByFrom = (messages: IOMessageV2[]) => messages.reduce(
   [] as IndexedMessageV2[]
 )
 
-export const messagesLoaderV2 = (clients: IOClients, withAppsMetaInfo?: boolean) =>
+export const messagesLoaderV2 = (clients: IOClients) =>
   new DataLoader<IOMessageV2, string>(async (messages: IOMessageV2[]) => {
     const to = messages[0].to!
     const indexedMessages = toPairs(messages) as Array<[string, IOMessageV2]>
@@ -40,7 +40,7 @@ export const messagesLoaderV2 = (clients: IOClients, withAppsMetaInfo?: boolean)
     const originalIndexes = pluck(0, sortedIndexedMessages) as string[]
     const sortedMessages = pluck(1, sortedIndexedMessages) as IOMessageV2[]
     const indexedByFrom = indexMessagesByFrom(sortedMessages)
-    const depTree = withAppsMetaInfo ? JSON.stringify(await clients.apps.getAppsMetaInfos()) : ''
+    const depTree = any(ioMessage => !!ioMessage.withAppsMetaInfo, messages) ? JSON.stringify(await clients.apps.getAppsMetaInfos()) : ''
     const translations = await clients.messagesGraphQL.translateV2({
       depTree,
       indexedByFrom,

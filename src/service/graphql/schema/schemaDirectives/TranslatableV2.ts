@@ -19,12 +19,12 @@ export class TranslatableV2 extends SchemaDirectiveVisitor {
       if (!ctx.loaders || !ctx.loaders.messagesV2) {
         ctx.loaders = {
           ...ctx.loaders,
-          messagesV2: messagesLoaderV2(ctx.clients, withAppsMetaInfo),
+          messagesV2: messagesLoaderV2(ctx.clients),
         }
       }
       const response = await resolve(root, args, ctx, info) as string | string[] | null
       const { vtex, loaders: { messagesV2 } } = ctx
-      const handler = handleSingleString(vtex, messagesV2!, behavior)
+      const handler = handleSingleString(vtex, messagesV2!, behavior, withAppsMetaInfo)
       return Array.isArray(response) ? await map(response, handler) : await handler(response)
     }
   }
@@ -51,7 +51,7 @@ export const parseTranslatableStringV2 = (rawMessage: string): TranslatableMessa
 export const formatTranslatableStringV2 = ({from, content, context}: TranslatableMessageV2): string =>
   `${content} ${context ? `(((${context})))` : ''} ${from ? `<<<${from}>>>` : ''}`
 
-const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2, behavior: Behavior) => async (rawMessage: string | null) => {
+const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2, behavior: Behavior, withAppsMetaInfo: boolean) => async (rawMessage: string | null) => {
   // Messages only knows how to process non empty strings.
   if (rawMessage == null) {
     return rawMessage
@@ -85,6 +85,7 @@ const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2, behavi
     context,
     from,
     to,
+    withAppsMetaInfo,
   })
 }
 
