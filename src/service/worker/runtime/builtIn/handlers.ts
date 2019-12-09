@@ -1,4 +1,4 @@
-import { ServiceContext, ServiceJSON, ServiceRuntimeContext } from '../typings'
+import { ServiceContext, ServiceJSON } from '../typings'
 
 export const whoAmIHandler = ({
   events,
@@ -23,7 +23,7 @@ export const healthcheckHandler = ({
   }
 }
 
-export const metricsLoggerHandler = (ctx: ServiceRuntimeContext) => {
+export const metricsLoggerHandler = (ctx: ServiceContext) => {
   ctx.status = 200
   ctx.body = ctx.metricsLogger.getSummaries()
 }

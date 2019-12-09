@@ -54,8 +54,6 @@ interface Loaders {
   messagesV2?: DataLoader<IOMessageV2, string>
 }
 
-export type ServiceRuntimeContext = ServiceContext<IOClients, RecorderState, ParamsContext>
-
 export type ServiceContext<ClientsT extends IOClients = IOClients, StateT extends RecorderState = RecorderState, CustomT extends ParamsContext = ParamsContext> = Pick<ParameterizedContext<StateT, Context<ClientsT>>, KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>> & CustomT & { loaders: Loaders }
 
 export type RouteHandler<ClientsT extends IOClients = IOClients, StateT extends RecorderState = RecorderState, CustomT extends ParamsContext = ParamsContext> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>

@@ -1,7 +1,7 @@
 import cluster from 'cluster'
 
 import { ACCOUNT, APP, LINKED, PRODUCTION, WORKSPACE } from '../../../constants'
-import { ServiceRuntimeContext } from './typings'
+import { ServiceContext } from './typings'
 
 export type StatusTrack = () => EnvMetric[]
 
@@ -23,7 +23,7 @@ export const isStatusTrack = (message: any): message is typeof STATUS_TRACK =>
 export const isStatusTrackBroadcast = (message: any): message is typeof BROADCAST_STATUS_TRACK =>
   message === BROADCAST_STATUS_TRACK
 
-export const statusTrackHandler = async (ctx: ServiceRuntimeContext) => {
+export const statusTrackHandler = async (ctx: ServiceContext) => {
   if (!LINKED) {
     process.send?.(BROADCAST_STATUS_TRACK)
   }

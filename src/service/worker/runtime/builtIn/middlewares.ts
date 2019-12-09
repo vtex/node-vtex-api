@@ -2,7 +2,7 @@ import { collectDefaultMetrics, Gauge, Registry } from 'prom-client'
 import gcStats from 'prometheus-gc-stats'
 
 import { MetricsLogger } from '../../../logger/metricsLogger'
-import { ServiceContext, ServiceRuntimeContext } from '../typings'
+import { ServiceContext } from '../typings'
 import { createRecorder } from '../utils/recorder'
 
 export function recorderMiddleware (ctx: ServiceContext, next: () => Promise<void>) {
@@ -12,7 +12,7 @@ export function recorderMiddleware (ctx: ServiceContext, next: () => Promise<voi
 
 export const addMetricsLoggerMiddleware = () => {
   const metricsLogger = new MetricsLogger()
-  return (ctx: ServiceRuntimeContext, next: () => Promise<void>) => {
+  return (ctx: ServiceContext, next: () => Promise<void>) => {
     ctx.metricsLogger = metricsLogger
     return next()
   }
@@ -25,7 +25,7 @@ export const prometheusLoggerMiddleware = () => {
   collectDefaultMetrics({ register })
   const startGcStats = gcStats(register)
   startGcStats()
-  return async (ctx: ServiceRuntimeContext, next: () => Promise<void>) => {
+  return async (ctx: ServiceContext, next: () => Promise<void>) => {
     if (ctx.request.path !== '/metrics') {
       gauge.inc(1)
       await next()
