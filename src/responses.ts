@@ -124,7 +124,7 @@ export type AppBundleLinked = AppBundleResponse & {
 export interface HouseKeeperState {
   infra: string[]
   edition: string[]
-  runtimes: string[]
+ runtimes: string[]
   apps: Array<{id: string, source: string}>
 }
 

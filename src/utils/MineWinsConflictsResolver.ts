@@ -2,7 +2,13 @@ import { AxiosResponse } from 'axios'
 import { Base64 } from 'js-base64'
 import { eqProps, equals } from 'ramda'
 import { isArray, isObject } from 'util'
-import { ConflictsResolver, VBase, VBaseConflict, VBaseConflictData } from '../clients/VBase'
+
+import {
+  ConflictsResolver,
+  VBase,
+  VBaseConflict,
+  VBaseConflictData,
+} from '../clients/infra/VBase'
 
 type Configuration = Record<string, ConfigurationData | ConfigurationData[] | object> | ConfigurationData[]
 type ConfigurationData = Record<string, object>
@@ -140,7 +146,7 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
   }
 
   private shouldAddToMine(item: ConfigurationData, base: ConfigurationData[], mine: ConfigurationData[]) {
-    if (this.comparableKeys && Object.keys(item).some(key => this.comparableKeys!.includes(key))) {  
+    if (this.comparableKeys && Object.keys(item).some(key => this.comparableKeys!.includes(key))) {
       return (
         !mine.some(mineItem => this.comparableKeys!.some(key => eqProps(key, item, mineItem))) &&
         !base.some(baseItem => this.comparableKeys!.some(key => eqProps(key, item, baseItem)))

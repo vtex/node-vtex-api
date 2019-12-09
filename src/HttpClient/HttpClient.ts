@@ -14,7 +14,7 @@ import {
   SESSION_HEADER,
   TENANT_HEADER,
 } from '../constants'
-import { IOContext } from '../service/typings'
+import { IOContext } from '../service/worker/runtime/typings'
 import { formatBindingHeaderValue } from '../utils/binding'
 import { formatTenantHeaderValue } from '../utils/tenant'
 import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'

@@ -8,7 +8,7 @@ import {
   EventHandler,
   RouteHandler,
   ServiceContext,
-} from '../service/typings'
+} from '../service/worker/runtime/typings'
 import { logger } from './unhandled'
 
 export const hrToMillis = ([seconds, nanoseconds]: [number, number]) =>
