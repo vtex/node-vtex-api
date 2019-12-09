@@ -303,6 +303,7 @@ export class Apps extends InfraClient {
     const { account, workspace, logger } = this.context
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
+
     try {
       const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey}).then(prop('apps'))
       if (staleIfError && this.diskCache) {
@@ -318,6 +319,44 @@ export class Apps extends InfraClient {
       }
       throw error
     }
+  }
+
+  public getStaleAppsMetaInfos = async (filter?: string) => {
+    const { account, workspace, logger } = this.context
+    const metric = 'get-apps-meta'
+    const inflightKey = inflightURL
+    const key = getMetaInfoKey(account)
+
+    if (!this.diskCache) {
+      throw Error('Apps client without diskCache')
+    }
+
+    const cachedResponse: {appsMetaInfo: AppMetaInfo[], headers: any} | undefined = await this.diskCache.get(key)
+    if (!this.context.recorder) {
+      logger.warn('Context without recorder, the etag will not be recorded')
+    } else if (cachedResponse){
+      this.context.recorder(cachedResponse.headers)
+    }
+
+    const metaInfoPromise = this.http.getRaw<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey})
+      .then((response) => {
+        const {data, headers: responseHeaders} = response
+        this.diskCache!.set(key, {
+          appsMetaInfo: data.apps || [],
+          headers: responseHeaders,
+        })
+        return response
+      })
+
+    const appsMetaInfo: AppMetaInfo[] = cachedResponse
+      ? cachedResponse.appsMetaInfo
+      : await metaInfoPromise.then(response => response.data.apps)
+
+    if (filter) {
+      return ramdaFilter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfo)
+    }
+
+    return appsMetaInfo
   }
 
   public getDependencies = (filter: string = '') => {
