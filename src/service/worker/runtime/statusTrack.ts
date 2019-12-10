@@ -32,15 +32,16 @@ export const statusTrackHandler = async (ctx: ServiceContext) => {
 }
 
 export const trackStatus = () => {
-  const status = global.metrics.statusTrack()
-  logStatus(status)
+  global.metrics.statusTrack().forEach(status => {
+    logStatus(status)
+  })
 }
 
 export const broadcastStatusTrack = () => Object.values(cluster.workers).forEach(
   worker => worker?.send(STATUS_TRACK)
 )
 
-const logStatus = (status: EnvMetric[]) => console.log(JSON.stringify({
+const logStatus = (status: EnvMetric) => console.log(JSON.stringify({
   __VTEX_IO_LOG: true,
   account: ACCOUNT,
   app: APP.ID,
