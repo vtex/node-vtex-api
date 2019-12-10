@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.70.0] - 2019-12-10
+### Changed
+- Makes getAppsMetaInfos return stale while revalidating
+
 ## [3.69.1] - 2019-12-09
 ### Changed
 - passes TranslatableV2 `withAppsMetaInfo` directive parameter to loader
