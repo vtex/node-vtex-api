@@ -1,10 +1,9 @@
 import archiver from 'archiver'
 import { IncomingMessage } from 'http'
-import { filter as ramdaFilter, path as ramdaPath, prop } from 'ramda'
+import { path as ramdaPath } from 'ramda'
 import { Readable, Writable } from 'stream'
 import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
-import { PICKED_AXIOS_PROPS } from './../utils/error'
 
 import { CacheLayer } from '..'
 import { CacheType, inflightURL, inflightUrlWithQuery, InfraClient, InstanceOptions } from '../HttpClient'
@@ -328,7 +327,7 @@ export class Apps extends InfraClient {
       : await metaInfoPromise.then(response => response.data.apps)
 
     if (filter) {
-      return ramdaFilter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfo)
+      return appsMetaInfo.filter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfo)
     }
 
     return appsMetaInfo
