@@ -1,9 +1,9 @@
 import { COLOSSUS_ROUTE_ID_HEADER } from '../../../../constants'
 import { LogLevel } from '../../../logger'
-import { ServiceContext } from '../typings'
+import { HttpRoute, ServiceContext } from '../typings'
 import { logOnceToDevConsole } from './../../../logger/console'
 
-export const routerFromPublicHttpHandlers = (routes: Record<string, any>) => {
+export const routerFromPublicHttpHandlers = (routes: Record<string, HttpRoute>) => {
   return async (ctx: ServiceContext, next: () => Promise<void>) => {
     const routeId = ctx.get(COLOSSUS_ROUTE_ID_HEADER)
 
