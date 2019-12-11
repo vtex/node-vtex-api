@@ -225,7 +225,9 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
     appHttpHandlers,
     appGraphQLHandlers,
     runtimeHttpHandlers,
-  ].reduce(mergeDeepRight)
+  ]
+  .filter(x => x != null)
+  .reduce(mergeDeepRight)
 
   if (httpHandlers?.pub) {
     const publicHandlersRouter = routerFromPublicHttpHandlers(httpHandlers.pub)
