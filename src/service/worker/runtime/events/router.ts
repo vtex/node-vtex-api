@@ -1,14 +1,11 @@
+import { EVENT_HANDLER_ID_HEADER } from '../../../../constants'
 import { LogLevel } from '../../../logger'
 import { RouteHandler, ServiceContext } from '../typings'
 import { logOnceToDevConsole } from './../../../logger/console'
 
 export const routerFromEventHandlers = (events: Record<string, RouteHandler> | null) => {
   return async (ctx: ServiceContext, next: () => Promise<void>) => {
-    const {
-      headers: {
-        EVENT_HANDLER_ID_HEADER: handlerId,
-      },
-    } = ctx
+    const handlerId = ctx.get(EVENT_HANDLER_ID_HEADER)
 
     if (!handlerId || !events) {
       return next()
