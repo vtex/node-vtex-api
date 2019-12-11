@@ -151,6 +151,7 @@ export interface ServiceRoute {
   path: string,
   public?: boolean,
   smartcache?: boolean,
+  extensible?: boolean
 }
 
 export interface RawServiceJSON {

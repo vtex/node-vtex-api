@@ -99,9 +99,10 @@ const createAppHttpHandlers = (
         const {
           path: servicePath,
           public: publicRoute = false,
+          extensible = false,
         } = serviceRoute
 
-        if (publicRoute) {
+        if (publicRoute || extensible) {
           acc.pub[routeId] = {
             handler: createPublicHttpRoute(clients, routes[routeId], serviceRoute, routeId),
             path: servicePath,
