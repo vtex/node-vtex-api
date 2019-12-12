@@ -3,6 +3,7 @@ import uuid from 'uuid/v4'
 
 import {
   ACCOUNT_HEADER,
+  BINDING_HEADER,
   CREDENTIAL_HEADER,
   FORWARDED_HOST_HEADER,
   LOCALE_HEADER,
@@ -20,6 +21,7 @@ import {
 import { parseTenantHeaderValue } from '../../../../utils/tenant'
 import { Logger } from '../../../logger'
 import { IOContext } from '../typings'
+import { parseBindingHeaderValue } from './../../../../utils/binding'
 
 type HandlerContext = Omit<IOContext, 'route'>
 
@@ -31,6 +33,7 @@ export const prepareHandlerCtx = (header: Context['request']['header']): Handler
   const partialContext = {
     account: header[ACCOUNT_HEADER],
     authToken: header[CREDENTIAL_HEADER],
+    binding: header[BINDING_HEADER] ? parseBindingHeaderValue(header[BINDING_HEADER]) : undefined,
     host: header[FORWARDED_HOST_HEADER],
     locale: header[LOCALE_HEADER],
     operationId: header[OPERATION_ID_HEADER] || uuid(),
