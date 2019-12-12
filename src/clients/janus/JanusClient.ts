@@ -31,6 +31,7 @@ export class JanusClient extends ExternalClient {
       ...options,
       params: {
         an: account,
+        ...options?.params,
       },
     })
   }
