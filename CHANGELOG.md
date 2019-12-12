@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Add binding to context when receiving header
 
 ## [6.1.3] - 2019-12-11
 ### Fixed
@@ -16,22 +18,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [6.1.1] - 2019-12-10
 
 ## [6.1.0] - 2019-12-09
-
-## [6.1.0-beta.8] - 2019-12-09
-
-## [6.1.0-beta.7] - 2019-12-09
-
-## [6.1.0-beta.6] - 2019-12-09
-
-## [6.1.0-beta.5] - 2019-12-09
-
-## [6.1.0-beta.4] - 2019-12-09
-
-## [6.1.0-beta.3] - 2019-12-09
-
-## [6.1.0-beta.2] - 2019-12-06
-
-## [6.1.0-beta.1] - 2019-12-06
 
 ## [6.0.0] - 2019-11-27
 
