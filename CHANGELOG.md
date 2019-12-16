@@ -6,8 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- When linking only one worker will be available
+- Gracefull shutdown when receiving `sigterm` from master and child processes
 
-## [6.1.6-beta] - 2019-12-16
+### Fixed
+- Remote debugger now debugs worker instead of master process
+- @transltableV2 directive arguments
 
 ## [6.1.5] - 2019-12-12
 
