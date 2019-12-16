@@ -2,7 +2,7 @@ import { cpus } from 'os'
 import { join } from 'path'
 
 import { IOClients } from '../clients/IOClients'
-import { MAX_WORKERS } from '../constants'
+import { LINKED, MAX_WORKERS } from '../constants'
 import { Service } from './worker/runtime/Service'
 import {
   ClientsConfig,
@@ -16,11 +16,23 @@ export const appPath = join(process.cwd(), './service/src/node/')
 export const bundlePath = join(appPath, 'index')
 export const serviceJsonPath = join(process.cwd(), './service/service.json')
 
+const getWorkers = (workers?: any) => {
+  // We need to have only one worker while linking so the debugger
+  // works properly
+  if (LINKED) {
+    return 1
+  }
+  // If user didn't set workers property, let's use the cpu count
+  const workersFromUser = workers && Number.isInteger(workers) ? workers : cpus().length
+  // never spawns more than MAX_WORKERS
+  return Math.min(workersFromUser, MAX_WORKERS)
+}
+
 export const getServiceJSON = (): ServiceJSON => {
   const service: RawServiceJSON = require(serviceJsonPath)
   return {
     ...service,
-    workers: Math.min(service.workers ? service.workers : cpus().length, MAX_WORKERS),
+    workers: getWorkers(service.workers),
   }
 }
 

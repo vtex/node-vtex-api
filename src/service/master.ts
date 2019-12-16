@@ -1,7 +1,6 @@
 import cluster, { Worker } from 'cluster'
 
-import { LINKED, UP_SIGNAL } from '../constants'
-import { addProcessListeners, logger } from '../utils/unhandled'
+import { INSPECT_DEBUGGER_PORT, LINKED, UP_SIGNAL } from '../constants'
 import { isLog, logOnceToDevConsole } from './logger'
 import {
   broadcastStatusTrack,
@@ -49,9 +48,12 @@ const onOnline = (worker: Worker) => {
 }
 
 export const startMaster = (service: ServiceJSON) => {
-  addProcessListeners()
-
   const { workers: numWorkers } = service
+
+  // Setup dubugger
+  if (LINKED) {
+    cluster.setupMaster({inspectPort: INSPECT_DEBUGGER_PORT})
+  }
 
   console.log(`Spawning ${numWorkers} workers`)
   for(let i=0; i < numWorkers; i++) {

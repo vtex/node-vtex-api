@@ -55,3 +55,5 @@ export const NODE_ENV = process.env.NODE_ENV as string
 export const ACCOUNT = process.env.VTEX_ACCOUNT as string
 export const WORKSPACE = process.env.VTEX_WORKSPACE as string
 export const PRODUCTION = process.env.VTEX_PRODUCTION === 'true'
+
+export const INSPECT_DEBUGGER_PORT = 5858
