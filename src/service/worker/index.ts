@@ -8,10 +8,10 @@ import { IOClients } from '../../clients/IOClients'
 import { UP_SIGNAL } from '../../constants'
 import { InstanceOptions } from '../../HttpClient/typings'
 import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
-import { addProcessListeners, logger } from '../../utils/unhandled'
 import { getService } from '../loaders'
 import { logOnceToDevConsole } from '../logger/console'
 import { LogLevel } from '../logger/logger'
+import { addProcessListeners, logger } from './listeners'
 import {
   healthcheckHandler,
   metricsLoggerHandler,
