@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.1.6] - 2019-12-17
+### Changed
+- When linking only one worker will be available
+- Gracefull shutdown when receiving `sigterm` from master and child processes
+
+### Fixed
+- Remote debugger now debugs worker instead of master process
+- @transltableV2 directive arguments
+
 ## [6.1.5] - 2019-12-12
 
 ## [6.1.4] - 2019-12-12
