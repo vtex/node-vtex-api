@@ -107,7 +107,8 @@ const createAppHttpHandlers = (
             handler: createPublicHttpRoute(clients, routes[routeId], serviceRoute, routeId),
             path: servicePath,
           }
-        } else {
+        }
+        if (!publicRoute || extensible) {
           acc.pvt[routeId] = {
             handler: createPrivateHttpRoute(clients, routes[routeId], serviceRoute, routeId),
             path: `/:account/:workspace${servicePath.replace(/\*([^/]*)/g, ':$1*')}`,
