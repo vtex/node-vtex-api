@@ -84,7 +84,7 @@ export class Assets extends InfraClient {
     return result
   }
 
-  public async getFile<T extends object | null>(appId: string, file: string, nullIfNotFound?: boolean) {
+  public async getFile<T>(appId: string, file: string, nullIfNotFound?: boolean) {
     const locator = parseAppId(appId)
     const linked = !!locator.build
 
@@ -114,7 +114,7 @@ export class Assets extends InfraClient {
     })
   }
 
-  protected getAppFileByAccount = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
+  protected getAppFileByAccount = <T>(app: string, path: string, nullIfNotFound?: boolean) => {
     const locator = parseAppId(app)
     const inflightKey = inflightURL
     return this.http.get<T>(this.routes.Files(this.context.account, locator, path), {
@@ -125,7 +125,7 @@ export class Assets extends InfraClient {
     } as IgnoreNotFoundRequestConfig)
   }
 
-  protected getAppFileByVendor = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
+  protected getAppFileByVendor = <T>(app: string, path: string, nullIfNotFound?: boolean) => {
     const locator = parseAppId(app)
     const vendor = locator.name.split('.')[0]
     const inflightKey = inflightURL
