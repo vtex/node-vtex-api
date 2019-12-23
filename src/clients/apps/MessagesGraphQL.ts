@@ -1,5 +1,5 @@
 import DataLoader from 'dataloader'
-import { path, values } from 'ramda'
+import { flatten, path, values } from 'ramda'
 
 import { InstanceOptions } from '../../HttpClient'
 import { IOContext } from '../../service/worker/runtime/typings'
@@ -77,13 +77,19 @@ interface TranslatedV2 {
   translate: string[]
 }
 
+interface MessageLoaderInput {
+  from: string
+  message: IOMessageInputV2
+}
+
+const MAX_BATCH_SIZE = 200
+
 export class MessagesGraphQL extends AppGraphQLClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
     super('vtex.messages@1.x', vtex, options)
   }
-  public transalateV2DataLoader = ({to, depTree}: any) =>
-    new DataLoader<any, string>((data: Array<{ from: string, message: IOMessageInputV2 }>) => {
-      // group by from
+  public transalateV2DataLoader = ({to, depTree}: Pick<TranslateInputV2, 'to' | 'depTree'>) =>
+    new DataLoader<MessageLoaderInput, string>((data: MessageLoaderInput[]) => {
       const indexedByFrom = data.reduce((acc, {from, message}) => {
         if (!acc[from]) {
           acc[from] = {
@@ -93,21 +99,21 @@ export class MessagesGraphQL extends AppGraphQLClient {
         }
         acc[from].messages.push(message)
         return acc
-      }, {} as any)
-      // make request
+      }, {} as Record<string, IndexedMessageV2>)
       const allMessages = {
         depTree,
         indexedByFrom: values(indexedByFrom),
         to,
       }
       return this.translateV2Query(allMessages)
-    }, {maxBatchSize: 200})
+    }, {maxBatchSize: MAX_BATCH_SIZE})
 
   public translateV2 = async (args: TranslateInputV2) => {
     const dataLoader = this.transalateV2DataLoader({to: args.to, depTree: args.depTree})
-    const b = await args.indexedByFrom.map(async ({from, messages}) => Promise.all(messages.map(message => dataLoader.load({from, message}))))
-    debugger
-    return b
+    return Promise.all(args.indexedByFrom.map(
+      async ({from, messages}) =>
+        await Promise.all(messages.map(message => dataLoader.load({from, message})))
+    )).then(flatten)
   }
 
   public translate = async (args: Translate): Promise<string[]> => this.graphql.query<TranslateResponse, { args: Translate }>({
