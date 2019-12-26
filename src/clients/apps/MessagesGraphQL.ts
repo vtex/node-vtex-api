@@ -82,7 +82,7 @@ interface MessageLoaderInput {
   message: IOMessageInputV2
 }
 
-const MAX_BATCH_SIZE = 200
+const MAX_BATCH_SIZE = 100
 
 export class MessagesGraphQL extends AppGraphQLClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
