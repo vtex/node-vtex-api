@@ -156,7 +156,7 @@ export class Assets extends InfraClient {
     return this.http.getBuffer(this.routes.Files(this.context.account, locator, path), {
       cacheable: CacheType.Any,
       inflightKey,
-      metric: 'assets-get-json-by-account',
+      metric: 'assets-get-file-by-account',
       nullIfNotFound,
     })
   }
@@ -168,7 +168,7 @@ export class Assets extends InfraClient {
     return this.http.getBuffer(this.routes.Files(vendor, locator, path), {
       cacheable: CacheType.Any,
       inflightKey,
-      metric: 'assets-get-json-by-vendor',
+      metric: 'assets-get-file-by-vendor',
       nullIfNotFound,
     })
   }
