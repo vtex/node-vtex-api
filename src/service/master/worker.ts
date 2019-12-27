@@ -1,17 +1,26 @@
 import cluster, { Worker } from 'cluster'
 import { constants } from 'os'
 
-import { INSPECT_DEBUGGER_PORT, LINKED, UP_SIGNAL } from '../constants'
-import { isLog, logOnceToDevConsole } from './logger'
-import { logger } from './worker/listeners'
+import {
+  INSPECT_DEBUGGER_PORT,
+  LINKED,
+  UNCAUGHT_EXCEPTION,
+  UP_SIGNAL,
+} from '../../constants'
+import { isLog, logOnceToDevConsole } from '../logger'
+import { logger } from '../worker/listeners'
 import {
   broadcastStatusTrack,
   isStatusTrackBroadcast,
   trackStatus,
-} from './worker/runtime/statusTrack'
-import { ServiceJSON } from './worker/runtime/typings'
+} from '../worker/runtime/statusTrack'
+import { ServiceJSON } from '../worker/runtime/typings'
 
-let handledSignal: NodeJS.Signals | undefined
+let handledSignal: NodeJS.Signals | null = null
+
+export const setHandledSignal = (signal: NodeJS.Signals) => {
+  handledSignal = signal
+}
 
 const onMessage = (worker: Worker, message: any) => {
   if (isLog(message)) {
@@ -31,7 +40,7 @@ const onMessage = (worker: Worker, message: any) => {
 }
 
 const onExit = (worker: Worker, code: number, signal: string) => {
-  if (!LINKED && worker.exitedAfterDisconnect === false) {
+  if (!LINKED && worker.exitedAfterDisconnect === false && code !== UNCAUGHT_EXCEPTION) {
     logger.error({
       code,
       message: 'Worker Died',
@@ -56,25 +65,7 @@ const onOnline = (worker: Worker) => {
   }
 }
 
-const handleSignal: NodeJS.SignalsListener = signal => {
-  // Log the Master Process received a signal
-  const message = `Master process ${process.pid} received signal ${signal}`
-  console.warn(message)
-  logger.warn({message, signal})
-
-  // For each worker, let's try to kill it gracefully
-  Object.values(cluster.workers).forEach(worker => worker?.kill(signal))
-
-  // Let's raise the flag to kill the master process after all workers have died
-  handledSignal = signal
-
-  // If the worker refuses to die after some milliseconds, let's force it to die
-  setTimeout(() => Object.values(cluster.workers).forEach(worker => worker?.process.kill('SIGKILL')), 1e3)
-  // If master refuses to die after some milliseconds, let's force it to die
-  setTimeout(() => process.exit(constants.signals[signal]), 1.5e3)
-}
-
-export const startMaster = (service: ServiceJSON) => {
+export const startWorkers = (service: ServiceJSON) => {
   const { workers: numWorkers } = service
 
   // Setup dubugger
@@ -82,6 +73,7 @@ export const startMaster = (service: ServiceJSON) => {
     cluster.setupMaster({inspectPort: INSPECT_DEBUGGER_PORT})
   }
 
+  // Setup cluster
   console.log(`Spawning ${numWorkers} workers`)
   for(let i=0; i < numWorkers; i++) {
     cluster.fork()
@@ -90,7 +82,4 @@ export const startMaster = (service: ServiceJSON) => {
   cluster.on('online', onOnline)
   cluster.on('exit', onExit)
   cluster.on('message', onMessage)
-
-  process.on('SIGINT', handleSignal)
-  process.on('SIGTERM', handleSignal)
 }

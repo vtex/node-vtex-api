@@ -57,3 +57,5 @@ export const WORKSPACE = process.env.VTEX_WORKSPACE as string
 export const PRODUCTION = process.env.VTEX_PRODUCTION === 'true'
 
 export const INSPECT_DEBUGGER_PORT = 5858
+export const UNCAUGHT_EXCEPTION = 420
+export const MAX_MEMCACHED_RESTARTS = 3

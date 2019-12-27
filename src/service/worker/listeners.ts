@@ -1,5 +1,6 @@
 import { constants } from 'os'
 
+import { UNCAUGHT_EXCEPTION } from '../../constants'
 import { RequestCancelledError } from '../../errors/RequestCancelledError'
 import { Logger } from '../logger'
 
@@ -26,7 +27,7 @@ export const addProcessListeners = () => {
       err.type = 'uncaughtException'
       logger.error(err)
     }
-    process.exit(420)
+    process.exitCode = UNCAUGHT_EXCEPTION
   })
 
   process.on('unhandledRejection', (reason: Error | any, promise: Promise<void>)  => {
