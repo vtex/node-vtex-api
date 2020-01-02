@@ -26,7 +26,7 @@ const dependsOnApp = (appsAtMajor: string[]) => (a: AppMetaInfo) => {
 }
 
 const useBuildJson = (app: AppMetaInfo, appVendorName: string) => {
-  const buildFeatures = (app as any)._buildFeatures as Record<string, string[]> | undefined
+  const buildFeatures = app._buildFeatures
   return buildFeatures && buildFeatures[appVendorName] && contains('build.json', buildFeatures[appVendorName])
 }
 
@@ -70,7 +70,7 @@ export class Assets extends InfraClient {
 
   public async getBuildJSONForApp(app: AppMetaInfo, appVendorName: string, pick: string | string[] = []): Promise<Record<string, any>> {
     const pickArray = Array.isArray(pick) ? pick : [pick]
-    const buildJson = await this.getJSON(app.id, `dist/${appVendorName}/build.json`) as Record<string, any>
+    const buildJson: Record<string, any> = await this.getJSON(app.id, `dist/${appVendorName}/build.json`)
     const result = !isEmpty(pickArray) ? ramdaPick(pickArray, buildJson) : buildJson
 
     result.declarer = app.id
