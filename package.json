@@ -74,7 +74,6 @@
     "xss": "^1.0.6"
   },
   "devDependencies": {
-    "@babel/runtime": "^7.7.7",
     "@types/archiver": "^2.0.1",
     "@types/bluebird": "^3.5.27",
     "@types/co-body": "^0.0.3",
