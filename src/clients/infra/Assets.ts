@@ -26,7 +26,7 @@ const dependsOnApp = (appsAtMajor: string[]) => (a: AppMetaInfo) => {
 }
 
 const useBuildJson = (app: AppMetaInfo, appVendorName: string) => {
-  const buildFeatures = (app as any)._buildFeatures as Record<string, string[]> | undefined
+  const buildFeatures = app._buildFeatures
   return buildFeatures && buildFeatures[appVendorName] && contains('build.json', buildFeatures[appVendorName])
 }
 
@@ -70,7 +70,7 @@ export class Assets extends InfraClient {
 
   public async getBuildJSONForApp(app: AppMetaInfo, appVendorName: string, pick: string | string[] = []): Promise<Record<string, any>> {
     const pickArray = Array.isArray(pick) ? pick : [pick]
-    const buildJson = await this.getFile(app.id, `dist/${appVendorName}/build.json`) as Record<string, any>
+    const buildJson: Record<string, any> = await this.getJSON(app.id, `dist/${appVendorName}/build.json`)
     const result = !isEmpty(pickArray) ? ramdaPick(pickArray, buildJson) : buildJson
 
     result.declarer = app.id
@@ -80,21 +80,31 @@ export class Assets extends InfraClient {
   public async getSettingsFromFilesForApp(app: AppMetaInfo, files: string | string[] = []): Promise<Record<string, any>> {
     // If there's no support for build.json, then fetch individual files and zip them into an {[file]: content} object.
     const filesArray = Array.isArray(files) ? files : [files]
-    const fetched = await Promise.all(filesArray.map(file => this.getFile(app.id, file, true)))
+    const fetched = await Promise.all(filesArray.map(file => this.getJSON(app.id, file, true)))
     const result: Record<string, any> = zipObj(filesArray, fetched)
 
     result.declarer = app.id
     return result
   }
 
-  public async getFile<T extends object | null>(appId: string, file: string, nullIfNotFound?: boolean) {
+  public async getJSON<T extends object | null>(appId: string, file: string, nullIfNotFound?: boolean) {
     const locator = parseAppId(appId)
     const linked = !!locator.build
 
     if (linked) {
-      return this.getAppFileByAccount<T>(appId, file, nullIfNotFound)
+      return this.getAppJSONByAccount<T>(appId, file, nullIfNotFound)
     }
-    return this.getAppFileByVendor<T>(appId, file, nullIfNotFound)
+    return this.getAppJSONByVendor<T>(appId, file, nullIfNotFound)
+  }
+
+  public async getFile(appId: string, file: string, nullIfNotFound?: boolean) {
+    const locator = parseAppId(appId)
+    const linked = !!locator.build
+
+    if (linked) {
+      return this.getAppFileByAccount(appId, file, nullIfNotFound)
+    }
+    return this.getAppFileByVendor(appId, file, nullIfNotFound)
   }
 
   public getFilteredDependencies(apps: string | string[], dependencies: AppMetaInfo[]): AppMetaInfo[] {
@@ -117,7 +127,7 @@ export class Assets extends InfraClient {
     })
   }
 
-  protected getAppFileByAccount = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
+  protected getAppJSONByAccount = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
     const locator = parseAppId(app)
     const inflightKey = inflightURL
     return this.http.get<T>(this.routes.Files(this.context.account, locator, path), {
@@ -128,7 +138,7 @@ export class Assets extends InfraClient {
     } as IgnoreNotFoundRequestConfig)
   }
 
-  protected getAppFileByVendor = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
+  protected getAppJSONByVendor = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
     const locator = parseAppId(app)
     const vendor = locator.name.split('.')[0]
     const inflightKey = inflightURL
@@ -138,6 +148,29 @@ export class Assets extends InfraClient {
         metric: 'assets-get-json-by-vendor',
         nullIfNotFound,
       } as IgnoreNotFoundRequestConfig)
+  }
+
+  protected getAppFileByAccount = (app: string, path: string, nullIfNotFound?: boolean) => {
+    const locator = parseAppId(app)
+    const inflightKey = inflightURL
+    return this.http.getBuffer(this.routes.Files(this.context.account, locator, path), {
+      cacheable: CacheType.Any,
+      inflightKey,
+      metric: 'assets-get-file-by-account',
+      nullIfNotFound,
+    })
+  }
+
+  protected getAppFileByVendor = (app: string, path: string, nullIfNotFound?: boolean) => {
+    const locator = parseAppId(app)
+    const vendor = locator.name.split('.')[0]
+    const inflightKey = inflightURL
+    return this.http.getBuffer(this.routes.Files(vendor, locator, path), {
+      cacheable: CacheType.Any,
+      inflightKey,
+      metric: 'assets-get-file-by-vendor',
+      nullIfNotFound,
+    })
   }
 }
 
