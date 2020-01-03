@@ -140,6 +140,11 @@ export class HttpClient {
     return this.request(putConfig).then(response => response.data as T)
   }
 
+  public putRaw = <T = void>(url: string, data?: any, config: RequestConfig = {}): Promise<IOResponse<T>> => {
+    const putConfig: RequestConfig = {...config, url, data, method: 'put'}
+    return this.request(putConfig) as Promise<IOResponse<T>>
+  }
+
   public post = <T = void>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
     const postConfig: RequestConfig = {...config, url, data, method: 'post'}
     return this.request(postConfig).then(response => response.data as T)
