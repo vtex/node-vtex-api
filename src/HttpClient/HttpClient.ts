@@ -13,7 +13,6 @@ import {
   SEGMENT_HEADER,
   SESSION_HEADER,
   TENANT_HEADER,
-  REGION_HEADER,
 } from '../constants'
 import { IOContext } from '../service/typings'
 import { formatBindingHeaderValue } from '../utils/binding'
@@ -68,7 +67,6 @@ export class HttpClient {
       binding,
       verbose,
       cancellation,
-      region
     } = opts
     this.name = name || baseURL || 'unknown'
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
@@ -82,7 +80,6 @@ export class HttpClient {
       ... locale ? {[LOCALE_HEADER]: locale} : null,
       ... operationId ? {'x-vtex-operation-id': operationId} : null,
       ... product ? {[PRODUCT_HEADER]: product} : null,
-      ... region ? { [REGION_HEADER]: region } : null,
       ... segmentToken ? {[SEGMENT_HEADER]: segmentToken} : null,
       ... sessionToken ? {[SESSION_HEADER]: sessionToken} : null,
     }

@@ -1,6 +1,7 @@
 import { IOContext } from '../service/typings'
 import { IOGraphQLClient } from './IOGraphQLClient'
 import { AuthType, InstanceOptions } from './typings'
+import { REGION_HEADER } from '../constants'
 
 const useHttps = !process.env.VTEX_IO
 /**
@@ -26,6 +27,10 @@ export class AppGraphQLClient extends IOGraphQLClient {
       context,
       {
         ...options,
+        headers: {
+          ... options?.headers,
+          ... region ? { [REGION_HEADER]: region } : null,
+        },
         authType: AuthType.bearer,
         baseURL,
         name,
