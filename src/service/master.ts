@@ -16,12 +16,10 @@ let handledSignal: NodeJS.Signals | undefined
 const onMessage = (worker: Worker, message: any) => {
   if (isLog(message)) {
     logOnceToDevConsole(message.message, message.level)
-  }
-  else if (isStatusTrackBroadcast(message)) {
+  } else if (isStatusTrackBroadcast(message)) {
     trackStatus()
     broadcastStatusTrack()
-  }
-  else {
+  } else {
     logger.warn({
       content: message,
       message: 'Worker sent message',
@@ -42,7 +40,12 @@ const onExit = (worker: Worker, code: number, signal: string) => {
   }
 
   const exitOn = ['SIGTERM', 'SIGINT']
-  if (handledSignal && exitOn.includes(handledSignal) && Object.keys(cluster.workers).length === 0) {
+  if (
+    handledSignal &&
+    exitOn.includes(handledSignal) &&
+    Object.keys(cluster.workers).length === 0
+  ) {
+    // @ts-ignore
     process.exit(constants.signals[handledSignal])
   }
 }
@@ -60,7 +63,7 @@ const handleSignal: NodeJS.SignalsListener = signal => {
   // Log the Master Process received a signal
   const message = `Master process ${process.pid} received signal ${signal}`
   console.warn(message)
-  logger.warn({message, signal})
+  logger.warn({ message, signal })
 
   // For each worker, let's try to kill it gracefully
   Object.values(cluster.workers).forEach(worker => worker?.kill(signal))
@@ -69,8 +72,15 @@ const handleSignal: NodeJS.SignalsListener = signal => {
   handledSignal = signal
 
   // If the worker refuses to die after some milliseconds, let's force it to die
-  setTimeout(() => Object.values(cluster.workers).forEach(worker => worker?.process.kill('SIGKILL')), 1e3)
+  setTimeout(
+    () =>
+      Object.values(cluster.workers).forEach(worker =>
+        worker?.process.kill('SIGKILL')
+      ),
+    1e3
+  )
   // If master refuses to die after some milliseconds, let's force it to die
+  // @ts-ignore
   setTimeout(() => process.exit(constants.signals[signal]), 1.5e3)
 }
 
@@ -79,11 +89,11 @@ export const startMaster = (service: ServiceJSON) => {
 
   // Setup dubugger
   if (LINKED) {
-    cluster.setupMaster({inspectPort: INSPECT_DEBUGGER_PORT})
+    cluster.setupMaster({ inspectPort: INSPECT_DEBUGGER_PORT })
   }
 
   console.log(`Spawning ${numWorkers} workers`)
-  for(let i=0; i < numWorkers; i++) {
+  for (let i = 0; i < numWorkers; i++) {
     cluster.fork()
   }
 
