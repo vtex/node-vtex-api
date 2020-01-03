@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Added
 - Support to `If-Match` header usage on VBase client.
+- Add `putRaw` method on HttpClient.
 
 ### Changed
 - [ErrorReport] Log ErrorReport errors created on `HttpClient` requests or thrown by user handlers to splunk.
