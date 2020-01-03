@@ -18,15 +18,31 @@ import { IOContext } from '../service/typings'
 import { formatBindingHeaderValue } from '../utils/binding'
 import { formatTenantHeaderValue } from '../utils/tenant'
 import { forExternal, forRoot, forWorkspace } from './factories'
-import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
+import {
+  CacheableRequestConfig,
+  cacheMiddleware,
+  CacheType,
+} from './middlewares/cache'
 import { cancellationToken } from './middlewares/cancellationToken'
 import { singleFlightMiddleware } from './middlewares/inflight'
 import { memoizationMiddleware, Memoized } from './middlewares/memoization'
 import { metricsMiddleware } from './middlewares/metrics'
-import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewares/notFound'
+import {
+  acceptNotFoundMiddleware,
+  notFoundFallbackMiddleware,
+} from './middlewares/notFound'
 import { recorderMiddleware } from './middlewares/recorder'
-import { defaultsMiddleware, requestMiddleware, routerCacheMiddleware } from './middlewares/request'
-import { InstanceOptions, IOResponse, MiddlewareContext, RequestConfig } from './typings'
+import {
+  defaultsMiddleware,
+  requestMiddleware,
+  routerCacheMiddleware,
+} from './middlewares/request'
+import {
+  InstanceOptions,
+  IOResponse,
+  MiddlewareContext,
+  RequestConfig,
+} from './typings'
 
 const DEFAULT_TIMEOUT_MS = 1000
 const noTransforms = [(data: any) => data]
@@ -41,7 +57,7 @@ export class HttpClient {
 
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
-  public constructor (opts: ClientOptions) {
+  public constructor(opts: ClientOptions) {
     const {
       baseURL,
       authToken,
@@ -62,26 +78,30 @@ export class HttpClient {
       concurrency,
       headers: defaultHeaders,
       host,
-      params, operationId,
+      params,
+      operationId,
       tenant,
       binding,
       verbose,
       cancellation,
     } = opts
     this.name = name || baseURL || 'unknown'
-    const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
+    const limit =
+      (concurrency && concurrency > 0 && pLimit(concurrency)) || undefined
     const headers: Record<string, string> = {
       ...defaultHeaders,
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
-      ... host ? {[FORWARDED_HOST_HEADER]: host} : null,
-      ... tenant ? {[TENANT_HEADER]: formatTenantHeaderValue(tenant)} : null,
-      ... binding ? {[BINDING_HEADER]: formatBindingHeaderValue(binding)} : null,
-      ... locale ? {[LOCALE_HEADER]: locale} : null,
-      ... operationId ? {'x-vtex-operation-id': operationId} : null,
-      ... product ? {[PRODUCT_HEADER]: product} : null,
-      ... segmentToken ? {[SEGMENT_HEADER]: segmentToken} : null,
-      ... sessionToken ? {[SESSION_HEADER]: sessionToken} : null,
+      ...(host ? { [FORWARDED_HOST_HEADER]: host } : null),
+      ...(tenant ? { [TENANT_HEADER]: formatTenantHeaderValue(tenant) } : null),
+      ...(binding
+        ? { [BINDING_HEADER]: formatBindingHeaderValue(binding) }
+        : null),
+      ...(locale ? { [LOCALE_HEADER]: locale } : null),
+      ...(operationId ? { 'x-vtex-operation-id': operationId } : null),
+      ...(product ? { [PRODUCT_HEADER]: product } : null),
+      ...(segmentToken ? { [SEGMENT_HEADER]: segmentToken } : null),
+      ...(sessionToken ? { [SESSION_HEADER]: sessionToken } : null),
     }
 
     if (authType && authToken) {
@@ -90,34 +110,51 @@ export class HttpClient {
 
     const memoizedCache = new Map<string, Promise<Memoized>>()
 
-    this.runMiddlewares = compose([...opts.middlewares || [],
+    this.runMiddlewares = compose([
+      ...(opts.middlewares || []),
       defaultsMiddleware(baseURL, headers, params, timeout, retries, verbose),
-      metricsMiddleware({metrics, serverTiming, name}),
-      memoizationMiddleware({memoizedCache}),
-      ...recorder ? [recorderMiddleware(recorder)] : [],
+      metricsMiddleware({ metrics, serverTiming, name }),
+      memoizationMiddleware({ memoizedCache }),
+      ...(recorder ? [recorderMiddleware(recorder)] : []),
       cancellationToken(cancellation),
       singleFlightMiddleware,
       acceptNotFoundMiddleware,
-      ...memoryCache ? [cacheMiddleware({type: CacheType.Memory, storage: memoryCache})] : [],
-      ...diskCache ? [cacheMiddleware({type: CacheType.Disk, storage: diskCache})] : [],
+      ...(memoryCache
+        ? [cacheMiddleware({ type: CacheType.Memory, storage: memoryCache })]
+        : []),
+      ...(diskCache
+        ? [cacheMiddleware({ type: CacheType.Disk, storage: diskCache })]
+        : []),
       notFoundFallbackMiddleware,
       routerCacheMiddleware,
       requestMiddleware(limit),
     ])
   }
 
-  public get = <T = any>(url: string, config: RequestConfig = {}): Promise<T> => {
+  public get = <T = any>(
+    url: string,
+    config: RequestConfig = {}
+  ): Promise<T> => {
     const cacheableConfig = this.getConfig(url, config)
     return this.request(cacheableConfig).then(response => response.data)
   }
 
-  public getRaw = <T = any>(url: string, config: RequestConfig = {}): Promise<IOResponse<T>> => {
+  public getRaw = <T = any>(
+    url: string,
+    config: RequestConfig = {}
+  ): Promise<IOResponse<T>> => {
     const cacheableConfig = this.getConfig(url, config)
     return this.request(cacheableConfig)
   }
 
-  public getWithBody = <T = any>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
-    const bodyHash = createHash('md5').update(JSON.stringify(data, null, 2)).digest('hex')
+  public getWithBody = <T = any>(
+    url: string,
+    data?: any,
+    config: RequestConfig = {}
+  ): Promise<T> => {
+    const bodyHash = createHash('md5')
+      .update(JSON.stringify(data, null, 2))
+      .digest('hex')
     const cacheableConfig = this.getConfig(url, {
       ...config,
       data,
@@ -129,53 +166,106 @@ export class HttpClient {
     return this.request(cacheableConfig).then(response => response.data)
   }
 
-  public getBuffer = (url: string, config: RequestConfig = {}): Promise<{data: Buffer, headers: any}> => {
-    const bufferConfig = {cacheable: CacheType.Disk, ...config, url, responseType: 'arraybuffer', transformResponse: noTransforms}
+  public getBuffer = (
+    url: string,
+    config: RequestConfig = {}
+  ): Promise<{ data: Buffer; headers: any }> => {
+    const bufferConfig = {
+      cacheable: CacheType.Disk,
+      ...config,
+      url,
+      responseType: 'arraybuffer',
+      transformResponse: noTransforms,
+    }
     return this.request(bufferConfig)
   }
 
-  public getStream = (url: string, config: RequestConfig = {}): Promise<IncomingMessage> => {
-    const streamConfig = {...config, url, responseType: 'stream', transformResponse: noTransforms}
-    return this.request(streamConfig).then(response => response.data as IncomingMessage)
+  public getStream = (
+    url: string,
+    config: RequestConfig = {}
+  ): Promise<IncomingMessage> => {
+    const streamConfig = {
+      ...config,
+      url,
+      responseType: 'stream',
+      transformResponse: noTransforms,
+    }
+    return this.request(streamConfig).then(
+      response => response.data as IncomingMessage
+    )
   }
 
-  public put = <T = void>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
-    const putConfig: RequestConfig = {...config, url, data, method: 'put'}
+  public put = <T = void>(
+    url: string,
+    data?: any,
+    config: RequestConfig = {}
+  ): Promise<T> => {
+    const putConfig: RequestConfig = { ...config, url, data, method: 'put' }
     return this.request(putConfig).then(response => response.data as T)
   }
 
-  public post = <T = void>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
-    const postConfig: RequestConfig = {...config, url, data, method: 'post'}
+  public putRaw = <T = void>(
+    url: string,
+    data?: any,
+    config: RequestConfig = {}
+  ): Promise<IOResponse<T>> => {
+    const putConfig: RequestConfig = { ...config, url, data, method: 'put' }
+    return this.request(putConfig) as Promise<IOResponse<T>>
+  }
+
+  public post = <T = void>(
+    url: string,
+    data?: any,
+    config: RequestConfig = {}
+  ): Promise<T> => {
+    const postConfig: RequestConfig = { ...config, url, data, method: 'post' }
     return this.request(postConfig).then(response => response.data as T)
   }
 
-  public postRaw = <T = void>(url: string, data?: any, config: RequestConfig = {}): Promise<IOResponse<T>> => {
-    const postConfig: RequestConfig = {...config, url, data, method: 'post'}
+  public postRaw = <T = void>(
+    url: string,
+    data?: any,
+    config: RequestConfig = {}
+  ): Promise<IOResponse<T>> => {
+    const postConfig: RequestConfig = { ...config, url, data, method: 'post' }
     return this.request(postConfig) as Promise<IOResponse<T>>
   }
 
-  public patch = <T = void>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
-    const patchConfig: RequestConfig = {...config, url, data, method: 'patch'}
+  public patch = <T = void>(
+    url: string,
+    data?: any,
+    config: RequestConfig = {}
+  ): Promise<T> => {
+    const patchConfig: RequestConfig = { ...config, url, data, method: 'patch' }
     return this.request(patchConfig).then(response => response.data as T)
   }
 
-  public head = (url: string, config:RequestConfig = {}): Promise<IOResponse<void>> => {
-    const headConfig: RequestConfig = {...config, url, method: 'head'}
+  public head = (
+    url: string,
+    config: RequestConfig = {}
+  ): Promise<IOResponse<void>> => {
+    const headConfig: RequestConfig = { ...config, url, method: 'head' }
     return this.request(headConfig)
   }
 
-  public delete = <T = void>(url: string, config?: RequestConfig): Promise<IOResponse<T>> => {
-    const deleteConfig: RequestConfig = {...config, url, method: 'delete'}
+  public delete = <T = void>(
+    url: string,
+    config?: RequestConfig
+  ): Promise<IOResponse<T>> => {
+    const deleteConfig: RequestConfig = { ...config, url, method: 'delete' }
     return this.request(deleteConfig)
   }
 
   protected request = async (config: RequestConfig): Promise<AxiosResponse> => {
-    const context: MiddlewareContext = {config}
+    const context: MiddlewareContext = { config }
     await this.runMiddlewares(context)
     return context.response!
   }
 
-  private getConfig = (url: string, config: RequestConfig = {}): CacheableRequestConfig => ({
+  private getConfig = (
+    url: string,
+    config: RequestConfig = {}
+  ): CacheableRequestConfig => ({
     cacheable: CacheType.Memory,
     memoizable: true,
     ...config,
