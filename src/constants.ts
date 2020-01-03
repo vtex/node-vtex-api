@@ -1,5 +1,6 @@
 export const DEFAULT_WORKSPACE = 'master'
 
+export const REGION_HEADER = 'x-vtex-upstream-target'
 export const SEGMENT_HEADER = 'x-vtex-segment'
 export const SESSION_HEADER = 'x-vtex-session'
 export const PRODUCT_HEADER = 'x-vtex-product'
