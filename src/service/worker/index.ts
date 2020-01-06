@@ -1,3 +1,4 @@
+import { LRUCache } from './../../caches/LRUCache';
 import { request } from 'http'
 import Koa from 'koa'
 import compress from 'koa-compress'
@@ -192,7 +193,7 @@ const scaleClientCaches = (
   scaleFactor: number,
   options?: Record<string, InstanceOptions>
 ) => Object.entries(options || {}).forEach(([name, opts]) => {
-  if (opts && opts.memoryCache && scaleFactor > 1) {
+  if (scaleFactor > 1 && opts?.memoryCache instanceof LRUCache) {
     const previous = (opts.memoryCache as any).storage.max
     const current = previous / scaleFactor;
     (opts.memoryCache as any).storage.max = current

@@ -79,6 +79,8 @@ export const cacheMiddleware = ({type, storage}: CacheOptions) => {
     const cacheHasWithSegment = await storage.has(keyWithSegment)
     const cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
 
+    ctx.config.forceMaxAge = 120
+
     if (cached) {
       const {etag: cachedEtag, response, expiration, responseType, responseEncoding} = cached as Cached
       if (expiration > Date.now() && response) {
@@ -101,6 +103,7 @@ export const cacheMiddleware = ({type, storage}: CacheOptions) => {
       }
     }
 
+    console.log('MISS !!!', ctx.config.baseURL, ctx.config.url)
     await next()
 
     if (!ctx.response) {

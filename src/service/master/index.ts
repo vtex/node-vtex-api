@@ -28,7 +28,7 @@ const handleSignal: NodeJS.SignalsListener = signal => {
 }
 
 export const startMaster = (service: ServiceJSON) => {
-  console.log('Spawning memcached instance')
+  console.log('Starting memcached instance')
   startMemCached(service)
 
   console.log('Starting workers')

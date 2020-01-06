@@ -69,12 +69,11 @@ export const startWorkers = (service: ServiceJSON) => {
   const { workers: numWorkers } = service
 
   // Setup dubugger
-  if (LINKED) {
-    cluster.setupMaster({inspectPort: INSPECT_DEBUGGER_PORT})
-  }
+  // if (LINKED) {
+  //   cluster.setupMaster({inspectPort: INSPECT_DEBUGGER_PORT})
+  // }
 
   // Setup cluster
-  console.log(`Spawning ${numWorkers} workers`)
   for(let i=0; i < numWorkers; i++) {
     cluster.fork()
   }

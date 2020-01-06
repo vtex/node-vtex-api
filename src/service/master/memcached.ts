@@ -1,6 +1,6 @@
 import { ChildProcess, exec, ExecException } from 'child_process'
 
-import { MAX_MEMCACHED_RESTARTS } from '../../constants'
+import { MAX_MEMCACHED_RESTARTS, MEMCACHED_SOCKET } from '../../constants'
 import { logger } from '../worker/listeners'
 import { ServiceJSON } from '../worker/runtime/typings'
 
@@ -38,7 +38,8 @@ export const startMemCached = (service: ServiceJSON) => {
   const { memory } = service
   if (memCachedRestarts < MAX_MEMCACHED_RESTARTS) {
     memCachedRestarts += 1
-    memCached = exec(`memcached -vv -u memcached -s /tmp/memcached.sock -m ${memory}`, afterExit)
+    // memCached = exec(`memcached -vv -u memcached -s ${MEMCACHED_SOCKET} -m ${memory}`, afterExit)
+    memCached = exec(`memcached -vv -u memcached -m ${memory} 2> /tmp/memcached.log`, afterExit)
     memCached.on('exit', onExit(service))
     memCached.on('error', onError(service))
   }
