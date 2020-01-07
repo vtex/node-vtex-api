@@ -1,4 +1,4 @@
-import { path } from 'ramda'
+import { flatten, path, splitEvery, values } from 'ramda'
 
 import { InstanceOptions } from '../../HttpClient'
 import { IOContext } from '../../service/worker/runtime/typings'
@@ -76,6 +76,8 @@ interface TranslatedV2 {
   translate: string[]
 }
 
+const MAX_BATCH_SIZE = 650
+
 export class MessagesGraphQL extends AppGraphQLClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
     super('vtex.messages@1.x', vtex, options)
@@ -92,16 +94,41 @@ export class MessagesGraphQL extends AppGraphQLClient {
     metric: 'messages-translate',
   }).then(path(['data', 'newTranslate'])) as Promise<TranslateResponse['newTranslate']>
 
-  public translateV2 = (args: TranslateInputV2) => this.graphql.query<TranslatedV2, { args: TranslateInputV2 }>({
-      query: `
+  public translateV2 = (args: TranslateInputV2) => {
+    const { indexedByFrom, ...rest } = args
+
+    const allMessages: Array<{from: string, message: IOMessageInputV2}> = flatten(indexedByFrom.map(({ from, messages }) =>
+      messages.map(message => ({from, message}))
+    ))
+
+    const batchedMessages = splitEvery(MAX_BATCH_SIZE, allMessages)
+    return Promise.all(batchedMessages.map(batch => {
+      const indexedBatch = batch.reduce((acc, {from, message}) => {
+        if (!acc[from]) {
+          acc[from] = {
+            from,
+            messages: [],
+          }
+        }
+        acc[from].messages.push(message)
+        return acc
+      }, {} as Record<string, IndexedMessageV2>)
+      const batchArgs = {
+        ...rest,
+        indexedByFrom: values(indexedBatch),
+      }
+      return this.graphql.query<TranslatedV2, { args: TranslateInputV2 }>({
+        query: `
       query Translate($args: TranslateArgs!) {
         translate(args: $args)
       }
       `,
-      variables: { args },
-    }, {
-      metric: 'messages-translate-v2',
-    }).then(path(['data', 'translate'])) as Promise<TranslatedV2['translate']>
+        variables: { args: batchArgs },
+      }, {
+        metric: 'messages-translate-v2',
+      }).then(path(['data', 'translate'])) as Promise<TranslatedV2['translate']>
+    })).then(flatten)
+  }
 
   public save = (args: SaveArgs): Promise<boolean> => this.graphql.mutate<boolean, { args: SaveArgs }>({
     mutate: `
