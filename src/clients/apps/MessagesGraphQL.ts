@@ -97,9 +97,9 @@ export class MessagesGraphQL extends AppGraphQLClient {
   public translateV2 = (args: TranslateInputV2) => {
     const { indexedByFrom, ...rest } = args
 
-    const allMessages: Array<{from: string, message: IOMessageInputV2}> = flatten(indexedByFrom.map(({ from, messages }) =>
-      messages.map(message => ({from, message}))
-    ))
+    const allMessages: Array<{from: string, message: IOMessageInputV2}> = indexedByFrom.reduce((acc, {from, messages}) => {
+      return acc.concat(messages.map(message => ({from, message})))
+    }, [] as Array<{from: string, message: IOMessageInputV2}>)
 
     const batchedMessages = splitEvery(MAX_BATCH_SIZE, allMessages)
     return Promise.all(batchedMessages.map(batch => {
