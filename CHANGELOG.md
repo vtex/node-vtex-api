@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.2.0] - 2020-01-07
+### Added
+- Batches messages to be translated
+
 ## [6.1.7] - 2020-01-02
 ### Changed
 - Added correct getFile function to Assets client
