@@ -76,7 +76,7 @@ interface TranslatedV2 {
   translate: string[]
 }
 
-const MAX_BATCH_SIZE = 650
+const MAX_BATCH_SIZE = 500
 
 export class MessagesGraphQL extends AppGraphQLClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
