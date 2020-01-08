@@ -35,7 +35,7 @@ const defaultClients: ClientsConfig = {
 export class Runtime<ClientsT extends IOClients = IOClients, StateT = void, CustomT = void> {
   public routes: Record<string, RouteHandler<ClientsT, StateT, CustomT>>
   public events: any
-  public statusTrack: () => EnvMetric[]
+  public statusTrack?: () => EnvMetric[]
   public __is_service: true = true // tslint:disable-line
 
   constructor(
