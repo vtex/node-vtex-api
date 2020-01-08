@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Fixed
-- There was a HUGE performance drop when setting `x-vtex-meta` header via `ctx.set` using an array. Joining in a single string solved the problem 
+- There was a HUGE performance drop when setting `x-vtex-meta` header via `ctx.set` using an array. Joining in a single string solved the problem
 
 ## [6.2.0] - 2020-01-07
 ### Added
