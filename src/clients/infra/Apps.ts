@@ -37,9 +37,9 @@ const createRoutes = ({account, workspace}: IOContext) => {
     Apps: () => `${routes.Workspace}/apps`,
     Dependencies:() => `${routes.Workspace}/dependencies`,
     File: (locator: AppLocator, path: string) => `${routes.Files(locator)}/${path}`,
+    FileFromApps: (app: string, path: string) => `${routes.Workspace}/apps/${app}/files/${path}`,
     Files: (locator: AppLocator) => `${routes.AppOrRegistry(locator)}/files`,
     Link: (app: string) => `${routes.Workspace}/v2/links/${app}`,
-    LinkedAppFile: (app: string, path: string) => `${routes.Workspace}/apps/${app}/files/${path}`,
     Links: () => `${routes.Workspace}/links`,
     Master: `/${account}/master`,
     Meta: () => `${routes.Workspace}/v2/apps`,
@@ -262,12 +262,12 @@ export class Apps extends InfraClient {
     } as IgnoreNotFoundRequestConfig)
   }
 
-  public getLinkedAppByWorkspaceJSON = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
+  public getFileFromApps = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
     const inflightKey = inflightURL
-    return this.http.get<T>(this.routes.LinkedAppFile(app, path), {
+    return this.http.get<T>(this.routes.FileFromApps(app, path), {
       cacheable: CacheType.Memory,
       inflightKey,
-      metric: 'apps-linked-app-get-json',
+      metric: 'get-file-from-apps',
       nullIfNotFound,
     } as IgnoreNotFoundRequestConfig)
   }

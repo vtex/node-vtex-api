@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
-- New route to get files from an app linked in a specific workspace
+- New route to get files from Apps with only the app name, account and workspace
 
 ## [6.2.2] - 2020-01-08
 ### Fixed
