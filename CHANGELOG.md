@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.3.0] - 2020-01-08
+### Added
+- New route to get files from Apps with only the app name, account and workspace
+
 ## [6.2.2] - 2020-01-08
 ### Fixed
 - Logic to get cancellable methods for cancellation token
