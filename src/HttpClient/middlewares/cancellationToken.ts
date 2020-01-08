@@ -44,7 +44,8 @@ export const cancellationToken = (cancellation?: Cancellation) => async (ctx: Mi
     return await next()
   }
 
-  if (method && method.toUpperCase() !== 'GET') {
+  const cancellableMethods = new Set(['GET', 'OPTIONS', 'HEAD'])
+  if (method && !cancellableMethods.has(method.toUpperCase())) {
     cancellation.cancelable = false
   }
 
