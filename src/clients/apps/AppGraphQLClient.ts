@@ -1,4 +1,5 @@
 import { AuthType, InstanceOptions } from '../../HttpClient/typings'
+import { formatPrivateRoute } from '../../service/worker/runtime/http/routes'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { IOGraphQLClient } from '../IOGraphQLClient'
 
@@ -15,7 +16,7 @@ export class AppGraphQLClient extends IOGraphQLClient {
     let baseURL: string
     if (appVersion) {
       const [major] = appVersion.split('.')
-      baseURL = `${protocol}://app.io.vtex.com/${vendor}.${name}/v${major}/${account}/${workspace}/_v/graphql`
+      baseURL = formatPrivateRoute({account, workspace, major, name, vendor, protocol, path: '/_v/graphql'})
     } else {
       console.warn(`${account} in ${workspace} is using old routing for ${app}. Please change vendor.app to vendor.app@major in client ${(options && options.name) || ''}`)
       const service = [name, vendor].join('.') // messages.vtex

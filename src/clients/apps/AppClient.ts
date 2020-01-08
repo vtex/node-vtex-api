@@ -1,4 +1,5 @@
 import { AuthType, InstanceOptions } from '../../HttpClient/typings'
+import { formatPrivateRoute } from '../../service/worker/runtime/http/routes'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { IOClient } from '../IOClient'
 
@@ -16,7 +17,7 @@ export class AppClient extends IOClient {
     let baseURL: string
     if (appVersion) {
       const [major] = appVersion.split('.')
-      baseURL = `${protocol}://app.io.vtex.com/${vendor}.${name}/v${major}/${account}/${workspace}`
+      baseURL = formatPrivateRoute({account, workspace, vendor, name, major, protocol})
     } else {
       console.warn(`${account} in ${workspace} is using old routing for ${app}. Please change vendor.app to vendor.app@major in client ${(options && options.name) || ''}`)
       const service = [name, vendor].join('.') // messages.vtex
