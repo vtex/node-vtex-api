@@ -57,3 +57,6 @@ export const WORKSPACE = process.env.VTEX_WORKSPACE as string
 export const PRODUCTION = process.env.VTEX_PRODUCTION === 'true'
 
 export const INSPECT_DEBUGGER_PORT = 5858
+
+export const cancellableMethods = new Set(['GET', 'OPTIONS', 'HEAD'])
+

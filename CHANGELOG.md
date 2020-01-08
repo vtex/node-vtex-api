@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.2.2] - 2020-01-08
+### Fixed
+- Logic to get cancellable methods for cancellation token
+
 ## [6.2.1] - 2020-01-08
 ### Fixed
 - There was a HUGE performance drop when setting `x-vtex-meta` header via `ctx.set` using an array. Joining in a single string solved the problem
