@@ -11,7 +11,8 @@ const appendResponseHeader = (ctx: Context, responseHeaders: any, targetHeader: 
   if (headerValue) {
     const currentValue = toArray(ctx.response.get(targetHeader) || [])
     const newValue = headerValue.split(',').map(trim)
-    ctx.set(targetHeader, uniqStr([...currentValue, ...newValue]).join(','))
+    const deduped = uniqStr([...currentValue, ...newValue])
+    ctx.set(targetHeader, deduped.join(','))
   }
 }
 
