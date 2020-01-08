@@ -39,6 +39,7 @@ const createRoutes = ({account, workspace}: IOContext) => {
     File: (locator: AppLocator, path: string) => `${routes.Files(locator)}/${path}`,
     Files: (locator: AppLocator) => `${routes.AppOrRegistry(locator)}/files`,
     Link: (app: string) => `${routes.Workspace}/v2/links/${app}`,
+    LinkedAppFile: (app: string, path: string) => `${routes.Workspace}/apps/${app}/files/${path}`,
     Links: () => `${routes.Workspace}/links`,
     Master: `/${account}/master`,
     Meta: () => `${routes.Workspace}/v2/apps`,
@@ -257,6 +258,16 @@ export class Apps extends InfraClient {
       cacheable: linked ? CacheType.Memory : CacheType.Any,
       inflightKey,
       metric: linked ? 'apps-get-json' : 'registry-get-json',
+      nullIfNotFound,
+    } as IgnoreNotFoundRequestConfig)
+  }
+
+  public getLinkedAppByWorkspaceJSON = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
+    const inflightKey = inflightURL
+    return this.http.get<T>(this.routes.LinkedAppFile(app, path), {
+      cacheable: CacheType.Memory,
+      inflightKey,
+      metric: 'apps-linked-app-get-json',
       nullIfNotFound,
     } as IgnoreNotFoundRequestConfig)
   }
