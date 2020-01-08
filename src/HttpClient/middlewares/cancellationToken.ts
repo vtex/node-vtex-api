@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { cancellableMethods } from '../../constants'
 import { Cancellation } from '../../service/worker/runtime/typings'
 import { MiddlewareContext } from '../typings'
 
@@ -44,7 +45,6 @@ export const cancellationToken = (cancellation?: Cancellation) => async (ctx: Mi
     return await next()
   }
 
-  const cancellableMethods = new Set(['GET', 'OPTIONS', 'HEAD'])
   if (method && !cancellableMethods.has(method.toUpperCase())) {
     cancellation.cancelable = false
   }
