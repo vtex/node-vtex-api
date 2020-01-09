@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.4.1] - 2020-01-09
+### Fixed
+- Internal app path log in toolbelt
+
 ## [6.4.0] - 2020-01-09
 ### Added
 - Allow getting segment data with default locale and currency from binding instead of tenant.

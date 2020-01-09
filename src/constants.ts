@@ -1,3 +1,5 @@
+import { versionToMajor } from './utils/app'
+
 export const DEFAULT_WORKSPACE = 'master'
 export const IS_IO = process.env.VTEX_IO
 export const PID = process.pid
@@ -47,6 +49,7 @@ export const REGION = process.env.VTEX_REGION as string
 export const PUBLIC_ENDPOINT = process.env.VTEX_PUBLIC_ENDPOINT || 'myvtex.com'
 export const APP = {
   ID: process.env.VTEX_APP_ID as string,
+  MAJOR: versionToMajor(process.env.VTEX_APP_VERSION as string),
   NAME: process.env.VTEX_APP_NAME as string,
   VENDOR: process.env.VTEX_APP_VENDOR as string,
   VERSION: process.env.VTEX_APP_VERSION as string,
