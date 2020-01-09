@@ -24,7 +24,7 @@ export const formatPublicRoute = ({workspace, account, endpoint, path}: {workspa
 
 const getPath = ({ public: publicRoute, path }: ServiceRoute) => publicRoute
   ? formatPublicRoute({workspace: WORKSPACE, account: ACCOUNT, endpoint: PUBLIC_ENDPOINT, path})
-  : formatPrivateRoute({vendor: APP_ENV.VENDOR, name: APP_ENV.NAME, major: APP_ENV.MAJOR, account: ACCOUNT, workspace: WORKSPACE, path})
+  : formatPrivateRoute({protocol: 'https', vendor: APP_ENV.VENDOR, name: APP_ENV.NAME, major: APP_ENV.MAJOR, account: ACCOUNT, workspace: WORKSPACE, path})
 
 export const logAvailableRoutes = (service: ServiceJSON) => {
   const available = Object.values(service.routes || {}).reduce(
