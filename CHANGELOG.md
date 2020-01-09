@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.4.0] - 2020-01-09
+### Added
+- Allow getting segment data with default locale and currency from binding instead of tenant.
+
 ## [6.3.0] - 2020-01-08
 ### Added
 - New route to get files from Apps with only the app name, account and workspace
@@ -81,7 +85,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Allows filter dependencies from app list
 
 ## [3.65.2] - 2019-11-25
-### Added 
+### Added
 - New attribute to messages API
 
 ## [3.65.1] - 2019-11-21
