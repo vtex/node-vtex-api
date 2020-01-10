@@ -139,6 +139,8 @@ export interface IOContext {
   tenant?: Tenant
   binding?: Binding
   cancellation?: Cancellation
+  // Some services may receive configuration from other apps in the request
+  configurations?: any
 }
 
 export interface EventBody {

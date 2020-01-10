@@ -11,13 +11,14 @@ const LINKED_ROUTE = 'linked'
 
 const dependsOnApp = (appAtMajor: string) => (a: AppMetaInfo) => {
   const [name, major] = appAtMajor.split('@')
+  const majorInt = major.includes('.') ? major.split('.')[0] : major
   const version = a._resolvedDependencies[name]
   if (!version) {
     return false
   }
 
   const [depMajor] = version.split('.')
-  return major === depMajor
+  return majorInt === depMajor
 }
 
 const joinIds = join('')
