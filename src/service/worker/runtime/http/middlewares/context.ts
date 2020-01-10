@@ -82,17 +82,12 @@ export const maybeGetServiceConfigurations = () => {
       appAtMajor,
       metaInfos
     )
-    const dps = (metaInfos as any[]).filter(i => (i.id as string).includes('app-test'))[0]
-    const version = dps._resolvedDependencies['vtex.service-example']
-    const [meta] = version.split('.')
-    const [_, major] = appAtMajor.split('@')
-    ctx.vtex.configurations = {
-      configuration: 'a',
-      deps: JSON.stringify(dependencies),
-      major,
-      meta,
-      test: appAtMajor,
-    }
+
+    const [appName] = (dependencies[0].id as string).split('@')
+    const [serviceName] = appAtMajor.split('@')
+    const configuration = await ctx.clients.apps.getFileFromApps(appName, `dist/${serviceName}/${appName}.json`)
+
+    ctx.vtex.configurations = configuration
     await next()
   }
 }
