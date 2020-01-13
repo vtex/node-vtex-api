@@ -38,6 +38,7 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
     vary,
     authTokens,
     clients(implementation!, options),
+    maybeGetServiceConfigurations(),
     timings,
     error,
     ...middlewares,

@@ -29,6 +29,7 @@ export const EVENT_HANDLER_ID_HEADER = 'x-event-handler-id'
 export const COLOSSUS_ROUTE_DECLARER_HEADER = 'x-colossus-route-declarer'
 export const COLOSSUS_ROUTE_ID_HEADER = 'x-colossus-route-id'
 export const COLOSSUS_PARAMS_HEADER = 'x-colossus-params'
+export const COLOSSUS_ROUTE_CONFIGURATION = 'x-colossus-route-configuration'
 
 export type VaryHeaders = typeof SEGMENT_HEADER | typeof SESSION_HEADER | typeof PRODUCT_HEADER | typeof LOCALE_HEADER
 
