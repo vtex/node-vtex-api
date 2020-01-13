@@ -32,7 +32,7 @@ export const createPvtContextMiddleware = (
       ...prepareHandlerCtx(header),
       ...(smartcache && { recorder: ctx.state.recorder }),
       route: {
-        configurationDependecy: 'pure',
+        configurationDependecy: 'workspace',
         id: routeId,
         params,
         type: 'private',
@@ -59,7 +59,7 @@ export const createPubContextMiddleware = (
       ...prepareHandlerCtx(header),
       ...(smartcache && { recorder: ctx.state.recorder }),
       route: {
-        configurationDependecy: 'pure',
+        configurationDependecy: 'workspace',
         declarer: header[COLOSSUS_ROUTE_DECLARER_HEADER],
         id: routeId,
         params: qsParse(header[COLOSSUS_PARAMS_HEADER]),
