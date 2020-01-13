@@ -42,28 +42,34 @@ export class Recorder {
     )
   }
 
-  public clear = () => HEADERS.forEach(headerName => this._record[headerName].clear())
+  public clear () {
+    HEADERS.forEach(headerName => this._record[headerName].clear())
+  }
 
-  public record = (headers?: Record<string, string>) => HEADERS.forEach(
-    headerName => {
-      const h = headers?.[headerName]
-      if (h) {
-        h.split(',').map(trim).forEach(hh => this._record[headerName].add(hh))
+  public record (headers?: Record<string, string>) {
+    HEADERS.forEach(
+      headerName => {
+        const h = headers?.[headerName]
+        if (h) {
+          h.split(',').map(trim).forEach(hh => this._record[headerName].add(hh))
+        }
       }
-    }
-  )
+    )
+  }
 
-  public flush = (ctx: Context) => HEADERS.forEach(
-    headerName => {
-      const currentValue = ctx.response.get(headerName) as string | string[]
-      const parsedCurrentValue = typeof currentValue === 'string'
-        ? currentValue.split(',')
-        : currentValue
-      const toAppend = Array.from(this._record[headerName])
-      const deduped = uniqStr([...parsedCurrentValue, ...toAppend].filter(x => !!x))
-      if (deduped.length > 0) {
-        ctx.set(headerName, deduped)
+  public flush (ctx: Context) {
+    HEADERS.forEach(
+      headerName => {
+        const currentValue = ctx.response.get(headerName) as string | string[]
+        const parsedCurrentValue = typeof currentValue === 'string'
+          ? currentValue.split(',')
+          : currentValue
+        const toAppend = Array.from(this._record[headerName])
+        const deduped = uniqStr([...parsedCurrentValue, ...toAppend].filter(x => !!x))
+        if (deduped.length > 0) {
+          ctx.set(headerName, deduped)
+        }
       }
-    }
-  )
+    )
+  }
 }
