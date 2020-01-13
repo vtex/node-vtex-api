@@ -152,11 +152,14 @@ export interface EventBody {
   key: string,
 }
 
+type RouteConfigurationType = 'pure' | 'workspace' | 'userAndWorkspace'
+
 export interface ServiceRoute {
   path: string,
   public?: boolean,
   smartcache?: boolean,
-  extensible?: boolean
+  extensible?: boolean,
+  configurationType?: RouteConfigurationType
 }
 
 export interface RawServiceJSON {
