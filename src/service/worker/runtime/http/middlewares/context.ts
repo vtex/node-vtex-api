@@ -1,4 +1,3 @@
-import { contains } from 'ramda';
 import { parse as qsParse } from 'querystring'
 import { appIdToAppAtMajor } from './../../../../../utils/app'
 
@@ -33,6 +32,7 @@ export const createPvtContextMiddleware = (
       ...prepareHandlerCtx(header),
       ...(smartcache && { recorder: ctx.state.recorder }),
       route: {
+        configurationDependecy: 'pure',
         id: routeId,
         params,
         type: 'private',
@@ -54,10 +54,12 @@ export const createPubContextMiddleware = (
     const {
       request: { header },
     } = ctx
+
     ctx.vtex = {
       ...prepareHandlerCtx(header),
       ...(smartcache && { recorder: ctx.state.recorder }),
       route: {
+        configurationDependecy: 'pure',
         declarer: header[COLOSSUS_ROUTE_DECLARER_HEADER],
         id: routeId,
         params: qsParse(header[COLOSSUS_PARAMS_HEADER]),
@@ -74,20 +76,25 @@ export const maybeGetServiceConfigurations = () => {
     U extends RecorderState,
     V extends ParamsContext
   >(ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
-    const appId = APP.ID
-    const appAtMajor = appIdToAppAtMajor(appId)
-    // TODO: find where the dependency tree is and use it, instead of calling APPS
-    const metaInfos = await ctx.clients.apps.getAppsMetaInfos()
-    const dependencies = ctx.clients.settings.getFilteredDependencies(
-      appAtMajor,
-      metaInfos
-    )
+    console.log('STARTING MAYBE GET SERVICE CONFIGURATIONS', ctx.vtex.route.configurationDependecy)
+    if (ctx.vtex.route.configurationDependecy !== 'pure') {
+      const appId = APP.ID
+      const appAtMajor = appIdToAppAtMajor(appId)
+      // TODO: find where the dependency tree is and use it, instead of calling APPS
+      const metaInfos = await ctx.clients.apps.getAppsMetaInfos()
+      const dependencies = ctx.clients.settings.getFilteredDependencies(
+        appAtMajor,
+        metaInfos
+      )
 
-    const [appName] = (dependencies[0].id as string).split('@')
-    const [serviceName] = appAtMajor.split('@')
-    const configuration = await ctx.clients.apps.getFileFromApps(appName, `dist/${serviceName}/${appName}.json`)
-
-    ctx.vtex.configurations = configuration
+      if (dependencies[0]) {
+        const [appName] = (dependencies[0].id as string).split('@')
+        const [serviceName] = appAtMajor.split('@')
+        const configuration = await ctx.clients.apps.getFileFromApps(appName, `dist/${serviceName}/${appName}.json`)
+        console.log('CONFIG', configuration)
+        ctx.vtex.configurations = configuration
+      }
+    }
     await next()
   }
 }
