@@ -70,14 +70,13 @@ export const createPubContextMiddleware = (
   }
 }
 
-export const maybeGetServiceConfigurations = () => {
+export const maybeGetServiceConfigurations = (serviceRoute: ServiceRoute) => {
   return async function configurationContext<
     T extends IOClients,
     U extends RecorderState,
     V extends ParamsContext
   >(ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
-    console.log('STARTING MAYBE GET SERVICE CONFIGURATIONS', ctx.vtex.route.configurationDependecy)
-    if (ctx.vtex.route.configurationDependecy !== 'pure') {
+    if (serviceRoute.configurationType !== 'pure') {
       const appId = APP.ID
       const appAtMajor = appIdToAppAtMajor(appId)
       // TODO: find where the dependency tree is and use it, instead of calling APPS
