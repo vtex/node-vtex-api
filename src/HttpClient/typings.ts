@@ -52,8 +52,6 @@ export interface MiddlewareContext {
 
 export type CacheStorage = CacheLayer<string, Cached>
 
-export { Recorder } from './middlewares/recorder'
-
 export interface InstanceOptions {
   authType?: AuthType
   timeout?: number,

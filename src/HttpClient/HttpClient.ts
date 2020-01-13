@@ -17,15 +17,32 @@ import {
 import { IOContext } from '../service/worker/runtime/typings'
 import { formatBindingHeaderValue } from '../utils/binding'
 import { formatTenantHeaderValue } from '../utils/tenant'
-import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
+import { SlowRecorder } from './../service/worker/runtime/utils/recorder'
+import {
+  CacheableRequestConfig,
+  cacheMiddleware,
+  CacheType,
+} from './middlewares/cache'
 import { cancellationToken } from './middlewares/cancellationToken'
 import { singleFlightMiddleware } from './middlewares/inflight'
 import { memoizationMiddleware, Memoized } from './middlewares/memoization'
 import { metricsMiddleware } from './middlewares/metrics'
-import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewares/notFound'
+import {
+  acceptNotFoundMiddleware,
+  notFoundFallbackMiddleware,
+} from './middlewares/notFound'
 import { recorderMiddleware } from './middlewares/recorder'
-import { defaultsMiddleware, requestMiddleware, routerCacheMiddleware } from './middlewares/request'
-import { InstanceOptions, IOResponse, MiddlewareContext, RequestConfig } from './typings'
+import {
+  defaultsMiddleware,
+  requestMiddleware,
+  routerCacheMiddleware,
+} from './middlewares/request'
+import {
+  InstanceOptions,
+  IOResponse,
+  MiddlewareContext,
+  RequestConfig,
+} from './typings'
 
 const DEFAULT_TIMEOUT_MS = 1000
 const noTransforms = [(data: any) => data]
@@ -90,7 +107,7 @@ export class HttpClient {
       defaultsMiddleware(baseURL, headers, params, timeout, retries, verbose),
       metricsMiddleware({metrics, serverTiming, name}),
       memoizationMiddleware({memoizedCache}),
-      ...recorder ? [recorderMiddleware(recorder)] : [],
+      ...recorder ? [recorderMiddleware(recorder as SlowRecorder)] : [],
       cancellationToken(cancellation),
       singleFlightMiddleware,
       acceptNotFoundMiddleware,
