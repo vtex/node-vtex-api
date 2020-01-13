@@ -18,6 +18,7 @@ export async function eventContextMiddleware <T extends IOClients, U extends Rec
       subject: header[EVENT_SUBJECT_HEADER],
     },
     route: {
+      configurationDependecy: 'pure',
       id: header[EVENT_HANDLER_ID_HEADER],
       params: {},
       type: 'event',
