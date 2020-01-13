@@ -107,7 +107,7 @@ export class HttpClient {
       defaultsMiddleware(baseURL, headers, params, timeout, retries, verbose),
       metricsMiddleware({metrics, serverTiming, name}),
       memoizationMiddleware({memoizedCache}),
-      ...recorder ? [recorderMiddleware(recorder as SlowRecorder)] : [],
+      ...recorder ? [recorderMiddleware(recorder)] : [],
       cancellationToken(cancellation),
       singleFlightMiddleware,
       acceptNotFoundMiddleware,
