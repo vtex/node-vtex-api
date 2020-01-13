@@ -1,4 +1,5 @@
 import { IOClients } from '../../../../../clients/IOClients'
+import { USE_FAST_RECORDER } from '../../../../../constants'
 import {
   cancelledRequestStatus,
   RequestCancelledError,
@@ -9,7 +10,13 @@ import {
 } from '../../../../../errors/TooManyRequestsError'
 import { cleanError } from '../../../../../utils/error'
 import { LogLevel } from '../../../../logger'
-import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
+import {
+  Maybe,
+  ParamsContext,
+  RecorderState,
+  ServiceContext,
+} from '../../typings'
+import { Recorder } from '../../utils/recorder'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
 const META_HEADER = 'x-vtex-meta'
@@ -47,6 +54,11 @@ export async function error<
     // Do not generate etag for errors
     ctx.remove(META_HEADER)
     ctx.remove(ETAG_HEADER)
+    if (USE_FAST_RECORDER) {
+      (ctx.vtex.recorder as Maybe<Recorder>)?.clear()
+    } else {
+      delete ctx.vtex.recorder
+    }
 
     // In production errors, add two second cache
     if (production) {
