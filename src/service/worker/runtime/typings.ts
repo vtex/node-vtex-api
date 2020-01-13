@@ -119,6 +119,7 @@ export interface IOContext {
   recorder?: Recorder | SlowRecorder
   region: string
   route: {
+    configurationDependecy: 'pure' | 'workspace' | 'user'
     declarer?: string
     id: string
     params: ParsedUrlQuery
