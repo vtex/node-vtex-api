@@ -20,8 +20,8 @@ const appendResponseHeader = (ctx: Context, responseHeaders: any, targetHeader: 
 }
 
 export const createSlowRecorder = (ctx: Context): SlowRecorder => (headers: Record<string, string>) => {
-  appendResponseHeader(ctx, headers, 'x-vtex-meta')
-  appendResponseHeader(ctx, headers, 'x-vtex-meta-bucket')
+  appendResponseHeader(ctx, headers, META_HEADER)
+  appendResponseHeader(ctx, headers, META_HEADER_BUCKET)
 }
 
 export const isSlowRecorder = (x: any): x is SlowRecorder => typeof x === 'function' && !x._record
