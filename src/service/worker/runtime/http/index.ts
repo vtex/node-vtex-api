@@ -15,11 +15,11 @@ import { clients } from './middlewares/clients'
 import {
   createPubContextMiddleware,
   createPvtContextMiddleware,
-  maybeGetServiceConfigurations,
 } from './middlewares/context'
 import { error } from './middlewares/error'
 import { trackIncomingRequestStats } from './middlewares/requestStats'
 import { removeSetCookie } from './middlewares/setCookie'
+import { getServiceSettings } from './middlewares/settings'
 import { timings } from './middlewares/timings'
 import { vary } from './middlewares/vary'
 
@@ -38,7 +38,7 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
     vary,
     authTokens,
     clients(implementation!, options),
-    maybeGetServiceConfigurations(serviceRoute),
+    ...(serviceRoute.settingsType !== 'pure' ? [getServiceSettings()] : []),
     timings,
     error,
     ...middlewares,
@@ -62,7 +62,7 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
     vary,
     authTokens,
     clients(implementation!, options),
-    maybeGetServiceConfigurations(serviceRoute),
+    ...(serviceRoute.settingsType !== 'pure' ? [getServiceSettings()] : []),
     removeSetCookie,
     timings,
     error,

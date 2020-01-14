@@ -104,8 +104,6 @@ export interface Cancellation {
   source: CancelTokenSource
 }
 
-export type ConfigurationDependency = 'pure' | 'workspace' | 'workspace&user'
-
 export interface IOContext {
   account: string
   platform: string
@@ -121,7 +119,6 @@ export interface IOContext {
   recorder?: Recorder | SlowRecorder
   region: string
   route: {
-    configurationDependecy: ConfigurationDependency
     declarer?: string
     id: string
     params: ParsedUrlQuery
@@ -142,8 +139,8 @@ export interface IOContext {
   tenant?: Tenant
   binding?: Binding
   cancellation?: Cancellation
-  // Some services may receive configuration from other apps in the request
-  configurations?: any
+  // Some services may receive settings from other apps in the request
+  settings?: any
 }
 
 export interface EventBody {
@@ -152,14 +149,14 @@ export interface EventBody {
   key: string,
 }
 
-type RouteConfigurationType = 'pure' | 'workspace' | 'userAndWorkspace'
+type RouteSettingsType = 'pure' | 'workspace' | 'userAndWorkspace'
 
 export interface ServiceRoute {
   path: string,
   public?: boolean,
   smartcache?: boolean,
   extensible?: boolean,
-  configurationType?: RouteConfigurationType
+  settingsType?: RouteSettingsType
 }
 
 export interface RawServiceJSON {
