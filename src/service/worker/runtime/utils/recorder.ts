@@ -60,12 +60,11 @@ export class Recorder {
   public flush (ctx: Context) {
     HEADERS.forEach(
       headerName => {
+        const newValueSet = new Set(this._record[headerName])
         const currentValue = ctx.response.get(headerName) as string | string[]
-        const parsedCurrentValue = typeof currentValue === 'string'
-          ? currentValue.split(',')
-          : currentValue
-        const toAppend = Array.from(this._record[headerName])
-        const deduped = uniqStr([...parsedCurrentValue, ...toAppend].filter(x => !!x))
+        const parsedCurrentValue = typeof currentValue === 'string' ? currentValue.split(',') : currentValue
+        parsedCurrentValue.forEach(cur => newValueSet.add(trim(cur)))
+        const deduped = Array.from(newValueSet).filter(x => !!x)
         if (deduped.length > 0) {
           ctx.set(headerName, deduped)
         }
