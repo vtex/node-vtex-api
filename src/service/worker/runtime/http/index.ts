@@ -16,7 +16,6 @@ import { clients } from './middlewares/clients'
 import {
   createPubContextMiddleware,
   createPvtContextMiddleware,
-  maybeGetServiceConfigurations,
 } from './middlewares/context'
 import { error } from './middlewares/error'
 import { trackIncomingRequestStats } from './middlewares/requestStats'

@@ -104,8 +104,6 @@ export interface Cancellation {
   source: CancelTokenSource
 }
 
-export type ConfigurationDependency = 'pure' | 'workspace' | 'workspace&user'
-
 export interface IOContext {
   account: string
   platform: string
@@ -121,7 +119,6 @@ export interface IOContext {
   recorder?: Recorder | SlowRecorder
   region: string
   route: {
-    configurationDependecy: ConfigurationDependency
     declarer?: string
     id: string
     params: ParsedUrlQuery
