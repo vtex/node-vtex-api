@@ -1,7 +1,7 @@
-import { createHash } from 'crypto'
-import { any, filter, join, pluck } from 'ramda'
+import { any } from 'ramda'
 
 import { inflightUrlWithQuery, InstanceOptions } from '../../HttpClient'
+import { getDependenciesHash, getFilteredDependencies } from '../../service/worker/runtime/http/middlewares/settings'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { isLinkedApp } from '../../utils/app'
 import { AppMetaInfo } from '../infra/Apps'
@@ -9,19 +9,6 @@ import { AppClient } from './AppClient'
 
 const LINKED_ROUTE = 'linked'
 
-const dependsOnApp = (appAtMajor: string) => (a: AppMetaInfo) => {
-  const [name, major] = appAtMajor.split('@')
-  const majorInt = major.includes('.') ? major.split('.')[0] : major
-  const version = a._resolvedDependencies[name]
-  if (!version) {
-    return false
-  }
-
-  const [depMajor] = version.split('.')
-  return majorInt === depMajor
-}
-
-const joinIds = join('')
 const containsLinks = any(isLinkedApp)
 
 export interface SettingsParams {
@@ -35,13 +22,11 @@ export class Settings extends AppClient {
   }
 
   public getFilteredDependencies(appAtMajor: string, dependencies: AppMetaInfo[]): AppMetaInfo[] {
-    const depends = dependsOnApp(appAtMajor)
-    return filter(depends, dependencies)
+    return getFilteredDependencies(appAtMajor, dependencies)
   }
 
   public getDependenciesHash(dependencies: AppMetaInfo[]): string {
-    const dependingApps = pluck('id', dependencies)
-    return createHash('md5').update(joinIds(dependingApps)).digest('hex')
+    return getDependenciesHash(dependencies)
   }
 
   public async getSettings(dependencies: AppMetaInfo[], appAtMajor: string, params?: SettingsParams) {
