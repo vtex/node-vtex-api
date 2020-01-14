@@ -34,7 +34,6 @@ export interface RequestConfig extends AxiosRequestConfig {
   forceMaxAge?: number
   responseEncoding?: BufferEncoding
   nullIfNotFound?: boolean
-  
 }
 
 export interface CacheHit {
