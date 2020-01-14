@@ -24,7 +24,7 @@ import { memoizationMiddleware, Memoized } from './middlewares/memoization'
 import { metricsMiddleware } from './middlewares/metrics'
 import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewares/notFound'
 import { recorderMiddleware } from './middlewares/recorder'
-import { defaultsMiddleware, requestMiddleware, routerCacheMiddleware } from './middlewares/request'
+import { defaultsMiddleware, requestMiddleware, routerCacheMiddleware, retryMiddleware } from './middlewares/request'
 import { InstanceOptions, IOResponse, MiddlewareContext, RequestConfig } from './typings'
 
 const DEFAULT_TIMEOUT_MS = 1000
@@ -63,6 +63,9 @@ export class HttpClient {
       binding,
       verbose,
       cancellation,
+      exponentialTimeoutCoefficient,
+      initialBackoffDelay,
+      exponentialBackoffCoefficient,
     } = opts
     this.name = name || baseURL || 'unknown'
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
@@ -88,6 +91,7 @@ export class HttpClient {
 
     this.runMiddlewares = compose([...opts.middlewares || [],
       defaultsMiddleware(baseURL, headers, params, timeout, retries, verbose),
+      retryMiddleware(exponentialTimeoutCoefficient, retries, initialBackoffDelay, exponentialBackoffCoefficient),
       metricsMiddleware({metrics, serverTiming, name}),
       memoizationMiddleware({memoizedCache}),
       ...recorder ? [recorderMiddleware(recorder)] : [],
