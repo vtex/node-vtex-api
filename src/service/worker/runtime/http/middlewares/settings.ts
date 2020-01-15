@@ -10,7 +10,6 @@ import {
   ParamsContext,
   RecorderState,
   ServiceContext,
-  ServiceRoute,
 } from './../../typings'
 
 const joinIds = join('')
@@ -67,6 +66,22 @@ async function getBuildJSONForApp(apps: Apps, app: AppMetaInfo, appVendorName: s
   return result
 }
 
+export const getDependenciesSettings = async (apps: Apps) => {
+  const appId = APP.ID
+  const appAtMajor = appIdToAppAtMajor(appId)
+  const metaInfos = await apps.getAppsMetaInfos()
+  const dependencies = getFilteredDependencies(
+    appAtMajor,
+    metaInfos
+  )
+
+  const [appVendorName] = appAtMajor.split('@')
+
+  return await Promise.all(dependencies.map((dep =>
+    getBuildJSONForApp(apps, dep, appVendorName)
+  )))
+}
+
 export const getServiceSettings = () => {
   return async function settingsContext<
     T extends IOClients,
@@ -74,19 +89,8 @@ export const getServiceSettings = () => {
     V extends ParamsContext
   >(ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
     const { clients: { apps } } = ctx
-    const appId = APP.ID
-    const appAtMajor = appIdToAppAtMajor(appId)
 
-    const metaInfos = await apps.getAppsMetaInfos()
-    const dependencies = getFilteredDependencies(
-      appAtMajor,
-      metaInfos
-    )
-    const [appVendorName] = appAtMajor.split('@')
-
-    const dependenciesSettings = await Promise.all(dependencies.map((dep =>
-      getBuildJSONForApp(apps, dep, appVendorName)
-    )))
+    const dependenciesSettings = await getDependenciesSettings(apps)
 
     // TODO: for now returning all settings, but the ideia is to do merge
     ctx.vtex.settings = dependenciesSettings
