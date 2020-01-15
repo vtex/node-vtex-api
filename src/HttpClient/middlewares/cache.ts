@@ -130,10 +130,11 @@ export const cacheMiddleware = ({type, storage}: CacheOptions) => {
     const shouldCache = maxAge || etag
     const varySession = ctx.response.headers.vary && ctx.response.headers.vary.includes(SESSION_HEADER)
     if (shouldCache && !varySession) {
-      const {responseType, responseEncoding} = ctx.config
+      const {responseType, responseEncoding: configResponseEncoding} = ctx.config
       const currentAge = revalidated ? 0 : age
       const varySegment = ctx.response.headers.vary && ctx.response.headers.vary.includes(SEGMENT_HEADER)
       const setKey = varySegment ? keyWithSegment : key
+      const responseEncoding = configResponseEncoding || (responseType === 'arraybuffer' ? 'base64' : undefined)
       const cacheableData = type === CacheType.Disk && responseType === 'arraybuffer'
         ? (data as Buffer).toString(responseEncoding)
         : data
