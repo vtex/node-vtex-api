@@ -13,6 +13,7 @@ export const FORWARDED_HOST_HEADER = 'x-forwarded-host'
 export const TENANT_HEADER = 'x-vtex-tenant'
 export const BINDING_HEADER = 'x-vtex-binding'
 export const META_HEADER = 'x-vtex-meta'
+export const META_HEADER_BUCKET = 'x-vtex-meta-bucket'
 export const ETAG_HEADER = 'etag'
 export const ACCOUNT_HEADER = 'x-vtex-account'
 export const CREDENTIAL_HEADER = 'x-vtex-credential'
@@ -63,3 +64,4 @@ export const INSPECT_DEBUGGER_PORT = 5858
 
 export const cancellableMethods = new Set(['GET', 'OPTIONS', 'HEAD'])
 
+export const USE_FAST_RECORDER = false

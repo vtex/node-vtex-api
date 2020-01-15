@@ -1,13 +1,21 @@
 import { collectDefaultMetrics, Gauge, Registry } from 'prom-client'
 import gcStats from 'prometheus-gc-stats'
 
+import { USE_FAST_RECORDER } from '../../../../constants'
 import { MetricsLogger } from '../../../logger/metricsLogger'
 import { ServiceContext } from '../typings'
-import { createRecorder } from '../utils/recorder'
+import { createSlowRecorder, Recorder } from '../utils/recorder'
 
-export function recorderMiddleware (ctx: ServiceContext, next: () => Promise<void>) {
-  ctx.state.recorder = createRecorder(ctx)
-  return next()
+export async function recorderMiddleware (ctx: ServiceContext, next: () => Promise<void>) {
+  if (USE_FAST_RECORDER) {
+    ctx.state.recorder = new Recorder()
+    await next()
+    ctx.state.recorder.flush(ctx)
+  } else {
+    ctx.state.recorder = createSlowRecorder(ctx)
+    await next()
+  }
+  return
 }
 
 export const addMetricsLoggerMiddleware = () => {

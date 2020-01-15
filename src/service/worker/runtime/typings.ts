@@ -13,12 +13,12 @@ import { ParsedUrlQuery } from 'querystring'
 import { IOMessageV2 } from '../../../clients/apps/MessagesGraphQL'
 import { ClientsImplementation, IOClients } from '../../../clients/IOClients'
 import { InstanceOptions } from '../../../HttpClient'
-import { Recorder } from '../../../HttpClient/middlewares/recorder'
 import { Binding } from '../../../utils/binding'
 import { IOMessage } from '../../../utils/message'
 import { Tenant } from '../../../utils/tenant'
 import { Logger } from '../../logger'
 import { MetricsLogger } from '../../logger/metricsLogger'
+import { Recorder, SlowRecorder } from './utils/recorder'
 
 type ServerTiming = Record<string, string>
 
@@ -72,7 +72,7 @@ export interface HttpRoute {
 }
 
 export interface RecorderState {
-  recorder: any
+  recorder: Recorder | SlowRecorder
   body: any
 }
 
@@ -116,7 +116,7 @@ export interface IOContext {
   locale?: string
   production: boolean
   product: string
-  recorder?: Recorder
+  recorder?: Recorder | SlowRecorder
   region: string
   route: {
     declarer?: string
