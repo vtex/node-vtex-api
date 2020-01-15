@@ -64,4 +64,4 @@ export const INSPECT_DEBUGGER_PORT = 5858
 
 export const cancellableMethods = new Set(['GET', 'OPTIONS', 'HEAD'])
 
-export const USE_FAST_RECORDER = false
+export const USE_FAST_RECORDER = true

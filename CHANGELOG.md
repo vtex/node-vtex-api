@@ -6,12 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Enables fast recorder
 
 ## [6.5.0] - 2020-01-15
-
-## [6.5.0-beta.0] - 2020-01-14
-
-## [6.5.0-beta] - 2020-01-13
 ### Changed
 - Sets `x-vtex-meta` header *ONCE* in the `recorder` middleware to tackle performance issues
 
