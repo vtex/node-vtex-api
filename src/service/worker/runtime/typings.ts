@@ -147,6 +147,8 @@ export interface EventBody {
   key: string,
 }
 
+export type RouteSettingsType = 'pure' | 'workspace' | 'userAndWorkspace'
+
 export interface ServiceRoute {
   path: string,
   public?: boolean,
