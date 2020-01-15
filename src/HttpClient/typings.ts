@@ -10,6 +10,8 @@ export type InflightKeyGenerator = (x: RequestConfig) => string
 export interface RequestConfig extends AxiosRequestConfig {
   retries?: number
   exponentialTimeoutCoefficient?: number
+  backoffDelayConstant?: number
+  exponentialBackoffCoefficient?: number
   retryCount?: number
   /**
    * Identifies the type of request for metrification purposes. Should vary with client method.

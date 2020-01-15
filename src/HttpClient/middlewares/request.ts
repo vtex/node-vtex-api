@@ -18,11 +18,69 @@ const http = axios.create({
   httpAgent,
 })
 
+function fixConfig(axiosInstance: AxiosInstance, config: RequestConfig) {
+  if (axiosInstance.defaults.httpAgent === config.httpAgent) {
+    delete config.httpAgent;
+  }
+  if (axiosInstance.defaults.httpsAgent === config.httpsAgent) {
+    delete config.httpsAgent;
+  }
+}
+
+const exponentialDelay = (backoffDelayConstant: number, exponentialBackoffCoefficient: number, retryNumber: number) => {
+  const delay = backoffDelayConstant * Math.pow(exponentialBackoffCoefficient, retryNumber)
+  const randomSum = delay * 0.2 * Math.random()
+  return delay + randomSum
+}
+
+// A lot of this code is based on:
+// https://github.com/softonic/axios-retry/blob/ffd4327f31d063522e58c525d28d4c5053d0ea7b/es/index.js#L109
+http.interceptors.response.use(undefined, error => {
+  if (error.config == null) {
+    return Promise.reject(error)
+  }
+
+  const config = error.config as RequestConfig
+
+  if (config.retries == null || config.retries === 0) {
+    return Promise.reject(error)
+  }
+  const { backoffDelayConstant = 100, exponentialBackoffCoefficient = 2, exponentialTimeoutCoefficient } = config
+  const retryCount = config.retryCount || 0
+  const shouldRetry = isAbortedOrNetworkErrorOrRouterTimeout(error) && retryCount < config.retries
+  if (shouldRetry) {
+    config.retryCount = retryCount + 1
+    const delay = exponentialDelay(backoffDelayConstant, exponentialBackoffCoefficient, config.retryCount)
+
+    // Axios fails merging this configuration to the default configuration because it has an issue
+    // with circular structures: https://github.com/mzabriskie/axios/issues/370
+    fixConfig(http, config)
+
+    config.timeout = exponentialTimeoutCoefficient ? (config.timeout as number) * exponentialTimeoutCoefficient : config.timeout
+    config.transformRequest = [data => data]
+
+    return new Promise(resolve => setTimeout(() => resolve(http(config)), delay))
+  }
+  return Promise.reject(error)
+})
+
 const paramsSerializer = (params: any) => {
   return stringify(params, { arrayFormat: 'repeat' })
 }
 
-export const defaultsMiddleware = (baseURL: string | undefined, rawHeaders: Record<string, string>, params: Record<string, string> | undefined, timeout: number, retries?: number, verbose?: boolean, exponentialTimeoutCoefficient?: number) => {
+export interface DefaultMiddlewareArgs {
+  baseURL: string | undefined
+  rawHeaders: Record<string, string>
+  params: Record<string, string> | undefined
+  timeout: number
+  retries?: number
+  verbose?: boolean
+  exponentialTimeoutCoefficient?: number
+  backoffDelayConstant?: number
+  exponentialBackoffCoefficient?: number
+}
+
+export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retries, verbose, exponentialTimeoutCoefficient, backoffDelayConstant, exponentialBackoffCoefficient }: DefaultMiddlewareArgs) => {
   const countByMetric: Record<string, number> = {}
   const headers = renameBy(toLower, rawHeaders)
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
@@ -44,6 +102,9 @@ export const defaultsMiddleware = (baseURL: string | undefined, rawHeaders: Reco
       },
       paramsSerializer,
       retryCount: 0,
+      backoffDelayConstant,
+      exponentialTimeoutCoefficient,
+      exponentialBackoffCoefficient,
     }
 
     if (ctx.config.verbose && ctx.config.metric) {
@@ -76,51 +137,6 @@ export const routerCacheMiddleware = async (ctx: MiddlewareContext, next: () => 
       router: 1,
     }
   }
-}
-
-function fixConfig(axiosInstance: AxiosInstance, config: RequestConfig) {
-  if (axiosInstance.defaults.httpAgent === config.httpAgent) {
-    delete config.httpAgent;
-  }
-  if (axiosInstance.defaults.httpsAgent === config.httpsAgent) {
-    delete config.httpsAgent;
-  }
-}
-
-const customExponentialDelay = (backoffDelayConstant: number, exponentialBackoffCoefficient: number, retryNumber: number) => {
-  const delay = backoffDelayConstant * Math.pow(exponentialBackoffCoefficient, retryNumber)
-  const randomSum = delay * 0.2 * Math.random()
-  return delay + randomSum
-}
-
-// A lot of this code is based on:
-// https://github.com/softonic/axios-retry/blob/ffd4327f31d063522e58c525d28d4c5053d0ea7b/es/index.js#L109
-export const retryMiddleware = (exponentialTimeoutCoefficient: number | undefined, retries: number | undefined, backoffDelayConstant: number = 100, exponentialBackoffCoefficient: number = 2) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-  http.interceptors.response.use(undefined, error => {
-    if (retries == null || retries === 0 || error.config == null) {
-      return Promise.reject(error)
-    }
-
-    const config = error.config as RequestConfig
-    const retryCount = config.retryCount || 0
-    const shouldRetry = isAbortedOrNetworkErrorOrRouterTimeout(error) && retryCount < retries
-    if (shouldRetry) {
-      config.retryCount = retryCount + 1
-      const delay = customExponentialDelay(backoffDelayConstant, exponentialBackoffCoefficient, config.retryCount)
-
-      // Axios fails merging this configuration to the default configuration because it has an issue
-      // with circular structures: https://github.com/mzabriskie/axios/issues/370
-      fixConfig(http, config)
-
-      
-      config.timeout = exponentialTimeoutCoefficient ? (config.timeout as number) * exponentialTimeoutCoefficient : config.timeout
-      config.transformRequest = [data => data]
-
-      return new Promise(resolve => setTimeout(() => resolve(http(config)), delay))
-    }
-    return Promise.reject(error)
-  })
-  await next()
 }
 
 export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
