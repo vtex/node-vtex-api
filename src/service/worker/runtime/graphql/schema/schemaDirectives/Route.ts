@@ -1,10 +1,22 @@
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
+import { getDependenciesSettings } from '../../../http/middlewares/settings'
+import { Apps } from './../../../../../../clients/infra/Apps'
 import { RouteSettingsType } from './../../../typings'
 
 const getSettings = (settingsType: any, ctx: any): any => {
   const settings = settingsType as RouteSettingsType
-  // TODO: get settings
+  if (settings === 'pure') { return ctx }
+
+  const { clients: { apps } } = ctx
+  const dependenciesSettings = getDependenciesSettings(apps as Apps)
+  ctx = {
+    ...ctx,
+    vtex: {
+      settings: dependenciesSettings,
+      ...ctx.vtex,
+    },
+  }
   return ctx
 }
 
@@ -26,4 +38,3 @@ directive @route(
   settingsType: String
 ) on FIELD_DEFINITION
 `
-// serviceRoute.settingsType

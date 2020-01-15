@@ -10,7 +10,6 @@ import {
   ParamsContext,
   RecorderState,
   ServiceContext,
-  ServiceRoute,
 } from './../../typings'
 
 const joinIds = join('')
@@ -102,6 +101,22 @@ export const getDependenciesSettings = async (apps: Apps) => {
   )
 
   return allResults.filter(res => res !== undefined)
+}
+
+export const getDependenciesSettings = async (apps: Apps) => {
+  const appId = APP.ID
+  const appAtMajor = appIdToAppAtMajor(appId)
+  const metaInfos = await apps.getAppsMetaInfos()
+  const dependencies = getFilteredDependencies(
+    appAtMajor,
+    metaInfos
+  )
+
+  const [appVendorName] = appAtMajor.split('@')
+
+  return await Promise.all(dependencies.map((dep =>
+    getBuildJSONForApp(apps, dep, appVendorName)
+  )))
 }
 
 export const getServiceSettings = () => {
