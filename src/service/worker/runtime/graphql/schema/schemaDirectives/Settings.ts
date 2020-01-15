@@ -17,7 +17,6 @@ const getSettings = async (settingsType: any, ctx: any) => {
       ...ctx.vtex,
     },
   }
-
   return ctx
 }
 
