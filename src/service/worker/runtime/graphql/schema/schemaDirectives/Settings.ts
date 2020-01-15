@@ -1,15 +1,15 @@
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
+import { Apps } from '../../../../../../clients/infra/Apps'
 import { getDependenciesSettings } from '../../../http/middlewares/settings'
-import { Apps } from './../../../../../../clients/infra/Apps'
-import { RouteSettingsType } from './../../../typings'
+import { RouteSettingsType } from '../../../typings'
 
-const getSettings = (settingsType: any, ctx: any): any => {
+const getSettings = async (settingsType: any, ctx: any) => {
   const settings = settingsType as RouteSettingsType
   if (settings === 'pure') { return ctx }
 
   const { clients: { apps } } = ctx
-  const dependenciesSettings = getDependenciesSettings(apps as Apps)
+  const dependenciesSettings = await getDependenciesSettings(apps as Apps)
   ctx = {
     ...ctx,
     vtex: {
@@ -20,21 +20,21 @@ const getSettings = (settingsType: any, ctx: any): any => {
   return ctx
 }
 
-export class Auth extends SchemaDirectiveVisitor {
+export class SettingsDirective extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, any>) {
     const {resolve = defaultFieldResolver} = field
     const { settingsType } = this.args
     field.resolve = async (root, args, ctx, info) => {
       if (settingsType) {
-        ctx = getSettings(settingsType, ctx)
+        ctx = await getSettings(settingsType, ctx)
       }
       return resolve(root, args, ctx, info)
     }
   }
 }
 
-export const authDirectiveTypeDefs = `
-directive @route(
+export const settingsDirectiveTypeDefs = `
+directive @settings(
   settingsType: String
 ) on FIELD_DEFINITION
 `
