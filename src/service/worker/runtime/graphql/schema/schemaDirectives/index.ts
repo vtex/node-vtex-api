@@ -2,6 +2,7 @@ import { Auth, authDirectiveTypeDefs } from './Auth'
 import { CacheControl, cacheControlDirectiveTypeDefs } from './CacheControl'
 import { Deprecated, deprecatedDirectiveTypeDefs } from './Deprecated'
 import { SanitizeDirective, sanitizeDirectiveTypeDefs } from './Sanitize'
+import { SettingsDirective, settingsDirectiveTypeDefs } from './Settings'
 import {
   SmartCacheDirective,
   smartCacheDirectiveTypeDefs,
@@ -18,6 +19,7 @@ export const nativeSchemaDirectives = {
   cacheControl: CacheControl,
   deprecated: Deprecated,
   sanitize: SanitizeDirective,
+  settings: SettingsDirective,
   smartcache: SmartCacheDirective,
   translatableV2: TranslatableV2,
 }
@@ -27,6 +29,7 @@ export const nativeSchemaDirectivesTypeDefs = [
   cacheControlDirectiveTypeDefs,
   deprecatedDirectiveTypeDefs,
   sanitizeDirectiveTypeDefs,
+  settingsDirectiveTypeDefs,
   smartCacheDirectiveTypeDefs,
   translatableV2DirectiveTypeDefs,
 ].join('\n\n')
