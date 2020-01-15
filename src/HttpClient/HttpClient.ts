@@ -64,7 +64,7 @@ export class HttpClient {
       verbose,
       cancellation,
       exponentialTimeoutCoefficient,
-      initialBackoffDelay,
+      backoffDelayConstant,
       exponentialBackoffCoefficient,
     } = opts
     this.name = name || baseURL || 'unknown'
@@ -91,7 +91,7 @@ export class HttpClient {
 
     this.runMiddlewares = compose([...opts.middlewares || [],
       defaultsMiddleware(baseURL, headers, params, timeout, retries, verbose),
-      retryMiddleware(exponentialTimeoutCoefficient, retries, initialBackoffDelay, exponentialBackoffCoefficient),
+      retryMiddleware(exponentialTimeoutCoefficient, retries, backoffDelayConstant, exponentialBackoffCoefficient),
       metricsMiddleware({metrics, serverTiming, name}),
       memoizationMiddleware({memoizedCache}),
       ...recorder ? [recorderMiddleware(recorder)] : [],

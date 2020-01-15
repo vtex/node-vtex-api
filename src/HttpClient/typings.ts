@@ -61,7 +61,7 @@ export interface InstanceOptions {
   baseURL?: string,
   retries?: number,
   exponentialTimeoutCoefficient?: number,
-  initialBackoffDelay?: number,
+  backoffDelayConstant?: number,
   exponentialBackoffCoefficient?: number,
   metrics?: MetricsAccumulator,
   /**

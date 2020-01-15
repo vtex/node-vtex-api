@@ -87,15 +87,15 @@ function fixConfig(axiosInstance: AxiosInstance, config: RequestConfig) {
   }
 }
 
-const customExponentialDelay = (initialBackoffDelay: number, exponentialBackoffCoefficient: number, retryNumber: number) => {
-  const delay = initialBackoffDelay * Math.pow(exponentialBackoffCoefficient, retryNumber)
+const customExponentialDelay = (backoffDelayConstant: number, exponentialBackoffCoefficient: number, retryNumber: number) => {
+  const delay = backoffDelayConstant * Math.pow(exponentialBackoffCoefficient, retryNumber)
   const randomSum = delay * 0.2 * Math.random()
   return delay + randomSum
 }
 
 // A lot of this code is based on:
 // https://github.com/softonic/axios-retry/blob/ffd4327f31d063522e58c525d28d4c5053d0ea7b/es/index.js#L109
-export const retryMiddleware = (exponentialTimeoutCoefficient: number | undefined, retries: number | undefined, initialBackoffDelay: number = 100, exponentialBackoffCoefficient: number = 2) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+export const retryMiddleware = (exponentialTimeoutCoefficient: number | undefined, retries: number | undefined, backoffDelayConstant: number = 100, exponentialBackoffCoefficient: number = 2) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
   http.interceptors.response.use(undefined, error => {
     if (retries == null || retries === 0 || error.config == null) {
       return Promise.reject(error)
@@ -106,7 +106,7 @@ export const retryMiddleware = (exponentialTimeoutCoefficient: number | undefine
     const shouldRetry = isAbortedOrNetworkErrorOrRouterTimeout(error) && retryCount < retries
     if (shouldRetry) {
       config.retryCount = retryCount + 1
-      const delay = customExponentialDelay(initialBackoffDelay, exponentialBackoffCoefficient, config.retryCount)
+      const delay = customExponentialDelay(backoffDelayConstant, exponentialBackoffCoefficient, config.retryCount)
 
       // Axios fails merging this configuration to the default configuration because it has an issue
       // with circular structures: https://github.com/mzabriskie/axios/issues/370
