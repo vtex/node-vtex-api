@@ -6,11 +6,7 @@ import { AppMetaInfo, Apps } from '../../../../../clients/infra/Apps'
 import { IOClients } from '../../../../../clients/IOClients'
 import { APP } from '../../../../../constants'
 import { appIdToAppAtMajor, parseAppId } from './../../../../../utils/app'
-import {
-  ParamsContext,
-  RecorderState,
-  ServiceContext,
-} from './../../typings'
+import { ParamsContext, RecorderState, ServiceContext } from './../../typings'
 
 const joinIds = join('')
 
@@ -26,20 +22,30 @@ const dependsOnApp = (appAtMajor: string) => (a: AppMetaInfo) => {
   return majorInt === depMajor
 }
 
-export const getFilteredDependencies = (appAtMajor: string, dependencies: AppMetaInfo[]): AppMetaInfo[] => {
+export const getFilteredDependencies = (
+  appAtMajor: string,
+  dependencies: AppMetaInfo[]
+): AppMetaInfo[] => {
   const depends = dependsOnApp(appAtMajor)
   return dependencies.filter(depends)
 }
 
 export const getDependenciesHash = (dependencies: AppMetaInfo[]): string => {
   const dependingApps = pluck('id', dependencies)
-  return createHash('md5').update(joinIds(dependingApps)).digest('hex')
+  return createHash('md5')
+    .update(joinIds(dependingApps))
+    .digest('hex')
 }
 
-const appJsonCache = new LRUCache<string, any>({max: 10000})
+const appJsonCache = new LRUCache<string, any>({ max: 10000 })
 // metrics.trackCache('apps-json', appJsonCache)
 
-async function getJSONWithCrossAccountCache(client: Apps, appId: string, file: string, nullIfNotFound?: boolean) {
+async function getJSONWithCrossAccountCache(
+  client: Apps,
+  appId: string,
+  file: string,
+  nullIfNotFound?: boolean
+) {
   const locator = parseAppId(appId)
   const linked = !!locator.build
   // Let Apps client memory cache handle links since they actually might vary.
@@ -58,28 +64,39 @@ async function getJSONWithCrossAccountCache(client: Apps, appId: string, file: s
   return fetched
 }
 
-async function getBuildJSONForApp(apps: Apps, app: AppMetaInfo, appVendorName: string): Promise<Record<string, any>> {
-  const buildJson = await getJSONWithCrossAccountCache(apps, app.id, `dist/${appVendorName}/build.json`)
-  const result = buildJson
+async function getBuildJSONForApp(
+  apps: Apps,
+  app: AppMetaInfo,
+  appVendorName: string
+): Promise<Record<string, any> | undefined> {
+  try {
+    const buildJson = await getJSONWithCrossAccountCache(
+      apps,
+      app.id,
+      `dist/${appVendorName}/build.json`
+    )
+    const result = buildJson
 
-  result.declarer = app.id
-  return result
+    result.declarer = app.id
+    return result
+  } catch (e) {
+    return undefined
+  }
 }
 
 export const getDependenciesSettings = async (apps: Apps) => {
   const appId = APP.ID
   const appAtMajor = appIdToAppAtMajor(appId)
   const metaInfos = await apps.getAppsMetaInfos()
-  const dependencies = getFilteredDependencies(
-    appAtMajor,
-    metaInfos
-  )
+  const dependencies = getFilteredDependencies(appAtMajor, metaInfos)
 
   const [appVendorName] = appAtMajor.split('@')
 
-  return await Promise.all(dependencies.map((dep =>
-    getBuildJSONForApp(apps, dep, appVendorName)
-  )))
+  const allResults = await Promise.all(
+    dependencies.map(dep => getBuildJSONForApp(apps, dep, appVendorName))
+  )
+
+  return allResults.filter(res => res !== undefined)
 }
 
 export const getServiceSettings = () => {
@@ -88,7 +105,9 @@ export const getServiceSettings = () => {
     U extends RecorderState,
     V extends ParamsContext
   >(ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
-    const { clients: { apps } } = ctx
+    const {
+      clients: { apps },
+    } = ctx
 
     const dependenciesSettings = await getDependenciesSettings(apps)
 

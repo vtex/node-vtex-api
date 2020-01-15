@@ -6,7 +6,7 @@ import { RouteSettingsType } from '../../../typings'
 
 const getSettings = async (settingsType: any, ctx: any) => {
   const settings = settingsType as RouteSettingsType
-  if (settings === 'pure') { return ctx }
+  if (settings !== 'workspace' && settings !== 'userAndWorkspace') { return ctx }
 
   const { clients: { apps } } = ctx
   const dependenciesSettings = await getDependenciesSettings(apps as Apps)
@@ -17,6 +17,7 @@ const getSettings = async (settingsType: any, ctx: any) => {
       ...ctx.vtex,
     },
   }
+
   return ctx
 }
 
