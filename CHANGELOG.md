@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.6.0] - 2020-01-16
+
 ## [6.6.0-beta] - 2020-01-15
 ### Changed
 - Enables fast recorder
