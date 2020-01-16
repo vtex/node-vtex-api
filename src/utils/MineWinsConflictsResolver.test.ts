@@ -6,7 +6,7 @@ import { MineWinsConflictsResolver } from './MineWinsConflictsResolver'
 describe('MineWinsConflictsResolver', () => {
   const VBaseMock = TypeMoq.Mock.ofType<VBase>()
 
-  const resolver = new (class extends MineWinsConflictsResolver {
+  const resolver = new (class extends MineWinsConflictsResolver<unknown> {
     constructor() {
       super(VBaseMock.object, 'test', '/test', ['a'])
     }

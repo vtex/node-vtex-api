@@ -13,7 +13,7 @@ import {
 type Configuration = Record<string, ConfigurationData | ConfigurationData[] | object> | ConfigurationData[]
 type ConfigurationData = Record<string, object>
 
-export class MineWinsConflictsResolver implements ConflictsResolver {
+export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
   /***
    * Take mine and merge with master keys that have no conflict
    * We use base to decide wether a key was deleted or not
@@ -36,14 +36,14 @@ export class MineWinsConflictsResolver implements ConflictsResolver {
       const { data: conflicts }: { data: VBaseConflictData[] } = data
       const selectedConflict = conflicts.find(conflict => conflict.path === this.filePath)
       if (!selectedConflict) {
-        return {}
+        return {} as T
       }
 
       selectedConflict.base.parsedContent = this.parseConflict(selectedConflict.base)
       selectedConflict.master.parsedContent = this.parseConflict(selectedConflict.master)
       selectedConflict.mine.parsedContent = this.parseConflict(selectedConflict.mine)
       const resolved = this.resolveConflictMineWins(selectedConflict)
-      return resolved
+      return resolved as T
     })
   }
 

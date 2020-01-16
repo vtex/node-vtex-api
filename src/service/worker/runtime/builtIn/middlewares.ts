@@ -8,9 +8,10 @@ import { createSlowRecorder, Recorder } from '../utils/recorder'
 
 export async function recorderMiddleware (ctx: ServiceContext, next: () => Promise<void>) {
   if (USE_FAST_RECORDER) {
-    ctx.state.recorder = new Recorder()
+    const recorder = new Recorder()
+    ctx.state.recorder = recorder
     await next()
-    ctx.state.recorder.flush(ctx)
+    recorder.flush(ctx)
   } else {
     ctx.state.recorder = createSlowRecorder(ctx)
     await next()

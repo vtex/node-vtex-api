@@ -67,7 +67,7 @@ export class VBase extends InfraClient {
     return this.http.getBuffer(routes.File(bucket, path), {metric, inflightKey})
   }
 
-  public getJSON = <T>(bucket: string, path: string, nullIfNotFound?: boolean, conflictsResolver?: ConflictsResolver) => {
+  public getJSON = <T>(bucket: string, path: string, nullIfNotFound?: boolean, conflictsResolver?: ConflictsResolver<T>) => {
     const headers = conflictsResolver? {'X-Vtex-Detect-Conflicts': true}: {}
     const inflightKey = inflightURL
     const metric = 'vbase-get-json'
@@ -176,6 +176,6 @@ export interface VBaseConflict{
   content: string,
 }
 
-export interface ConflictsResolver{
-  resolve: () => {}
+export interface ConflictsResolver<T>{
+  resolve: () => T | Promise<T>
 }
