@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Vbase `getJSON` typings. Do not return type `{}`
+
+### Changed
+- Do not rely on state for flushing `x-vtex-meta` headers
 
 ## [6.6.0] - 2020-01-16
 
