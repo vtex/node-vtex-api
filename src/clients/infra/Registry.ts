@@ -61,17 +61,17 @@ export class Registry extends InfraClient {
 
   public deprecateApp = (app: string, version: string) => {
     const metric = 'registry-deprecate'
-    return this.http.patch(routes.AppVersion(app, version), {patchState: "deprecate"}, {metric})
+    return this.http.patch(routes.AppVersion(app, version), {patchState: 'deprecate'}, {metric})
   }
 
   public undeprecateApp = (app: string, version: string) => {
     const metric = 'registry-undeprecate'
-    return this.http.patch(routes.AppVersion(app, version), {patchState: "undeprecate"}, {metric})
+    return this.http.patch(routes.AppVersion(app, version), {patchState: 'undeprecate'}, {metric})
   }
 
   public validateApp = (app: string, version: string) => {
     const metric = 'registry-validate'
-    return this.http.patch(routes.AppVersion(app, version), {patchState: "validate"}, {metric})
+    return this.http.patch(routes.AppVersion(app, version), {patchState: 'validate'}, {metric})
   }
 
   public getAppManifest = (app: string, version: string, opts?: AppsManifestOptions) => {

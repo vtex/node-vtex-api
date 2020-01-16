@@ -20,10 +20,10 @@ const http = axios.create({
 
 function fixConfig(axiosInstance: AxiosInstance, config: RequestConfig) {
   if (axiosInstance.defaults.httpAgent === config.httpAgent) {
-    delete config.httpAgent;
+    delete config.httpAgent
   }
   if (axiosInstance.defaults.httpsAgent === config.httpsAgent) {
-    delete config.httpsAgent;
+    delete config.httpsAgent
   }
 }
 
@@ -85,26 +85,26 @@ export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retri
   const headers = renameBy(toLower, rawHeaders)
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     ctx.config = {
-      retries,
       baseURL,
       maxRedirects: 0,
+      retries,
       timeout,
       validateStatus: status => (status >= 200 && status < 300),
       verbose,
       ...ctx.config,
+      exponentialBackoffCoefficient,
+      exponentialTimeoutCoefficient,
       headers: {
         ...headers,
         ...renameBy(toLower, ctx.config.headers),
       },
+      initialBackoffDelay,
       params: {
         ...params,
         ...ctx.config.params,
       },
       paramsSerializer,
       retryCount: 0,
-      initialBackoffDelay,
-      exponentialTimeoutCoefficient,
-      exponentialBackoffCoefficient,
     }
 
     if (ctx.config.verbose && ctx.config.metric) {
