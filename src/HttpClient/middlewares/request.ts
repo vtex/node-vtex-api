@@ -1,13 +1,12 @@
 import Agent from 'agentkeepalive'
-import axios from 'axios'
-import retry, { exponentialDelay } from 'axios-retry'
+import axios, { AxiosInstance } from 'axios'
 import { Limit } from 'p-limit'
 import { stringify } from 'qs'
 import { mapObjIndexed, path, sum, toLower, values } from 'ramda'
 
 import { renameBy } from '../../utils/renameBy'
 import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../utils/retry'
-import { MiddlewareContext } from '../typings'
+import { MiddlewareContext, RequestConfig } from '../typings'
 
 const httpAgent = new Agent({
   freeSocketTimeout: 15 * 1000,
@@ -19,38 +18,93 @@ const http = axios.create({
   httpAgent,
 })
 
-retry(http, {
-  retries: 0,
-  retryCondition: isAbortedOrNetworkErrorOrRouterTimeout,
-  retryDelay: exponentialDelay,
-  shouldResetTimeout: true,
+function fixConfig(axiosInstance: AxiosInstance, config: RequestConfig) {
+  if (axiosInstance.defaults.httpAgent === config.httpAgent) {
+    delete config.httpAgent
+  }
+  if (axiosInstance.defaults.httpsAgent === config.httpsAgent) {
+    delete config.httpsAgent
+  }
+}
+
+const exponentialDelay = (initialBackoffDelay: number, exponentialBackoffCoefficient: number, retryNumber: number) => {
+  const delay = initialBackoffDelay * Math.pow(exponentialBackoffCoefficient, retryNumber - 1)
+  const randomSum = delay * 0.2 * Math.random()
+  return delay + randomSum
+}
+
+// A lot of this code is based on:
+// https://github.com/softonic/axios-retry/blob/ffd4327f31d063522e58c525d28d4c5053d0ea7b/es/index.js#L109
+http.interceptors.response.use(undefined, error => {
+  if (error.config == null) {
+    return Promise.reject(error)
+  }
+
+  const config = error.config as RequestConfig
+
+  if (config.retries == null || config.retries === 0) {
+    return Promise.reject(error)
+  }
+  const { initialBackoffDelay = 200, exponentialBackoffCoefficient = 2, exponentialTimeoutCoefficient } = config
+  const retryCount = config.retryCount || 0
+  const shouldRetry = isAbortedOrNetworkErrorOrRouterTimeout(error) && retryCount < config.retries
+  if (shouldRetry) {
+    config.retryCount = retryCount + 1
+    const delay = exponentialDelay(initialBackoffDelay, exponentialBackoffCoefficient, config.retryCount)
+
+    // Axios fails merging this configuration to the default configuration because it has an issue
+    // with circular structures: https://github.com/mzabriskie/axios/issues/370
+    fixConfig(http, config)
+
+    config.timeout = exponentialTimeoutCoefficient ? (config.timeout as number) * exponentialTimeoutCoefficient : config.timeout
+    config.transformRequest = [data => data]
+
+    return new Promise(resolve => setTimeout(() => resolve(http(config)), delay))
+  }
+  return Promise.reject(error)
 })
 
 const paramsSerializer = (params: any) => {
-  return stringify(params, {arrayFormat: 'repeat'})
+  return stringify(params, { arrayFormat: 'repeat' })
 }
 
-export const defaultsMiddleware = (baseURL: string | undefined, rawHeaders: Record<string, string>, params: Record<string, string> | undefined, timeout: number, retries?: number, verbose?: boolean) => {
+export interface DefaultMiddlewareArgs {
+  baseURL: string | undefined
+  rawHeaders: Record<string, string>
+  params: Record<string, string> | undefined
+  timeout: number
+  retries?: number
+  verbose?: boolean
+  exponentialTimeoutCoefficient?: number
+  initialBackoffDelay?: number
+  exponentialBackoffCoefficient?: number
+}
+
+export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient }: DefaultMiddlewareArgs) => {
   const countByMetric: Record<string, number> = {}
   const headers = renameBy(toLower, rawHeaders)
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     ctx.config = {
-      'axios-retry': retries ? { retries } : undefined,
       baseURL,
       maxRedirects: 0,
+      retries,
       timeout,
       validateStatus: status => (status >= 200 && status < 300),
       verbose,
       ...ctx.config,
+      exponentialBackoffCoefficient,
+      exponentialTimeoutCoefficient,
       headers: {
         ...headers,
         ...renameBy(toLower, ctx.config.headers),
       },
+      initialBackoffDelay,
       params: {
         ...params,
         ...ctx.config.params,
       },
       paramsSerializer,
+      retryCount: 0,
     }
 
     if (ctx.config.verbose && ctx.config.metric) {
@@ -91,7 +145,7 @@ export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContex
   ctx.response = await (limit ? limit(makeRequest) : makeRequest())
 }
 
-function countPerOrigin (obj: { [key: string]: any[] }) {
+function countPerOrigin(obj: { [key: string]: any[] }) {
   try {
     return mapObjIndexed(val => val.length, obj)
   } catch (_) {
@@ -99,7 +153,7 @@ function countPerOrigin (obj: { [key: string]: any[] }) {
   }
 }
 
-export function httpAgentStats () {
+export function httpAgentStats() {
   const socketsPerOrigin = countPerOrigin(httpAgent.sockets)
   const sockets = sum(values(socketsPerOrigin))
   const freeSocketsPerOrigin = countPerOrigin((httpAgent as any).freeSockets)

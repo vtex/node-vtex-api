@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Parameters to customize exponential backoff delay and increase timeout at each retry.
+
+### Changed
+- Stop using `axios-retry` logic, implement retry manually.
 
 ## [6.6.1] - 2020-01-16
 ### Fixed

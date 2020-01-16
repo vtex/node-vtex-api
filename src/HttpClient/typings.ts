@@ -1,5 +1,4 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios'
-import { IAxiosRetryConfig } from 'axios-retry'
 import { Middleware } from 'koa-compose'
 
 import { CacheLayer } from '../caches/CacheLayer'
@@ -9,7 +8,11 @@ import { Cached, CacheType } from './middlewares/cache'
 export type InflightKeyGenerator = (x: RequestConfig) => string
 
 export interface RequestConfig extends AxiosRequestConfig {
-  'axios-retry'?: IAxiosRetryConfig
+  retries?: number
+  exponentialTimeoutCoefficient?: number
+  initialBackoffDelay?: number
+  exponentialBackoffCoefficient?: number
+  retryCount?: number
   /**
    * Identifies the type of request for metrification purposes. Should vary with client method.
    */
@@ -59,6 +62,9 @@ export interface InstanceOptions {
   diskCache?: CacheLayer<string, Cached>,
   baseURL?: string,
   retries?: number,
+  exponentialTimeoutCoefficient?: number,
+  initialBackoffDelay?: number,
+  exponentialBackoffCoefficient?: number,
   metrics?: MetricsAccumulator,
   /**
    * Maximum number of concurrent requests

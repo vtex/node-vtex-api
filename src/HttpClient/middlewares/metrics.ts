@@ -110,10 +110,10 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
           Object.assign(extensions, {[`${status}-memoized`]: 1})
         }
 
-        if (ctx.config['axios-retry']) {
-          const {retryCount} = ctx.config['axios-retry'] as any
+        if (ctx.config.retryCount) {
+          const retryCount = ctx.config.retryCount
 
-          if (retryCount && retryCount > 0) {
+          if (retryCount > 0) {
             extensions[`retry-${status}-${retryCount}`] = 1
           }
         }
