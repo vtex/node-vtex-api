@@ -64,7 +64,7 @@ export class HttpClient {
       verbose,
       cancellation,
       exponentialTimeoutCoefficient,
-      backoffDelayConstant,
+      initialBackoffDelay,
       exponentialBackoffCoefficient,
     } = opts
     this.name = name || baseURL || 'unknown'
@@ -90,7 +90,7 @@ export class HttpClient {
     const memoizedCache = new Map<string, Promise<Memoized>>()
 
     this.runMiddlewares = compose([...opts.middlewares || [],
-    defaultsMiddleware({ baseURL, rawHeaders: headers, params, timeout, retries, verbose, exponentialTimeoutCoefficient, backoffDelayConstant, exponentialBackoffCoefficient }),
+    defaultsMiddleware({ baseURL, rawHeaders: headers, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient }),
     metricsMiddleware({ metrics, serverTiming, name }),
     memoizationMiddleware({ memoizedCache }),
     ...recorder ? [recorderMiddleware(recorder)] : [],
