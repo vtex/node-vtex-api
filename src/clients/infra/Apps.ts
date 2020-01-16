@@ -326,7 +326,7 @@ export class Apps extends InfraClient {
       return appsMetaInfos
     } catch (error) {
       if (staleIfError && workspace === 'master' && this.diskCache) {
-        return await this.diskCache.get(getMetaInfoKey(account)) || []
+        return await this.diskCache.get(getMetaInfoKey(account))
       }
       throw error
     }
