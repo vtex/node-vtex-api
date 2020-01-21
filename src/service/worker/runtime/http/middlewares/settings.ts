@@ -88,6 +88,25 @@ async function getBuildJSONForApp(
   }
 }
 
+const formatDependencies = (results: Array<Record<string, any> | undefined>) => {
+  const formatted: any = {}
+  results.forEach(res => {
+    if (!res) { return }
+    let configuratorName: string = ''
+    let configuration: any = {}
+    Object.keys(res).forEach(key => {
+      if (key === 'declarer') {
+        configuratorName = res[key]
+      } else {
+        configuration = res[key]
+      }
+    })
+    if (configuratorName === '' || !configuration) { return }
+    formatted[configuratorName] = configuration
+  })
+  return formatted
+}
+
 export const getDependenciesSettings = async (apps: Apps) => {
   const appId = APP.ID
   const appAtMajor = appIdToAppAtMajor(appId)
@@ -100,7 +119,7 @@ export const getDependenciesSettings = async (apps: Apps) => {
     dependencies.map(dep => getBuildJSONForApp(apps, dep, appVendorName))
   )
 
-  return allResults.filter(res => res !== undefined)
+  return formatDependencies(allResults)
 }
 
 export const getDependenciesSettings = async (apps: Apps) => {
@@ -133,6 +152,7 @@ export const getServiceSettings = () => {
 
     // TODO: for now returning all settings, but the ideia is to do merge
     ctx.vtex.settings = dependenciesSettings
+    console.log('SETTINGS', dependenciesSettings)
     await next()
   }
 }

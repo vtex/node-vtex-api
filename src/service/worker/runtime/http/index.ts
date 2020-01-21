@@ -1,4 +1,3 @@
-import { ServiceRoute } from './../typings';
 import { IOClients } from '../../../../clients/IOClients'
 import {
   ClientsConfig,
@@ -39,7 +38,7 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
     vary,
     authTokens,
     clients(implementation!, options),
-    ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
+    ...[getServiceSettings()],
     timings,
     error,
     ...middlewares,
@@ -63,7 +62,7 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
     vary,
     authTokens,
     clients(implementation!, options),
-    ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
+    ...[getServiceSettings()],
     removeSetCookie,
     timings,
     error,
