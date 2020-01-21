@@ -111,21 +111,6 @@ export const getDependenciesSettings = async (apps: Apps) => {
   const appId = APP.ID
   const appAtMajor = appIdToAppAtMajor(appId)
   const metaInfos = await apps.getAppsMetaInfos()
-  const dependencies = getFilteredDependencies(appAtMajor, metaInfos)
-
-  const [appVendorName] = appAtMajor.split('@')
-
-  const allResults = await Promise.all(
-    dependencies.map(dep => getBuildJSONForApp(apps, dep, appVendorName))
-  )
-
-  return formatDependencies(allResults)
-}
-
-export const getDependenciesSettings = async (apps: Apps) => {
-  const appId = APP.ID
-  const appAtMajor = appIdToAppAtMajor(appId)
-  const metaInfos = await apps.getAppsMetaInfos()
   const dependencies = getFilteredDependencies(
     appAtMajor,
     metaInfos
@@ -133,9 +118,10 @@ export const getDependenciesSettings = async (apps: Apps) => {
 
   const [appVendorName] = appAtMajor.split('@')
 
-  return await Promise.all(dependencies.map((dep =>
+  const allResults = await Promise.all(dependencies.map((dep =>
     getBuildJSONForApp(apps, dep, appVendorName)
   )))
+  return formatDependencies(allResults)
 }
 
 export const getServiceSettings = () => {
@@ -152,7 +138,6 @@ export const getServiceSettings = () => {
 
     // TODO: for now returning all settings, but the ideia is to do merge
     ctx.vtex.settings = dependenciesSettings
-    console.log('SETTINGS', dependenciesSettings)
     await next()
   }
 }
