@@ -14,10 +14,6 @@ export function clients<
     if (ctx.serverTiming){
       ctx.vtex.serverTiming = ctx.serverTiming
     }
-    clientOptions = {...clientOptions, apps: {
-      ...clientOptions.apps,
-      verbose: true,
-    }}
     ctx.clients = new ClientsImpl(clientOptions, ctx.vtex)
     await next()
   }
