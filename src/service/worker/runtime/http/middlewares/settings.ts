@@ -1,12 +1,11 @@
-import { Assets } from './../../../../../clients/infra/Assets';
-import LRUCache = require('lru-cache')
-
 import { createHash } from 'crypto'
 import { join, pluck } from 'ramda'
+
 import { AppMetaInfo, Apps } from '../../../../../clients/infra/Apps'
 import { IOClients } from '../../../../../clients/IOClients'
 import { APP } from '../../../../../constants'
-import { appIdToAppAtMajor, parseAppId } from './../../../../../utils/app'
+import { Assets } from './../../../../../clients/infra/Assets'
+import { appIdToAppAtMajor } from './../../../../../utils/app'
 import {
   ParamsContext,
   RecorderState,
@@ -42,53 +41,6 @@ export const getDependenciesHash = (dependencies: AppMetaInfo[]): string => {
     .digest('hex')
 }
 
-const appJsonCache = new LRUCache<string, any>({ max: 10000 })
-// metrics.trackCache('apps-json', appJsonCache)
-
-async function getJSONWithCrossAccountCache(
-  client: Apps,
-  appId: string,
-  file: string,
-  nullIfNotFound?: boolean
-) {
-  const locator = parseAppId(appId)
-  const linked = !!locator.build
-  // Let Apps client memory cache handle links since they actually might vary.
-  if (linked) {
-    return client.getAppJSON(appId, file, nullIfNotFound)
-  }
-
-  const key = `${appId}/${file}`
-  const cached = appJsonCache.get(key)
-  if (cached !== undefined) {
-    return cached
-  }
-
-  const fetched = await client.getAppJSON(appId, file, nullIfNotFound)
-  appJsonCache.set(key, fetched)
-  return fetched
-}
-
-async function getBuildJSONForApp(
-  apps: Apps,
-  app: AppMetaInfo,
-  appVendorName: string
-): Promise<Record<string, any> | undefined> {
-  try {
-    const buildJson = await getJSONWithCrossAccountCache(
-      apps,
-      app.id,
-      `dist/${appVendorName}/build.json`
-    )
-    const result = buildJson
-
-    result.declarer = app.id
-    return result
-  } catch (e) {
-    return undefined
-  }
-}
-
 const formatDependencies = (results: Array<Record<string, any> | undefined>) => {
   const formatted: any = {}
   results.forEach(res => {
@@ -108,20 +60,12 @@ const formatDependencies = (results: Array<Record<string, any> | undefined>) => 
   return formatted
 }
 
-export const getDependenciesSettings = async (apps: Apps) => {
+export const getDependenciesSettings = async (apps: Apps, assets: Assets) => {
   const appId = APP.ID
   const metaInfos = await apps.getAppsMetaInfos()
   const appAtMajor = appIdToAppAtMajor(appId)
-  const dependencies = getFilteredDependencies(
-    appAtMajor,
-    metaInfos
-  )
 
-  const [appVendorName] = appAtMajor.split('@')
-
-  const allResults = await Promise.all(dependencies.map((dep =>
-    getBuildJSONForApp(apps, dep, appVendorName)
-  )))
+  const allResults = await assets.getSettings(metaInfos, appAtMajor)
 
   return formatDependencies(allResults)
 }
@@ -133,10 +77,10 @@ export const getServiceSettings = () => {
     V extends ParamsContext
   >(ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
     const {
-      clients: { apps },
+      clients: { apps, assets },
     } = ctx
 
-    const dependenciesSettings = await getDependenciesSettings(apps)
+    const dependenciesSettings = await getDependenciesSettings(apps, assets)
 
     // TODO: for now returning all settings, but the ideia is to do merge
     ctx.vtex.settings = dependenciesSettings

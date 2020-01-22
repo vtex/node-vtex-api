@@ -14,10 +14,11 @@ const dependsOnApp = (appsAtMajor: string[]) => (a: AppMetaInfo) => {
   let dependsOn = false
   appsAtMajor.forEach(appAtMajor => {
     const [name, major] = appAtMajor.split('@')
+    const sanitizedMajor = major.includes('.') ? major.split('.')[0] : major
     const version = a._resolvedDependencies[name]
     if (version) {
       const [depMajor] = version.split('.')
-      if (major === depMajor) {
+      if (sanitizedMajor === depMajor) {
         dependsOn = true
       }
     }

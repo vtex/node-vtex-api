@@ -9,8 +9,8 @@ const getSettings = async (settingsType: any, ctx: any) => {
   const settings = settingsType as RouteSettingsType
   if (settings !== 'workspace' && settings !== 'userAndWorkspace') { return ctx }
 
-  const { clients: { apps } } = ctx
-  const dependenciesSettings = await getDependenciesSettings(apps as Apps)
+  const { clients: { apps, assets } } = ctx
+  const dependenciesSettings = await getDependenciesSettings(apps as Apps, assets)
   ctx = {
     ...ctx,
     vtex: {
