@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.7.1] - 2020-01-22
+### Fixed
+- Encodes Buffer with base64 to cache it correctly
+
 ## [6.7.0] - 2020-01-22
 ### Added
 - `@deprecated` directive logs to Splunk when used. To avoid overflowing splunk with useless logs, we only log once at every minute
