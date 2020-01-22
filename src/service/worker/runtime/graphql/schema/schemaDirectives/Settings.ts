@@ -1,6 +1,7 @@
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 import { Apps } from '../../../../../../clients/infra/Apps'
+import { Assets } from '../../../../../../clients/infra/Assets'
 import { getDependenciesSettings } from '../../../http/middlewares/settings'
 import { RouteSettingsType } from '../../../typings'
 
