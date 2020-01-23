@@ -42,22 +42,17 @@ export const getDependenciesHash = (dependencies: AppMetaInfo[]): string => {
 }
 
 const formatDependencies = (results: Array<Record<string, any> | undefined>) => {
-  const formatted: any = {}
-  results.forEach(res => {
-    if (!res) { return }
-    let configuratorName: string = ''
-    let configuration: any = {}
-    Object.keys(res).forEach(key => {
-      if (key === 'declarer') {
-        configuratorName = res[key]
-      } else {
-        configuration = res[key]
-      }
-    })
-    if (configuratorName === '' || !configuration) { return }
-    formatted[configuratorName] = configuration
-  })
-  return formatted
+  return results.reduce((acc: any, curr: any) => {
+    if (!curr) { return }
+    const configuratorName: string | undefined = curr.declarer
+    if (!configuratorName) { return acc }
+    const [configurationKey] = configuratorName.split('@')
+    const configuration: any = curr[configurationKey]
+
+    if (!configuratorName || !configuration) { return acc }
+    acc[configuratorName] = configuration
+    return acc
+  }, {} as any)
 }
 
 export const getDependenciesSettings = async (apps: Apps, assets: Assets) => {

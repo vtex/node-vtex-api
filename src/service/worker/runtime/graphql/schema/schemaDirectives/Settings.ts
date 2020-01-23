@@ -1,24 +1,18 @@
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 import { Apps } from '../../../../../../clients/infra/Apps'
-import { Assets } from '../../../../../../clients/infra/Assets'
 import { getDependenciesSettings } from '../../../http/middlewares/settings'
 import { RouteSettingsType } from '../../../typings'
 
-const getSettings = async (settingsType: any, ctx: any) => {
-  const settings = settingsType as RouteSettingsType
-  if (settings !== 'workspace' && settings !== 'userAndWorkspace') { return ctx }
+const addSettings = async (settings: RouteSettingsType, ctx: any) => {
+  if (settings === 'pure') { return ctx }
 
   const { clients: { apps, assets } } = ctx
   const dependenciesSettings = await getDependenciesSettings(apps as Apps, assets)
-  ctx = {
-    ...ctx,
-    vtex: {
-      settings: dependenciesSettings,
-      ...ctx.vtex,
-    },
+  if (!ctx.vtex) {
+    ctx.vtex = {}
   }
-  return ctx
+  ctx.vtex.settings = { ...ctx.vtex.settings, dependenciesSettings }
 }
 
 export class SettingsDirective extends SchemaDirectiveVisitor {
@@ -27,7 +21,7 @@ export class SettingsDirective extends SchemaDirectiveVisitor {
     const { settingsType } = this.args
     field.resolve = async (root, args, ctx, info) => {
       if (settingsType) {
-        ctx = await getSettings(settingsType, ctx)
+        await addSettings(settingsType, ctx)
       }
       return resolve(root, args, ctx, info)
     }
