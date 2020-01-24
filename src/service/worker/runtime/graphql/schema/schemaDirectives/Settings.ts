@@ -1,17 +1,24 @@
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
+import { join } from 'path'
 import { Apps } from '../../../../../../clients/infra/Apps'
-import { getDependenciesSettings } from '../../../http/middlewares/settings'
 import { RouteSettingsType } from '../../../typings'
 
 const addSettings = async (settings: RouteSettingsType, ctx: any) => {
   if (settings === 'pure') { return ctx }
 
-  const { clients: { apps, assets } } = ctx
-  const dependenciesSettings = await getDependenciesSettings(apps as Apps, assets)
+  let dependenciesSettings = {}
+  try {
+    const middlewarePath = join(process.cwd(), './service/node_modules/@vtex/settings-middleware')
+    const lib = await import(middlewarePath)
+    dependenciesSettings = await lib.getDependenciesSettings(ctx)
+  } catch (e) {
+    console.log('ERROR IMPORTING getDependenciesSettings from @vtex/settings-middleware', e)
+  }
   if (!ctx.vtex) {
     ctx.vtex = {}
   }
+
   ctx.vtex.settings = { ...ctx.vtex.settings, dependenciesSettings }
 }
 
