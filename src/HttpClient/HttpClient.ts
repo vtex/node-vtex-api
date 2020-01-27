@@ -129,12 +129,12 @@ export class HttpClient {
   }
 
   public getBuffer = (url: string, config: RequestConfig = {}): Promise<{ data: Buffer, headers: any }> => {
-    const bufferConfig = { cacheable: CacheType.Disk, ...config, url, responseType: 'arraybuffer', transformResponse: noTransforms }
+    const bufferConfig: RequestConfig = { cacheable: CacheType.Disk, ...config, url, responseType: 'arraybuffer', transformResponse: noTransforms }
     return this.request(bufferConfig)
   }
 
   public getStream = (url: string, config: RequestConfig = {}): Promise<IncomingMessage> => {
-    const streamConfig = { ...config, url, responseType: 'stream', transformResponse: noTransforms }
+    const streamConfig: RequestConfig = { ...config, url, responseType: 'stream', transformResponse: noTransforms }
     return this.request(streamConfig).then(response => response.data as IncomingMessage)
   }
 
