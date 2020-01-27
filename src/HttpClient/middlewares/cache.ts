@@ -1,4 +1,8 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios'
+// @ts-ignore
+import combineURLs from 'axios/lib/helpers/combineURLs'
+// @ts-ignore
+import buildURLs from 'axios/lib/helpers/buildURLs'
 import { URL } from 'url'
 
 import { CacheLayer } from '../../caches/CacheLayer'
@@ -13,6 +17,11 @@ export const cacheKey = (config: AxiosRequestConfig) => {
   const locale = headers[LOCALE_HEADER]
   const fullURL = [baseURL, url].filter(str => str).join('/')
   const urlObject = new URL(fullURL)
+  console.log("urlObject", urlObject)
+  console.log("axiosConfig", config)
+  const combinedURL = combineURLs(baseURL, url)
+  const buildedURL = buildURLs(combinedURL, params.append(RANGE_HEADER_QS_KEY, headers.range))
+  console.log({fullURL, combinedURL, buildedURL})
 
   if (headers && headers.range) {
     urlObject.searchParams.append(RANGE_HEADER_QS_KEY, headers.range)
