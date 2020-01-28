@@ -41,28 +41,12 @@ export const getDependenciesHash = (dependencies: AppMetaInfo[]): string => {
     .digest('hex')
 }
 
-const formatDependencies = (results: Array<Record<string, any> | undefined>) => {
-  return results.reduce((acc: any, curr: any) => {
-    if (!curr) { return }
-    const configuratorName: string | undefined = curr.declarer
-    if (!configuratorName) { return acc }
-    const [configurationKey] = configuratorName.split('@')
-    const configuration: any = curr[configurationKey]
-
-    if (!configuratorName || !configuration) { return acc }
-    acc[configuratorName] = configuration
-    return acc
-  }, {} as any)
-}
-
 export const getDependenciesSettings = async (apps: Apps, assets: Assets) => {
   const appId = APP.ID
   const metaInfos = await apps.getAppsMetaInfos()
   const appAtMajor = appIdToAppAtMajor(appId)
 
-  const allResults = await assets.getSettings(metaInfos, appAtMajor)
-
-  return formatDependencies(allResults)
+  return await assets.getSettings(metaInfos, appAtMajor)
 }
 
 export const getServiceSettings = () => {
