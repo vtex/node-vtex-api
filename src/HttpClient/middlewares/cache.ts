@@ -1,5 +1,4 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios'
-import { URL } from 'url'
 
 import { CacheLayer } from '../../caches/CacheLayer'
 import { LOCALE_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../../constants'
@@ -26,7 +25,7 @@ export const cacheKey = (config: AxiosRequestConfig) => {
     key = key.concat(`--${RANGE_HEADER_QS_KEY}=${headers.range}`)
   }
 
-  return cacheKey
+  return key
 }
 
 const parseCacheHeaders = (headers: Record<string, string>) => {
