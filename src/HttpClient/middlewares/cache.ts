@@ -1,8 +1,4 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios'
-// @ts-ignore
-import combineURLs from 'axios/lib/helpers/combineURLs'
-// @ts-ignore
-import buildURLs from 'axios/lib/helpers/buildURLs'
 import { URL } from 'url'
 
 import { CacheLayer } from '../../caches/CacheLayer'
@@ -15,28 +11,22 @@ const cacheableStatusCodes = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 
 export const cacheKey = (config: AxiosRequestConfig) => {
   const {baseURL = '', url = '', params, headers} = config
   const locale = headers[LOCALE_HEADER]
-  const fullURL = [baseURL, url].filter(str => str).join('/')
-  const urlObject = new URL(fullURL)
-  console.log("urlObject", urlObject)
-  console.log("axiosConfig", config)
-  const combinedURL = combineURLs(baseURL, url)
-  const buildedURL = buildURLs(combinedURL, params.append(RANGE_HEADER_QS_KEY, headers.range))
-  console.log({fullURL, combinedURL, buildedURL})
 
-  if (headers && headers.range) {
-    urlObject.searchParams.append(RANGE_HEADER_QS_KEY, headers.range)
-  }
+  const encodedBaseURL = baseURL.replace(/\//g, '\\')
+  const encodedURL = url.replace(/\//g, '\\')
+
+  let cacheKey = `${locale}--${encodedBaseURL}--${encodedURL}`
 
   if (params) {
-    for (const [key, value] of Object.entries<string>(params)) {
-      urlObject.searchParams.append(key, value)
-    }
+    Object.keys(params).sort().forEach((key) =>
+      cacheKey = cacheKey.concat(`--${key}=${params[key]}`)
+    )
+  }
+  if (headers?.range) {
+    cacheKey = cacheKey.concat(`--${RANGE_HEADER_QS_KEY}=${headers.range}`)
   }
 
-  // Replace forward slashes with backwards slashes for disk cache legibility
-  const encodedPath = `${locale}/${urlObject.pathname}${urlObject.search}`.replace(/\//g, '\\\\')
-  // Add hostname as top level directory on disk cache
-  return `${urlObject.hostname}/${encodedPath}`
+  return cacheKey
 }
 
 const parseCacheHeaders = (headers: Record<string, string>) => {
