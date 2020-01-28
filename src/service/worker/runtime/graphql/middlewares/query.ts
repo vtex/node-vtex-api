@@ -50,9 +50,9 @@ async function parseAndValidateQuery (ctx: GraphQLServiceContext, next: () => Pr
   if (request.is('multipart/form-data')) {
     query = (request as any).body
   } else if (request.method.toUpperCase() === 'POST') {
-    query = await json(req)
+    query = await json(req, {limit: '3mb'})
   } else {
-    query = queryFromUrl(request.url) || await json(req)
+    query = queryFromUrl(request.url) || await json(req, {limit: '3mb'})
   }
 
   // Assign the query before setting the query.document because if the
