@@ -15,15 +15,15 @@ export const cacheKey = (config: AxiosRequestConfig) => {
   const encodedBaseURL = baseURL.replace(/\//g, '\\')
   const encodedURL = url.replace(/\//g, '\\')
 
-  let cacheKey = `${locale}--${encodedBaseURL}--${encodedURL}`
+  let key = `${locale}--${encodedBaseURL}--${encodedURL}`
 
   if (params) {
-    Object.keys(params).sort().forEach((key) =>
-      cacheKey = cacheKey.concat(`--${key}=${params[key]}`)
+    Object.keys(params).sort().forEach((param) =>
+      key = key.concat(`--${key}=${params[key]}`)
     )
   }
   if (headers?.range) {
-    cacheKey = cacheKey.concat(`--${RANGE_HEADER_QS_KEY}=${headers.range}`)
+    key = key.concat(`--${RANGE_HEADER_QS_KEY}=${headers.range}`)
   }
 
   return cacheKey
