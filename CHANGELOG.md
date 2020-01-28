@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Chore
 - Increase query size limit from 1mb to 3mb.
+### Fixed
+- Settings format is now the same delivered by settings server.
 
 ## [6.8.0] - 2020-01-23
 ### Added
