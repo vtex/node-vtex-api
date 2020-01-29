@@ -1,5 +1,4 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios'
-import { URL } from 'url'
 
 import { CacheLayer } from '../../caches/CacheLayer'
 import { LOCALE_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../../constants'
@@ -11,23 +10,22 @@ const cacheableStatusCodes = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 
 export const cacheKey = (config: AxiosRequestConfig) => {
   const {baseURL = '', url = '', params, headers} = config
   const locale = headers[LOCALE_HEADER]
-  const fullURL = [baseURL, url].filter(str => str).join('/')
-  const urlObject = new URL(fullURL)
 
-  if (headers && headers.range) {
-    urlObject.searchParams.append(RANGE_HEADER_QS_KEY, headers.range)
-  }
+  const encodedBaseURL = baseURL.replace(/\//g, '\\')
+  const encodedURL = url.replace(/\//g, '\\')
+
+  let key = `${locale}--${encodedBaseURL}--${encodedURL}?`
 
   if (params) {
-    for (const [key, value] of Object.entries<string>(params)) {
-      urlObject.searchParams.append(key, value)
-    }
+    Object.keys(params).sort().forEach((param) =>
+      key = key.concat(`--${key}=${params[key]}`)
+    )
+  }
+  if (headers?.range) {
+    key = key.concat(`--${RANGE_HEADER_QS_KEY}=${headers.range}`)
   }
 
-  // Replace forward slashes with backwards slashes for disk cache legibility
-  const encodedPath = `${locale}/${urlObject.pathname}${urlObject.search}`.replace(/\//g, '\\\\')
-  // Add hostname as top level directory on disk cache
-  return `${urlObject.hostname}/${encodedPath}`
+  return key
 }
 
 const parseCacheHeaders = (headers: Record<string, string>) => {
@@ -73,6 +71,7 @@ export const cacheMiddleware = ({type, storage}: CacheOptions) => {
       return await next()
     }
     const key = cacheKey(ctx.config)
+    console.log({key})
     const segmentToken = ctx.config.headers[SEGMENT_HEADER]
     const keyWithSegment = key + segmentToken
 
