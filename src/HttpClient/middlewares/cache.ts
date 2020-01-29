@@ -14,7 +14,7 @@ export const cacheKey = (config: AxiosRequestConfig) => {
   const encodedBaseURL = baseURL.replace(/\//g, '\\')
   const encodedURL = url.replace(/\//g, '\\')
 
-  let key = `${locale}--${encodedBaseURL}--${encodedURL}`
+  let key = `${locale}--${encodedBaseURL}--${encodedURL}?`
 
   if (params) {
     Object.keys(params).sort().forEach((param) =>
@@ -71,6 +71,7 @@ export const cacheMiddleware = ({type, storage}: CacheOptions) => {
       return await next()
     }
     const key = cacheKey(ctx.config)
+    console.log({key})
     const segmentToken = ctx.config.headers[SEGMENT_HEADER]
     const keyWithSegment = key + segmentToken
 
