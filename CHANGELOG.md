@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.10.1] - 2020-01-29
+### Fixed
+- getAppsMetaInfos typings from Apps client
+
 ## [6.10.0] - 2020-01-29
 ### Changed
 - Improve `cacheKey` performance and sort params in the key.
