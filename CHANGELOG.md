@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Fixed
-- getAppMetaInfo typings from Apps client
+- getAppsMetaInfos typings from Apps client
 
 ## [6.10.0] - 2020-01-29
 ### Changed
