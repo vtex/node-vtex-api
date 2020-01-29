@@ -149,5 +149,5 @@ export class MessagesGraphQL extends AppGraphQLClient {
     variables: { args },
   }, {
     metric: 'messages-saveV2-translation',
-  }).then(response => response?.data?.saveV2)
+  }).then(response => response.data!.saveV2)
 }
