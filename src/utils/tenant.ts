@@ -1,9 +1,9 @@
-export interface Tenant {
+interface TenantHeader {
   locale: string
 }
 
-export const formatTenantHeaderValue = (tenant: Tenant): string => tenant.locale
+export const formatTenantHeaderValue = (tenant: TenantHeader): string => tenant.locale
 
-export const parseTenantHeaderValue = (value: string): Tenant => ({
+export const parseTenantHeaderValue = (value: string): TenantHeader => ({
   locale: value,
 })
