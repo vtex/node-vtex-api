@@ -1,4 +1,4 @@
-interface TenantHeader {
+export interface TenantHeader {
   locale: string
 }
 

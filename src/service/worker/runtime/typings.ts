@@ -13,9 +13,9 @@ import { ParsedUrlQuery } from 'querystring'
 import { IOMessageV2 } from '../../../clients/apps/MessagesGraphQL'
 import { ClientsImplementation, IOClients } from '../../../clients/IOClients'
 import { InstanceOptions } from '../../../HttpClient'
-import { Binding } from '../../../utils/binding'
+import { BindingHeader } from '../../../utils/binding'
 import { IOMessage } from '../../../utils/message'
-import { Tenant } from '../../../utils/tenant'
+import { TenantHeader } from '../../../utils/tenant'
 import { Logger } from '../../logger'
 import { MetricsLogger } from '../../logger/metricsLogger'
 import { Recorder, SlowRecorder } from './utils/recorder'
@@ -136,8 +136,8 @@ export interface IOContext {
   logger: Logger
   eventInfo?: EventBody
   host?: string
-  tenant?: Tenant
-  binding?: Binding
+  tenant?: TenantHeader
+  binding?: BindingHeader
   cancellation?: Cancellation
   // Some services may receive settings from other apps in the request
   settings?: any
