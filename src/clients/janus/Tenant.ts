@@ -3,7 +3,7 @@ import { InstanceOptions, RequestConfig } from '../../HttpClient/typings'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { JanusClient } from './JanusClient'
 
-interface Binding {
+export interface Binding {
   id: string
   canonicalBaseAddress: string
   alternateBaseAddresses: string[]
@@ -15,7 +15,7 @@ interface Binding {
   targetProduct: string
 }
 
-interface Tenant {
+export interface Tenant {
   id: string
   slug: string
   title: string
