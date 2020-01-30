@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.11.0] - 2020-01-30
+### Changed
+- Update axios from 0.18.0 to 0.19.2
+
 ## [6.10.1] - 2020-01-29
 ### Fixed
 - getAppsMetaInfos typings from Apps client

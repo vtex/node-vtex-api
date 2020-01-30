@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "6.10.1",
+  "version": "6.11.0",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -45,7 +45,7 @@
     "agentkeepalive": "^4.0.2",
     "apollo-server-errors": "^2.2.1",
     "archiver": "^3.0.0",
-    "axios": "^0.18.0",
+    "axios": "^0.19.2",
     "axios-retry": "^3.1.2",
     "bluebird": "^3.5.4",
     "chalk": "^2.4.2",
