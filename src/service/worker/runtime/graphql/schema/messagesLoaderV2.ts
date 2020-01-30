@@ -46,7 +46,6 @@ export const messagesLoaderV2 = (clients: IOClients, withAppsMetaInfo?: boolean)
     const depTree = withAppsMetaInfo ? JSON.stringify(await clients.apps.getAppsMetaInfos()) : ''
     const translations = await clients.messagesGraphQL.translateV2({
       depTree,
-      encoding: 'ICU',
       indexedByFrom,
       to,
     })
