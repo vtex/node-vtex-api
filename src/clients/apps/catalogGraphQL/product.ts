@@ -20,6 +20,9 @@ query GetProduct ($identifier: ProductUniqueIdentifier!) {
     supplierId
     showWithoutStock
     score
+    salesChannel {
+      id
+    }
   }
 }
 `
@@ -44,4 +47,5 @@ export interface Product {
   supplierId?: string
   showWithoutStock: boolean
   score?: number
+  salesChannel?: Array<{ id: string }>
 }
