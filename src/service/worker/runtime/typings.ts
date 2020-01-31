@@ -10,7 +10,6 @@ import { ParameterizedContext } from 'koa'
 import { Middleware } from 'koa-compose'
 import { ParsedUrlQuery } from 'querystring'
 
-import { IOMessageV2 } from '../../../clients/apps/MessagesGraphQL'
 import { ClientsImplementation, IOClients } from '../../../clients/IOClients'
 import { InstanceOptions } from '../../../HttpClient'
 import { BindingHeader } from '../../../utils/binding'
@@ -18,6 +17,7 @@ import { IOMessage } from '../../../utils/message'
 import { TenantHeader } from '../../../utils/tenant'
 import { Logger } from '../../logger'
 import { MetricsLogger } from '../../logger/metricsLogger'
+import { MessagesLoaderV2 } from './graphql/schema/messagesLoaderV2'
 import { Recorder, SlowRecorder } from './utils/recorder'
 
 type ServerTiming = Record<string, string>
@@ -51,10 +51,10 @@ type KnownKeys<T> = {
 
 interface Loaders {
   messages?: DataLoader<IOMessage, string>
-  messagesV2?: DataLoader<IOMessageV2, string>
+  messagesV2?: MessagesLoaderV2
 }
 
-export type ServiceContext<ClientsT extends IOClients = IOClients, StateT extends RecorderState = RecorderState, CustomT extends ParamsContext = ParamsContext> = Pick<ParameterizedContext<StateT, Context<ClientsT>>, KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>> & CustomT & { loaders: Loaders }
+export type ServiceContext<ClientsT extends IOClients = IOClients, StateT extends RecorderState = RecorderState, CustomT extends ParamsContext = ParamsContext> = Pick<ParameterizedContext<StateT, Context<ClientsT>>, KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>> & CustomT & { loaders?: Loaders }
 
 export type RouteHandler<ClientsT extends IOClients = IOClients, StateT extends RecorderState = RecorderState, CustomT extends ParamsContext = ParamsContext> = Middleware<ServiceContext<ClientsT, StateT, CustomT>>
 
