@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.13.0-beta] - 2020-01-31
+
 ## [6.12.0] - 2020-01-31
 ### Added
 - Adds `catalogGraphQL` client
