@@ -1,30 +1,43 @@
-import { map } from 'bluebird'
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 
 import { Behavior } from '../../../../../../clients'
 import { IOContext, ServiceContext } from '../../../typings'
-import { MessagesLoaderV2, messagesLoaderV2 } from '../messagesLoaderV2'
+import { createMessagesLoader, MessagesLoaderV2 } from '../messagesLoaderV2'
 
 const CONTEXT_REGEX = /\(\(\((?<context>(.)*)\)\)\)/
 const FROM_REGEX = /\<\<\<(?<from>(.)*)\>\>\>/
 const CONTENT_REGEX = /\(\(\((?<context>(.)*)\)\)\)|\<\<\<(?<from>(.)*)\>\>\>/g
 
+interface Args {
+  behavior: 'FULL' | 'USER_AND_APP' | 'USER_ONLY'
+  withAppsMetaInfo: boolean
+}
+
 export class TranslatableV2 extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, ServiceContext>) {
     const { resolve = defaultFieldResolver } = field
-    const { behavior = 'FULL', withAppsMetaInfo = false } = this.args
+    const { behavior = 'FULL', withAppsMetaInfo = false } = this.args as Args
     field.resolve = async (root, args, ctx, info) => {
-      if (!ctx.loaders || !ctx.loaders.messagesV2) {
+      if (!ctx.loaders?.messagesV2) {
+        const { vtex: { locale: to } } = ctx
+
+        if (to == null) {
+          throw new Error('@translatableV2 directive needs the locale variable available in IOContext. You can do this by either setting \`ctx.vtex.locale\` directly or calling this app with \`x-vtex-locale\` header')
+        }
+
+        const dependencies = withAppsMetaInfo ? await ctx.clients.apps.getAppsMetaInfos() : undefined
         ctx.loaders = {
           ...ctx.loaders,
-          messagesV2: messagesLoaderV2(ctx.clients, withAppsMetaInfo),
+          messagesV2: createMessagesLoader(ctx.clients, to, dependencies),
         }
       }
       const response = await resolve(root, args, ctx, info) as string | string[] | null
       const { vtex, loaders: { messagesV2 } } = ctx
       const handler = handleSingleString(vtex, messagesV2!, behavior)
-      return Array.isArray(response) ? await map(response, handler) : await handler(response)
+      return Array.isArray(response)
+        ? Promise.all(response.map(handler))
+        : handler(response)
     }
   }
 }
@@ -57,25 +70,16 @@ const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2 , behav
   }
 
   const { content, context, from: maybeFrom } = parseTranslatableStringV2(rawMessage)
-  const { locale: to, tenant } = ctx
+  const { tenant } = ctx
 
   if (content == null) {
     throw new Error(`@translatableV2 directive needs a content to translate, but received ${JSON.stringify(rawMessage)}`)
   }
 
-  if (to == null) {
-    throw new Error('@translatableV2 directive needs the locale variable available in IOContext. You can do this by either setting \`ctx.vtex.locale\` directly or calling this app with \`x-vtex-locale\` header')
-  }
-
-  const from = maybeFrom || (tenant && tenant.locale)
+  const from = maybeFrom || tenant?.locale
 
   if (from == null) {
     throw new Error('@translatableV2 directive needs a source language to translate from. You can do this by either setting \`ctx.vtex.tenant\` variable, call this app with the header \`x-vtex-tenant\` or format the string with the \`formatTranslatableStringV2\` function with the \`from\` option set')
-  }
-
-  // If the message is already in the target locale, return the content.
-  if (!to || from === to) {
-    return content
   }
 
   return messagesV2.load({
@@ -83,7 +87,6 @@ const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2 , behav
     content,
     context,
     from,
-    to,
   })
 }
 
