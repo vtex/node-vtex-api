@@ -3,9 +3,9 @@
     "esModuleInterop": true,
     "types": ["node", "jest"],
     "typeRoots": ["node_modules/@types"],
-    "target": "es2017",
+    "target": "es2019",
     "lib": [
-      "es2017",
+      "es2019",
       "esnext.asynciterable"
     ],
     "module": "commonjs",
