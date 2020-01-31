@@ -11,7 +11,7 @@ const handleSignal: NodeJS.SignalsListener = signal => {
   const message = `Worker ${process.pid} received signal ${signal}`
   console.warn(message)
   logger.warn({message, signal})
-  process.exit(constants.signals[signal])
+  process.exit((constants.signals as any)[signal])
 }
 
 export const addProcessListeners = () => {
