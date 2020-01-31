@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.12.0] - 2020-01-31
+### Added
+- Adds `catalogGraphQL` client
+
 ## [6.11.1] - 2020-01-30
 ### Fixed
 - Export tenant data
