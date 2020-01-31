@@ -116,7 +116,7 @@ export class HttpClient {
   }
 
   public getWithBody = <T = any>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
-    const bodyHash = createHash('md5').update(JSON.stringify(data, null, 2)).digest('hex')
+    const bodyHash = createHash('md5').update(JSON.stringify(data)).digest('hex')
     const cacheableConfig = this.getConfig(url, {
       ...config,
       data,
