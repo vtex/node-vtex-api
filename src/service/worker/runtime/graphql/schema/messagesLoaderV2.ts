@@ -1,9 +1,11 @@
 import DataLoader from 'dataloader'
 import { sortBy, zip } from 'ramda'
 
-import { Message } from '../../../../../clients/apps/MessagesGraphQL'
+import {
+  IndexedByFrom,
+  Message,
+} from '../../../../../clients/apps/MessagesGraphQL'
 import { AppMetaInfo } from '../../../../../clients/infra/Apps'
-import { IndexedByFrom } from './../../../../../clients/apps/MessagesGraphQL'
 import { IOClients } from './../../../../../clients/IOClients'
 
 type Indexed<X> = [number, X]
