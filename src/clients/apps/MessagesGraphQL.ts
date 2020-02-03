@@ -33,12 +33,6 @@ export interface TranslateInput {
   encoding?: 'ICU' | 'HANDLEBARS'
 }
 
-export interface TranslateInput {
-  indexedByFrom: IndexedByFrom[]
-  to: string
-  encoding?: 'ICU' | 'HANDLEBARS'
-}
-
 export interface TranslateWithDependenciesInput {
   indexedByFrom: IndexedByFrom[]
   to: string
