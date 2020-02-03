@@ -1,3 +1,4 @@
+import { isSlowRecorder } from './../../service/worker/runtime/utils/recorder';
 import archiver from 'archiver'
 import { IncomingMessage } from 'http'
 import { filter as ramdaFilter, path as ramdaPath, prop } from 'ramda'
@@ -332,25 +333,39 @@ export class Apps extends InfraClient {
       )
   }
 
-  public getAppsMetaInfos = async (filter?: string, staleIfError?: boolean) => {
-    const { account, workspace, logger } = this.context
+  public getAppsMetaInfos = async (filter?: string, staleWhileRevalidate: boolean = true) => {
+    const { account, production, recorder} = this.context
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
-    try {
-      const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey}).then(prop('apps'))
-      if (staleIfError && this.diskCache) {
-        updateMetaInfoCache(this.diskCache, account, workspace, appsMetaInfos, logger)
-      }
-      if (filter) {
-        return ramdaFilter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfos)
-      }
-      return appsMetaInfos
-    } catch (error) {
-      if (staleIfError && workspace === 'master' && this.diskCache) {
-        return await this.diskCache.get(getMetaInfoKey(account)) as AppMetaInfo[]
-      }
-      throw error
+    const key = getMetaInfoKey(account)
+
+    const cachedResponse: {appsMetaInfo: AppMetaInfo[], headers: any} | undefined = this.diskCache && await this.diskCache.get(key)
+    if (cachedResponse && recorder) {
+      isSlowRecorder(recorder) ? recorder(cachedResponse.headers) : recorder.record(cachedResponse.headers)
     }
+
+    const metaInfoPromise = this.http.getRaw<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey})
+      .then((response) => {
+        const {data, headers: responseHeaders} = response
+        if (this.diskCache) {
+          this.diskCache.set(key, {
+            appsMetaInfo: data.apps || [],
+            headers: responseHeaders,
+          })
+        }
+        return response
+      })
+
+    const useCachedResponse = cachedResponse && production && staleWhileRevalidate
+    const appsMetaInfo: AppMetaInfo[] = useCachedResponse
+      ? cachedResponse!.appsMetaInfo
+      : await metaInfoPromise.then(response => response.data.apps)
+
+    if (filter) {
+      return appsMetaInfo.filter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfo)
+    }
+
+    return appsMetaInfo
   }
 
   public getDependencies = (filter: string = '') => {
