@@ -43,7 +43,7 @@ const onExit = (worker: Worker, code: number, signal: string) => {
 
   const exitOn = ['SIGTERM', 'SIGINT']
   if (handledSignal && exitOn.includes(handledSignal) && Object.keys(cluster.workers).length === 0) {
-    process.exit(constants.signals[handledSignal])
+    process.exit((constants.signals as any)[handledSignal])
   }
 }
 
@@ -71,7 +71,7 @@ const handleSignal: NodeJS.SignalsListener = signal => {
   // If the worker refuses to die after some milliseconds, let's force it to die
   setTimeout(() => Object.values(cluster.workers).forEach(worker => worker?.process.kill('SIGKILL')), 1e3)
   // If master refuses to die after some milliseconds, let's force it to die
-  setTimeout(() => process.exit(constants.signals[signal]), 1.5e3)
+  setTimeout(() => process.exit((constants.signals as any)[signal]), 1.5e3)
 }
 
 export const startMaster = (service: ServiceJSON) => {

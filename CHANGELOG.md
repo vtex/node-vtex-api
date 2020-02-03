@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.13.0] - 2020-02-03
+
 ## [6.12.1] - 2020-02-03
 ### Changed
 - Make it usable outside of IO
@@ -32,10 +34,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Improve `cacheKey` performance and sort params in the key.
 
 ## [6.9.0] - 2020-01-29
-
-## [6.9.0-beta.0] - 2020-01-29
-
-## [6.9.0-beta] - 2020-01-29
 ### Added
 - Adds new query to messages client
 - Uses new resolver in Translatable resolver

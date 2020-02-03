@@ -1,20 +1,30 @@
 import DataLoader from 'dataloader'
-import { pluck, sortBy, toPairs, zip } from 'ramda'
+import { sortBy, zip } from 'ramda'
 
 import {
-  IndexedMessageV2,
-  IOMessageV2,
+  IndexedByFrom,
+  Message,
 } from '../../../../../clients/apps/MessagesGraphQL'
-import { IOClients } from '../../../../../clients/IOClients'
+import { AppMetaInfo } from '../../../../../clients/infra/Apps'
+import { IOClients } from './../../../../../clients/IOClients'
 
-const sortByContentAndFrom = (indexedMessages: Array<[string, IOMessageV2]>) => sortBy(
+type Indexed<X> = [number, X]
+
+const sortByContentAndFrom = (indexedMessages: Array<Indexed<Message>>) => sortBy(
   ([_, {content, from}]) => `__from:${from}__content:${content}`,
   indexedMessages
 )
 
-const sortByIndex = (indexedTranslations: Array<[string, string]>) => sortBy(([index, _]) => Number(index), indexedTranslations)
+// O(n) counting sort implementation
+const sortByIndex = (indexedTranslations: Array<Indexed<string>>) => indexedTranslations.reduce(
+  (acc, [index, data]) => {
+    acc[index] = data
+    return acc
+  },
+  [] as string[]
+)
 
-const indexMessagesByFrom = (messages: IOMessageV2[]) => messages.reduce(
+const indexMessagesByFrom = (messages:  Message[]) => messages.reduce(
   (acc, {from, context, content, behavior}) => {
     const lastIndexed = acc.length && acc[acc.length-1]
     const formatted = {
@@ -32,27 +42,76 @@ const indexMessagesByFrom = (messages: IOMessageV2[]) => messages.reduce(
     }
     return acc
   },
-  [] as IndexedMessageV2[]
+  [] as IndexedByFrom[]
 )
 
-export const messagesLoaderV2 = (clients: IOClients, withAppsMetaInfo?: boolean) =>
-  new DataLoader<IOMessageV2, string>(async (messages: IOMessageV2[]) => {
-    const to = messages[0].to!
-    const indexedMessages = toPairs(messages) as Array<[string, IOMessageV2]>
-    const sortedIndexedMessages = sortByContentAndFrom(indexedMessages)
-    const originalIndexes = pluck(0, sortedIndexedMessages) as string[]
-    const sortedMessages = pluck(1, sortedIndexedMessages) as IOMessageV2[]
-    const indexedByFrom = indexMessagesByFrom(sortedMessages)
-    const depTree = withAppsMetaInfo ? JSON.stringify(await clients.apps.getAppsMetaInfos()) : ''
-    const translations = await clients.messagesGraphQL.translateV2({
-      depTree,
-      encoding: 'ICU',
-      indexedByFrom,
-      to,
-    })
-    const indexedTranslations = zip(originalIndexes, translations)
-    const translationsInOriginalOrder = sortByIndex(indexedTranslations)
-    return pluck(1, translationsInOriginalOrder)
-  })
+const toPairs = <T>(x: T[]) => x.map((xx, it) => [it, xx] as Indexed<T>)
 
-export type MessagesLoaderV2 = ReturnType<typeof messagesLoaderV2>
+const splitIndex = <T>(indexed: Array<Indexed<T>>) => indexed.reduce(
+  (acc, [index, data]) => {
+    acc[0].push(index)
+    acc[1].push(data)
+    return acc
+  },
+  [[] as number[], [] as T[]] as [number[], T[]]
+)
+
+const filterFromEqualsTo = (indexedMessages: Array<Indexed<Message>>, to: string) => indexedMessages.reduce(
+  (acc, indexed) => {
+    const [index, { content, from }] = indexed
+    if (to === from.toLowerCase() || !content) {
+      acc.original.push([index, content])
+    } else {
+      acc.toTranslate.push(indexed)
+    }
+    return acc
+  },
+  {
+    original: [] as Array<Indexed<string>>,
+    toTranslate: [] as Array<Indexed<Message>>,
+  }
+)
+
+const messageToKey = ({content, context, from}: Message) => `:content:${content}:context:${context}:from:${from}`
+
+export const createMessagesLoader = (
+  { messagesGraphQL, assets }: IOClients,
+  to: string,
+  dependencies?: AppMetaInfo[]
+) => {
+  const loweredTo = to.toLowerCase()
+  const messagesDeps = dependencies && assets.getFilteredDependencies('vtex.messages@1.x', dependencies)
+  const depTree = messagesDeps && JSON.stringify(messagesDeps)
+  return new DataLoader<Message, string>(
+    async messages => {
+      const indexedMessages = toPairs(messages)
+      const { toTranslate, original } = filterFromEqualsTo(indexedMessages, loweredTo)
+
+      // In case we have nothing to translate
+      if (toTranslate.length === 0) {
+        return messages.map(({content}) => content)
+      }
+
+      const sortedIndexedMessages = sortByContentAndFrom(toTranslate)
+      const [ originalIndexes, sortedMessages ] = splitIndex(sortedIndexedMessages)
+      const indexedByFrom = indexMessagesByFrom(sortedMessages)
+
+      const args = { indexedByFrom, to }
+      const translations = depTree
+        ? await messagesGraphQL.translateWithDependencies({ ...args, depTree })
+        : await messagesGraphQL.translate(args)
+
+      const indexedTranslations = zip(originalIndexes, translations)
+      const allIndexedTranslations = [...indexedTranslations, ...original]
+      return sortByIndex(allIndexedTranslations)
+    },
+    {
+      batch: true,
+      cache: true,
+      cacheKeyFn: messageToKey,
+      maxBatchSize: 200,
+    }
+  )
+}
+
+export type MessagesLoaderV2 = ReturnType<typeof createMessagesLoader>
