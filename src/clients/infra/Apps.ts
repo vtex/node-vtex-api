@@ -362,7 +362,7 @@ export class Apps extends InfraClient {
       : await metaInfoPromise.then(response => response.data.apps)
 
     if (filter) {
-      return appsMetaInfo.filter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfo)
+      return appsMetaInfo.filter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta))
     }
 
     return appsMetaInfo
