@@ -1,30 +1,7 @@
 import { Context } from 'koa'
-import { trim, uniqWith } from 'ramda'
+import { trim } from 'ramda'
 
 import { META_HEADER, META_HEADER_BUCKET } from './../../../../constants'
-import { toArray } from './toArray'
-
-export type SlowRecorder = (headers: Record<string, string>) => void
-
-// uniqWith is way faster than ramda's uniq
-const uniqStr = uniqWith((a: string, b: string) => a === b)
-
-const appendResponseHeader = (ctx: Context, responseHeaders: any, targetHeader: string) => {
-  const headerValue = responseHeaders[targetHeader]
-  if (headerValue) {
-    const currentValue = toArray(ctx.response.get(targetHeader) || [])
-    const newValue = headerValue.split(',').map(trim)
-    const deduped = uniqStr([...currentValue, ...newValue])
-    ctx.set(targetHeader, deduped.join(','))
-  }
-}
-
-export const createSlowRecorder = (ctx: Context): SlowRecorder => (headers: Record<string, string>) => {
-  appendResponseHeader(ctx, headers, META_HEADER)
-  appendResponseHeader(ctx, headers, META_HEADER_BUCKET)
-}
-
-export const isSlowRecorder = (x: any): x is SlowRecorder => typeof x === 'function' && !x._record
 
 const HEADERS = [META_HEADER, META_HEADER_BUCKET]
 
