@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.14.0-beta] - 2020-02-04
+
 ## [6.13.1] - 2020-02-04
 ### Fixed 
 - Adds catalog Graphql client to IOClients
