@@ -1,5 +1,3 @@
-import { flatten, path, splitEvery, values } from 'ramda'
-
 import { InstanceOptions } from '../../HttpClient'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { AppGraphQLClient } from './AppGraphQLClient'

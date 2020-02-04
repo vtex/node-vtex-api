@@ -1,4 +1,4 @@
-import { compose, find, head, isEmpty, map, reduce, split } from 'ramda'
+import { isEmpty } from 'ramda'
 
 import { IOClients } from '../../../../../clients/IOClients'
 import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
@@ -12,19 +12,18 @@ Cookies dropped:
   ${keys.join('\n\t')}
 `
 
-const findStr = (target: string, set: string[]) => find((a: string) => a.toLocaleLowerCase() === target, set)
+const PUBLIC = 'public'
 
 const findScopeInCacheControl = (cacheControl: string | undefined) => {
-  const splitted = cacheControl && cacheControl.split(/\s*,\s*/g)
-  const scopePublic = splitted && findStr('public', splitted)
+  const splitted = cacheControl?.split(/\s*,\s*/g)
+  const scopePublic = splitted?.find(a => a.toLowerCase() === PUBLIC)
   return scopePublic
 }
 
-const cookieKey = (cookie: string) => compose<string, string[], string>(head, split('='))(cookie)
+const cookieKey = (cookie: string) => cookie.split('=')[0]
 
-const indexCookieByKeys = (setCookie: string[]) => map(
-  (cookie: string) => [cookieKey(cookie), cookie] as [string, string],
-  setCookie
+const indexCookieByKeys = (setCookie: string[]) => setCookie.map(
+  cookie => [cookieKey(cookie), cookie] as [string, string]
 )
 
 interface CookieAccumulator {
@@ -48,9 +47,9 @@ export async function removeSetCookie<
 
   const cacheControl: string | undefined = ctx.response.headers['cache-control']
   const scope = findScopeInCacheControl(cacheControl)
-  if (scope === 'public') {
+  if (scope === PUBLIC) {
     const indexedCookies = indexCookieByKeys(setCookie)
-    const cookies = reduce(
+    const cookies = indexedCookies.reduce(
       (acc, [key, payload]) => {
         if (BLACKLISTED_COOKIES.has(key)) {
           acc.droppedKeys.push(key)
@@ -62,8 +61,7 @@ export async function removeSetCookie<
       {
         addedPayload: [],
         droppedKeys: [],
-      } as CookieAccumulator,
-      indexedCookies
+      } as CookieAccumulator
     )
 
     if (cookies.droppedKeys.length > 0) {
