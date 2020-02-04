@@ -1,11 +1,12 @@
-import { compose, fromPairs, map, toPairs } from 'ramda'
+import { Maybe } from './../service/worker/runtime/typings'
 
-export const renameBy = <K>(
+export const renameBy = <T extends Record<string, V>, V>(
   fn: (key: string) => string,
-  obj: Record<string, K>
-): Record<string, K> =>
-  compose<Record<string, K>, Array<[string, K]>, Array<[string, K]>, Record<string, K>>(
-    fromPairs,
-    map(([key, val]) => [fn(key), val] as [string, K]),
-    toPairs
-  )(obj)
+  object: Maybe<T>
+) => object && Object.keys(object).reduce(
+  (acc, key) => {
+    acc[fn(key)] = object[key]
+    return acc
+  },
+  {} as Record<string, V>
+)

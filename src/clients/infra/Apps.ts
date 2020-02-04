@@ -1,6 +1,6 @@
 import archiver from 'archiver'
 import { IncomingMessage } from 'http'
-import { filter as ramdaFilter, path as ramdaPath, prop } from 'ramda'
+import { prop } from 'ramda'
 import { Readable, Writable } from 'stream'
 import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
@@ -327,12 +327,19 @@ export class Apps extends InfraClient {
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
     try {
-      const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey}).then(prop('apps'))
+      const { apps: appsMetaInfos } = await this.http.get<WorkspaceMetaInfo>(
+        this.routes.Meta(),
+        {
+          inflightKey,
+          metric,
+          params: { fields: workspaceFields },
+        }
+      )
       if (staleIfError && this.diskCache) {
         updateMetaInfoCache(this.diskCache, account, workspace, appsMetaInfos, logger)
       }
       if (filter) {
-        return ramdaFilter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta), appsMetaInfos)
+        return appsMetaInfos.filter(appMeta => !!(appMeta._resolvedDependencies?.filter))
       }
       return appsMetaInfos
     } catch (error) {

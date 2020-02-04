@@ -2,7 +2,6 @@ import Agent from 'agentkeepalive'
 import axios, { AxiosInstance } from 'axios'
 import { Limit } from 'p-limit'
 import { stringify } from 'qs'
-import { mapObjIndexed, path, sum, toLower, values } from 'ramda'
 
 import { renameBy } from '../../utils/renameBy'
 import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../utils/retry'
@@ -80,6 +79,8 @@ export interface DefaultMiddlewareArgs {
   exponentialBackoffCoefficient?: number
 }
 
+const toLower = (x: string) => x.toLowerCase()
+
 export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient }: DefaultMiddlewareArgs) => {
   const countByMetric: Record<string, number> = {}
   const headers = renameBy(toLower, rawHeaders)
@@ -121,14 +122,12 @@ export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retri
 const ROUTER_CACHE_KEY = 'x-router-cache'
 const ROUTER_CACHE_HIT = 'HIT'
 const ROUTER_CACHE_REVALIDATED = 'REVALIDATED'
-const ROUTER_CACHE_KEY_PATH = ['response', 'headers', ROUTER_CACHE_KEY]
-const ROUTER_RESPONSE_STATUS_PATH = ['response', 'status']
 
 export const routerCacheMiddleware = async (ctx: MiddlewareContext, next: () => Promise<void>) => {
   await next()
 
-  const routerCacheHit = path(ROUTER_CACHE_KEY_PATH, ctx)
-  const status = path(ROUTER_RESPONSE_STATUS_PATH, ctx)
+  const routerCacheHit = ctx.response?.headers?.[ROUTER_CACHE_KEY]
+  const status = ctx.response?.status
   if (routerCacheHit === ROUTER_CACHE_HIT || (routerCacheHit === ROUTER_CACHE_REVALIDATED && status !== 304)) {
     ctx.cacheHit = {
       memory: 0,
@@ -145,21 +144,29 @@ export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContex
   ctx.response = await (limit ? limit(makeRequest) : makeRequest())
 }
 
-function countPerOrigin(obj: { [key: string]: any[] }) {
+function countPerOrigin(obj: Record<string, any[]>) {
   try {
-    return mapObjIndexed(val => val.length, obj)
+    return Object.keys(obj).reduce(
+      (acc, key) => {
+        acc[key] = obj[key].length
+        return acc
+      },
+      {} as Record<string, number>
+    )
   } catch (_) {
     return {}
   }
 }
 
+const sum = (a: number, b: number) => a + b
+
 export function httpAgentStats() {
   const socketsPerOrigin = countPerOrigin(httpAgent.sockets)
-  const sockets = sum(values(socketsPerOrigin))
+  const sockets = Object.values(socketsPerOrigin).reduce(sum, 0)
   const freeSocketsPerOrigin = countPerOrigin((httpAgent as any).freeSockets)
-  const freeSockets = sum(values(freeSocketsPerOrigin))
+  const freeSockets = Object.values(freeSocketsPerOrigin).reduce(sum, 0)
   const pendingRequestsPerOrigin = countPerOrigin(httpAgent.requests)
-  const pendingRequests = sum(values(pendingRequestsPerOrigin))
+  const pendingRequests = Object.values(pendingRequestsPerOrigin).reduce(sum, 0)
 
   return {
     freeSockets,
