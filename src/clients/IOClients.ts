@@ -1,6 +1,7 @@
 import { InstanceOptions } from '../HttpClient'
 import { IOContext } from '../service/worker/runtime/typings'
 import { Billing, Builder, MessagesGraphQL, Settings } from './apps'
+import { CatalogGraphQL } from './apps/catalogGraphQL/index'
 import { ID } from './external'
 import {
   Apps,
@@ -99,6 +100,10 @@ export class IOClients {
 
   public get workspaces() {
     return this.getOrSet('workspaces', Workspaces)
+  }
+
+  public get catalogGraphQL() {
+    return this.getOrSet('catalogGraphQL', CatalogGraphQL)
   }
 
   protected getOrSet<TClient extends IOClientConstructor>(key: string, Implementation: TClient): InstanceType<TClient> {
