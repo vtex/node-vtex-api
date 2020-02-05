@@ -73,10 +73,17 @@ const zipObj = (keys: string[], values: any[]) => {
 }
 
 const workspaceFields = [
-  '_resolvedDependencies',
-  'settingsSchema',
-  '_isRoot',
+  '_activationDate',
   '_buildFeatures',
+  '_isRoot',
+  '_resolvedDependencies',
+  'credentialType',
+  'link',
+  'name',
+  'registry',
+  'settingsSchema',
+  'vendor',
+  'version',
 ].join(',')
 
 interface AppLocator {
