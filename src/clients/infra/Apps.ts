@@ -72,11 +72,21 @@ const zipObj = (keys: string[], values: any[]) => {
   return out
 }
 
+// 🚨🚨🚨
+// In order to make changes in here, please also change the colossus App so we
+// share the same cache key and do NOT call Apps unecessarily
 const workspaceFields = [
-  '_resolvedDependencies',
-  'settingsSchema',
-  '_isRoot',
+  '_activationDate',
   '_buildFeatures',
+  '_isRoot',
+  '_resolvedDependencies',
+  'credentialType',
+  'link',
+  'name',
+  'registry',
+  'settingsSchema',
+  'vendor',
+  'version',
 ].join(',')
 
 interface AppLocator {
