@@ -37,10 +37,10 @@ export const parseBindingHeaderValue = (value: string): BindingHeader => {
     // v0+kuberouter
     const [, id, rootPath, locale, currency] = value.split(',')
     return {
-      id: id || undefined,
-      rootPath: rootPath || undefined,
-      locale: locale,
       currency: currency || undefined,
+      id: id || undefined,
+      locale: locale,
+      rootPath: rootPath || undefined,
     }
   }
 
