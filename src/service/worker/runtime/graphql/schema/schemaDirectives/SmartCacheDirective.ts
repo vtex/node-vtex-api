@@ -20,7 +20,7 @@ export class SmartCacheDirective extends SchemaDirectiveVisitor {
     const maxAgeS = maxAge && MAX_AGE[maxAge]
     field.resolve = (root, args, context, info) => {
       if (maxAgeS) {
-        context.set(ETAG_CONTROL_HEADER, maxAgeS)
+        context.set(ETAG_CONTROL_HEADER, `public, max-age=${maxAgeS}`)
       }
       context.vtex.recorder = context.state.recorder
       return resolve(root, args, context, info)
