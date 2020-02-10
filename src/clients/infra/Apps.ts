@@ -1,7 +1,5 @@
-import { isSlowRecorder } from './../../service/worker/runtime/utils/recorder';
 import archiver from 'archiver'
 import { IncomingMessage } from 'http'
-import { filter as ramdaFilter, path as ramdaPath, prop } from 'ramda'
 import { Readable, Writable } from 'stream'
 import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
@@ -339,9 +337,9 @@ export class Apps extends InfraClient {
     const inflightKey = inflightURL
     const key = getMetaInfoKey(account)
 
-    const cachedResponse: {appsMetaInfo: AppMetaInfo[], headers: any} | undefined = this.diskCache && await this.diskCache.get(key)
+    const cachedResponse: {appsMetaInfo: AppMetaInfo[], headers: any} | undefined = await this.diskCache?.get(key)
     if (cachedResponse && recorder) {
-      isSlowRecorder(recorder) ? recorder(cachedResponse.headers) : recorder.record(cachedResponse.headers)
+      recorder.record(cachedResponse.headers)
     }
 
     const metaInfoPromise = this.http.getRaw<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey})
@@ -362,7 +360,7 @@ export class Apps extends InfraClient {
       : await metaInfoPromise.then(response => response.data.apps)
 
     if (filter) {
-      return appsMetaInfo.filter(appMeta => !!ramdaPath(['_resolvedDependencies', filter], appMeta))
+      return appsMetaInfo.filter(appMeta => appMeta?._resolvedDependencies?.filter)
     }
 
     return appsMetaInfo
