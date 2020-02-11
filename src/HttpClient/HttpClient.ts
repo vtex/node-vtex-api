@@ -14,6 +14,7 @@ import {
   SESSION_HEADER,
   TENANT_HEADER,
 } from '../constants'
+import { Logger } from '../service/logger/logger'
 import { IOContext } from '../service/worker/runtime/typings'
 import { formatBindingHeaderValue } from '../utils/binding'
 import { formatTenantHeaderValue } from '../utils/tenant'
@@ -105,9 +106,14 @@ export class HttpClient {
     ])
   }
 
-  public get = <T = any>(url: string, config: RequestConfig = {}): Promise<T> => {
+  public get = <T = any>(url: string, config: RequestConfig = {}, logger?: Logger): Promise<T> => {
     const cacheableConfig = this.getConfig(url, config)
-    return this.request(cacheableConfig).then(response => response.data)
+    return this.request(cacheableConfig).then(response => {
+      if (response.headers['x-router-cache'] === 'MISS' && logger) {
+        logger.debug({'Router cache miss for dependency tree': response})
+      }
+      return response.data
+    })
   }
 
   public getRaw = <T = any>(url: string, config: RequestConfig = {}): Promise<IOResponse<T>> => {

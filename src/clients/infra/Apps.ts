@@ -337,7 +337,7 @@ export class Apps extends InfraClient {
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
     try {
-      const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey}).then(prop('apps'))
+      const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey}, logger).then(prop('apps'))
       if (staleIfError && this.diskCache) {
         updateMetaInfoCache(this.diskCache, account, workspace, appsMetaInfos, logger)
       }
