@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.15.1-beta] - 2020-02-10
+
 ## [6.15.0] - 2020-02-06
 ### Added
 - Add support for router binding header.
