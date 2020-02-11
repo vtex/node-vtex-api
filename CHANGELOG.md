@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.15.2-beta] - 2020-02-10
+
 ## [6.15.1] - 2020-02-10
 ### Fixed
 - Fix `x-vtex-etag-control` set by SmartCacheDirective.
