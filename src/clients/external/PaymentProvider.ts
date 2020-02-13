@@ -4,10 +4,10 @@ import { IOContext, InstanceOptions, Maybe } from '../..'
 const routes = {
   callback: (transactionId: string, paymentId: string) =>
     `${routes.payment(transactionId, paymentId)}/notification`,
-  payment: (transactionId: string, paymentId: string) =>
-    `/transactions/${transactionId}/payments/${paymentId}`,
   inbound: (transactionId: string, paymentId: string, action: string) =>
     `${routes.payment(transactionId, paymentId)}/inbound-request/${action}`,
+  payment: (transactionId: string, paymentId: string) =>
+    `/transactions/${transactionId}/payments/${paymentId}`,
 }
 
 export class PaymentProvider extends ExternalClient {
@@ -15,7 +15,13 @@ export class PaymentProvider extends ExternalClient {
     super(
       `http://${context.account}.vtexpayments.com.br/payment-provider`,
       context,
-      options
+      {
+        ...(options ?? {}),
+        headers: {
+          ...(options?.headers ?? {}),
+          'X-Vtex-Use-Https': 'true',
+        },
+      }
     )
   }
 
@@ -29,9 +35,6 @@ export class PaymentProvider extends ExternalClient {
       callback,
       {
         metric: 'gateway-callback',
-        headers: {
-          'X-Vtex-Use-Https': 'true',
-        },
       }
     )
 
@@ -46,9 +49,6 @@ export class PaymentProvider extends ExternalClient {
       payload,
       {
         metric: 'gateway-inbound-request',
-        headers: {
-          'X-Vtex-Use-Https': 'true',
-        },
       }
     )
 }
@@ -70,7 +70,7 @@ export interface AuthorizationCallback {
   barCodeImageType?: Maybe<string>
   barCodeImageNumber?: Maybe<string>
   code?: Maybe<string>
-  message: Maybe<string>
+  message?: Maybe<string>
   delayToAutoSettle?: Maybe<number>
   delayToAutoSettleAfterAntifraud?: Maybe<number>
   delayToCancel?: Maybe<number>
