@@ -18,7 +18,7 @@ import { TenantHeader } from '../../../utils/tenant'
 import { Logger } from '../../logger'
 import { MetricsLogger } from '../../logger/metricsLogger'
 import { MessagesLoaderV2 } from './graphql/schema/messagesLoaderV2'
-import { Recorder, SlowRecorder } from './utils/recorder'
+import { Recorder } from './utils/recorder'
 
 type ServerTiming = Record<string, string>
 
@@ -72,7 +72,7 @@ export interface HttpRoute {
 }
 
 export interface RecorderState {
-  recorder: Recorder | SlowRecorder
+  recorder: Recorder
   body: any
 }
 
@@ -116,7 +116,7 @@ export interface IOContext {
   locale?: string
   production: boolean
   product: string
-  recorder?: Recorder | SlowRecorder
+  recorder?: Recorder
   region: string
   route: {
     declarer?: string

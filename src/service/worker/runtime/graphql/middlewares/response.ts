@@ -4,7 +4,6 @@ import {
   FORWARDED_HOST_HEADER,
   META_HEADER,
   SEGMENT_HEADER,
-  USE_FAST_RECORDER,
 } from '../../../../../constants'
 import { Maybe } from '../../typings'
 import { Recorder } from '../../utils/recorder'
@@ -29,11 +28,7 @@ export async function response (ctx: GraphQLServiceContext, next: () => Promise<
     // Do not generate etag for errors
     ctx.remove(META_HEADER)
     ctx.remove(ETAG_HEADER)
-    if (USE_FAST_RECORDER) {
-      (ctx.vtex.recorder as Maybe<Recorder>)?.clear()
-    } else {
-      delete ctx.vtex.recorder
-    }
+    ctx.vtex.recorder?.clear()
   }
 
   ctx.vary(FORWARDED_HOST_HEADER)
