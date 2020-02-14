@@ -46,12 +46,9 @@ http.interceptors.response.use(undefined, error => {
     return Promise.reject(error)
   }
   const { initialBackoffDelay = 200, exponentialBackoffCoefficient = 2, exponentialTimeoutCoefficient } = config
-  console.log('teste exponentialTimeoutCoefficient: ', exponentialTimeoutCoefficient)
   const retryCount = config.retryCount || 0
   const shouldRetry = isAbortedOrNetworkErrorOrRouterTimeout(error) && retryCount < config.retries
   if (shouldRetry) {
-    console.log('teste RETRYING!!')
-    console.log('teste config.retryCount: ', config.retryCount)
     config.retryCount = retryCount + 1
     const delay = exponentialDelay(initialBackoffDelay, exponentialBackoffCoefficient, config.retryCount)
 
@@ -60,7 +57,6 @@ http.interceptors.response.use(undefined, error => {
     fixConfig(http, config)
 
     config.timeout = exponentialTimeoutCoefficient ? (config.timeout as number) * exponentialTimeoutCoefficient : config.timeout
-    console.log('teste NEW TIMEOUT: ', config.timeout)
     config.transformRequest = [data => data]
 
     return new Promise(resolve => setTimeout(() => resolve(http(config)), delay))
