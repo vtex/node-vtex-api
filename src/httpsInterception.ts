@@ -26,5 +26,5 @@ function setup () {
 
 // Only setup http interception if inside IO
 if (IS_IO) {
-  setup()
+  // setup()
 }
