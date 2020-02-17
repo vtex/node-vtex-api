@@ -1,9 +1,10 @@
 import { cleanError } from '../../utils/error'
 import { IOContext } from '../worker/runtime/typings'
 import { logOnceToDevConsole } from './console'
+import { APP } from '../../constants'
 
 const linked = !!process.env.VTEX_APP_LINK
-const app = process.env.VTEX_APP_ID
+const app = APP.ID
 const EMPTY_MESSAGE = 'Logger.log was called with null or undefined message'
 
 export enum LogLevel {
@@ -45,6 +46,8 @@ export class Logger {
     /* tslint:disable:object-literal-sort-keys */
     console.log(JSON.stringify({
       __VTEX_IO_LOG: true,
+      __SKIDDER_TOPIC_1: `skidder.acc.${this.account}`,
+      __SKIDDER_TOPIC_2: `skidder.app.${this.account}.${APP.VENDOR}.${APP.NAME}`,
       level,
       app,
       account: this.account,
