@@ -77,12 +77,13 @@ export const cacheMiddleware = ({type, storage}: CacheOptions) => {
     const cacheHasWithSegment = await storage.has(keyWithSegment)
     const cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
 
-    if (cached) {
+    if (cached && cached.response) {
       const {etag: cachedEtag, response, expiration, responseType, responseEncoding} = cached as Cached
-      if (expiration > Date.now() && response) {
-        if (type === CacheType.Disk && responseType === 'arraybuffer') {
-          response.data = Buffer.from(response.data, responseEncoding)
-        }
+      if (type === CacheType.Disk && responseType === 'arraybuffer') {
+        response.data = Buffer.from(response.data, responseEncoding)
+      }
+
+      if (expiration > Date.now()) {
         ctx.response = response as AxiosResponse
         ctx.cacheHit = {
           memory: 1,
