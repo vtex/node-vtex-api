@@ -4,6 +4,7 @@ import { Limit } from 'p-limit'
 import { stringify } from 'qs'
 import { mapObjIndexed, path, sum, toLower, values } from 'ramda'
 
+import { Logger } from '../../service/logger/logger'
 import { renameBy } from '../../utils/renameBy'
 import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../utils/retry'
 import { MiddlewareContext, RequestConfig } from '../typings'
@@ -139,8 +140,13 @@ export const routerCacheMiddleware = async (ctx: MiddlewareContext, next: () => 
   }
 }
 
-export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-  const makeRequest = () => http.request(ctx.config)
+export const requestMiddleware = (limit?: Limit, logger?: Logger) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+  const makeRequest = () => http.request(ctx.config).then((response)=>{
+    if (response.headers['x-router-cache'] === 'MISS' && logger && response.config.url!.includes('/v2/apps')) {
+      logger.debug({'x-router-cache for dependency tree': response.headers['x-router-cache'], config: response.config, status: response.status})
+    }
+    return response
+  })
 
   ctx.response = await (limit ? limit(makeRequest) : makeRequest())
 }

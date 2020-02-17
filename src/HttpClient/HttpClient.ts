@@ -67,6 +67,7 @@ export class HttpClient {
       exponentialTimeoutCoefficient,
       initialBackoffDelay,
       exponentialBackoffCoefficient,
+      logger,
     } = opts
     this.name = name || baseURL || 'unknown'
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
@@ -102,16 +103,13 @@ export class HttpClient {
     ...diskCache ? [cacheMiddleware({ type: CacheType.Disk, storage: diskCache })] : [],
       notFoundFallbackMiddleware,
       routerCacheMiddleware,
-    requestMiddleware(limit),
+    requestMiddleware(limit, logger),
     ])
   }
 
-  public get = <T = any>(url: string, config: RequestConfig = {}, logger?: Logger): Promise<T> => {
+  public get = <T = any>(url: string, config: RequestConfig = {}): Promise<T> => {
     const cacheableConfig = this.getConfig(url, config)
     return this.request(cacheableConfig).then(response => {
-      if (response.headers['x-router-cache'] === 'MISS' && logger) {
-        logger.debug({'Router cache miss for dependency tree': response})
-      }
       return response.data
     })
   }
