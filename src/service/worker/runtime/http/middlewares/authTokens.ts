@@ -11,7 +11,7 @@ export async function authTokens <
 > (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
   const { vtex: { account } } = ctx
 
-  ctx.vtex.adminUserAuthToken = ctx.cookies.get(VTEX_ID_COOKIE_KEY)
+  ctx.vtex.adminUserAuthToken = ctx.cookies.get(VTEX_ID_COOKIE_KEY) || ctx.headers.get(VTEX_ID_COOKIE_KEY)
   ctx.vtex.storeUserAuthToken = ctx.cookies.get(`${VTEX_ID_COOKIE_KEY}_${account}`)
   ctx.vtex.janusEnv = ctx.cookies.get(JANUS_ENV_COOKIE_KEY)
 
