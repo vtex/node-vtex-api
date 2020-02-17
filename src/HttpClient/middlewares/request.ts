@@ -86,19 +86,19 @@ export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retri
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     ctx.config = {
       baseURL,
+      exponentialBackoffCoefficient,
+      exponentialTimeoutCoefficient,
+      initialBackoffDelay,
       maxRedirects: 0,
       retries,
       timeout,
       validateStatus: status => (status >= 200 && status < 300),
       verbose,
       ...ctx.config,
-      exponentialBackoffCoefficient,
-      exponentialTimeoutCoefficient,
       headers: {
         ...headers,
         ...renameBy(toLower, ctx.config.headers),
       },
-      initialBackoffDelay,
       params: {
         ...params,
         ...ctx.config.params,
