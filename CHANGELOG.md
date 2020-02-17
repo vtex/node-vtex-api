@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.16.2-beta] - 2020-02-17
+
 ## [6.16.1] - 2020-02-17
 ### Changed
 - Exponential timeout and backoff variables can now be set by request and not only by client.
