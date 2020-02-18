@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.17.1-beta] - 2020-02-18
+
 ## [6.17.0] - 2020-02-18
 ### Added
 - Injects `__SKIDDER_TOPIC_1` and `__SKIDDER_TOPIC_2` keys in logs
