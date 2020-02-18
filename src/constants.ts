@@ -54,6 +54,9 @@ export const APP = {
   NAME: process.env.VTEX_APP_NAME as string,
   VENDOR: process.env.VTEX_APP_VENDOR as string,
   VERSION: process.env.VTEX_APP_VERSION as string,
+  IS_THIRD_PARTY() {
+    return 'vtex' !== this.VENDOR && 'gocommerce' !== this.VENDOR
+  },
 }
 export const NODE_ENV = process.env.NODE_ENV as string
 export const ACCOUNT = process.env.VTEX_ACCOUNT as string
