@@ -1,7 +1,7 @@
+import { APP } from '../../constants'
 import { cleanError } from '../../utils/error'
 import { IOContext } from '../worker/runtime/typings'
 import { logOnceToDevConsole } from './console'
-import { APP } from '../../constants'
 
 const linked = !!process.env.VTEX_APP_LINK
 const app = APP.ID
@@ -43,11 +43,10 @@ export class Logger {
 
   public log = (message: any, level: LogLevel): void => {
     const data = message ? cleanError(message) : EMPTY_MESSAGE
+
     /* tslint:disable:object-literal-sort-keys */
-    console.log(JSON.stringify({
+    const inflatedLog = {
       __VTEX_IO_LOG: true,
-      __SKIDDER_TOPIC_1: `skidder.acc.${this.account}`,
-      __SKIDDER_TOPIC_2: `skidder.app.${this.account}.${APP.VENDOR}.${APP.NAME}`,
       level,
       app,
       account: this.account,
@@ -56,7 +55,17 @@ export class Logger {
       data,
       operationId: this.operationId,
       requestId: this.requestId,
-    }))
+    }
+
+    // Mark third-party apps logs to send to skidder
+    if (APP.IS_THIRD_PARTY()) {
+      Object.assign(inflatedLog, {
+        __SKIDDER_TOPIC_1: `skidder.acc.${this.account}`,
+        __SKIDDER_TOPIC_2: `skidder.app.${this.account}.${APP.VENDOR}.${APP.NAME}`,
+      })
+    }
+
+    console.log(JSON.stringify(inflatedLog))
 
     // Warn the developer how to retrieve the error in splunk
     this.logSplunkQuery()
