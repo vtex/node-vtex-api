@@ -4,6 +4,8 @@ import { cleanError } from '../../utils/error'
 const linked = !!process.env.VTEX_APP_LINK
 const app = process.env.VTEX_APP_ID
 const EMPTY_MESSAGE = 'Logger.log was called with null or undefined message'
+const appName = process.env.VTEX_APP_NAME as string
+const vendor = process.env.VTEX_APP_VENDOR as string
 
 export enum LogLevel {
   Debug = 'debug',
@@ -42,8 +44,9 @@ export class Logger {
 
   public log = (message: any, level: LogLevel): void => {
     const data = message ? cleanError(message) : EMPTY_MESSAGE
+    
     /* tslint:disable:object-literal-sort-keys */
-    console.log(JSON.stringify({
+    const inflatedLog = {
       __VTEX_IO_LOG: true,
       level,
       app,
@@ -53,10 +56,23 @@ export class Logger {
       data,
       operationId: this.operationId,
       requestId: this.requestId,
-    }))
+    }
+
+    if (this.isThirdPartyApp()) {
+      Object.assign(inflatedLog, {
+        __SKIDDER_TOPIC_1: `skidder.acc.${this.account}`,
+        __SKIDDER_TOPIC_2: `skidder.app.${this.account}.${vendor}.${appName}`,
+      })
+    }
+
+    console.log(JSON.stringify(inflatedLog))
 
     // Warn the developer how to retrieve the error in splunk
     this.logSplunkQuery()
+  }
+
+  private isThirdPartyApp() {
+    return 'vtex' !== vendor && 'gocommerce' !== vendor
   }
 
   /**
