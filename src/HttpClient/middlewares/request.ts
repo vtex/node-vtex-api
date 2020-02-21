@@ -16,6 +16,7 @@ const httpAgent = new Agent({
 
 const http = axios.create({
   httpAgent,
+  httpsAgent: httpAgent,
 })
 
 function fixConfig(axiosInstance: AxiosInstance, config: RequestConfig) {
