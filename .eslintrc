@@ -1,0 +1,53 @@
+{
+  "extends": "vtex",
+  "root": true,
+  "env": {
+    "node": true,
+    "es6": true,
+    "jest": true
+  },
+  "rules": {
+    "no-console": "off",
+    "import/order": "off",
+    "@typescript-eslint/no-non-null-assertion": "off",
+    "@typescript-eslint/no-namespace": "off",
+    "@typescript-eslint/interface-name-prefix": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "off",
+      { "argsIgnorePattern": "_+" }
+    ],
+    "@typescript-eslint/explicit-member-accessibility": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+    
+    // Rules to fix before turning them to errors
+    "no-useless-escape": "warn",
+    "no-return-await": "warn",
+    "no-await-in-loop": "warn",
+    "no-async-promise-executor": "warn",
+    "@typescript-eslint/require-array-sort-compare": "warn",
+    "@typescript-eslint/no-use-before-define": "warn",
+    "@typescript-eslint/restrict-plus-operands": "warn",
+    "@typescript-eslint/no-useless-constructor": "warn"
+  },
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "rules": {
+        "no-dupe-class-members": "off"
+      }
+    },
+    {
+      "files": ["*.test.ts"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off"
+      }
+    },
+    {
+      "files": ["./src/httpsInterception.ts", "./src/service/loaders.ts"],
+      "rules": {
+        "@typescript-eslint/no-var-requires": "off",
+        "global-require": "off"
+      }
+    }
+  ]
+}
