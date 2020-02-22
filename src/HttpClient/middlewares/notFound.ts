@@ -5,7 +5,7 @@ const addNotFound = (validateStatus: (status: number) => boolean) => (status: nu
   validateStatus(status) || status === 404
 
 function nullIfNotFound(config: any): boolean {
-  return config && config.nullIfNotFound
+  return config?.nullIfNotFound
 }
 
 export const acceptNotFoundMiddleware = async (ctx: MiddlewareContext, next: () => Promise<void>) => {

@@ -3,7 +3,7 @@ import { parse as qsParse } from 'querystring'
 import { IOClients } from '../../../../../clients/IOClients'
 import { COLOSSUS_PARAMS_HEADER, COLOSSUS_ROUTE_DECLARER_HEADER } from '../../../../../constants'
 import { prepareHandlerCtx } from '../../utils/context'
-import { ParamsContext, RecorderState, ServiceContext, ServiceRoute } from './../../typings'
+import { ParamsContext, RecorderState, ServiceContext, ServiceRoute } from '../../typings'
 
 export const createPvtContextMiddleware = (routeId: string, { smartcache }: ServiceRoute) => {
   return async function pvtContext<T extends IOClients, U extends RecorderState, V extends ParamsContext>(

@@ -32,7 +32,7 @@ const detailsFromCtx = (ctx: GraphQLServiceContext) => {
     vtex: { operationId, requestId },
   } = ctx
 
-  const queryRest = pick<any>(QUERY_FIELDS, ctx.graphql.query || {})
+  const queryRest = pick<any>(QUERY_FIELDS, ctx.graphql.query ?? {})
   const variables = ctx.request.is('multipart/form-data') ? '[GraphQL Upload]' : trimVariables(queryRest.variables)
   const query = {
     ...queryRest,

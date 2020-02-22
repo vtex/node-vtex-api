@@ -26,7 +26,7 @@ const dependsOnApp = (appsAtMajor: string[]) => (a: AppMetaInfo) => {
 
 const useBuildJson = (app: AppMetaInfo, appVendorName: string) => {
   const buildFeatures = app._buildFeatures
-  return buildFeatures && buildFeatures[appVendorName] && contains('build.json', buildFeatures[appVendorName])
+  return buildFeatures?.[appVendorName] && contains('build.json', buildFeatures[appVendorName])
 }
 
 export interface AssetsParams {

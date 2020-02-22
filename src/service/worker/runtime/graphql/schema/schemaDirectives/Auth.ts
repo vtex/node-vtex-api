@@ -46,7 +46,7 @@ async function getUserCanAccessResource(
 }
 
 async function auth(ctx: ServiceContext, authArgs: AuthDirectiveArgs): Promise<void> {
-  const vtexIdToken = ctx.cookies.get('VtexIdclientAutCookie') || ctx.get('VtexIdclientAutCookie')
+  const vtexIdToken = ctx.cookies.get('VtexIdclientAutCookie') ?? ctx.get('VtexIdclientAutCookie')
   if (!vtexIdToken) {
     throw new ForbiddenError('VtexIdclientAutCookie not found.')
   }

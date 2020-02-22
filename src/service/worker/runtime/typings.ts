@@ -77,7 +77,7 @@ export type Resolver<
   | GraphQLFieldResolver<any, ServiceContext<ClientsT, StateT, CustomT>, any>
   | GraphQLFieldConfig<any, ServiceContext<ClientsT, StateT, CustomT>, any>
 
-export type Handler = RouteHandler<IOClients, RecorderState, ParamsContext>
+export type Handler = RouteHandler
 
 export interface HttpRoute {
   handler: RouteHandler

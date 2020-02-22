@@ -8,7 +8,7 @@ const useHttps = !IS_IO
  * Used to perform calls on infra apps (e.g. sphinx, apps, vbase).
  */
 export class InfraClient extends IOClient {
-  constructor(app: string, context: IOContext, options?: InstanceOptions, isRoot: boolean = false) {
+  constructor(app: string, context: IOContext, options?: InstanceOptions, isRoot = false) {
     const { account, workspace, region } = context
     const [appName, appVersion] = app.split('@')
     const protocol = useHttps ? 'https' : 'http'

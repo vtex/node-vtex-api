@@ -90,7 +90,7 @@ export class VBase extends InfraClient {
     return this.http.getStream(routes.File(bucket, path), { metric: 'vbase-get-file-s' })
   }
 
-  public saveFile = (bucket: string, path: string, stream: Readable, gzip: boolean = true, ttl?: number) => {
+  public saveFile = (bucket: string, path: string, stream: Readable, gzip = true, ttl?: number) => {
     return this.saveContent(bucket, path, stream, { gzip, ttl })
   }
 

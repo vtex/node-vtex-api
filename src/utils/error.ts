@@ -44,7 +44,7 @@ const destroyCircular = (from: any, seen: any[]) => {
     if (!value || typeof value !== 'object') {
       // Truncate very large strings
       if (typeof value === 'string' && value.length > MAX_ERROR_STRING_LENGTH) {
-        to[key] = value.substr(0, MAX_ERROR_STRING_LENGTH) + '[...TRUNCATED]'
+        to[key] = `${value.substr(0, MAX_ERROR_STRING_LENGTH)}[...TRUNCATED]`
       } else {
         to[key] = value
       }
@@ -76,15 +76,15 @@ const destroyCircular = (from: any, seen: any[]) => {
       if (headers) {
         const headerNames = keys(headers)
         const authorization = findCaseInsensitive('authorization', headerNames as string[])
-        if (!!authorization) {
+        if (authorization) {
           delete headers[authorization]
         }
         const proxyAuth = findCaseInsensitive('proxy-authorization', headerNames as string[])
-        if (!!proxyAuth) {
+        if (proxyAuth) {
           delete headers[proxyAuth]
         }
         const vtexIdClientAutCookie = findCaseInsensitive('vtexidclientautcookie', headerNames as string[])
-        if (!!vtexIdClientAutCookie) {
+        if (vtexIdClientAutCookie) {
           delete headers[vtexIdClientAutCookie]
         }
       }

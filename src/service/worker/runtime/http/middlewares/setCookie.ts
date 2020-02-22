@@ -15,7 +15,7 @@ Cookies dropped:
 const findStr = (target: string, set: string[]) => find((a: string) => a.toLocaleLowerCase() === target, set)
 
 const findScopeInCacheControl = (cacheControl: string | undefined) => {
-  const splitted = cacheControl && cacheControl.split(/\s*,\s*/g)
+  const splitted = cacheControl?.split(/\s*,\s*/g)
   const scopePublic = splitted && findStr('public', splitted)
   return scopePublic
 }

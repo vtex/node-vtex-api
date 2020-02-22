@@ -21,7 +21,7 @@ import {
 import { parseTenantHeaderValue } from '../../../../utils/tenant'
 import { Logger } from '../../../logger'
 import { IOContext } from '../typings'
-import { parseBindingHeaderValue } from './../../../../utils/binding'
+import { parseBindingHeaderValue } from '../../../../utils/binding'
 
 type HandlerContext = Omit<IOContext, 'route'>
 
@@ -45,7 +45,7 @@ export const prepareHandlerCtx = (header: Context['request']['header']): Handler
     segmentToken: header[SEGMENT_HEADER],
     sessionToken: header[SESSION_HEADER],
     tenant: header[TENANT_HEADER] ? parseTenantHeaderValue(header[TENANT_HEADER]) : undefined,
-    userAgent: process.env.VTEX_APP_ID || '',
+    userAgent: process.env.VTEX_APP_ID ?? '',
     workspace: header[WORKSPACE_HEADER],
   }
   return {

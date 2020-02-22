@@ -27,7 +27,7 @@ export interface GraphQLResponse<T extends Serializable> {
 }
 
 const throwOnGraphQLErrors = <T extends Serializable>(message: string, response: GraphQLResponse<T>) => {
-  if (response && response.errors && response.errors.length > 0) {
+  if (response?.errors && response.errors.length > 0) {
     throw new CustomGraphQLError(message, response.errors)
   }
   return response
@@ -42,7 +42,7 @@ export class GraphQLClient {
   ): Promise<GraphQLResponse<Data>> =>
     this.http
       .getWithBody<GraphQLResponse<Data>>(
-        config.url || '',
+        config.url ?? '',
         { query, variables },
         {
           inflightKey: inflight !== false ? inflightUrlWithQuery : undefined,
@@ -58,7 +58,7 @@ export class GraphQLClient {
     config: RequestConfig = {}
   ) =>
     this.http
-      .post<GraphQLResponse<Data>>(config.url || '', { query: mutate, variables }, config)
+      .post<GraphQLResponse<Data>>(config.url ?? '', { query: mutate, variables }, config)
       .then(graphqlResponse =>
         throwOnError === false ? graphqlResponse : throwOnGraphQLErrors(this.http.name, graphqlResponse)
       )

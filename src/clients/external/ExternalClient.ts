@@ -8,7 +8,7 @@ import { IOClient } from '../IOClient'
 export class ExternalClient extends IOClient {
   constructor(baseURL: string, context: IOContext, options?: InstanceOptions) {
     const { authToken } = context
-    const headers = (options && options.headers) || {}
+    const headers = options?.headers ?? {}
 
     super(context, {
       ...options,

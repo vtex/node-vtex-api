@@ -35,14 +35,13 @@ export const updateMetaInfoCache = async (
   } catch (error) {
     logger.error({ error, message: 'Apps disk cache update failed' })
   }
-  return
 }
 
 const getFallbackKey = (appName: string, major: string) => `${appName}@${major}`
 
 export const saveVersion = async (app: string, cacheStorage: CacheLayer<string, string>) => {
   const [appName, version] = app.split('@')
-  const major = head(version.split('.')) || ''
+  const major = head(version.split('.')) ?? ''
 
   const fallbackKey = getFallbackKey(appName, major)
   if (cacheStorage.has(fallbackKey)) {
@@ -62,7 +61,7 @@ export const getFallbackFile = async (
   apps: Apps
 ): Promise<{ data: Buffer; headers: any }> => {
   const [appName, version] = app.split('@')
-  const major = head(version.split('.')) || ''
+  const major = head(version.split('.')) ?? ''
   const fallbackKey = getFallbackKey(appName, major)
 
   const fallbackVersion = await cacheStorage.get(fallbackKey)

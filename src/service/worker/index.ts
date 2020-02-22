@@ -167,8 +167,8 @@ const createRuntimeHttpHandlers = (
 })
 
 const scaleClientCaches = (scaleFactor: number, options?: Record<string, InstanceOptions>) =>
-  Object.entries(options || {}).forEach(([name, opts]) => {
-    if (opts && opts.memoryCache && scaleFactor > 1) {
+  Object.entries(options ?? {}).forEach(([name, opts]) => {
+    if (opts?.memoryCache && scaleFactor > 1) {
       const previous = (opts.memoryCache as any).storage.max
       const current = previous / scaleFactor
       ;(opts.memoryCache as any).storage.max = current

@@ -85,7 +85,7 @@ const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2, behavi
     )
   }
 
-  const from = maybeFrom || binding?.locale || tenant?.locale
+  const from = maybeFrom ?? binding?.locale ?? tenant?.locale
 
   if (from == null) {
     throw new Error(

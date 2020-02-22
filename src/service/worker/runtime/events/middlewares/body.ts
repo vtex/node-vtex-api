@@ -3,7 +3,7 @@ import bodyParse from 'co-body'
 import { IOClients } from '../../../../../clients/IOClients'
 import { LogLevel } from '../../../../logger'
 import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
-import { logOnceToDevConsole } from './../../../../logger/console'
+import { logOnceToDevConsole } from '../../../../logger/console'
 
 export async function parseBodyMiddleware<T extends IOClients, U extends RecorderState, V extends ParamsContext>(
   ctx: ServiceContext<T, U, V>,

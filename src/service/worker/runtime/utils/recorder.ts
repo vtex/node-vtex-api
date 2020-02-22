@@ -1,7 +1,7 @@
 import { Context } from 'koa'
 import { trim } from 'ramda'
 
-import { META_HEADER, META_HEADER_BUCKET } from './../../../../constants'
+import { META_HEADER, META_HEADER_BUCKET } from '../../../../constants'
 
 const HEADERS = [META_HEADER, META_HEADER_BUCKET]
 

@@ -1,15 +1,15 @@
-export type FetchResult<V> = {
+export interface FetchResult<V> {
   value: V
   maxAge?: number
 }
 
-export type DiskStats = {
+export interface DiskStats {
   hits: number
   total: number
   name: string
 }
 
-export type LRUStats = {
+export interface LRUStats {
   itemCount: number
   length: number
   disposedItems: number
@@ -20,14 +20,14 @@ export type LRUStats = {
   total: number
 }
 
-export type MultilayerStats = {
+export interface MultilayerStats {
   hitRate: number | undefined
   hits: number
   total: number
   name: string
 }
 
-export type LRUDiskCacheOptions = {
+export interface LRUDiskCacheOptions {
   /**
    * The maximum size of the cache, checked by applying the length
    * function to all values in the cache. Not setting this is kind of silly,

@@ -8,7 +8,7 @@ export class Sphinx extends InfraClient {
   }
 
   public validatePolicies = (policies: PolicyRequest[]) => {
-    return this.http.post<void>(
+    return this.http.post(
       '/policies/validate',
       { policies },
       {

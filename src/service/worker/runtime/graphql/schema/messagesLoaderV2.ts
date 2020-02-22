@@ -3,7 +3,7 @@ import { sortBy, zip } from 'ramda'
 
 import { IndexedByFrom, Message } from '../../../../../clients/apps/MessagesGraphQL'
 import { AppMetaInfo } from '../../../../../clients/infra/Apps'
-import { IOClients } from './../../../../../clients/IOClients'
+import { IOClients } from '../../../../../clients/IOClients'
 
 type Indexed<X> = [number, X]
 

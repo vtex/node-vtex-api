@@ -32,7 +32,6 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
     const memoized = await inflight.get(key)!
     ctx.inflightHit = isInflight
     ctx.response = memoized.response
-    return
   } else {
     const promise = new Promise<Inflight>(async (resolve, reject) => {
       try {

@@ -114,7 +114,7 @@ export class Builder extends AppClient {
     zip.on('error', e => {
       throw e
     })
-    const hint = stickyHint || `request:${this.context.account}:${this.context.workspace}:${app}`
+    const hint = stickyHint ?? `request:${this.context.account}:${this.context.workspace}:${app}`
     const metric = 'bh-zip-send'
     const params = tag ? { ...requestParams, tag } : requestParams
     const request = this.http.postRaw<BuildResult>(route, zip, {

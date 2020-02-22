@@ -1,5 +1,5 @@
 import { MiddlewareContext } from '../typings'
-import { Recorder } from './../../service/worker/runtime/utils/recorder'
+import { Recorder } from '../../service/worker/runtime/utils/recorder'
 
 export const recorderMiddleware = (recorder: Recorder) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
   try {

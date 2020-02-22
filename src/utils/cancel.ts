@@ -1,5 +1,5 @@
 import { ParamsContext, RecorderState, RouteHandler, ServiceContext } from '../service/worker/runtime/typings'
-import { IOClients } from './../clients/IOClients'
+import { IOClients } from '../clients/IOClients'
 
 export function cancel<T extends IOClients, U extends RecorderState, V extends ParamsContext>(
   middleware: RouteHandler<T, U, V>

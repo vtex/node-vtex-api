@@ -19,8 +19,7 @@ export class AppGraphQLClient extends IOGraphQLClient {
       baseURL = formatPrivateRoute({ account, workspace, major, name, vendor, protocol, path: '/_v/graphql' })
     } else {
       console.warn(
-        `${account} in ${workspace} is using old routing for ${app}. Please change vendor.app to vendor.app@major in client ${(options &&
-          options.name) ||
+        `${account} in ${workspace} is using old routing for ${app}. Please change vendor.app to vendor.app@major in client ${options?.name ??
           ''}`
       )
       const service = [name, vendor].join('.') // messages.vtex

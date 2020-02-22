@@ -68,7 +68,7 @@ export class HttpClient {
       initialBackoffDelay,
       exponentialBackoffCoefficient,
     } = opts
-    this.name = name || baseURL || 'unknown'
+    this.name = name ?? baseURL ?? 'unknown'
     const limit = (concurrency && concurrency > 0 && pLimit(concurrency)) || undefined
     const headers: Record<string, string> = {
       ...defaultHeaders,
@@ -85,13 +85,13 @@ export class HttpClient {
     }
 
     if (authType && authToken) {
-      headers['Authorization'] = `${authType} ${authToken}`
+      headers.Authorization = `${authType} ${authToken}`
     }
 
     const memoizedCache = new Map<string, Promise<Memoized>>()
 
     this.runMiddlewares = compose([
-      ...(opts.middlewares || []),
+      ...(opts.middlewares ?? []),
       defaultsMiddleware({
         baseURL,
         rawHeaders: headers,

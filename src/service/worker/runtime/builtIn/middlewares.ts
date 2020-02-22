@@ -10,7 +10,6 @@ export async function recorderMiddleware(ctx: ServiceContext, next: () => Promis
   ctx.state.recorder = recorder
   await next()
   recorder.flush(ctx)
-  return
 }
 
 export const addMetricsLoggerMiddleware = () => {

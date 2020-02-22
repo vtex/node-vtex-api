@@ -4,9 +4,9 @@ import { join, pluck } from 'ramda'
 import { AppMetaInfo, Apps } from '../../../../../clients/infra/Apps'
 import { IOClients } from '../../../../../clients/IOClients'
 import { APP } from '../../../../../constants'
-import { Assets } from './../../../../../clients/infra/Assets'
-import { appIdToAppAtMajor } from './../../../../../utils/app'
-import { ParamsContext, RecorderState, ServiceContext } from './../../typings'
+import { Assets } from '../../../../../clients/infra/Assets'
+import { appIdToAppAtMajor } from '../../../../../utils/app'
+import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
 
 const joinIds = join('')
 

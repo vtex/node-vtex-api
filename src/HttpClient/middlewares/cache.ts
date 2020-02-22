@@ -76,7 +76,7 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
     const cacheHasWithSegment = await storage.has(keyWithSegment)
     const cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
 
-    if (cached && cached.response) {
+    if (cached?.response) {
       const { etag: cachedEtag, response, expiration, responseType, responseEncoding } = cached as Cached
       if (type === CacheType.Disk && responseType === 'arraybuffer') {
         response.data = Buffer.from(response.data, responseEncoding)
@@ -133,7 +133,7 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
       const currentAge = revalidated ? 0 : age
       const varySegment = ctx.response.headers.vary && ctx.response.headers.vary.includes(SEGMENT_HEADER)
       const setKey = varySegment ? keyWithSegment : key
-      const responseEncoding = configResponseEncoding || (responseType === 'arraybuffer' ? 'base64' : undefined)
+      const responseEncoding = configResponseEncoding ?? (responseType === 'arraybuffer' ? 'base64' : undefined)
       const cacheableData =
         type === CacheType.Disk && responseType === 'arraybuffer' ? (data as Buffer).toString(responseEncoding) : data
 
@@ -144,7 +144,6 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
         responseEncoding,
         responseType,
       })
-      return
     }
   }
 }

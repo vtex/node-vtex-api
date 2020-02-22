@@ -20,7 +20,7 @@ export const formatBindingHeaderValue = (
   }
 
   if (format === BindingHeaderFormat.kuberouter0) {
-    return ['0', binding.id || '', binding.rootPath || '', binding.locale || '', binding.currency || ''].join(',')
+    return ['0', binding.id ?? '', binding.rootPath ?? '', binding.locale || '', binding.currency ?? ''].join(',')
   }
 
   throw new Error(`Unkown binding format: ${format}`)
@@ -33,7 +33,7 @@ export const parseBindingHeaderValue = (value: string): BindingHeader => {
     return {
       currency: currency || undefined,
       id: id || undefined,
-      locale: locale,
+      locale,
       rootPath: rootPath || undefined,
     }
   }

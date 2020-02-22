@@ -43,7 +43,7 @@ const onExit = (worker: Worker, code: number, signal: string) => {
 
 let workersOnline = 0
 const onOnline = (worker: Worker) => {
-  console.log('Worker ' + worker.process.pid + ' is listening')
+  console.log(`Worker ${worker.process.pid} is listening`)
   workersOnline += 1
   if (workersOnline === 1) {
     worker.send(UP_SIGNAL)

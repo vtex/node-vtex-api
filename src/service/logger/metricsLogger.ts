@@ -58,16 +58,16 @@ export class MetricsLogger {
   public getSummaries: () => Metric[]
 
   constructor() {
-    //////////////////////
+    // ////////////////////
     // private attributes
-    //////////////////////
+    // ////////////////////
 
     let samples: Samples = {}
     let lastCpu: Snapshot = cpuSnapshot()
 
-    //////////////////////
+    // ////////////////////
     // private methods definitions
-    //////////////////////
+    // ////////////////////
 
     const summaries = compose<any, any, any, any>(reject(isNil), values, mapObjIndexed(getSummary))
 
@@ -85,11 +85,11 @@ export class MetricsLogger {
 
     function getProcessEnv(): ProcessEnv {
       return {
-        appName: process.env.VTEX_APP_NAME || '',
-        appVersion: process.env.VTEX_APP_VERSION || '',
+        appName: process.env.VTEX_APP_NAME ?? '',
+        appVersion: process.env.VTEX_APP_VERSION ?? '',
         production: PRODUCTION,
-        region: process.env.VTEX_REGION || '',
-        vendor: process.env.VTEX_APP_VENDOR || '',
+        region: process.env.VTEX_REGION ?? '',
+        vendor: process.env.VTEX_APP_VENDOR ?? '',
       }
     }
 
@@ -177,9 +177,9 @@ export class MetricsLogger {
       }
     }
 
-    //////////////////////
+    // ////////////////////
     // public methods definitions
-    //////////////////////
+    // ////////////////////
 
     this.add = (key: Key, value: any): void => {
       if (validKey(key)) {
@@ -198,8 +198,8 @@ export class MetricsLogger {
       return runtimeSummaries.concat(appSummaries)
     }
 
-    //////////////////////
+    // ////////////////////
     // real constructor
-    //////////////////////
+    // ////////////////////
   }
 }

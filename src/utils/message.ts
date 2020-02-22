@@ -11,7 +11,7 @@ export interface IOMessage {
 
 export const providerFromMessage = (message: IOMessage) => {
   const { provider } = parseIOMessageId(message)
-  return provider || 'unknown'
+  return provider ?? 'unknown'
 }
 
 export const parseIOMessageId = ({ id }: IOMessage) => {

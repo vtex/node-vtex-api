@@ -40,12 +40,12 @@ export const metricsMiddleware = ({ metrics, serverTiming, name }: MetricsOpts) 
     formatTimingName({
       hopNumber: 0,
       source: process.env.VTEX_APP_NAME!,
-      target: name || 'unknown',
+      target: name ?? 'unknown',
     })
   )
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     const start = process.hrtime()
-    let status: string = 'unknown'
+    let status = 'unknown'
     let errorCode: any
     let errorStatus: any
 
@@ -101,7 +101,7 @@ export const metricsMiddleware = ({ metrics, serverTiming, name }: MetricsOpts) 
         }
 
         if (ctx.config.retryCount) {
-          const retryCount = ctx.config.retryCount
+          const { retryCount } = ctx.config
 
           if (retryCount > 0) {
             extensions[`retry-${status}-${retryCount}`] = 1
@@ -128,13 +128,11 @@ export const metricsMiddleware = ({ metrics, serverTiming, name }: MetricsOpts) 
             headers: ctx.response && ctx.response.headers,
           })
         }
-      } else {
-        if (ctx.config.verbose) {
-          console.warn(`PROTIP: Please add a metric property to ${name} client request to get metrics in Splunk`, {
-            baseURL: ctx.config.baseURL,
-            url: ctx.config.url,
-          })
-        }
+      } else if (ctx.config.verbose) {
+        console.warn(`PROTIP: Please add a metric property to ${name} client request to get metrics in Splunk`, {
+          baseURL: ctx.config.baseURL,
+          url: ctx.config.url,
+        })
       }
       if (serverTiming) {
         // Timings in the client's perspective

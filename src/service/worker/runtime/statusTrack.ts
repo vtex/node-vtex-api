@@ -27,7 +27,6 @@ export const statusTrackHandler = async (ctx: ServiceContext) => {
     process.send?.(BROADCAST_STATUS_TRACK)
   }
   ctx.body = []
-  return
 }
 
 export const trackStatus = () => {

@@ -28,7 +28,7 @@ function fixConfig(axiosInstance: AxiosInstance, config: RequestConfig) {
 }
 
 const exponentialDelay = (initialBackoffDelay: number, exponentialBackoffCoefficient: number, retryNumber: number) => {
-  const delay = initialBackoffDelay * Math.pow(exponentialBackoffCoefficient, retryNumber - 1)
+  const delay = initialBackoffDelay * exponentialBackoffCoefficient ** (retryNumber - 1)
   const randomSum = delay * 0.2 * Math.random()
   return delay + randomSum
 }
@@ -46,7 +46,7 @@ http.interceptors.response.use(undefined, error => {
     return Promise.reject(error)
   }
   const { initialBackoffDelay = 200, exponentialBackoffCoefficient = 2, exponentialTimeoutCoefficient } = config
-  const retryCount = config.retryCount || 0
+  const retryCount = config.retryCount ?? 0
   const shouldRetry = isAbortedOrNetworkErrorOrRouterTimeout(error) && retryCount < config.retries
   if (shouldRetry) {
     config.retryCount = retryCount + 1

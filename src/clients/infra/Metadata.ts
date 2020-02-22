@@ -55,7 +55,7 @@ export class Metadata extends InfraClient {
   }
 
   public get = (bucket: string, key: string) => {
-    return this.http.get<any>(routes.MetadataKey(bucket, key), { metric: 'meta-get' })
+    return this.http.get(routes.MetadataKey(bucket, key), { metric: 'meta-get' })
   }
 
   public save = (bucket: string, key: string, data: any) => {

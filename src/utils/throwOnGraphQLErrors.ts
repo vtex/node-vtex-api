@@ -3,7 +3,7 @@ import { GraphQLResponse } from '../HttpClient/GraphQLClient'
 
 export function throwOnGraphQLErrors(message: string) {
   return function maybeGraphQLResponse(response: GraphQLResponse<any>) {
-    if (response && response.errors && response.errors.length > 0) {
+    if (response?.errors && response.errors.length > 0) {
       throw new CustomGraphQLError(message, response.errors)
     }
 

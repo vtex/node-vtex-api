@@ -26,7 +26,7 @@ export const shrinkTimings = (name: string) => name.replace(/graphql/g, 'gql').r
 type TimingFormat = ReturnType<typeof parseTimingName>
 
 export const formatTimingName = ({ hopNumber, target, source }: TimingFormat) =>
-  `${Number.isNaN(hopNumber as any) ? '' : hopNumber}.${source || ''}#${target || ''}`
+  `${Number.isNaN(hopNumber as any) ? '' : hopNumber}.${source ?? ''}#${target ?? ''}`
 
 export const parseTimingName = (timing: string | undefined) => {
   const [hopNumber, sourceAndTarget] = timing ? timing.split('.') : [null, null]

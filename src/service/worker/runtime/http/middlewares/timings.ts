@@ -14,8 +14,8 @@ const APP_ELAPSED_TIME_LOCATOR = shrinkTimings(
   })
 )
 
-const pid = chalk.magenta('[' + PID + ']')
-const formatDate = (date: Date) => chalk.dim('[' + date.toISOString().split('T')[1] + ']')
+const pid = chalk.magenta(`[${PID}]`)
+const formatDate = (date: Date) => chalk.dim(`[${date.toISOString().split('T')[1]}]`)
 const formatStatus = (status: number) =>
   status >= 500 ? chalk.red(status.toString()) : status >= 200 && status < 300 ? chalk.green(status.toString()) : status
 const formatMillis = (millis: number) =>
@@ -45,16 +45,16 @@ const log = <T extends IOClients, U extends RecorderState, V extends ParamsConte
 const logBillingInfo = ({ account, workspace, production, route: { id, type } }: IOContext, millis: number) =>
   JSON.stringify({
     __VTEX_IO_BILLING: 'true',
-    account: account,
+    account,
     app: APP.ID,
     handler: id,
     isLink: LINKED,
-    production: production,
+    production,
     routeType: type === 'public' ? 'public_route' : 'private_route',
     type: 'process-time',
     value: millis,
     vendor: APP.VENDOR,
-    workspace: workspace,
+    workspace,
   })
 
 export async function timings<T extends IOClients, U extends RecorderState, V extends ParamsContext>(

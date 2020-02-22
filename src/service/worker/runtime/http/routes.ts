@@ -19,7 +19,7 @@ export const formatPrivateRoute = ({
   account,
   workspace,
   path,
-}: PrivateRouteInfo) => `${protocol}://app.io.vtex.com/${vendor}.${name}/v${major}/${account}/${workspace}${path || ''}`
+}: PrivateRouteInfo) => `${protocol}://app.io.vtex.com/${vendor}.${name}/v${major}/${account}/${workspace}${path ?? ''}`
 
 export const formatPublicRoute = ({
   workspace,
@@ -47,7 +47,7 @@ const getPath = ({ public: publicRoute, path }: ServiceRoute) =>
       })
 
 export const logAvailableRoutes = (service: ServiceJSON) => {
-  const available = Object.values(service.routes || {}).reduce(
+  const available = Object.values(service.routes ?? {}).reduce(
     (acc, route) => `${acc}\n${getPath(route)}`,
     'Available service routes:'
   )

@@ -12,7 +12,7 @@ export class CatalogGraphQL extends AppGraphQLClient {
     super('vtex.catalog-graphql@1.x', ctx, {
       ...opts,
       headers: {
-        ...(opts && opts.headers),
+        ...opts?.headers,
         cookie: `VtexIdclientAutCookie=${ctx.authToken}`,
       },
     })

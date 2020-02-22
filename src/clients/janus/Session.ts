@@ -19,7 +19,7 @@ export class Session extends JanusClient {
       headers: {
         'set-cookie': [setCookies],
       },
-    } = await this.http.getRaw<any>(routes.base, {
+    } = await this.http.getRaw(routes.base, {
       headers: {
         'Content-Type': 'application/json',
         Cookie: `vtex_session=${token};`,

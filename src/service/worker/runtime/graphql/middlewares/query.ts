@@ -4,7 +4,7 @@ import { parse } from 'url'
 
 import { BODY_HASH } from '../../../../../constants'
 import { GraphQLServiceContext, Query } from '../typings'
-import { LRUCache } from './../../../../../caches/LRUCache'
+import { LRUCache } from '../../../../../caches/LRUCache'
 
 const documentStorage = new LRUCache<string, DocumentNode>({
   max: 500,
@@ -15,7 +15,7 @@ const queryFromUrl = (url: string) => {
   const { query: querystringObj } = parsedUrl
 
   // Having a BODY_HASH means the query is in the body
-  if (querystringObj && querystringObj[BODY_HASH]) {
+  if (querystringObj?.[BODY_HASH]) {
     return null
   }
 
@@ -47,7 +47,7 @@ export const extractQuery = (schema: GraphQLSchema) =>
     } else if (request.method.toUpperCase() === 'POST') {
       query = await json(req, { limit: '3mb' })
     } else {
-      query = queryFromUrl(request.url) || (await json(req, { limit: '3mb' }))
+      query = queryFromUrl(request.url) ?? (await json(req, { limit: '3mb' }))
     }
 
     // Assign the query before setting the query.document because if the

@@ -141,7 +141,7 @@ export class Registry extends InfraClient {
     )
   }
 
-  public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {
+  public resolveDependenciesWithManifest = (manifest: AppManifest, filter = '') => {
     const params = { filter }
     const metric = 'registry-resolve-deps'
     return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {

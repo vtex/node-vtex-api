@@ -16,7 +16,7 @@ export class IOClient {
       name: this.constructor.name,
       ...context,
       ...options,
-      metrics: options && options.metrics,
+      metrics: options?.metrics,
     })
   }
 }

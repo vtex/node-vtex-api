@@ -22,7 +22,7 @@ const parseValue = (value: string, options?: IFilterXSSOptions) => {
 
 export class IOSanitizedStringType extends GraphQLScalarType {
   constructor(options?: SanitizeOptions) {
-    const allowHTMLTags = options && options.allowHTMLTags
+    const allowHTMLTags = options?.allowHTMLTags
     const stripIgnoreTag = !options || options.stripIgnoreTag !== false
     const xssOptions: IFilterXSSOptions = {
       stripIgnoreTag,

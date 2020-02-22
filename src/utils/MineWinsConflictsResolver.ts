@@ -9,7 +9,7 @@ type Configuration = Record<string, ConfigurationData | ConfigurationData[] | ob
 type ConfigurationData = Record<string, object>
 
 export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
-  /***
+  /** *
    * Take mine and merge with master keys that have no conflict
    * We use base to decide wether a key was deleted or not
    */
@@ -45,10 +45,11 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
   protected mergeMineWins(base: Configuration, master: Configuration, mine: Configuration) {
     if (isArray(master)) {
       return this.mergeMineWinsArray((base || []) as ConfigurationData[], master, (mine || []) as ConfigurationData[])
-    } else if (isObject(master)) {
+    }
+    if (isObject(master)) {
       return this.mergeMineWinsObject((base || {}) as ConfigurationData, master, (mine || {}) as ConfigurationData)
     }
-    return mine ? mine : master
+    return mine || master
   }
 
   private parseConflict(conflict: VBaseConflict) {

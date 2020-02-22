@@ -20,7 +20,6 @@ export const memoizationMiddleware = ({ memoizedCache }: MemoizationOptions) => 
       const memoized = await memoizedCache.get(key)!
       ctx.memoizedHit = isMemoized
       ctx.response = memoized.response
-      return
     } else {
       const promise = new Promise<Memoized>(async (resolve, reject) => {
         try {

@@ -93,8 +93,8 @@ export class Apps extends InfraClient {
 
   constructor(context: IOContext, options?: InstanceOptions) {
     super('apps@0.x', context, options, true)
-    this.diskCache = options && options.diskCache
-    this.memoryCache = options && options.memoryCache
+    this.diskCache = options?.diskCache
+    this.memoryCache = options?.memoryCache
     this._routes = createRoutes(context)
   }
 
@@ -287,7 +287,7 @@ export class Apps extends InfraClient {
   public getAppSettings = (app: string) => {
     const inflightKey = inflightURL
     const metric = 'apps-get-settings'
-    return this.http.get<any>(this.routes.Settings(app), { inflightKey, metric })
+    return this.http.get(this.routes.Settings(app), { inflightKey, metric })
   }
 
   public getAllAppsSettings = (listAppsOptions: ListAppsOptions = {}): Promise<AppsSettings> => {
@@ -348,7 +348,7 @@ export class Apps extends InfraClient {
     }
   }
 
-  public getDependencies = (filter: string = '') => {
+  public getDependencies = (filter = '') => {
     const params = { filter }
     const metric = 'apps-get-deps'
     const inflightKey = inflightUrlWithQuery
@@ -363,14 +363,14 @@ export class Apps extends InfraClient {
     return this.http.patch(this.routes.Apps(), [{ name, version, registry }], { metric: 'apps-update-dep' })
   }
 
-  public resolveDependencies = (apps: string[], registries: string[], filter: string = '') => {
+  public resolveDependencies = (apps: string[], registries: string[], filter = '') => {
     const params = { apps, registries, filter }
     const metric = 'apps-resolve-deps'
     const inflightKey = inflightUrlWithQuery
     return this.http.get(this.routes.ResolveDependencies(), { params, metric, inflightKey })
   }
 
-  public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {
+  public resolveDependenciesWithManifest = (manifest: AppManifest, filter = '') => {
     const params = { filter }
     const metric = 'apps-resolve-deps-m'
     return this.http.post<Record<string, string[]>>(this.routes.ResolveDependenciesWithManifest(), manifest, {

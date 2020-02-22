@@ -2,7 +2,7 @@ import { GraphQLScalarType } from 'graphql'
 import { GraphQLUpload } from 'graphql-upload'
 import { keys, reduce } from 'ramda'
 
-import { SchemaMetaData } from '../../schema'
+import { SchemaMetaData } from '..'
 
 import { resolvers as ioUploadResolvers } from './ioUpload'
 import { resolvers as sanitizedStringResolvers } from './sanitizedString'
