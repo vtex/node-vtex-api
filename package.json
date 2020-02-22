@@ -9,8 +9,10 @@
     "watch": "tsc --watch",
     "build": "tsc",
     "gen": "typescript-json-schema tsconfig.json PublicAppManifest > gen/manifest.schema",
-    "lint": "tsc --noEmit && tslint --fix -c tslint.json './src/**/*.ts'",
     "test": "jest",
+    "lint": "eslint src/ --ext .ts --config .eslintrc",
+    "format": "prettier --config ./.prettierrc --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "format-lint": "yarn format && yarn lint",
     "prepublish": "run-s clean build gen",
     "prereleasy": "yarn prepublish"
   },
