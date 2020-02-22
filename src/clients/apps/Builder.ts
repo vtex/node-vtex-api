@@ -22,116 +22,144 @@ const routes = {
 export class Builder extends AppClient {
   private stickyHost!: string
 
-  constructor (ioContext: IOContext, opts?: InstanceOptions) {
+  constructor(ioContext: IOContext, opts?: InstanceOptions) {
     super('vtex.builder-hub@0.x', ioContext, opts)
   }
 
   public availability = async (app: string, hintIndex: number) => {
-    const stickyHint = hintIndex === undefined || hintIndex === null ?
-      `request:${this.context.account}:${this.context.workspace}:${app}` :
-      `request:${this.context.account}:${this.context.workspace}:${app}:${hintIndex}`
+    const stickyHint =
+      hintIndex === undefined || hintIndex === null
+        ? `request:${this.context.account}:${this.context.workspace}:${app}`
+        : `request:${this.context.account}:${this.context.workspace}:${app}:${hintIndex}`
     const headers = {
       'Content-Type': 'application/json',
       'x-vtex-sticky-host': stickyHint,
     }
     const metric = 'bh-availability'
-    const {data: {availability},
-           headers: {'x-vtex-sticky-host': host},
-          } = await this.http.getRaw(routes.Availability(app), {headers, metric, cacheable: CacheType.None})
-    const {hostname, score} = availability as AvailabilityResponse
-    return {host, hostname, score}
+    const {
+      data: { availability },
+      headers: { 'x-vtex-sticky-host': host },
+    } = await this.http.getRaw(routes.Availability(app), { headers, metric, cacheable: CacheType.None })
+    const { hostname, score } = availability as AvailabilityResponse
+    return { host, hostname, score }
   }
 
   public clean = (app: string) => {
     const headers = {
       'Content-Type': 'application/json',
-      ...this.stickyHost && {'x-vtex-sticky-host': this.stickyHost},
+      ...(this.stickyHost && { 'x-vtex-sticky-host': this.stickyHost }),
     }
     const metric = 'bh-clean'
-    return this.http.post<BuildResult>(routes.Clean(app), {headers, metric})
+    return this.http.post<BuildResult>(routes.Clean(app), { headers, metric })
   }
 
   public getPinnedDependencies = () => {
     return this.http.get(routes.PinnedDependencies())
   }
 
-  public linkApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}) => {
+  public linkApp = (
+    app: string,
+    files: File[],
+    zipOptions: ZipOptions = { sticky: true },
+    params: RequestParams = {}
+  ) => {
     return this.zipAndSend(routes.Link(app), app, files, zipOptions, params)
   }
 
-  public publishApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}) => {
+  public publishApp = (
+    app: string,
+    files: File[],
+    zipOptions: ZipOptions = { sticky: true },
+    params: RequestParams = {}
+  ) => {
     return this.zipAndSend(routes.Publish(app), app, files, zipOptions, params)
   }
 
   public relinkApp = (app: string, changes: Change[], params: RequestParams = {}) => {
     const headers = {
       'Content-Type': 'application/json',
-      ...this.stickyHost && {'x-vtex-sticky-host': this.stickyHost},
+      ...(this.stickyHost && { 'x-vtex-sticky-host': this.stickyHost }),
     }
     const metric = 'bh-relink'
-    return this.http.put<BuildResult>(routes.Relink(app), changes, {headers, metric, params})
+    return this.http.put<BuildResult>(routes.Relink(app), changes, { headers, metric, params })
   }
 
-  public testApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}) => {
+  public testApp = (
+    app: string,
+    files: File[],
+    zipOptions: ZipOptions = { sticky: true },
+    params: RequestParams = {}
+  ) => {
     return this.zipAndSend(routes.Test(app), app, files, zipOptions, params)
   }
 
-  private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky, stickyHint, zlib}: ZipOptions = {}, requestParams: RequestParams = {}) => {
+  private zipAndSend = async (
+    route: string,
+    app: string,
+    files: File[],
+    { tag, sticky, stickyHint, zlib }: ZipOptions = {},
+    requestParams: RequestParams = {}
+  ) => {
     if (!(files[0] && files[0].path && files[0].content)) {
-      throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
+      throw new Error(
+        'Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.'
+      )
     }
-    const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
+    const indexOfManifest = files.findIndex(({ path }) => path === 'manifest.json')
     if (indexOfManifest === -1) {
       throw new Error('No manifest.json file found in files.')
     }
-    const zip = archiver('zip', {zlib})
+    const zip = archiver('zip', { zlib })
     // Throw stream errors so they reject the promise chain.
-    zip.on('error', (e) => {
+    zip.on('error', e => {
       throw e
     })
     const hint = stickyHint || `request:${this.context.account}:${this.context.workspace}:${app}`
     const metric = 'bh-zip-send'
-    const params = tag ? {...requestParams, tag} : requestParams
+    const params = tag ? { ...requestParams, tag } : requestParams
     const request = this.http.postRaw<BuildResult>(route, zip, {
       headers: {
         'Content-Type': 'application/octet-stream',
-        ...sticky && {'x-vtex-sticky-host': this.stickyHost || hint},
+        ...(sticky && { 'x-vtex-sticky-host': this.stickyHost || hint }),
       },
       metric,
       params,
     })
 
-    files.forEach(({content, path}) => zip.append(content, {name: path}))
+    files.forEach(({ content, path }) => zip.append(content, { name: path }))
     const finalize = zip.finalize()
 
     const [response] = await Promise.all([request, finalize])
-    const {data, headers: {'x-vtex-sticky-host': host}} = response
+    const {
+      data,
+      headers: { 'x-vtex-sticky-host': host },
+    } = response
     this.stickyHost = host
     return data
   }
 }
 
 interface RequestParams {
-  tsErrorsAsWarnings?: boolean,
-  skipSemVerEnsure?: boolean,
+  tsErrorsAsWarnings?: boolean
+  skipSemVerEnsure?: boolean
 }
 
 interface ZipOptions {
-  sticky?: boolean,
-  stickyHint?: string,
-  tag?: string,
-  zlib?: ZlibOptions,
+  sticky?: boolean
+  stickyHint?: string
+  tag?: string
+  zlib?: ZlibOptions
 }
 
 export interface BuildResult {
   availability?: AvailabilityResponse
-  code?: string,
-  message?: any,
-  timeNano?: number,
+  code?: string
+  message?: any
+  timeNano?: number
 }
 
 export interface AvailabilityResponse {
-  host: string | undefined,
-  hostname: string | undefined,
-  score: number,
+  host: string | undefined
+  hostname: string | undefined
+  score: number
 }

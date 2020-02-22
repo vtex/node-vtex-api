@@ -56,7 +56,9 @@ http.interceptors.response.use(undefined, error => {
     // with circular structures: https://github.com/mzabriskie/axios/issues/370
     fixConfig(http, config)
 
-    config.timeout = exponentialTimeoutCoefficient ? (config.timeout as number) * exponentialTimeoutCoefficient : config.timeout
+    config.timeout = exponentialTimeoutCoefficient
+      ? (config.timeout as number) * exponentialTimeoutCoefficient
+      : config.timeout
     config.transformRequest = [data => data]
 
     return new Promise(resolve => setTimeout(() => resolve(http(config)), delay))
@@ -80,7 +82,17 @@ export interface DefaultMiddlewareArgs {
   exponentialBackoffCoefficient?: number
 }
 
-export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient }: DefaultMiddlewareArgs) => {
+export const defaultsMiddleware = ({
+  baseURL,
+  rawHeaders,
+  params,
+  timeout,
+  retries,
+  verbose,
+  exponentialTimeoutCoefficient,
+  initialBackoffDelay,
+  exponentialBackoffCoefficient,
+}: DefaultMiddlewareArgs) => {
   const countByMetric: Record<string, number> = {}
   const headers = renameBy(toLower, rawHeaders)
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
@@ -92,7 +104,7 @@ export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retri
       maxRedirects: 0,
       retries,
       timeout,
-      validateStatus: status => (status >= 200 && status < 300),
+      validateStatus: status => status >= 200 && status < 300,
       verbose,
       ...ctx.config,
       headers: {

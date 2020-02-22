@@ -2,12 +2,11 @@ import { any, map, slice } from 'ramda'
 import { CacheLayer } from './CacheLayer'
 import { FetchResult, MultilayerStats } from './typings'
 
-export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
-
+export class MultilayeredCache<K, V> implements CacheLayer<K, V> {
   private hits = 0
   private total = 0
 
-  constructor (private caches: Array<CacheLayer<K, V>>) {}
+  constructor(private caches: Array<CacheLayer<K, V>>) {}
 
   public get = async (key: K, fetcher?: () => Promise<FetchResult<V>>): Promise<V | void> => {
     let value: V | void
@@ -44,7 +43,7 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
     return any(item => item, hasList)
   }
 
-  public getStats = (name='multilayred-cache'): MultilayerStats => {
+  public getStats = (name = 'multilayred-cache'): MultilayerStats => {
     const multilayerStats = {
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
       hits: this.hits,
@@ -55,7 +54,7 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
     return multilayerStats
   }
 
-  private findIndex = async <T> (func: (item: T) => Promise<boolean>, array: T[]): Promise<number> => {
+  private findIndex = async <T>(func: (item: T) => Promise<boolean>, array: T[]): Promise<number> => {
     this.total += 1
     for (let index = 0; index < array.length; index++) {
       const hasKey = await func(array[index])
@@ -67,7 +66,7 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
     return -1
   }
 
-  private resetCounters () {
+  private resetCounters() {
     this.hits = 0
     this.total = 0
   }

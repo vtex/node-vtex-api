@@ -41,7 +41,7 @@ const filterAndSortQuery = (query?: Record<string, string>) => {
 
 const routes = {
   base: '/api/segments',
-  segments: (token?: string | null) => token ? `${routes.base}/${token}` : routes.base,
+  segments: (token?: string | null) => (token ? `${routes.base}/${token}` : routes.base),
 }
 
 export class Segment extends JanusClient {
@@ -50,16 +50,14 @@ export class Segment extends JanusClient {
    *
    * @memberof Segment
    */
-  public getSegment = () =>
-    this.rawSegment(this.context!.segmentToken).then(prop('data'))
+  public getSegment = () => this.rawSegment(this.context!.segmentToken).then(prop('data'))
 
   /**
    * Get the segment data from this specific segment token
    *
    * @memberof Segment
    */
-  public getSegmentByToken = (token: string | null) =>
-    this.rawSegment(token).then(prop('data'))
+  public getSegmentByToken = (token: string | null) => this.rawSegment(token).then(prop('data'))
 
   public getOrCreateSegment = async (query?: Record<string, string>, token?: string) => {
     const {
@@ -80,7 +78,7 @@ export class Segment extends JanusClient {
     const { product } = this.context
     const filteredQuery = filterAndSortQuery(query)
 
-    return this.http.getRaw<SegmentData>(routes.segments(token), ({
+    return this.http.getRaw<SegmentData>(routes.segments(token), {
       forceMaxAge: SEGMENT_MAX_AGE_S,
       headers: {
         'Content-Type': 'application/json',
@@ -92,6 +90,6 @@ export class Segment extends JanusClient {
         ...filteredQuery,
         session_path: product || '',
       },
-    }))
+    })
   }
 }

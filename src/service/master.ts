@@ -4,11 +4,7 @@ import { constants } from 'os'
 import { INSPECT_DEBUGGER_PORT, LINKED, UP_SIGNAL } from '../constants'
 import { isLog, logOnceToDevConsole } from './logger'
 import { logger } from './worker/listeners'
-import {
-  broadcastStatusTrack,
-  isStatusTrackBroadcast,
-  trackStatus,
-} from './worker/runtime/statusTrack'
+import { broadcastStatusTrack, isStatusTrackBroadcast, trackStatus } from './worker/runtime/statusTrack'
 import { ServiceJSON } from './worker/runtime/typings'
 
 let handledSignal: NodeJS.Signals | undefined
@@ -16,12 +12,10 @@ let handledSignal: NodeJS.Signals | undefined
 const onMessage = (worker: Worker, message: any) => {
   if (isLog(message)) {
     logOnceToDevConsole(message.message, message.level)
-  }
-  else if (isStatusTrackBroadcast(message)) {
+  } else if (isStatusTrackBroadcast(message)) {
     trackStatus()
     broadcastStatusTrack()
-  }
-  else {
+  } else {
     logger.warn({
       content: message,
       message: 'Worker sent message',
@@ -60,7 +54,7 @@ const handleSignal: NodeJS.SignalsListener = signal => {
   // Log the Master Process received a signal
   const message = `Master process ${process.pid} received signal ${signal}`
   console.warn(message)
-  logger.warn({message, signal})
+  logger.warn({ message, signal })
 
   // For each worker, let's try to kill it gracefully
   Object.values(cluster.workers).forEach(worker => worker?.kill(signal))
@@ -79,11 +73,11 @@ export const startMaster = (service: ServiceJSON) => {
 
   // Setup dubugger
   if (LINKED) {
-    cluster.setupMaster({inspectPort: INSPECT_DEBUGGER_PORT})
+    cluster.setupMaster({ inspectPort: INSPECT_DEBUGGER_PORT })
   }
 
   console.log(`Spawning ${numWorkers} workers`)
-  for(let i=0; i < numWorkers; i++) {
+  for (let i = 0; i < numWorkers; i++) {
     cluster.fork()
   }
 

@@ -5,7 +5,7 @@ import { MetricsLogger } from '../../../logger/metricsLogger'
 import { ServiceContext } from '../typings'
 import { Recorder } from '../utils/recorder'
 
-export async function recorderMiddleware (ctx: ServiceContext, next: () => Promise<void>) {
+export async function recorderMiddleware(ctx: ServiceContext, next: () => Promise<void>) {
   const recorder = new Recorder()
   ctx.state.recorder = recorder
   await next()

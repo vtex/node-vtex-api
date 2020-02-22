@@ -8,8 +8,13 @@ import {
 import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
 import { prepareHandlerCtx } from '../../utils/context'
 
-export async function eventContextMiddleware <T extends IOClients, U extends RecorderState, V extends ParamsContext>(ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
-  const { request: { header } } = ctx
+export async function eventContextMiddleware<T extends IOClients, U extends RecorderState, V extends ParamsContext>(
+  ctx: ServiceContext<T, U, V>,
+  next: () => Promise<void>
+) {
+  const {
+    request: { header },
+  } = ctx
   ctx.vtex = {
     ...prepareHandlerCtx(header),
     eventInfo: {

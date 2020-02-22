@@ -5,11 +5,12 @@ const PRIVATE_ROUTE_REGEX = /_v\/graphql\/private\/v*/
 
 const linked = !!process.env.VTEX_APP_LINK
 
-const isPrivateRoute = ({request: {headers}}: GraphQLServiceContext) => PRIVATE_ROUTE_REGEX.test(headers['x-forwarded-path'] || '')
+const isPrivateRoute = ({ request: { headers } }: GraphQLServiceContext) =>
+  PRIVATE_ROUTE_REGEX.test(headers['x-forwarded-path'] || '')
 
 const publicRegExp = (endpoint: string) => new RegExp(`.*${endpoint.replace('.', '\\.')}.*`)
 
-const isPublicEndpoint = ({request: {headers}}: GraphQLServiceContext) => {
+const isPublicEndpoint = ({ request: { headers } }: GraphQLServiceContext) => {
   const host = headers['x-forwarded-host']
 
   if (headers.origin || !host) {
@@ -22,16 +23,9 @@ const isPublicEndpoint = ({request: {headers}}: GraphQLServiceContext) => {
 export const cacheControlHTTP = (ctx: GraphQLServiceContext) => {
   const {
     graphql: {
-      cacheControl: {
-        maxAge,
-        scope: scopeHint,
-        noCache: noCacheHint,
-        noStore: noStoreHint,
-      },
+      cacheControl: { maxAge, scope: scopeHint, noCache: noCacheHint, noStore: noStoreHint },
     },
-    vtex: {
-      production,
-    },
+    vtex: { production },
   } = ctx
 
   const finalHeader = []

@@ -3,14 +3,8 @@ import { CacheControl, cacheControlDirectiveTypeDefs } from './CacheControl'
 import { Deprecated, deprecatedDirectiveTypeDefs } from './Deprecated'
 import { SanitizeDirective, sanitizeDirectiveTypeDefs } from './Sanitize'
 import { SettingsDirective, settingsDirectiveTypeDefs } from './Settings'
-import {
-  SmartCacheDirective,
-  smartCacheDirectiveTypeDefs,
-} from './SmartCacheDirective'
-import {
-  TranslatableV2,
-  translatableV2DirectiveTypeDefs,
-} from './TranslatableV2'
+import { SmartCacheDirective, smartCacheDirectiveTypeDefs } from './SmartCacheDirective'
+import { TranslatableV2, translatableV2DirectiveTypeDefs } from './TranslatableV2'
 
 export { parseTranslatableStringV2, formatTranslatableStringV2 } from './TranslatableV2'
 

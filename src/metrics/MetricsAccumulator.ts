@@ -2,15 +2,13 @@ import { assoc, flatten, map, mapObjIndexed, values } from 'ramda'
 import { mean, median, percentile } from 'stats-lite'
 
 import { httpAgentStats } from '../HttpClient/middlewares/request'
-import {
-  incomingRequestStats,
-} from '../service/worker/runtime/http/middlewares/requestStats'
+import { incomingRequestStats } from '../service/worker/runtime/http/middlewares/requestStats'
 import { EnvMetric, NamedMetric } from '../service/worker/runtime/statusTrack'
 import { hrToMillis } from '../utils/time'
 
 export interface Metric {
   name: string
-  [key: string]: number | string | null,
+  [key: string]: number | string | null
 }
 
 // Production pods never handle development workspaces and vice-versa.
@@ -29,13 +27,13 @@ type AggregateMetric = EnvMetric & Aggregate
 
 interface GetStats {
   getStats(): {
-    [key: string]: number | boolean | string | undefined,
+    [key: string]: number | boolean | string | undefined
   }
 }
 
 let lastCpu: NodeJS.CpuUsage = process.cpuUsage()
 
-function cpuUsage () {
+function cpuUsage() {
   const diff = process.cpuUsage(lastCpu)
   lastCpu = {
     system: lastCpu.system + diff.system,
@@ -44,13 +42,11 @@ function cpuUsage () {
   return diff
 }
 
-function getIncomingRequestStats () {
+function getIncomingRequestStats() {
   const stats = incomingRequestStats.get()
   incomingRequestStats.clear()
   return stats
 }
-
-
 
 export class MetricsAccumulator {
   private metricsMillis: Record<string, number[]>
@@ -141,10 +137,7 @@ export class MetricsAccumulator {
   })
 
   private flushMetrics = (): EnvMetric[] => {
-    const aggregateMetrics: EnvMetric[] = values(mapObjIndexed(
-      this.metricToAggregate,
-      this.metricsMillis
-    ))
+    const aggregateMetrics: EnvMetric[] = values(mapObjIndexed(this.metricToAggregate, this.metricsMillis))
 
     const systemMetrics: EnvMetric[] = [
       {
@@ -172,10 +165,7 @@ export class MetricsAccumulator {
     const onFlushMetrics = flatten(map(getMetric => getMetric(), this.onFlushMetrics)) as NamedMetric[]
     const envFlushMetric = map(assoc('production', production), onFlushMetrics) as EnvMetric[]
 
-    const cacheMetrics = values(mapObjIndexed(
-      this.cacheToMetric,
-      this.cacheMap
-    ))
+    const cacheMetrics = values(mapObjIndexed(this.cacheToMetric, this.cacheMap))
 
     return [...systemMetrics, ...aggregateMetrics, ...envFlushMetric, ...cacheMetrics]
   }

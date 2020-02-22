@@ -3,18 +3,14 @@ import { compose, isNil, mapObjIndexed, reject, values } from 'ramda'
 import { median, percentile, sum } from 'stats-lite'
 
 import { PRODUCTION } from '../../constants'
-import {
-  cpuSnapshot,
-  Snapshot,
-  snapshotDiff,
-} from '../worker/runtime/utils/diff'
+import { cpuSnapshot, Snapshot, snapshotDiff } from '../worker/runtime/utils/diff'
 
 const runtimeBaseDefaultMetricNames = ['routeStats']
 const runtimeNodeDefaultMetricNames = {
   cpuUsage: 'cpuUsage',
   memoryUsage: 'memoryUsage',
 }
-const invalidMetricNames =runtimeBaseDefaultMetricNames.concat(Object.values(runtimeNodeDefaultMetricNames))
+const invalidMetricNames = runtimeBaseDefaultMetricNames.concat(Object.values(runtimeNodeDefaultMetricNames))
 
 interface ProcessEnv {
   appName: string
@@ -73,12 +69,7 @@ export class MetricsLogger {
     // private methods definitions
     //////////////////////
 
-
-    const summaries = compose<any, any, any, any>(
-      reject(isNil),
-      values,
-      mapObjIndexed(getSummary)
-    )
+    const summaries = compose<any, any, any, any>(reject(isNil), values, mapObjIndexed(getSummary))
 
     function getDefaultStoredashProperties() {
       return {
@@ -87,7 +78,7 @@ export class MetricsLogger {
         Min: 0,
         Name: 'runtime',
         Sum: 0,
-        Timestamp: (new Date()).getTime(),
+        Timestamp: new Date().getTime(),
         Unit: '',
       }
     }
@@ -109,7 +100,7 @@ export class MetricsLogger {
       const metric = {
         Data: {
           key: {
-            name:runtimeNodeDefaultMetricNames.cpuUsage,
+            name: runtimeNodeDefaultMetricNames.cpuUsage,
           },
           processEnv: getProcessEnv(),
           summary: cpuDiff,
@@ -123,7 +114,7 @@ export class MetricsLogger {
       const metric = {
         Data: {
           key: {
-            name:runtimeNodeDefaultMetricNames.memoryUsage,
+            name: runtimeNodeDefaultMetricNames.memoryUsage,
           },
           processEnv: getProcessEnv(),
           summary: process.memoryUsage(),
@@ -174,7 +165,7 @@ export class MetricsLogger {
       return stringify(key)
     }
 
-    function getNumericSummary (vals: number[]): NumericSummary {
+    function getNumericSummary(vals: number[]): NumericSummary {
       return {
         count: vals.length,
         max: Math.max(...vals),

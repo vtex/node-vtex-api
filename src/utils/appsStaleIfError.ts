@@ -14,7 +14,13 @@ const hashMD5 = (text: string) =>
     .update(text)
     .digest('hex')
 
-export const updateMetaInfoCache = async (cacheStorage: CacheLayer<string, AppMetaInfo[]>, account: string, workspace: string, dependencies: AppMetaInfo[], logger: Logger) => {
+export const updateMetaInfoCache = async (
+  cacheStorage: CacheLayer<string, AppMetaInfo[]>,
+  account: string,
+  workspace: string,
+  dependencies: AppMetaInfo[],
+  logger: Logger
+) => {
   if (workspace !== 'master') {
     return
   }
@@ -22,12 +28,12 @@ export const updateMetaInfoCache = async (cacheStorage: CacheLayer<string, AppMe
   const hash = hashMD5(dependencies.toString())
 
   try {
-    const storedDependencies = await cacheStorage.get(key) || ''
+    const storedDependencies = (await cacheStorage.get(key)) || ''
     if (hash !== hashMD5(storedDependencies.toString())) {
       await cacheStorage.set(key, dependencies)
     }
   } catch (error) {
-    logger.error({error, message: 'Apps disk cache update failed'})
+    logger.error({ error, message: 'Apps disk cache update failed' })
   }
   return
 }
@@ -49,7 +55,12 @@ export const saveVersion = async (app: string, cacheStorage: CacheLayer<string, 
   }
 }
 
-export const getFallbackFile = async (app: string, path: string, cacheStorage: CacheLayer<string, string>, apps: Apps): Promise<{data: Buffer, headers: any }> => {
+export const getFallbackFile = async (
+  app: string,
+  path: string,
+  cacheStorage: CacheLayer<string, string>,
+  apps: Apps
+): Promise<{ data: Buffer; headers: any }> => {
   const [appName, version] = app.split('@')
   const major = head(version.split('.')) || ''
   const fallbackKey = getFallbackKey(appName, major)
@@ -61,5 +72,3 @@ export const getFallbackFile = async (app: string, path: string, cacheStorage: C
   }
   throw Error('Fallback version was not found')
 }
-
-

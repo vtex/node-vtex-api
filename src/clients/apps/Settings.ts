@@ -17,7 +17,7 @@ export interface SettingsParams {
 }
 
 export class Settings extends AppClient {
-  constructor (context: IOContext, options?: InstanceOptions) {
+  constructor(context: IOContext, options?: InstanceOptions) {
     super('vtex.settings-server@0.x', context, options)
   }
 
@@ -32,9 +32,7 @@ export class Settings extends AppClient {
   public async getSettings(dependencies: AppMetaInfo[], appAtMajor: string, params?: SettingsParams) {
     const filtered = this.getFilteredDependencies(appAtMajor, dependencies)
     // Settings server exposes a smartCache-enabled route for when the workspace contains links.
-    const lastSegment = containsLinks(filtered)
-      ? LINKED_ROUTE
-      : this.getDependenciesHash(filtered)
+    const lastSegment = containsLinks(filtered) ? LINKED_ROUTE : this.getDependenciesHash(filtered)
 
     return this.http.get(`/settings/${appAtMajor}/${lastSegment}`, {
       inflightKey: inflightUrlWithQuery,

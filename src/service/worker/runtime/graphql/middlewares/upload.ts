@@ -8,10 +8,7 @@ const graphqlUpload = graphqlUploadKoa({
   maxFiles: 10,
 })
 
-function graphqlUploadKoaMiddleware(
-  ctx: GraphQLServiceContext,
-  next: () => Promise<void>
-): Promise<void> {
+function graphqlUploadKoaMiddleware(ctx: GraphQLServiceContext, next: () => Promise<void>): Promise<void> {
   return graphqlUpload(ctx as any, next)
 }
 

@@ -9,18 +9,12 @@ interface CacheControlArgs {
 }
 
 export class CacheControl extends SchemaDirectiveVisitor {
-  public visitFieldDefinition (field: GraphQLField<any, GraphQLServiceContext>) {
+  public visitFieldDefinition(field: GraphQLField<any, GraphQLServiceContext>) {
     const { resolve = defaultFieldResolver } = field
-    const {
-      maxAge: directiveMaxAge,
-      scope: directiveScope,
-    } = this.args as CacheControlArgs
+    const { maxAge: directiveMaxAge, scope: directiveScope } = this.args as CacheControlArgs
 
     field.resolve = (root, args, ctx, info) => {
-      const {
-        maxAge,
-        scope,
-      } = ctx.graphql.cacheControl
+      const { maxAge, scope } = ctx.graphql.cacheControl
 
       if (Number.isInteger(directiveMaxAge) && directiveMaxAge < maxAge) {
         ctx.graphql.cacheControl.maxAge = directiveMaxAge

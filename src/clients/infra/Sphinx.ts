@@ -3,14 +3,18 @@ import { IOContext } from '../../service/worker/runtime/typings'
 import { InfraClient } from './InfraClient'
 
 export class Sphinx extends InfraClient {
-  constructor (ioContext: IOContext, opts?: InstanceOptions) {
+  constructor(ioContext: IOContext, opts?: InstanceOptions) {
     super('sphinx@0.x', ioContext, opts, false)
   }
 
   public validatePolicies = (policies: PolicyRequest[]) => {
-    return this.http.post<void>('/policies/validate', { policies }, {
-      metric: 'sphinx-validate-policy',
-    })
+    return this.http.post<void>(
+      '/policies/validate',
+      { policies },
+      {
+        metric: 'sphinx-validate-policy',
+      }
+    )
   }
 
   public isAdmin = (email: string) => {

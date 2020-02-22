@@ -1,10 +1,7 @@
 import { formatApolloErrors } from 'apollo-server-errors'
 import { uniqBy } from 'ramda'
 
-import {
-  cancelledErrorCode,
-  cancelledRequestStatus,
-} from '../../../../../errors/RequestCancelledError'
+import { cancelledErrorCode, cancelledRequestStatus } from '../../../../../errors/RequestCancelledError'
 import { LogLevel } from '../../../../logger'
 import { IOContext } from '../../typings'
 import { GraphQLServiceContext } from '../typings'
@@ -13,12 +10,14 @@ import { generatePathName } from '../utils/pathname'
 
 const TWO_SECONDS_S = 2
 
-const uniqErrorsByPath = (errors: any[]) => uniqBy(
-  e => e.extensions && e.extensions.exception && e.extensions.exception.request
-    ? e.extensions.exception.request.path
-    : e,
-  errors
-)
+const uniqErrorsByPath = (errors: any[]) =>
+  uniqBy(
+    e =>
+      e.extensions && e.extensions.exception && e.extensions.exception.request
+        ? e.extensions.exception.request.path
+        : e,
+    errors
+  )
 
 const createLogErrorToSplunk = (vtex: IOContext) => (err: any) => {
   const {
@@ -49,7 +48,7 @@ const createLogErrorToSplunk = (vtex: IOContext) => (err: any) => {
   logger.log(log, level)
 }
 
-export async function graphqlError (ctx: GraphQLServiceContext, next: () => Promise<void>) {
+export async function graphqlError(ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {
     vtex: { production },
   } = ctx
@@ -65,25 +64,21 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
       const formatter = createFormatError(ctx)
       graphQLErrors = formatApolloErrors(response.errors, { formatter })
     }
-  }
-  catch (e) {
+  } catch (e) {
     if (e.code === cancelledErrorCode) {
       ctx.status = cancelledRequestStatus
       return
     }
 
     const formatError = createFormatError(ctx)
-    graphQLErrors = Array.isArray(e)
-      ? e.map(formatError)
-      : [formatError(e)]
+    graphQLErrors = Array.isArray(e) ? e.map(formatError) : [formatError(e)]
 
     // Add response
     ctx.status = e.statusCode || 500
     if (e.headers) {
       ctx.set(e.headers)
     }
-  }
-  finally {
+  } finally {
     if (graphQLErrors) {
       ctx.graphql.status = 'error'
 
@@ -107,7 +102,6 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
         ...ctx.graphql.graphqlResponse,
         errors: uniqueErrors,
       }
-
     }
   }
 }

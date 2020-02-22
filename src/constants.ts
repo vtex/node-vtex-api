@@ -37,9 +37,9 @@ export const BODY_HASH = '__graphqlBodyHash'
 export const UP_SIGNAL = 'UP'
 
 export const MAX_AGE = {
-  LONG  : 86400,
+  LONG: 86400,
   MEDIUM: 3600,
-  SHORT : 120,
+  SHORT: 120,
 }
 
 export const HTTP_SERVER_PORT = 5050

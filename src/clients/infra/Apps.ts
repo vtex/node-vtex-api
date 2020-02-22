@@ -6,36 +6,23 @@ import { extract } from 'tar-fs'
 import { createGunzip, ZlibOptions } from 'zlib'
 
 import { CacheLayer } from '../..'
-import {
-  CacheType,
-  inflightURL,
-  inflightUrlWithQuery,
-  InstanceOptions,
-} from '../../HttpClient'
-import {
-  IgnoreNotFoundRequestConfig,
-} from '../../HttpClient/middlewares/notFound'
+import { CacheType, inflightURL, inflightUrlWithQuery, InstanceOptions } from '../../HttpClient'
+import { IgnoreNotFoundRequestConfig } from '../../HttpClient/middlewares/notFound'
 import { AppBundleLinked, AppFilesList, AppManifest } from '../../responses'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { parseAppId, removeVersionFromAppId } from '../../utils'
-import {
-  getFallbackFile,
-  getMetaInfoKey,
-  saveVersion,
-  updateMetaInfoCache,
-} from '../../utils/appsStaleIfError'
+import { getFallbackFile, getMetaInfoKey, saveVersion, updateMetaInfoCache } from '../../utils/appsStaleIfError'
 import { InfraClient } from './InfraClient'
 
-const createRoutes = ({account, workspace}: IOContext) => {
+const createRoutes = ({ account, workspace }: IOContext) => {
   const routes = {
     Acknowledge: (app: string, service: string) => `${routes.App(app)}/acknowledge/${service}`,
     App: (app: string) => `${routes.Apps()}/${app}`,
     AppBundle: (locator: AppLocator, path: string) => `${routes.AppOrRegistry(locator)}/bundle/${path}`,
-    AppOrRegistry: ({name, version, build}: AppLocator) => build
-      ? `${routes.Apps()}/${name}@${version}+${build}`
-      : `${routes.Registry()}/${name}/${version}`,
+    AppOrRegistry: ({ name, version, build }: AppLocator) =>
+      build ? `${routes.Apps()}/${name}@${version}+${build}` : `${routes.Registry()}/${name}/${version}`,
     Apps: () => `${routes.Workspace}/apps`,
-    Dependencies:() => `${routes.Workspace}/dependencies`,
+    Dependencies: () => `${routes.Workspace}/dependencies`,
     File: (locator: AppLocator, path: string) => `${routes.Files(locator)}/${path}`,
     FileFromApps: (app: string, path: string) => `${routes.Workspace}/apps/${app}/files/${path}`,
     Files: (locator: AppLocator) => `${routes.AppOrRegistry(locator)}/files`,
@@ -53,7 +40,7 @@ const createRoutes = ({account, workspace}: IOContext) => {
   return routes
 }
 
-const getVendorAndName = ({id}: {id: string}) => removeVersionFromAppId(id)
+const getVendorAndName = ({ id }: { id: string }) => removeVersionFromAppId(id)
 const notFound = (e: any) => {
   if (e.response && e.response.status === 404) {
     return {}
@@ -64,7 +51,7 @@ const notFound = (e: any) => {
 const zipObj = (keys: string[], values: any[]) => {
   let idx = 0
   const len = Math.min(keys.length, values.length)
-  const out: {[key: string]: any} = {}
+  const out: { [key: string]: any } = {}
   while (idx < len) {
     out[keys[idx]] = values[idx]
     idx += 1
@@ -100,7 +87,7 @@ export class Apps extends InfraClient {
   private diskCache: CacheLayer<string, any> | undefined
   private memoryCache: CacheLayer<string, any> | undefined
 
-  private get routes () {
+  private get routes() {
     return this._routes
   }
 
@@ -128,7 +115,9 @@ export class Apps extends InfraClient {
 
   public link = async (app: string, files: Change[], { zlib }: ZipOptions = {}) => {
     if (!(files[0] && files[0].path)) {
-      throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
+      throw new Error(
+        'Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.'
+      )
     }
 
     const emptyChanges = files.filter(file => !file.content)
@@ -142,7 +131,7 @@ export class Apps extends InfraClient {
     }
     const zip = archiver('zip', { zlib })
     // Throw stream errors so they reject the promise chain.
-    zip.on('error', (e) => {
+    zip.on('error', e => {
       throw e
     })
     const request = this.http.put<AppBundleLinked>(this.routes.Link(app), zip, {
@@ -165,7 +154,9 @@ export class Apps extends InfraClient {
 
   public patch = async (app: string, changes: Change[], { zlib }: ZipOptions = {}) => {
     if (!(changes[0] && changes[0].path)) {
-      throw new Error('Argument changes must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
+      throw new Error(
+        'Argument changes must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.'
+      )
     }
 
     const files = changes.filter(change => !!change.content)
@@ -176,7 +167,7 @@ export class Apps extends InfraClient {
 
     const zip = archiver('zip', { zlib })
     // Throw stream errors so they reject the promise chain.
-    zip.on('error', (e) => {
+    zip.on('error', e => {
       throw e
     })
     const request = this.http.patch(this.routes.Link(app), zip, {
@@ -201,12 +192,12 @@ export class Apps extends InfraClient {
   }
 
   public saveAppSettings = (app: string, settings: any) => {
-    const headers = {'Content-Type': 'application/json'}
+    const headers = { 'Content-Type': 'application/json' }
     const metric = 'apps-save'
-    return this.http.put(this.routes.Settings(app), settings, {headers, metric})
+    return this.http.put(this.routes.Settings(app), settings, { headers, metric })
   }
 
-  public listApps = ({oldVersion, since, service}: ListAppsOptions = {}) => {
+  public listApps = ({ oldVersion, since, service }: ListAppsOptions = {}) => {
     const params = {
       oldVersion,
       service,
@@ -214,10 +205,10 @@ export class Apps extends InfraClient {
     }
     const metric = 'apps-list'
     const inflightKey = inflightUrlWithQuery
-    return this.http.get<AppsList>(this.routes.Apps(), {params, metric, inflightKey})
+    return this.http.get<AppsList>(this.routes.Apps(), { params, metric, inflightKey })
   }
 
-  public listAppFiles = (app: string, {prefix, nextMarker}: ListFilesOptions = {}) => {
+  public listAppFiles = (app: string, { prefix, nextMarker }: ListFilesOptions = {}) => {
     const locator = parseAppId(app)
     const linked = !!locator.build
     const params = {
@@ -226,12 +217,12 @@ export class Apps extends InfraClient {
     }
     const metric = linked ? 'apps-list-files' : 'registry-list-files'
     const inflightKey = inflightUrlWithQuery
-    return this.http.get<AppFilesList>(this.routes.Files(locator), {params, metric, inflightKey})
+    return this.http.get<AppFilesList>(this.routes.Files(locator), { params, metric, inflightKey })
   }
 
   public listLinks = () => {
     const inflightKey = inflightURL
-    return this.http.get<string[]>(this.routes.Links(), {metric: 'apps-list-links', inflightKey})
+    return this.http.get<string[]>(this.routes.Links(), { metric: 'apps-list-links', inflightKey })
   }
 
   public getAppFile = (app: string, path: string, staleIfError?: boolean) => {
@@ -284,23 +275,23 @@ export class Apps extends InfraClient {
   public getAppFileStream = (app: string, path: string): Promise<IncomingMessage> => {
     const locator = parseAppId(app)
     const metric = locator.build ? 'apps-get-file-s' : 'registry-get-file-s'
-    return this.http.getStream(this.routes.File(locator, path), {metric})
+    return this.http.getStream(this.routes.File(locator, path), { metric })
   }
 
   public getApp = (app: string) => {
     const metric = 'apps-get-app'
     const inflightKey = inflightURL
-    return this.http.get<AppManifest>(this.routes.App(app), {metric, inflightKey})
+    return this.http.get<AppManifest>(this.routes.App(app), { metric, inflightKey })
   }
 
   public getAppSettings = (app: string) => {
     const inflightKey = inflightURL
     const metric = 'apps-get-settings'
-    return this.http.get<any>(this.routes.Settings(app), {inflightKey, metric})
+    return this.http.get<any>(this.routes.Settings(app), { inflightKey, metric })
   }
 
   public getAllAppsSettings = (listAppsOptions: ListAppsOptions = {}): Promise<AppsSettings> => {
-    return this.listApps(listAppsOptions).then(({data: installedApps}: AppsList) => {
+    return this.listApps(listAppsOptions).then(({ data: installedApps }: AppsList) => {
       const names = installedApps.map(getVendorAndName)
       const settingsPromises = names.map(vendorAndName => this.getAppSettings(vendorAndName).catch(notFound))
       return Promise.all(settingsPromises).then((settings: any[]) => {
@@ -311,7 +302,7 @@ export class Apps extends InfraClient {
 
   public getAppBundle = (app: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
     const locator = parseAppId(app)
-    const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
+    const params = generatePackageJson && { _packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x' }
     const metric = locator.build ? 'apps-get-bundle' : 'registry-get-bundle'
     return this.http.getStream(this.routes.AppBundle(locator, bundlePath), {
       headers: {
@@ -323,12 +314,15 @@ export class Apps extends InfraClient {
     })
   }
 
-  public unpackAppBundle = (app: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean): Promise<Writable> => {
-    return this.getAppBundle(app, bundlePath, generatePackageJson)
-      .then(stream => stream
-        .pipe(createGunzip())
-        .pipe(extract(unpackPath))
-      )
+  public unpackAppBundle = (
+    app: string,
+    bundlePath: string,
+    unpackPath: string,
+    generatePackageJson: boolean
+  ): Promise<Writable> => {
+    return this.getAppBundle(app, bundlePath, generatePackageJson).then(stream =>
+      stream.pipe(createGunzip()).pipe(extract(unpackPath))
+    )
   }
 
   public getAppsMetaInfos = async (filter?: string, staleIfError?: boolean) => {
@@ -336,7 +330,9 @@ export class Apps extends InfraClient {
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
     try {
-      const appsMetaInfos = await this.http.get<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey}).then(prop('apps'))
+      const appsMetaInfos = await this.http
+        .get<WorkspaceMetaInfo>(this.routes.Meta(), { params: { fields: workspaceFields }, metric, inflightKey })
+        .then(prop('apps'))
       if (staleIfError && this.diskCache) {
         updateMetaInfoCache(this.diskCache, account, workspace, appsMetaInfos, logger)
       }
@@ -346,57 +342,57 @@ export class Apps extends InfraClient {
       return appsMetaInfos
     } catch (error) {
       if (staleIfError && workspace === 'master' && this.diskCache) {
-        return await this.diskCache.get(getMetaInfoKey(account)) as AppMetaInfo[]
+        return (await this.diskCache.get(getMetaInfoKey(account))) as AppMetaInfo[]
       }
       throw error
     }
   }
 
   public getDependencies = (filter: string = '') => {
-    const params = {filter}
+    const params = { filter }
     const metric = 'apps-get-deps'
     const inflightKey = inflightUrlWithQuery
-    return this.http.get<Record<string, string[]>>(this.routes.Dependencies(), {params, metric, inflightKey})
+    return this.http.get<Record<string, string[]>>(this.routes.Dependencies(), { params, metric, inflightKey })
   }
 
   public updateDependencies = () => {
-    return this.http.put<Record<string, string[]>>(this.routes.Dependencies(), null, {metric: 'apps-update-deps'})
+    return this.http.put<Record<string, string[]>>(this.routes.Dependencies(), null, { metric: 'apps-update-deps' })
   }
 
   public updateDependency = (name: string, version: string, registry: string) => {
-    return this.http.patch(this.routes.Apps(), [{name, version, registry}], {metric: 'apps-update-dep'})
+    return this.http.patch(this.routes.Apps(), [{ name, version, registry }], { metric: 'apps-update-dep' })
   }
 
   public resolveDependencies = (apps: string[], registries: string[], filter: string = '') => {
-    const params = {apps, registries, filter}
+    const params = { apps, registries, filter }
     const metric = 'apps-resolve-deps'
     const inflightKey = inflightUrlWithQuery
-    return this.http.get(this.routes.ResolveDependencies(), {params, metric, inflightKey})
+    return this.http.get(this.routes.ResolveDependencies(), { params, metric, inflightKey })
   }
 
   public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {
-    const params = {filter}
+    const params = { filter }
     const metric = 'apps-resolve-deps-m'
-    return this.http.post<Record<string, string[]>>(this.routes.ResolveDependenciesWithManifest(), manifest, {params, metric})
+    return this.http.post<Record<string, string[]>>(this.routes.ResolveDependenciesWithManifest(), manifest, {
+      params,
+      metric,
+    })
   }
 
   private installRuntime = (descriptor: string) => {
     const { account, workspace } = this.context
     const [name, version] = descriptor.split('@')
-    return this.http.patch(
-      `http://apps.aws-us-east-1.vtex.io/${account}/${workspace}/apps`,
-      [
-        {
-          name,
-          version,
-        },
-      ]
-    )
+    return this.http.patch(`http://apps.aws-us-east-1.vtex.io/${account}/${workspace}/apps`, [
+      {
+        name,
+        version,
+      },
+    ])
   }
 }
 
 interface ZipOptions {
-  zlib?: ZlibOptions,
+  zlib?: ZlibOptions
 }
 
 export interface AppMetaInfo {
@@ -412,33 +408,33 @@ export interface WorkspaceMetaInfo {
 }
 
 export interface AppsListItem {
-  app: string,
-  id: string,
-  location: string,
+  app: string
+  id: string
+  location: string
 }
 
 export interface AppsList {
-  data: AppsListItem[],
+  data: AppsListItem[]
 }
 
 export interface Change {
-  path: string,
-  content: string | Readable | Buffer,
+  path: string
+  content: string | Readable | Buffer
 }
 
 export interface ListAppsOptions {
-  oldVersion?: string,
-  context?: string[],
-  since?: string,
-  service?: string,
+  oldVersion?: string
+  context?: string[]
+  since?: string
+  service?: string
 }
 
 export interface ListFilesOptions {
-  prefix?: string,
-  context?: string[],
-  nextMarker?: string,
+  prefix?: string
+  context?: string[]
+  nextMarker?: string
 }
 
 export interface AppsSettings {
-  [app: string]: any,
+  [app: string]: any
 }

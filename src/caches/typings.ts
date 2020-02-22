@@ -1,30 +1,30 @@
 export type FetchResult<V> = {
-  value: V,
-  maxAge?: number,
+  value: V
+  maxAge?: number
 }
 
 export type DiskStats = {
-  hits: number,
-  total: number,
-  name: string,
+  hits: number
+  total: number
+  name: string
 }
 
 export type LRUStats = {
-  itemCount: number,
-  length: number,
-  disposedItems: number,
-  hitRate: number | undefined,
-  hits: number,
-  max: number,
-  name: string,
-  total: number,
+  itemCount: number
+  length: number
+  disposedItems: number
+  hitRate: number | undefined
+  hits: number
+  max: number
+  name: string
+  total: number
 }
 
 export type MultilayerStats = {
-  hitRate: number | undefined,
-  hits: number,
-  total: number,
-  name: string,
+  hitRate: number | undefined
+  hits: number
+  total: number
+  name: string
 }
 
 export type LRUDiskCacheOptions = {
@@ -48,5 +48,5 @@ export type LRUDiskCacheOptions = {
    * return `undefined` when you try to get a stale entry,
    * as if it had already been deleted.
    */
-  stale?: boolean,
+  stale?: boolean
 }

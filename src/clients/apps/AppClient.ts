@@ -10,28 +10,29 @@ const useHttps = !process.env.VTEX_IO
  */
 export class AppClient extends IOClient {
   constructor(app: string, context: IOContext, options?: InstanceOptions) {
-    const {account, workspace, region} = context
+    const { account, workspace, region } = context
     const [appName, appVersion] = app.split('@')
     const [vendor, name] = appName.split('.') // vtex.messages
     const protocol = useHttps ? 'https' : 'http'
     let baseURL: string
     if (appVersion) {
       const [major] = appVersion.split('.')
-      baseURL = formatPrivateRoute({account, workspace, vendor, name, major, protocol})
+      baseURL = formatPrivateRoute({ account, workspace, vendor, name, major, protocol })
     } else {
-      console.warn(`${account} in ${workspace} is using old routing for ${app}. Please change vendor.app to vendor.app@major in client ${(options && options.name) || ''}`)
+      console.warn(
+        `${account} in ${workspace} is using old routing for ${app}. Please change vendor.app to vendor.app@major in client ${(options &&
+          options.name) ||
+          ''}`
+      )
       const service = [name, vendor].join('.') // messages.vtex
       baseURL = `http://${service}.${region}.vtex.io/${account}/${workspace}`
     }
 
-    super(
-      context,
-      {
-        ...options,
-        authType: AuthType.bearer,
-        baseURL,
-        name,
-      }
-    )
+    super(context, {
+      ...options,
+      authType: AuthType.bearer,
+      baseURL,
+      name,
+    })
   }
 }

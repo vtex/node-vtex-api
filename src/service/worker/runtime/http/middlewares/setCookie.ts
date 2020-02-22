@@ -22,22 +22,21 @@ const findScopeInCacheControl = (cacheControl: string | undefined) => {
 
 const cookieKey = (cookie: string) => compose<string, string[], string>(head, split('='))(cookie)
 
-const indexCookieByKeys = (setCookie: string[]) => map(
-  (cookie: string) => [cookieKey(cookie), cookie] as [string, string],
-  setCookie
-)
+const indexCookieByKeys = (setCookie: string[]) =>
+  map((cookie: string) => [cookieKey(cookie), cookie] as [string, string], setCookie)
 
 interface CookieAccumulator {
   addedPayload: string[]
   droppedKeys: string[]
 }
 
-export async function removeSetCookie<
-  T extends IOClients,
-  U extends RecorderState,
-  V extends ParamsContext
-> (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
-  const { vtex: { logger } } = ctx
+export async function removeSetCookie<T extends IOClients, U extends RecorderState, V extends ParamsContext>(
+  ctx: ServiceContext<T, U, V>,
+  next: () => Promise<void>
+) {
+  const {
+    vtex: { logger },
+  } = ctx
 
   await next()
 

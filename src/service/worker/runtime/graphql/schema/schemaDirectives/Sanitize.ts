@@ -1,19 +1,10 @@
-import {
-  GraphQLArgument,
-  GraphQLField,
-  GraphQLInputField,
-  GraphQLNonNull,
-  GraphQLScalarType,
-} from 'graphql'
+import { GraphQLArgument, GraphQLField, GraphQLInputField, GraphQLNonNull, GraphQLScalarType } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 
-import {
-  IOSanitizedStringType,
-  SanitizeOptions,
-} from '../typeDefs/sanitizedString'
+import { IOSanitizedStringType, SanitizeOptions } from '../typeDefs/sanitizedString'
 
 export class SanitizeDirective extends SchemaDirectiveVisitor {
-  public visitFieldDefinition (field: GraphQLField<any, any>) {
+  public visitFieldDefinition(field: GraphQLField<any, any>) {
     this.wrapType(field)
   }
 

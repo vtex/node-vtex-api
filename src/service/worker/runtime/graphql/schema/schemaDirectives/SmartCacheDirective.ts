@@ -14,9 +14,9 @@ const DEFAULT_ARGS: Args = {
 }
 
 export class SmartCacheDirective extends SchemaDirectiveVisitor {
-  public visitFieldDefinition (field: GraphQLField<any, any>) {
-    const {resolve = defaultFieldResolver} = field
-    const { maxAge } = this.args as Args || DEFAULT_ARGS
+  public visitFieldDefinition(field: GraphQLField<any, any>) {
+    const { resolve = defaultFieldResolver } = field
+    const { maxAge } = (this.args as Args) || DEFAULT_ARGS
     const maxAgeS = maxAge && MAX_AGE[maxAge]
     field.resolve = (root, args, context, info) => {
       if (maxAgeS) {

@@ -1,12 +1,6 @@
 import { IOClients } from '../../../../clients/IOClients'
 import { createPrivateHttpRoute } from '../http'
-import {
-  ClientsConfig,
-  GraphQLOptions,
-  ParamsContext,
-  RecorderState,
-  ServiceRoute,
-} from '../typings'
+import { ClientsConfig, GraphQLOptions, ParamsContext, RecorderState, ServiceRoute } from '../typings'
 import { injectGraphqlContext } from './middlewares/context'
 import { graphqlError } from './middlewares/error'
 import { extractQuery } from './middlewares/query'
@@ -25,13 +19,6 @@ export const createGraphQLRoute = <T extends IOClients, U extends RecorderState,
   routeId: string
 ) => {
   const schema = makeSchema(graphql)
-  const pipeline = [
-    injectGraphqlContext,
-    response,
-    graphqlError,
-    upload,
-    extractQuery(schema),
-    run(schema),
-  ]
+  const pipeline = [injectGraphqlContext, response, graphqlError, upload, extractQuery(schema), run(schema)]
   return createPrivateHttpRoute<T, U, V & GraphQLContext>(clientsConfig, pipeline, serviceRoute, routeId)
 }

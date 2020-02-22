@@ -1,32 +1,25 @@
 import DataLoader from 'dataloader'
 import { sortBy, zip } from 'ramda'
 
-import {
-  IndexedByFrom,
-  Message,
-} from '../../../../../clients/apps/MessagesGraphQL'
+import { IndexedByFrom, Message } from '../../../../../clients/apps/MessagesGraphQL'
 import { AppMetaInfo } from '../../../../../clients/infra/Apps'
 import { IOClients } from './../../../../../clients/IOClients'
 
 type Indexed<X> = [number, X]
 
-const sortByContentAndFrom = (indexedMessages: Array<Indexed<Message>>) => sortBy(
-  ([_, {content, from}]) => `__from:${from}__content:${content}`,
-  indexedMessages
-)
+const sortByContentAndFrom = (indexedMessages: Array<Indexed<Message>>) =>
+  sortBy(([_, { content, from }]) => `__from:${from}__content:${content}`, indexedMessages)
 
 // O(n) counting sort implementation
-const sortByIndex = (indexedTranslations: Array<Indexed<string>>) => indexedTranslations.reduce(
-  (acc, [index, data]) => {
+const sortByIndex = (indexedTranslations: Array<Indexed<string>>) =>
+  indexedTranslations.reduce((acc, [index, data]) => {
     acc[index] = data
     return acc
-  },
-  [] as string[]
-)
+  }, [] as string[])
 
-const indexMessagesByFrom = (messages:  Message[]) => messages.reduce(
-  (acc, {from, context, content, behavior}) => {
-    const lastIndexed = acc.length && acc[acc.length-1]
+const indexMessagesByFrom = (messages: Message[]) =>
+  messages.reduce((acc, { from, context, content, behavior }) => {
+    const lastIndexed = acc.length && acc[acc.length - 1]
     const formatted = {
       behavior,
       content,
@@ -41,38 +34,38 @@ const indexMessagesByFrom = (messages:  Message[]) => messages.reduce(
       })
     }
     return acc
-  },
-  [] as IndexedByFrom[]
-)
+  }, [] as IndexedByFrom[])
 
 const toPairs = <T>(x: T[]) => x.map((xx, it) => [it, xx] as Indexed<T>)
 
-const splitIndex = <T>(indexed: Array<Indexed<T>>) => indexed.reduce(
-  (acc, [index, data]) => {
-    acc[0].push(index)
-    acc[1].push(data)
-    return acc
-  },
-  [[] as number[], [] as T[]] as [number[], T[]]
-)
+const splitIndex = <T>(indexed: Array<Indexed<T>>) =>
+  indexed.reduce(
+    (acc, [index, data]) => {
+      acc[0].push(index)
+      acc[1].push(data)
+      return acc
+    },
+    [[] as number[], [] as T[]] as [number[], T[]]
+  )
 
-const filterFromEqualsTo = (indexedMessages: Array<Indexed<Message>>, to: string) => indexedMessages.reduce(
-  (acc, indexed) => {
-    const [index, { content, from }] = indexed
-    if (to === from.toLowerCase() || !content) {
-      acc.original.push([index, content])
-    } else {
-      acc.toTranslate.push(indexed)
+const filterFromEqualsTo = (indexedMessages: Array<Indexed<Message>>, to: string) =>
+  indexedMessages.reduce(
+    (acc, indexed) => {
+      const [index, { content, from }] = indexed
+      if (to === from.toLowerCase() || !content) {
+        acc.original.push([index, content])
+      } else {
+        acc.toTranslate.push(indexed)
+      }
+      return acc
+    },
+    {
+      original: [] as Array<Indexed<string>>,
+      toTranslate: [] as Array<Indexed<Message>>,
     }
-    return acc
-  },
-  {
-    original: [] as Array<Indexed<string>>,
-    toTranslate: [] as Array<Indexed<Message>>,
-  }
-)
+  )
 
-const messageToKey = ({content, context, from}: Message) => `:content:${content}:context:${context}:from:${from}`
+const messageToKey = ({ content, context, from }: Message) => `:content:${content}:context:${context}:from:${from}`
 
 export const createMessagesLoader = (
   { messagesGraphQL, assets }: IOClients,
@@ -89,11 +82,11 @@ export const createMessagesLoader = (
 
       // In case we have nothing to translate
       if (toTranslate.length === 0) {
-        return messages.map(({content}) => content)
+        return messages.map(({ content }) => content)
       }
 
       const sortedIndexedMessages = sortByContentAndFrom(toTranslate)
-      const [ originalIndexes, sortedMessages ] = splitIndex(sortedIndexedMessages)
+      const [originalIndexes, sortedMessages] = splitIndex(sortedIndexedMessages)
       const indexedByFrom = indexMessagesByFrom(sortedMessages)
 
       const args = { indexedByFrom, to }

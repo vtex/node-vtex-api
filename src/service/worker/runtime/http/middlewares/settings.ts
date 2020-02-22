@@ -6,11 +6,7 @@ import { IOClients } from '../../../../../clients/IOClients'
 import { APP } from '../../../../../constants'
 import { Assets } from './../../../../../clients/infra/Assets'
 import { appIdToAppAtMajor } from './../../../../../utils/app'
-import {
-  ParamsContext,
-  RecorderState,
-  ServiceContext,
-} from './../../typings'
+import { ParamsContext, RecorderState, ServiceContext } from './../../typings'
 
 const joinIds = join('')
 
@@ -26,10 +22,7 @@ const dependsOnApp = (appAtMajor: string) => (a: AppMetaInfo) => {
   return majorInt === depMajor
 }
 
-export const getFilteredDependencies = (
-  appAtMajor: string,
-  dependencies: AppMetaInfo[]
-): AppMetaInfo[] => {
+export const getFilteredDependencies = (appAtMajor: string, dependencies: AppMetaInfo[]): AppMetaInfo[] => {
   const depends = dependsOnApp(appAtMajor)
   return dependencies.filter(depends)
 }
@@ -50,11 +43,10 @@ export const getDependenciesSettings = async (apps: Apps, assets: Assets) => {
 }
 
 export const getServiceSettings = () => {
-  return async function settingsContext<
-    T extends IOClients,
-    U extends RecorderState,
-    V extends ParamsContext
-  >(ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
+  return async function settingsContext<T extends IOClients, U extends RecorderState, V extends ParamsContext>(
+    ctx: ServiceContext<T, U, V>,
+    next: () => Promise<void>
+  ) {
     const {
       clients: { apps, assets },
     } = ctx

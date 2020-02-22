@@ -61,43 +61,53 @@ export class MessagesGraphQL extends AppGraphQLClient {
     super('vtex.messages@1.x', vtex, options)
   }
 
-  public translateV2 (args: TranslateInput) {
+  public translateV2(args: TranslateInput) {
     const { indexedByFrom, ...rest } = args
 
-    const allMessages: Array<{from: string, message: Omit<Message, 'from'>}> = indexedByFrom.reduce((acc, {from, messages}) => {
-      return acc.concat(messages.map(message => ({from, message})))
-    }, [] as Array<{from: string, message: Omit<Message, 'from'>}>)
+    const allMessages: Array<{ from: string; message: Omit<Message, 'from'> }> = indexedByFrom.reduce(
+      (acc, { from, messages }) => {
+        return acc.concat(messages.map(message => ({ from, message })))
+      },
+      [] as Array<{ from: string; message: Omit<Message, 'from'> }>
+    )
 
     const batchedMessages = splitEvery(MAX_BATCH_SIZE, allMessages)
-    return Promise.all(batchedMessages.map(batch => {
-      const indexedBatch = batch.reduce((acc, {from, message}) => {
-        if (!acc[from]) {
-          acc[from] = {
-            from,
-            messages: [],
+    return Promise.all(
+      batchedMessages.map(batch => {
+        const indexedBatch = batch.reduce((acc, { from, message }) => {
+          if (!acc[from]) {
+            acc[from] = {
+              from,
+              messages: [],
+            }
           }
+          acc[from].messages.push(message)
+          return acc
+        }, {} as Record<string, IndexedByFrom>)
+        const batchArgs = {
+          ...rest,
+          indexedByFrom: values(indexedBatch),
         }
-        acc[from].messages.push(message)
-        return acc
-      }, {} as Record<string, IndexedByFrom>)
-      const batchArgs = {
-        ...rest,
-        indexedByFrom: values(indexedBatch),
-      }
-      return this.graphql.query<TranslatedV2, { args: TranslateInput }>({
-        query: `
+        return this.graphql
+          .query<TranslatedV2, { args: TranslateInput }>(
+            {
+              query: `
       query Translate($args: TranslateArgs!) {
         translate(args: $args)
       }
       `,
-        variables: { args: batchArgs },
-      }, {
-        metric: 'messages-translate-v2',
-      }).then(path(['data', 'translate'])) as Promise<TranslatedV2['translate']>
-    })).then(flatten)
+              variables: { args: batchArgs },
+            },
+            {
+              metric: 'messages-translate-v2',
+            }
+          )
+          .then(path(['data', 'translate'])) as Promise<TranslatedV2['translate']>
+      })
+    ).then(flatten)
   }
 
-  public async translate (args: TranslateInput) {
+  public async translate(args: TranslateInput) {
     const response = await this.graphql.query<TranslatedV2, { args: TranslateInput }>(
       {
         query: `query Translate($args: TranslateArgs!) {
@@ -112,7 +122,7 @@ export class MessagesGraphQL extends AppGraphQLClient {
     return response.data!.translate
   }
 
-  public async translateWithDependencies (args: TranslateWithDependenciesInput) {
+  public async translateWithDependencies(args: TranslateWithDependenciesInput) {
     const response = await this.graphql.query<TranslatedWithDependencies, { args: TranslateWithDependenciesInput }>(
       {
         query: `query TranslateWithDeps($args: TranslateWithDependenciesArgs!) {
@@ -127,8 +137,7 @@ export class MessagesGraphQL extends AppGraphQLClient {
     return response.data!.translateWithDependencies
   }
 
-
-  public async saveV2 (args: SaveInput) {
+  public async saveV2(args: SaveInput) {
     const response = await this.graphql.mutate<{ saveV2: boolean }, { args: SaveInput }>(
       {
         mutate: `mutation SaveV2($args: SaveArgsV2!) {
@@ -143,4 +152,3 @@ export class MessagesGraphQL extends AppGraphQLClient {
     return response.data!.saveV2
   }
 }
-

@@ -5,7 +5,7 @@ import { LogLevel } from './logger'
 
 export interface LogMessage {
   cmd: typeof LOG_ONCE
-  message: string,
+  message: string
   level: LogLevel
 }
 
@@ -35,8 +35,7 @@ export const logOnceToDevConsole = (message: any, level: LogLevel): void => {
 
     if (isMaster) {
       log(message, level)
-    }
-    else if (isWorker && process.send) {
+    } else if (isWorker && process.send) {
       const logMessage: LogMessage = {
         cmd: LOG_ONCE,
         level,

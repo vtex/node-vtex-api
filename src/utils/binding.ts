@@ -6,8 +6,8 @@ export interface BindingHeader {
 }
 
 enum BindingHeaderFormat {
-  webframework0='v0+webframework',
-  kuberouter0='v0+kuberouter'
+  webframework0 = 'v0+webframework',
+  kuberouter0 = 'v0+kuberouter',
 }
 
 export const formatBindingHeaderValue = (
@@ -20,13 +20,7 @@ export const formatBindingHeaderValue = (
   }
 
   if (format === BindingHeaderFormat.kuberouter0) {
-    return [
-      '0',
-      binding.id || '',
-      binding.rootPath || '',
-      binding.locale || '',
-      binding.currency || ''
-    ].join(',')
+    return ['0', binding.id || '', binding.rootPath || '', binding.locale || '', binding.currency || ''].join(',')
   }
 
   throw new Error(`Unkown binding format: ${format}`)

@@ -3,7 +3,17 @@ import { pick } from 'ramda'
 import { cleanError } from '../../../../../utils/error'
 import { GraphQLServiceContext } from '../typings'
 
-const ERROR_FIELD_WHITELIST = ['message', 'path', 'stack', 'extensions', 'statusCode', 'name', 'headers', 'originalError', 'code']
+const ERROR_FIELD_WHITELIST = [
+  'message',
+  'path',
+  'stack',
+  'extensions',
+  'statusCode',
+  'name',
+  'headers',
+  'originalError',
+  'code',
+]
 const QUERY_FIELDS = ['query', 'operationName', 'variables']
 
 const trimVariables = (variables: object) => {
@@ -18,21 +28,12 @@ const trimVariables = (variables: object) => {
 
 const detailsFromCtx = (ctx: GraphQLServiceContext) => {
   const {
-    headers: {
-      'x-forwarded-host': forwardedHost,
-      'x-forwarded-proto': forwardedProto,
-      'x-vtex-platform': platform,
-    },
-    vtex: {
-      operationId,
-      requestId,
-    },
+    headers: { 'x-forwarded-host': forwardedHost, 'x-forwarded-proto': forwardedProto, 'x-vtex-platform': platform },
+    vtex: { operationId, requestId },
   } = ctx
 
   const queryRest = pick<any>(QUERY_FIELDS, ctx.graphql.query || {})
-  const variables = ctx.request.is('multipart/form-data')
-    ? '[GraphQL Upload]'
-    : trimVariables(queryRest.variables)
+  const variables = ctx.request.is('multipart/form-data') ? '[GraphQL Upload]' : trimVariables(queryRest.variables)
   const query = {
     ...queryRest,
     variables,
@@ -82,7 +83,7 @@ const formatError = (error: any, details?: any) => {
     }
 
     // Make originalError not enumerable to prevent duplicated log and response information
-    Object.defineProperty(formattedError, 'originalError', {enumerable: false})
+    Object.defineProperty(formattedError, 'originalError', { enumerable: false })
   }
 
   Object.assign(formattedError, details)
