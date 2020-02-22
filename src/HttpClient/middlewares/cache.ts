@@ -76,7 +76,8 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
     const cacheHasWithSegment = await storage.has(keyWithSegment)
     const cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
 
-    if (cached?.response) {
+    // eslint-disable-next-line
+    if (cached && cached.response) {
       const { etag: cachedEtag, response, expiration, responseType, responseEncoding } = cached as Cached
       if (type === CacheType.Disk && responseType === 'arraybuffer') {
         response.data = Buffer.from(response.data, responseEncoding)
