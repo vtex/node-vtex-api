@@ -4,7 +4,6 @@ import { mergeDeepRight } from 'ramda'
 import { IS_IO } from './constants'
 
 // As we'll modify this module we need a plain-old require
-// tslint:disable-next-line:no-var-requires
 const https = require('https')
 
 function setup () {

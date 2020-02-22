@@ -44,7 +44,6 @@ export class Logger {
   public log = (message: any, level: LogLevel): void => {
     const data = message ? cleanError(message) : EMPTY_MESSAGE
 
-    /* tslint:disable:object-literal-sort-keys */
     const inflatedLog = {
       __VTEX_IO_LOG: true,
       level,

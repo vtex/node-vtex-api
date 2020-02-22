@@ -96,7 +96,6 @@ interface AppLocator {
 }
 
 export class Apps extends InfraClient {
-  // tslint:disable-next-line: variable-name
   private _routes: ReturnType<typeof createRoutes>
   private diskCache: CacheLayer<string, any> | undefined
   private memoryCache: CacheLayer<string, any> | undefined

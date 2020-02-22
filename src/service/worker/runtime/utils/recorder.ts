@@ -6,7 +6,6 @@ import { META_HEADER, META_HEADER_BUCKET } from './../../../../constants'
 const HEADERS = [META_HEADER, META_HEADER_BUCKET]
 
 export class Recorder {
-  // tslint:disable-next-line: variable-name
   private _record: Record<string, Set<string>>
 
   constructor() {

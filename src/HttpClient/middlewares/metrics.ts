@@ -133,7 +133,7 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
               : extensions.revalidated || extensions.router || status !== 'success'
                 ? hrToMillis(process.hrtime(start))
                 : '(from cache)',
-            status: ctx.response && ctx.response.status, // tslint:disable-next-line
+            status: ctx.response && ctx.response.status,
             headers: ctx.response && ctx.response.headers,
           })
         }
