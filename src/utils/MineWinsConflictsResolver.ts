@@ -3,18 +3,13 @@ import { Base64 } from 'js-base64'
 import { eqProps, equals } from 'ramda'
 import { isArray, isObject } from 'util'
 
-import {
-  ConflictsResolver,
-  VBase,
-  VBaseConflict,
-  VBaseConflictData,
-} from '../clients/infra/VBase'
+import { ConflictsResolver, VBase, VBaseConflict, VBaseConflictData } from '../clients/infra/VBase'
 
 type Configuration = Record<string, ConfigurationData | ConfigurationData[] | object> | ConfigurationData[]
 type ConfigurationData = Record<string, object>
 
 export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
-  /***
+  /** *
    * Take mine and merge with master keys that have no conflict
    * We use base to decide wether a key was deleted or not
    */
@@ -50,10 +45,11 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
   protected mergeMineWins(base: Configuration, master: Configuration, mine: Configuration) {
     if (isArray(master)) {
       return this.mergeMineWinsArray((base || []) as ConfigurationData[], master, (mine || []) as ConfigurationData[])
-    } else if (isObject(master)) {
+    }
+    if (isObject(master)) {
       return this.mergeMineWinsObject((base || {}) as ConfigurationData, master, (mine || {}) as ConfigurationData)
     }
-    return mine ? mine : master
+    return mine || master
   }
 
   private parseConflict(conflict: VBaseConflict) {
@@ -93,23 +89,26 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
     return mine.parsedContent
   }
 
-  private mergeMineWinsObject(
-    base: ConfigurationData,
-    master: ConfigurationData,
-    mine: ConfigurationData
-  ) {
-    const merged = { ...master, ...mine}
+  private mergeMineWinsObject(base: ConfigurationData, master: ConfigurationData, mine: ConfigurationData) {
+    const merged = { ...master, ...mine }
 
     Object.entries(merged).forEach(([key, value]) => {
       if (master[key] == null && base && base[key] != null && equals(value, base[key])) {
         delete merged[key] // value deleted from master with no conflict
-      }else if(base[key] && master[key] && !mine[key]){
+      } else if (base[key] && master[key] && !mine[key]) {
         delete merged[key] // value deleted from mine
-      }
-      else if (isArray(value)) {
-        merged[key] = this.mergeMineWinsArray((base[key] || []) as ConfigurationData[] , (master[key] || []) as ConfigurationData[], value)
+      } else if (isArray(value)) {
+        merged[key] = this.mergeMineWinsArray(
+          (base[key] || []) as ConfigurationData[],
+          (master[key] || []) as ConfigurationData[],
+          value
+        )
       } else if (isObject(value)) {
-        merged[key] = this.mergeMineWins((base[key] || {}) as Configuration, (master[key] || {}) as Configuration, (value || {}) as Configuration)
+        merged[key] = this.mergeMineWins(
+          (base[key] || {}) as Configuration,
+          (master[key] || {}) as Configuration,
+          (value || {}) as Configuration
+        )
       }
     })
     return merged
@@ -121,7 +120,11 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
     return mine
   }
 
-  private removeMasterDeletedElements(base: ConfigurationData[], master: ConfigurationData[], mine: ConfigurationData[]) {
+  private removeMasterDeletedElements(
+    base: ConfigurationData[],
+    master: ConfigurationData[],
+    mine: ConfigurationData[]
+  ) {
     base.forEach(baseItem => {
       const foundInMaster = this.isObjectInArray(baseItem, master)
       if (!foundInMaster) {

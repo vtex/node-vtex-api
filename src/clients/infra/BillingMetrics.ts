@@ -7,8 +7,7 @@ export class BillingMetrics extends InfraClient {
     super('colossus0.x', context, options)
   }
 
-  public sendMetric = (metric: BillingMetric) =>
-    this.http.post<BillingMetric>('/metrics', metric)
+  public sendMetric = (metric: BillingMetric) => this.http.post<BillingMetric>('/metrics', metric)
 }
 
 export interface BillingMetric {

@@ -1,9 +1,6 @@
 import { ServiceContext, ServiceJSON } from '../typings'
 
-export const whoAmIHandler = ({
-  events,
-  routes,
-}: ServiceJSON) => (ctx: ServiceContext) => {
+export const whoAmIHandler = ({ events, routes }: ServiceJSON) => (ctx: ServiceContext) => {
   ctx.status = 200
   ctx.body = {
     events,
@@ -12,10 +9,7 @@ export const whoAmIHandler = ({
   ctx.set('Cache-Control', 'public, max-age=86400') // cache for 24 hours
 }
 
-export const healthcheckHandler = ({
-  events,
-  routes,
-}: ServiceJSON) => (ctx: ServiceContext) => {
+export const healthcheckHandler = ({ events, routes }: ServiceJSON) => (ctx: ServiceContext) => {
   ctx.status = 200
   ctx.body = {
     events,

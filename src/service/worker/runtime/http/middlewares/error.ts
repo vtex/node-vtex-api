@@ -1,19 +1,9 @@
 import { IOClients } from '../../../../../clients/IOClients'
-import {
-  cancelledRequestStatus,
-  RequestCancelledError,
-} from '../../../../../errors/RequestCancelledError'
-import {
-  TooManyRequestsError,
-  tooManyRequestsStatus,
-} from '../../../../../errors/TooManyRequestsError'
+import { cancelledRequestStatus, RequestCancelledError } from '../../../../../errors/RequestCancelledError'
+import { TooManyRequestsError, tooManyRequestsStatus } from '../../../../../errors/TooManyRequestsError'
 import { cleanError } from '../../../../../utils/error'
 import { LogLevel } from '../../../../logger'
-import {
-  ParamsContext,
-  RecorderState,
-  ServiceContext,
-} from '../../typings'
+import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
 const META_HEADER = 'x-vtex-meta'
@@ -21,11 +11,10 @@ const ETAG_HEADER = 'etag'
 const TWO_SECONDS_S = 2
 const production = process.env.VTEX_PRODUCTION === 'true'
 
-export async function error<
-  T extends IOClients,
-  U extends RecorderState,
-  V extends ParamsContext
-> (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
+export async function error<T extends IOClients, U extends RecorderState, V extends ParamsContext>(
+  ctx: ServiceContext<T, U, V>,
+  next: () => Promise<void>
+) {
   try {
     await next()
   } catch (e) {
@@ -41,11 +30,8 @@ export async function error<
     const err = cleanError(e)
 
     // Add response
-    ctx.status = e && e.status >= 400 && e.status <= 599
-      ? e.status
-      : ctx.status >= 500 && ctx.status <= 599
-        ? ctx.status
-        : 500
+    ctx.status =
+      e && e.status >= 400 && e.status <= 599 ? e.status : ctx.status >= 500 && ctx.status <= 599 ? ctx.status : 500
     ctx.body = ctx.body || err
 
     // Do not generate etag for errors
@@ -68,10 +54,7 @@ export async function error<
       vtex: {
         operationId,
         requestId,
-        route: {
-          id,
-          params,
-        },
+        route: { id, params },
       },
       headers: {
         'x-forwarded-path': forwardedPath,
@@ -85,7 +68,7 @@ export async function error<
     } = ctx
 
     // Grab level from originalError, default to "error" level.
-    let level = err && err.level as LogLevel
+    let level = err && (err.level as LogLevel)
     if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
       level = LogLevel.Error
     }

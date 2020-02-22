@@ -10,7 +10,7 @@ export const startApp = () => {
   const serviceJSON = getServiceJSON()
   try {
     // if it is a master process then call setting up worker process
-    if(cluster.isMaster) {
+    if (cluster.isMaster) {
       startMaster(serviceJSON)
     } else {
       // to setup server configurations and share port address for incoming requests
@@ -23,4 +23,3 @@ export const startApp = () => {
 }
 
 export { appPath } from './loaders'
-

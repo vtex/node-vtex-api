@@ -1,17 +1,32 @@
 // Inspired by https://github.com/sindresorhus/serialize-error
 import { find, keys, pick } from 'ramda'
 
-export const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url', 'metric', 'inflightKey', 'forceMaxAge', 'params', 'responseType']
+export const PICKED_AXIOS_PROPS = [
+  'baseURL',
+  'cacheable',
+  'data',
+  'finished',
+  'headers',
+  'method',
+  'timeout',
+  'status',
+  'path',
+  'url',
+  'metric',
+  'inflightKey',
+  'forceMaxAge',
+  'params',
+  'responseType',
+]
 
-const MAX_ERROR_STRING_LENGTH = process.env.MAX_ERROR_STRING_LENGTH ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10) : 8 * 1024
+const MAX_ERROR_STRING_LENGTH = process.env.MAX_ERROR_STRING_LENGTH
+  ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10)
+  : 8 * 1024
 
-const findCaseInsensitive = (target: string, set: string[]) => find(
-  t => t.toLocaleLowerCase() === target,
-  set
-)
+const findCaseInsensitive = (target: string, set: string[]) => find(t => t.toLocaleLowerCase() === target, set)
 
 const destroyCircular = (from: any, seen: any[]) => {
-  const to: {[key: string]: any} = Array.isArray(from) ? [] : {}
+  const to: { [key: string]: any } = Array.isArray(from) ? [] : {}
 
   seen.push(from)
 
@@ -29,7 +44,7 @@ const destroyCircular = (from: any, seen: any[]) => {
     if (!value || typeof value !== 'object') {
       // Truncate very large strings
       if (typeof value === 'string' && value.length > MAX_ERROR_STRING_LENGTH) {
-        to[key] = value.substr(0, MAX_ERROR_STRING_LENGTH) + '[...TRUNCATED]'
+        to[key] = `${value.substr(0, MAX_ERROR_STRING_LENGTH)}[...TRUNCATED]`
       } else {
         to[key] = value
       }
@@ -44,12 +59,7 @@ const destroyCircular = (from: any, seen: any[]) => {
     to[key] = '[Circular]'
   }
 
-  const commonProperties = [
-    'name',
-    'message',
-    'stack',
-    'code',
-  ]
+  const commonProperties = ['name', 'message', 'stack', 'code']
 
   for (const property of commonProperties) {
     if (typeof from[property] === 'string') {
@@ -57,11 +67,7 @@ const destroyCircular = (from: any, seen: any[]) => {
     }
   }
 
-  const axiosProperties = [
-    'config',
-    'request',
-    'response',
-  ]
+  const axiosProperties = ['config', 'request', 'response']
 
   for (const property of axiosProperties) {
     if (to[property] != null && typeof to[property] === 'object') {
@@ -70,15 +76,15 @@ const destroyCircular = (from: any, seen: any[]) => {
       if (headers) {
         const headerNames = keys(headers)
         const authorization = findCaseInsensitive('authorization', headerNames as string[])
-        if (!!authorization) {
+        if (authorization) {
           delete headers[authorization]
         }
         const proxyAuth = findCaseInsensitive('proxy-authorization', headerNames as string[])
-        if (!!proxyAuth) {
+        if (proxyAuth) {
           delete headers[proxyAuth]
         }
         const vtexIdClientAutCookie = findCaseInsensitive('vtexidclientautcookie', headerNames as string[])
-        if (!!vtexIdClientAutCookie) {
+        if (vtexIdClientAutCookie) {
           delete headers[vtexIdClientAutCookie]
         }
       }
@@ -86,7 +92,7 @@ const destroyCircular = (from: any, seen: any[]) => {
   }
 
   if (!to.code && to.response) {
-    to.code = to.response.status && `E_HTTP_${to.response.status}` || 'E_UNKNOWN'
+    to.code = (to.response.status && `E_HTTP_${to.response.status}`) || 'E_UNKNOWN'
   }
 
   return to
@@ -105,7 +111,7 @@ export const cleanError = (value: any) => {
   // People sometimes throw things besides Error objects…
   if (typeof value === 'function') {
     // `JSON.stringify()` discards functions. We do too, unless a function is thrown directly.
-    return `[Function: ${(value.name || 'anonymous')}]`
+    return `[Function: ${value.name || 'anonymous'}]`
   }
 
   return value

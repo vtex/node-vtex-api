@@ -3,9 +3,7 @@ import { Readable } from 'stream'
 
 import { AppMetaInfo } from '../..'
 import { CacheType, inflightURL, InstanceOptions } from '../../HttpClient'
-import {
-  IgnoreNotFoundRequestConfig,
-} from '../../HttpClient/middlewares/notFound'
+import { IgnoreNotFoundRequestConfig } from '../../HttpClient/middlewares/notFound'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { parseAppId, ParsedLocator } from '../../utils'
 import { InfraClient } from './InfraClient'
@@ -28,7 +26,7 @@ const dependsOnApp = (appsAtMajor: string[]) => (a: AppMetaInfo) => {
 
 const useBuildJson = (app: AppMetaInfo, appVendorName: string) => {
   const buildFeatures = app._buildFeatures
-  return buildFeatures && buildFeatures[appVendorName] && contains('build.json', buildFeatures[appVendorName])
+  return buildFeatures?.[appVendorName] && contains('build.json', buildFeatures[appVendorName])
 }
 
 export interface AssetsParams {
@@ -37,13 +35,13 @@ export interface AssetsParams {
 }
 
 const appOrRegistry = (workspace: string, { name, version, build }: ParsedLocator) =>
-    build
-      ? `${workspace}/apps/${name}@${version}+${build}`
-      : `master/registry/${name}/${version}`
+  build ? `${workspace}/apps/${name}@${version}+${build}` : `master/registry/${name}/${version}`
 
 const createRoutes = (workspace: string) => ({
-  Bundle: (scope: string, locator: ParsedLocator, path: string) => `/${scope}/${appOrRegistry(workspace, locator)}/bundle/${path}`,
-  Files: (scope: string, locator: ParsedLocator, path: string) => `/${scope}/${appOrRegistry(workspace, locator)}/files/${path}`,
+  Bundle: (scope: string, locator: ParsedLocator, path: string) =>
+    `/${scope}/${appOrRegistry(workspace, locator)}/bundle/${path}`,
+  Files: (scope: string, locator: ParsedLocator, path: string) =>
+    `/${scope}/${appOrRegistry(workspace, locator)}/files/${path}`,
 })
 
 export class Assets extends InfraClient {
@@ -54,22 +52,27 @@ export class Assets extends InfraClient {
     this.routes = createRoutes(this.context.workspace)
   }
 
-  public getSettings (dependencies: AppMetaInfo[], appAtMajor: string, params: AssetsParams = {}) {
-    const {pick, files} = params
+  public getSettings(dependencies: AppMetaInfo[], appAtMajor: string, params: AssetsParams = {}) {
+    const { pick, files } = params
     const filtered = this.getFilteredDependencies(appAtMajor, dependencies)
 
-    return Promise.all(filtered.map(dependency => {
-      const [appVendorName] = appAtMajor.split('@')
-      const buildJson = useBuildJson(dependency, appVendorName)
+    return Promise.all(
+      filtered.map(dependency => {
+        const [appVendorName] = appAtMajor.split('@')
+        const buildJson = useBuildJson(dependency, appVendorName)
 
-      return buildJson
-        ? this.getBuildJSONForApp(dependency, appVendorName, pick)
-        : this.getSettingsFromFilesForApp(dependency, files)
-    }
-    ))
+        return buildJson
+          ? this.getBuildJSONForApp(dependency, appVendorName, pick)
+          : this.getSettingsFromFilesForApp(dependency, files)
+      })
+    )
   }
 
-  public async getBuildJSONForApp(app: AppMetaInfo, appVendorName: string, pick: string | string[] = []): Promise<Record<string, any>> {
+  public async getBuildJSONForApp(
+    app: AppMetaInfo,
+    appVendorName: string,
+    pick: string | string[] = []
+  ): Promise<Record<string, any>> {
     const pickArray = Array.isArray(pick) ? pick : [pick]
     const buildJson: Record<string, any> = await this.getJSON(app.id, `dist/${appVendorName}/build.json`)
     const result = !isEmpty(pickArray) ? ramdaPick(pickArray, buildJson) : buildJson
@@ -78,7 +81,10 @@ export class Assets extends InfraClient {
     return result
   }
 
-  public async getSettingsFromFilesForApp(app: AppMetaInfo, files: string | string[] = []): Promise<Record<string, any>> {
+  public async getSettingsFromFilesForApp(
+    app: AppMetaInfo,
+    files: string | string[] = []
+  ): Promise<Record<string, any>> {
     // If there's no support for build.json, then fetch individual files and zip them into an {[file]: content} object.
     const filesArray = Array.isArray(files) ? files : [files]
     const fetched = await Promise.all(filesArray.map(file => this.getJSON(app.id, file, true)))
@@ -109,14 +115,14 @@ export class Assets extends InfraClient {
   }
 
   public getFilteredDependencies(apps: string | string[], dependencies: AppMetaInfo[]): AppMetaInfo[] {
-    const appsAtMajor: string[] = typeof(apps) === 'string' ? [apps] : apps
+    const appsAtMajor: string[] = typeof apps === 'string' ? [apps] : apps
     const depends = dependsOnApp(appsAtMajor)
     return filter(depends, dependencies)
   }
 
   public getAppBundleByVendor = (app: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
     const locator = parseAppId(app)
-    const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
+    const params = generatePackageJson && { _packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x' }
     const metric = locator.build ? 'apps-get-bundle' : 'registry-get-bundle'
     return this.http.getStream(this.routes.Bundle(this.context.account, locator, bundlePath), {
       headers: {
@@ -144,11 +150,11 @@ export class Assets extends InfraClient {
     const vendor = locator.name.split('.')[0]
     const inflightKey = inflightURL
     return this.http.get<T>(this.routes.Files(vendor, locator, path), {
-        cacheable: CacheType.Any,
-        inflightKey,
-        metric: 'assets-get-json-by-vendor',
-        nullIfNotFound,
-      } as IgnoreNotFoundRequestConfig)
+      cacheable: CacheType.Any,
+      inflightKey,
+      metric: 'assets-get-json-by-vendor',
+      nullIfNotFound,
+    } as IgnoreNotFoundRequestConfig)
   }
 
   protected getAppFileByAccount = (app: string, path: string, nullIfNotFound?: boolean) => {
@@ -174,5 +180,3 @@ export class Assets extends InfraClient {
     })
   }
 }
-
-

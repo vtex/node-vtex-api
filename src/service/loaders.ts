@@ -4,13 +4,7 @@ import { join } from 'path'
 import { IOClients } from '../clients/IOClients'
 import { LINKED, MAX_WORKERS } from '../constants'
 import { Service } from './worker/runtime/Service'
-import {
-  ClientsConfig,
-  ParamsContext,
-  RawServiceJSON,
-  RecorderState,
-  ServiceJSON,
-} from './worker/runtime/typings'
+import { ClientsConfig, ParamsContext, RawServiceJSON, RecorderState, ServiceJSON } from './worker/runtime/typings'
 
 export const appPath = join(process.cwd(), './service/src/node/')
 export const bundlePath = join(appPath, 'index')
@@ -53,7 +47,9 @@ const defaultClients: ClientsConfig = {
 
 export const getService = (): Service<IOClients, RecorderState, ParamsContext> => {
   const { default: service } = require(bundlePath)
-  const { config: { clients } } = service
+  const {
+    config: { clients },
+  } = service
   service.config.clients = {
     implementation: clients?.implementation ?? IOClients,
     options: {

@@ -21,7 +21,7 @@ export class Logger {
   private requestId: string
   private production: boolean
 
-  constructor(ctx: Pick<IOContext, 'account'|'workspace'|'requestId'|'operationId'|'production'>) {
+  constructor(ctx: Pick<IOContext, 'account' | 'workspace' | 'requestId' | 'operationId' | 'production'>) {
     this.account = ctx.account
     this.workspace = ctx.workspace
     this.requestId = ctx.requestId
@@ -29,22 +29,17 @@ export class Logger {
     this.production = ctx.production
   }
 
-  public debug = (message: any) =>
-    this.log(message, LogLevel.Debug)
+  public debug = (message: any) => this.log(message, LogLevel.Debug)
 
-  public info = (message: any) =>
-    this.log(message, LogLevel.Info)
+  public info = (message: any) => this.log(message, LogLevel.Info)
 
-  public warn = (warning: any) =>
-    this.log(warning, LogLevel.Warn)
+  public warn = (warning: any) => this.log(warning, LogLevel.Warn)
 
-  public error = (error: any) =>
-    this.log(error, LogLevel.Error)
+  public error = (error: any) => this.log(error, LogLevel.Error)
 
   public log = (message: any, level: LogLevel): void => {
     const data = message ? cleanError(message) : EMPTY_MESSAGE
 
-    /* tslint:disable:object-literal-sort-keys */
     const inflatedLog = {
       __VTEX_IO_LOG: true,
       level,

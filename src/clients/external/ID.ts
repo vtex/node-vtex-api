@@ -18,19 +18,21 @@ const endpoint = (env: string) => {
 }
 
 export class ID extends ExternalClient {
-  constructor (context: IOContext, opts?: InstanceOptions) {
+  constructor(context: IOContext, opts?: InstanceOptions) {
     super(endpoint(VTEXID_ENDPOINTS.STABLE), context, opts)
   }
 
   public getTemporaryToken = () => {
     const metric = 'vtexid-temp-token'
-    return this.http.get<TemporaryToken>(routes.START, {metric}).then(({authenticationToken}) => authenticationToken)
+    return this.http
+      .get<TemporaryToken>(routes.START, { metric })
+      .then(({ authenticationToken }) => authenticationToken)
   }
 
   public sendCodeToEmail = (token: string, email: string) => {
-    const params = {authenticationToken: token, email}
+    const params = { authenticationToken: token, email }
     const metric = 'vtexid-send-code'
-    return this.http.get(routes.SEND, {params, metric})
+    return this.http.get(routes.SEND, { params, metric })
   }
 
   public getEmailCodeAuthenticationToken = (token: string, email: string, code: string) => {
@@ -40,7 +42,7 @@ export class ID extends ExternalClient {
       login: email,
     }
     const metric = 'vtexid-email-token'
-    return this.http.get<AuthenticationResponse>(routes.VALIDATE, {params, metric})
+    return this.http.get<AuthenticationResponse>(routes.VALIDATE, { params, metric })
   }
 
   public getPasswordAuthenticationToken = (token: string, email: string, password: string) => {
@@ -50,24 +52,24 @@ export class ID extends ExternalClient {
       password,
     }
     const metric = 'vtexid-pass-token'
-    return this.http.get<AuthenticationResponse>(routes.VALIDATE_CLASSIC, {params, metric})
+    return this.http.get<AuthenticationResponse>(routes.VALIDATE_CLASSIC, { params, metric })
   }
 }
 
 interface TemporaryToken {
-  authenticationToken: string,
+  authenticationToken: string
 }
 
 export interface AuthenticationResponse {
-  promptMFA: boolean,
-  clientToken: any,
+  promptMFA: boolean
+  clientToken: any
   authCookie: {
-    Name: string,
-    Value: string,
-  },
-  accountAuthCookie: any,
-  expiresIn: number,
-  userId: string,
-  phoneNumber: string,
-  scope: any,
+    Name: string
+    Value: string
+  }
+  accountAuthCookie: any
+  expiresIn: number
+  userId: string
+  phoneNumber: string
+  scope: any
 }

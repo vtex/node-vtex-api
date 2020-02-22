@@ -2,37 +2,31 @@ import { compose, forEach, path, reduce, replace, split } from 'ramda'
 
 import { RequestCancelledError } from '../../errors/RequestCancelledError'
 import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
-import {
-  cancelMessage,
-} from '../../service/worker/runtime/http/middlewares/requestStats'
-import {
-  formatTimingName,
-  hrToMillis,
-  parseTimingName,
-  shrinkTimings,
-} from '../../utils'
+import { cancelMessage } from '../../service/worker/runtime/http/middlewares/requestStats'
+import { formatTimingName, hrToMillis, parseTimingName, shrinkTimings } from '../../utils'
 import { TIMEOUT_CODE } from '../../utils/retry'
 import { statusLabel } from '../../utils/status'
 import { MiddlewareContext } from '../typings'
 
-const parseServerTiming = (serverTimingsHeaderValue: string) => compose<string, string, string[], Array<[string, string]>>(
-  reduce((acc, rawHeader) => {
-    const [name, durStr] = rawHeader.split(';')
-    const [_, dur] = durStr ? durStr.split('=') : [null, null]
-    const {hopNumber, source, target} = parseTimingName(name)
-    const formatted = formatTimingName({
-      hopNumber: Number.isNaN(hopNumber as any) ? null : hopNumber! + 1,
-      source,
-      target,
-    })
-    if (dur && formatted) {
-      acc.push([formatted, dur])
-    }
-    return acc
-  }, [] as Array<[string, string]>),
-  split(','),
-  replace(/\s/g, '')
-)(serverTimingsHeaderValue)
+const parseServerTiming = (serverTimingsHeaderValue: string) =>
+  compose<string, string, string[], Array<[string, string]>>(
+    reduce((acc, rawHeader) => {
+      const [name, durStr] = rawHeader.split(';')
+      const [_, dur] = durStr ? durStr.split('=') : [null, null]
+      const { hopNumber, source, target } = parseTimingName(name)
+      const formatted = formatTimingName({
+        hopNumber: Number.isNaN(hopNumber as any) ? null : hopNumber! + 1,
+        source,
+        target,
+      })
+      if (dur && formatted) {
+        acc.push([formatted, dur])
+      }
+      return acc
+    }, [] as Array<[string, string]>),
+    split(','),
+    replace(/\s/g, '')
+  )(serverTimingsHeaderValue)
 
 interface MetricsOpts {
   metrics?: MetricsAccumulator
@@ -40,21 +34,22 @@ interface MetricsOpts {
   name?: string
 }
 
-export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) => {
+export const metricsMiddleware = ({ metrics, serverTiming, name }: MetricsOpts) => {
   const serverTimingStart = process.hrtime()
-  const serverTimingLabel = shrinkTimings(formatTimingName({
-    hopNumber: 0,
-    source: process.env.VTEX_APP_NAME!,
-    target: name || 'unknown',
-  }))
+  const serverTimingLabel = shrinkTimings(
+    formatTimingName({
+      hopNumber: 0,
+      source: process.env.VTEX_APP_NAME!,
+      target: name ?? 'unknown',
+    })
+  )
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     const start = process.hrtime()
-    let status: string = 'unknown'
+    let status = 'unknown'
     let errorCode: any
     let errorStatus: any
 
     try {
-
       if (ctx.config.verbose && ctx.config.label) {
         console.log(`VERBOSE: ${name}.${ctx.config.label}`, `start`)
       }
@@ -64,83 +59,80 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
         status = statusLabel(ctx.response.status)
       }
     } catch (err) {
-      const isCancelled = (err.message === cancelMessage)
+      const isCancelled = err.message === cancelMessage
       if (ctx.config.metric) {
         errorCode = err.code
         errorStatus = err.response && err.response.status
 
         if (err.code === 'ECONNABORTED') {
           status = 'aborted'
-        }
-        else if (err.response && err.response.data && err.response.data.code === TIMEOUT_CODE) {
+        } else if (err.response && err.response.data && err.response.data.code === TIMEOUT_CODE) {
           status = 'timeout'
-        }
-        else if (err.response && err.response.status) {
+        } else if (err.response && err.response.status) {
           status = statusLabel(err.response.status)
-        }
-        else if (isCancelled) {
+        } else if (isCancelled) {
           status = 'cancelled'
         } else {
           status = 'error'
         }
       }
 
-      throw isCancelled
-        ? new RequestCancelledError(err.message)
-        : err
+      throw isCancelled ? new RequestCancelledError(err.message) : err
     } finally {
       if (ctx.config.metric && metrics) {
         const label = `http-client-${ctx.config.metric}`
         const extensions: Record<string, string | number> = {}
 
-        Object.assign(extensions, {[status]: 1})
+        Object.assign(extensions, { [status]: 1 })
 
         if (ctx.cacheHit) {
-          Object.assign(extensions, ctx.cacheHit, {[`${status}-hit`]: 1})
+          Object.assign(extensions, ctx.cacheHit, { [`${status}-hit`]: 1 })
         } else if (!ctx.inflightHit && !ctx.memoizedHit) {
           // Lets us know how many calls passed through to origin
-          Object.assign(extensions, {[`${status}-miss`]: 1})
+          Object.assign(extensions, { [`${status}-miss`]: 1 })
         }
 
         if (ctx.inflightHit) {
-          Object.assign(extensions, {[`${status}-inflight`]: 1})
+          Object.assign(extensions, { [`${status}-inflight`]: 1 })
         }
 
         if (ctx.memoizedHit) {
-          Object.assign(extensions, {[`${status}-memoized`]: 1})
+          Object.assign(extensions, { [`${status}-memoized`]: 1 })
         }
 
         if (ctx.config.retryCount) {
-          const retryCount = ctx.config.retryCount
+          const { retryCount } = ctx.config
 
           if (retryCount > 0) {
             extensions[`retry-${status}-${retryCount}`] = 1
           }
         }
 
-        const end = status === 'success' && !ctx.cacheHit && !ctx.inflightHit && !ctx.memoizedHit
-          ? process.hrtime(start)
-          : undefined
+        const end =
+          status === 'success' && !ctx.cacheHit && !ctx.inflightHit && !ctx.memoizedHit
+            ? process.hrtime(start)
+            : undefined
 
         metrics.batch(label, end, extensions)
 
         if (ctx.config.verbose) {
           console.log(`VERBOSE: ${name}.${ctx.config.label}`, {
             ...extensions,
-            ...errorCode || errorStatus ? {errorCode, errorStatus} : null,
+            ...(errorCode || errorStatus ? { errorCode, errorStatus } : null),
             millis: end
               ? hrToMillis(end)
               : extensions.revalidated || extensions.router || status !== 'success'
-                ? hrToMillis(process.hrtime(start))
-                : '(from cache)',
-            status: ctx.response && ctx.response.status, // tslint:disable-next-line
+              ? hrToMillis(process.hrtime(start))
+              : '(from cache)',
+            status: ctx.response && ctx.response.status,
             headers: ctx.response && ctx.response.headers,
           })
         }
-      } else {
-        if (ctx.config.verbose) {
-          console.warn(`PROTIP: Please add a metric property to ${name} client request to get metrics in Splunk`, {baseURL: ctx.config.baseURL, url: ctx.config.url})
-        }
+      } else if (ctx.config.verbose) {
+        console.warn(`PROTIP: Please add a metric property to ${name} client request to get metrics in Splunk`, {
+          baseURL: ctx.config.baseURL,
+          url: ctx.config.url,
+        })
       }
       if (serverTiming) {
         // Timings in the client's perspective
@@ -153,14 +145,11 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
         const serverTimingsHeader = path<string>(['response', 'headers', 'server-timing'], ctx)
         if (!ctx.cacheHit && !ctx.inflightHit && !ctx.memoizedHit && serverTimingsHeader) {
           const parsedServerTiming = parseServerTiming(serverTimingsHeader)
-          forEach(
-            ([timingsName, timingsDur]) => {
-              if (!serverTiming[timingsName] || Number(serverTiming[timingsName]) < Number(timingsDur)) {
-                serverTiming[timingsName] = timingsDur
-              }
-            },
-            parsedServerTiming
-          )
+          forEach(([timingsName, timingsDur]) => {
+            if (!serverTiming[timingsName] || Number(serverTiming[timingsName]) < Number(timingsDur)) {
+              serverTiming[timingsName] = timingsDur
+            }
+          }, parsedServerTiming)
         }
       }
     }

@@ -58,7 +58,8 @@ export class HttpClient {
       concurrency,
       headers: defaultHeaders,
       host,
-      params, operationId,
+      params,
+      operationId,
       tenant,
       binding,
       verbose,
@@ -67,41 +68,52 @@ export class HttpClient {
       initialBackoffDelay,
       exponentialBackoffCoefficient,
     } = opts
-    this.name = name || baseURL || 'unknown'
-    const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
+    this.name = name ?? baseURL ?? 'unknown'
+    const limit = (concurrency && concurrency > 0 && pLimit(concurrency)) || undefined
     const headers: Record<string, string> = {
       ...defaultHeaders,
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
-      ...host ? { [FORWARDED_HOST_HEADER]: host } : null,
-      ...tenant ? { [TENANT_HEADER]: formatTenantHeaderValue(tenant) } : null,
-      ...binding ? { [BINDING_HEADER]: formatBindingHeaderValue(binding) } : null,
-      ...locale ? { [LOCALE_HEADER]: locale } : null,
-      ...operationId ? { 'x-vtex-operation-id': operationId } : null,
-      ...product ? { [PRODUCT_HEADER]: product } : null,
-      ...segmentToken ? { [SEGMENT_HEADER]: segmentToken } : null,
-      ...sessionToken ? { [SESSION_HEADER]: sessionToken } : null,
+      ...(host ? { [FORWARDED_HOST_HEADER]: host } : null),
+      ...(tenant ? { [TENANT_HEADER]: formatTenantHeaderValue(tenant) } : null),
+      ...(binding ? { [BINDING_HEADER]: formatBindingHeaderValue(binding) } : null),
+      ...(locale ? { [LOCALE_HEADER]: locale } : null),
+      ...(operationId ? { 'x-vtex-operation-id': operationId } : null),
+      ...(product ? { [PRODUCT_HEADER]: product } : null),
+      ...(segmentToken ? { [SEGMENT_HEADER]: segmentToken } : null),
+      ...(sessionToken ? { [SESSION_HEADER]: sessionToken } : null),
     }
 
     if (authType && authToken) {
-      headers['Authorization'] = `${authType} ${authToken}` // tslint:disable-line
+      headers.Authorization = `${authType} ${authToken}`
     }
 
     const memoizedCache = new Map<string, Promise<Memoized>>()
 
-    this.runMiddlewares = compose([...opts.middlewares || [],
-    defaultsMiddleware({ baseURL, rawHeaders: headers, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient }),
-    metricsMiddleware({ metrics, serverTiming, name }),
-    memoizationMiddleware({ memoizedCache }),
-    ...recorder ? [recorderMiddleware(recorder)] : [],
-    cancellationToken(cancellation),
+    this.runMiddlewares = compose([
+      ...(opts.middlewares ?? []),
+      defaultsMiddleware({
+        baseURL,
+        rawHeaders: headers,
+        params,
+        timeout,
+        retries,
+        verbose,
+        exponentialTimeoutCoefficient,
+        initialBackoffDelay,
+        exponentialBackoffCoefficient,
+      }),
+      metricsMiddleware({ metrics, serverTiming, name }),
+      memoizationMiddleware({ memoizedCache }),
+      ...(recorder ? [recorderMiddleware(recorder)] : []),
+      cancellationToken(cancellation),
       singleFlightMiddleware,
       acceptNotFoundMiddleware,
-    ...memoryCache ? [cacheMiddleware({ type: CacheType.Memory, storage: memoryCache })] : [],
-    ...diskCache ? [cacheMiddleware({ type: CacheType.Disk, storage: diskCache })] : [],
+      ...(memoryCache ? [cacheMiddleware({ type: CacheType.Memory, storage: memoryCache })] : []),
+      ...(diskCache ? [cacheMiddleware({ type: CacheType.Disk, storage: diskCache })] : []),
       notFoundFallbackMiddleware,
       routerCacheMiddleware,
-    requestMiddleware(limit),
+      requestMiddleware(limit),
     ])
   }
 
@@ -116,7 +128,9 @@ export class HttpClient {
   }
 
   public getWithBody = <T = any>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
-    const bodyHash = createHash('md5').update(JSON.stringify(data)).digest('hex')
+    const bodyHash = createHash('md5')
+      .update(JSON.stringify(data))
+      .digest('hex')
     const cacheableConfig = this.getConfig(url, {
       ...config,
       data,
@@ -128,8 +142,14 @@ export class HttpClient {
     return this.request(cacheableConfig).then(response => response.data)
   }
 
-  public getBuffer = (url: string, config: RequestConfig = {}): Promise<{ data: Buffer, headers: any }> => {
-    const bufferConfig: RequestConfig = { cacheable: CacheType.Disk, ...config, url, responseType: 'arraybuffer', transformResponse: noTransforms }
+  public getBuffer = (url: string, config: RequestConfig = {}): Promise<{ data: Buffer; headers: any }> => {
+    const bufferConfig: RequestConfig = {
+      cacheable: CacheType.Disk,
+      ...config,
+      url,
+      responseType: 'arraybuffer',
+      transformResponse: noTransforms,
+    }
     return this.request(bufferConfig)
   }
 

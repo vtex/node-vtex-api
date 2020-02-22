@@ -12,9 +12,10 @@ export class CatalogGraphQL extends AppGraphQLClient {
     super('vtex.catalog-graphql@1.x', ctx, {
       ...opts,
       headers: {
-        ...opts && opts.headers,
+        ...opts?.headers,
         cookie: `VtexIdclientAutCookie=${ctx.authToken}`,
-      }})
+      },
+    })
   }
 
   public sku = (id: string) => {
@@ -25,14 +26,16 @@ export class CatalogGraphQL extends AppGraphQLClient {
       },
     }
     return this.graphql
-      .query<{sku: SKU}, typeof variables>({
-        inflight: true,
-        query: getSKU,
-        variables,
-      },
-      {
-        forceMaxAge: 5,
-      })
+      .query<{ sku: SKU }, typeof variables>(
+        {
+          inflight: true,
+          query: getSKU,
+          variables,
+        },
+        {
+          forceMaxAge: 5,
+        }
+      )
       .then(prop('data'))
   }
 
@@ -44,38 +47,44 @@ export class CatalogGraphQL extends AppGraphQLClient {
       },
     }
     return this.graphql
-      .query<{product: Product}, typeof variables>({
-        inflight: true,
-        query: getProduct,
-        variables,
-      },
-      {
-        forceMaxAge: 5,
-      })
+      .query<{ product: Product }, typeof variables>(
+        {
+          inflight: true,
+          query: getProduct,
+          variables,
+        },
+        {
+          forceMaxAge: 5,
+        }
+      )
       .then(prop('data'))
   }
 
   public category = (id: string) =>
     this.graphql
-      .query<{category: Category}, { id: string }>({
-        inflight: true,
-        query: getCategory,
-        variables: { id },
-      },
-      {
-        forceMaxAge: 5,
-      })
+      .query<{ category: Category }, { id: string }>(
+        {
+          inflight: true,
+          query: getCategory,
+          variables: { id },
+        },
+        {
+          forceMaxAge: 5,
+        }
+      )
       .then(prop('data'))
 
   public brand = (id: string) =>
     this.graphql
-      .query<{brand: Brand}, { id: string }>({
-        inflight: true,
-        query: getBrand,
-        variables: { id },
-      },
-      {
-        forceMaxAge: 5,
-      })
+      .query<{ brand: Brand }, { id: string }>(
+        {
+          inflight: true,
+          query: getBrand,
+          variables: { id },
+        },
+        {
+          forceMaxAge: 5,
+        }
+      )
       .then(prop('data'))
 }

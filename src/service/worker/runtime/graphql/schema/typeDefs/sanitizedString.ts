@@ -1,5 +1,5 @@
 import { GraphQLScalarType, Kind } from 'graphql'
-import {filterXSS, IFilterXSSOptions, IWhiteList} from 'xss'
+import { filterXSS, IFilterXSSOptions, IWhiteList } from 'xss'
 
 const defaultName = 'IOSanitizedString'
 
@@ -22,18 +22,18 @@ const parseValue = (value: string, options?: IFilterXSSOptions) => {
 
 export class IOSanitizedStringType extends GraphQLScalarType {
   constructor(options?: SanitizeOptions) {
-    const allowHTMLTags = options && options.allowHTMLTags
+    const allowHTMLTags = options?.allowHTMLTags
     const stripIgnoreTag = !options || options.stripIgnoreTag !== false
     const xssOptions: IFilterXSSOptions = {
       stripIgnoreTag,
-      ...!allowHTMLTags && {whiteList: [] as IWhiteList},
-      ...stripIgnoreTag && {escapeHtml: noop},
+      ...(!allowHTMLTags && { whiteList: [] as IWhiteList }),
+      ...(stripIgnoreTag && { escapeHtml: noop }),
     }
 
     super({
       name: options ? `Custom${defaultName}` : defaultName,
       parseLiteral: ast => {
-        switch(ast.kind) {
+        switch (ast.kind) {
           case Kind.STRING:
             return parseValue(ast.value, xssOptions)
           default:

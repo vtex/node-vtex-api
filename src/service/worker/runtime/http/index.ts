@@ -1,21 +1,12 @@
 import { IOClients } from '../../../../clients/IOClients'
-import {
-  ClientsConfig,
-  ParamsContext,
-  RecorderState,
-  RouteHandler,
-  ServiceRoute,
-} from '../typings'
+import { ClientsConfig, ParamsContext, RecorderState, RouteHandler, ServiceRoute } from '../typings'
 import { compose } from '../utils/compose'
 import { toArray } from '../utils/toArray'
 import { authTokens } from './middlewares/authTokens'
 import { cancellationToken } from './middlewares/cancellationToken'
 import { cdnNormalizer } from './middlewares/cdnNormalizer'
 import { clients } from './middlewares/clients'
-import {
-  createPubContextMiddleware,
-  createPvtContextMiddleware,
-} from './middlewares/context'
+import { createPubContextMiddleware, createPvtContextMiddleware } from './middlewares/context'
 import { error } from './middlewares/error'
 import { trackIncomingRequestStats } from './middlewares/requestStats'
 import { removeSetCookie } from './middlewares/setCookie'
@@ -38,7 +29,9 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
     vary,
     authTokens,
     clients(implementation!, options),
-    ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
+    ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace'
+      ? [getServiceSettings()]
+      : []),
     timings,
     error,
     ...middlewares,
@@ -62,7 +55,9 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
     vary,
     authTokens,
     clients(implementation!, options),
-    ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
+    ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace'
+      ? [getServiceSettings()]
+      : []),
     removeSetCookie,
     timings,
     error,

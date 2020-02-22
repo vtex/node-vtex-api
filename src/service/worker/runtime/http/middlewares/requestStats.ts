@@ -8,7 +8,7 @@ class IncomingRequestStats {
   public closed = 0
   public total = 0
 
-  public get () {
+  public get() {
     return {
       aborted: this.aborted,
       closed: this.closed,
@@ -16,7 +16,7 @@ class IncomingRequestStats {
     }
   }
 
-  public clear () {
+  public clear() {
     this.aborted = 0
     this.closed = 0
     this.total = 0
@@ -28,11 +28,9 @@ export const incomingRequestStats = new IncomingRequestStats()
 const requestClosed = () => {
   incomingRequestStats.closed++
 }
-const requestAborted = <
-  T extends IOClients,
-  U extends RecorderState,
-  V extends ParamsContext
->(ctx: ServiceContext<T, U, V>) => () => {
+const requestAborted = <T extends IOClients, U extends RecorderState, V extends ParamsContext>(
+  ctx: ServiceContext<T, U, V>
+) => () => {
   incomingRequestStats.aborted++
 
   if (ctx.vtex.cancellation && ctx.vtex.cancellation.cancelable) {
@@ -41,11 +39,10 @@ const requestAborted = <
   }
 }
 
-export async function trackIncomingRequestStats <
-  T extends IOClients,
-  U extends RecorderState,
-  V extends ParamsContext
-> (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
+export async function trackIncomingRequestStats<T extends IOClients, U extends RecorderState, V extends ParamsContext>(
+  ctx: ServiceContext<T, U, V>,
+  next: () => Promise<void>
+) {
   ctx.req.on('close', requestClosed)
   ctx.req.on('aborted', requestAborted(ctx))
   incomingRequestStats.total++

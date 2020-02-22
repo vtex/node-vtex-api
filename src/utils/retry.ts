@@ -1,4 +1,4 @@
-import {isNetworkOrIdempotentRequestError, isSafeRequestError} from 'axios-retry'
+import { isNetworkOrIdempotentRequestError, isSafeRequestError } from 'axios-retry'
 
 export const TIMEOUT_CODE = 'ProxyTimeout'
 
@@ -32,4 +32,4 @@ export const isAbortedOrNetworkErrorOrRouterTimeout = (e: any) => {
   return isNetworkErrorOrRouterTimeout(e)
 }
 
-export {isNetworkOrIdempotentRequestError, exponentialDelay} from 'axios-retry'
+export { isNetworkOrIdempotentRequestError, exponentialDelay } from 'axios-retry'

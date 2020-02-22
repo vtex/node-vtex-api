@@ -8,7 +8,7 @@ const production = process.env.VTEX_PRODUCTION === 'true'
 const handleCancellation = (ctx: MiddlewareContext, cancellation: Cancellation) => {
   let cancellable = true
   return {
-    cancelToken: new axios.CancelToken((canceller) => {
+    cancelToken: new axios.CancelToken(canceller => {
       cancellation.source.token.promise.then(cancel => {
         if (cancellable) {
           canceller(cancel.message)
@@ -38,8 +38,13 @@ const handleCancellation = (ctx: MiddlewareContext, cancellation: Cancellation) 
   }
 }
 
-export const cancellationToken = (cancellation?: Cancellation) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-  const { config: { method } } = ctx
+export const cancellationToken = (cancellation?: Cancellation) => async (
+  ctx: MiddlewareContext,
+  next: () => Promise<void>
+) => {
+  const {
+    config: { method },
+  } = ctx
 
   if (!cancellation) {
     return await next()
@@ -61,7 +66,7 @@ export const cancellationToken = (cancellation?: Cancellation) => async (ctx: Mi
     }
   }
 
-  const {onRequestFinish, cancelToken} = handleCancellation(ctx, cancellation)
+  const { onRequestFinish, cancelToken } = handleCancellation(ctx, cancellation)
   ctx.config.cancelToken = cancelToken
 
   try {

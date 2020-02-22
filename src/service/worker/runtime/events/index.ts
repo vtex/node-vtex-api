@@ -2,13 +2,7 @@ import { IOClients } from '../../../../clients/IOClients'
 import { clients } from '../http/middlewares/clients'
 import { error } from '../http/middlewares/error'
 import { timings } from '../http/middlewares/timings'
-import {
-  ClientsConfig,
-  EventHandler,
-  ParamsContext,
-  RecorderState,
-  ServiceContext,
-} from '../typings'
+import { ClientsConfig, EventHandler, ParamsContext, RecorderState, ServiceContext } from '../typings'
 import { compose, composeForEvents } from '../utils/compose'
 import { toArray } from '../utils/toArray'
 import { parseBodyMiddleware } from './middlewares/body'
@@ -31,16 +25,18 @@ export const createEventHandler = <T extends IOClients, U extends RecorderState,
   return compose(pipeline)
 }
 
-function contextAdapter<T extends IOClients, U extends RecorderState, V extends ParamsContext> (middlewares: Array<EventHandler<T, U>>) {
-  return  async function  middlewareCascade(ctx: ServiceContext<T, U, V>) {
+function contextAdapter<T extends IOClients, U extends RecorderState, V extends ParamsContext>(
+  middlewares: Array<EventHandler<T, U>>
+) {
+  return async function middlewareCascade(ctx: ServiceContext<T, U, V>) {
     const ctxEvent = {
       body: (ctx.state as any).body,
       clients: ctx.clients,
-      key: ctx.vtex.eventInfo? ctx.vtex.eventInfo.key : '',
+      key: ctx.vtex.eventInfo ? ctx.vtex.eventInfo.key : '',
       metrics: ctx.metrics,
-      sender: ctx.vtex.eventInfo? ctx.vtex.eventInfo.sender : '',
+      sender: ctx.vtex.eventInfo ? ctx.vtex.eventInfo.sender : '',
       state: ctx.state,
-      subject: ctx.vtex.eventInfo? ctx.vtex.eventInfo.subject : '',
+      subject: ctx.vtex.eventInfo ? ctx.vtex.eventInfo.subject : '',
       timings: ctx.timings,
       vtex: ctx.vtex,
     }

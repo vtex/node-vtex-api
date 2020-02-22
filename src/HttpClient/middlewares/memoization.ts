@@ -7,7 +7,7 @@ interface MemoizationOptions {
   memoizedCache: Map<string, Promise<Memoized>>
 }
 
-export const memoizationMiddleware = ({memoizedCache}: MemoizationOptions) => {
+export const memoizationMiddleware = ({ memoizedCache }: MemoizationOptions) => {
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     if (!isLocallyCacheable(ctx.config, CacheType.Any) || !ctx.config.memoizable) {
       return await next()
@@ -20,7 +20,6 @@ export const memoizationMiddleware = ({memoizedCache}: MemoizationOptions) => {
       const memoized = await memoizedCache.get(key)!
       ctx.memoizedHit = isMemoized
       ctx.response = memoized.response
-      return
     } else {
       const promise = new Promise<Memoized>(async (resolve, reject) => {
         try {
@@ -29,8 +28,7 @@ export const memoizationMiddleware = ({memoizedCache}: MemoizationOptions) => {
             cacheHit: ctx.cacheHit!,
             response: ctx.response!,
           })
-        }
-        catch (err) {
+        } catch (err) {
           reject(err)
         }
       })

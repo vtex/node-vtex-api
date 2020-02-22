@@ -10,11 +10,11 @@ export interface IOMessage {
 }
 
 export const providerFromMessage = (message: IOMessage) => {
-  const {provider} = parseIOMessageId(message)
-  return provider || 'unknown'
+  const { provider } = parseIOMessageId(message)
+  return provider ?? 'unknown'
 }
 
-export const parseIOMessageId = ({id}: IOMessage) => {
+export const parseIOMessageId = ({ id }: IOMessage) => {
   const splitted = id.split(PROVIDER_SPACER)
   if (splitted.length === 2) {
     return {

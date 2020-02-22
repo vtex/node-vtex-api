@@ -57,36 +57,36 @@ export type CacheStorage = CacheLayer<string, Cached>
 
 export interface InstanceOptions {
   authType?: AuthType
-  timeout?: number,
-  memoryCache?: CacheLayer<string, Cached>,
-  diskCache?: CacheLayer<string, Cached>,
-  baseURL?: string,
-  retries?: number,
-  exponentialTimeoutCoefficient?: number,
-  initialBackoffDelay?: number,
-  exponentialBackoffCoefficient?: number,
-  metrics?: MetricsAccumulator,
+  timeout?: number
+  memoryCache?: CacheLayer<string, Cached>
+  diskCache?: CacheLayer<string, Cached>
+  baseURL?: string
+  retries?: number
+  exponentialTimeoutCoefficient?: number
+  initialBackoffDelay?: number
+  exponentialBackoffCoefficient?: number
+  metrics?: MetricsAccumulator
   /**
    * Maximum number of concurrent requests
    *
    * @type {number}
    * @memberof InstanceOptions
    */
-  concurrency?: number,
+  concurrency?: number
   /**
    * Default headers to be sent with every request
    *
    * @type {Record<string, string>}
    * @memberof InstanceOptions
    */
-  headers?: Record<string, string>,
+  headers?: Record<string, string>
   /**
    * Default query string parameters to be sent with every request
    *
    * @type {Record<string, string>}
    * @memberof InstanceOptions
    */
-  params?: Record<string, string>,
+  params?: Record<string, string>
   middlewares?: Array<Middleware<MiddlewareContext>>
   verbose?: boolean
   name?: string

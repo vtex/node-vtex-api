@@ -3,14 +3,20 @@ import { constants } from 'os'
 import { RequestCancelledError } from '../../errors/RequestCancelledError'
 import { Logger } from '../logger'
 
-export const logger = new Logger({account: 'unhandled', workspace: 'unhandled', requestId: 'unhandled', operationId: 'unhandled', production: process.env.VTEX_PRODUCTION === 'true'})
+export const logger = new Logger({
+  account: 'unhandled',
+  workspace: 'unhandled',
+  requestId: 'unhandled',
+  operationId: 'unhandled',
+  production: process.env.VTEX_PRODUCTION === 'true',
+})
 let watched: NodeJS.Process
 
 // Remove the any typings once we move to nodejs 10.x
 const handleSignal: NodeJS.SignalsListener = signal => {
   const message = `Worker ${process.pid} received signal ${signal}`
   console.warn(message)
-  logger.warn({message, signal})
+  logger.warn({ message, signal })
   process.exit((constants.signals as any)[signal])
 }
 
@@ -29,7 +35,7 @@ export const addProcessListeners = () => {
     process.exit(420)
   })
 
-  process.on('unhandledRejection', (reason: Error | any, promise: Promise<void>)  => {
+  process.on('unhandledRejection', (reason: Error | any, promise: Promise<void>) => {
     if (reason instanceof RequestCancelledError) {
       return
     }
@@ -40,7 +46,7 @@ export const addProcessListeners = () => {
     }
   })
 
-  process.on('warning', (warning) => {
+  process.on('warning', warning => {
     console.warn(warning)
   })
 

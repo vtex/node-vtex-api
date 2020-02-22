@@ -1,38 +1,33 @@
-// tslint:disable-next-line:interface-over-type-literal
-export type FetchResult<V> = {
-  value: V,
-  maxAge?: number,
+export interface FetchResult<V> {
+  value: V
+  maxAge?: number
 }
 
-// tslint:disable-next-line:interface-over-type-literal
-export type DiskStats = {
-  hits: number,
-  total: number,
-  name: string,
+export interface DiskStats {
+  hits: number
+  total: number
+  name: string
 }
 
-// tslint:disable-next-line:interface-over-type-literal
-export type LRUStats = {
-  itemCount: number,
-  length: number,
-  disposedItems: number,
-  hitRate: number | undefined,
-  hits: number,
-  max: number,
-  name: string,
-  total: number,
+export interface LRUStats {
+  itemCount: number
+  length: number
+  disposedItems: number
+  hitRate: number | undefined
+  hits: number
+  max: number
+  name: string
+  total: number
 }
 
-// tslint:disable-next-line:interface-over-type-literal
-export type MultilayerStats = {
-  hitRate: number | undefined,
-  hits: number,
-  total: number,
-  name: string,
+export interface MultilayerStats {
+  hitRate: number | undefined
+  hits: number
+  total: number
+  name: string
 }
 
-// tslint:disable-next-line:interface-over-type-literal
-export type LRUDiskCacheOptions = {
+export interface LRUDiskCacheOptions {
   /**
    * The maximum size of the cache, checked by applying the length
    * function to all values in the cache. Not setting this is kind of silly,
@@ -53,5 +48,5 @@ export type LRUDiskCacheOptions = {
    * return `undefined` when you try to get a stale entry,
    * as if it had already been deleted.
    */
-  stale?: boolean,
+  stale?: boolean
 }

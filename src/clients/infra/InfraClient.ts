@@ -8,8 +8,8 @@ const useHttps = !IS_IO
  * Used to perform calls on infra apps (e.g. sphinx, apps, vbase).
  */
 export class InfraClient extends IOClient {
-  constructor(app: string, context: IOContext, options?: InstanceOptions, isRoot: boolean = false) {
-    const {account, workspace, region} = context
+  constructor(app: string, context: IOContext, options?: InstanceOptions, isRoot = false) {
+    const { account, workspace, region } = context
     const [appName, appVersion] = app.split('@')
     const protocol = useHttps ? 'https' : 'http'
     let baseURL: string
@@ -23,14 +23,10 @@ export class InfraClient extends IOClient {
       baseURL = `http://${app}.${region}.vtex.io${isRoot ? '' : `/${account}/${workspace}`}`
     }
 
-    super(
-      context,
-      {
-        ...options,
-        authType: AuthType.bearer,
-        baseURL,
-      }
-    )
+    super(context, {
+      ...options,
+      authType: AuthType.bearer,
+      baseURL,
+    })
   }
 }
-

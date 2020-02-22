@@ -10,15 +10,10 @@ import { Recorder } from '../../utils/recorder'
 import { GraphQLServiceContext } from '../typings'
 import { cacheControlHTTP } from '../utils/cacheControl'
 
-export async function response (ctx: GraphQLServiceContext, next: () => Promise<void>) {
-
+export async function response(ctx: GraphQLServiceContext, next: () => Promise<void>) {
   await next()
 
-  const {
-    cacheControl,
-    status,
-    graphqlResponse,
-  } = ctx.graphql
+  const { cacheControl, status, graphqlResponse } = ctx.graphql
 
   const cacheControlHeader = cacheControlHTTP(ctx)
 

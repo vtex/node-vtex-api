@@ -15,29 +15,28 @@ Cookies dropped:
 const findStr = (target: string, set: string[]) => find((a: string) => a.toLocaleLowerCase() === target, set)
 
 const findScopeInCacheControl = (cacheControl: string | undefined) => {
-  const splitted = cacheControl && cacheControl.split(/\s*,\s*/g)
+  const splitted = cacheControl?.split(/\s*,\s*/g)
   const scopePublic = splitted && findStr('public', splitted)
   return scopePublic
 }
 
 const cookieKey = (cookie: string) => compose<string, string[], string>(head, split('='))(cookie)
 
-const indexCookieByKeys = (setCookie: string[]) => map(
-  (cookie: string) => [cookieKey(cookie), cookie] as [string, string],
-  setCookie
-)
+const indexCookieByKeys = (setCookie: string[]) =>
+  map((cookie: string) => [cookieKey(cookie), cookie] as [string, string], setCookie)
 
 interface CookieAccumulator {
   addedPayload: string[]
   droppedKeys: string[]
 }
 
-export async function removeSetCookie<
-  T extends IOClients,
-  U extends RecorderState,
-  V extends ParamsContext
-> (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
-  const { vtex: { logger } } = ctx
+export async function removeSetCookie<T extends IOClients, U extends RecorderState, V extends ParamsContext>(
+  ctx: ServiceContext<T, U, V>,
+  next: () => Promise<void>
+) {
+  const {
+    vtex: { logger },
+  } = ctx
 
   await next()
 

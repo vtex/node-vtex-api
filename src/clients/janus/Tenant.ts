@@ -37,10 +37,11 @@ export class TenantClient extends JanusClient {
     })
   }
 
-  public info = (config?: RequestConfig) => this.http.get<Tenant>('/api/tenant/tenants', {
-    inflightKey: inflightUrlWithQuery,
-    memoizeable: true,
-    metric: 'get-tenant-info',
-    ...config,
-  })
+  public info = (config?: RequestConfig) =>
+    this.http.get<Tenant>('/api/tenant/tenants', {
+      inflightKey: inflightUrlWithQuery,
+      memoizeable: true,
+      metric: 'get-tenant-info',
+      ...config,
+    })
 }

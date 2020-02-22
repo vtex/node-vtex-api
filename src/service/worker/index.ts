@@ -12,11 +12,7 @@ import { getService } from '../loaders'
 import { logOnceToDevConsole } from '../logger/console'
 import { LogLevel } from '../logger/logger'
 import { addProcessListeners, logger } from './listeners'
-import {
-  healthcheckHandler,
-  metricsLoggerHandler,
-  whoAmIHandler,
-} from './runtime/builtIn/handlers'
+import { healthcheckHandler, metricsLoggerHandler, whoAmIHandler } from './runtime/builtIn/handlers'
 import {
   addMetricsLoggerMiddleware,
   prometheusLoggerMiddleware,
@@ -29,18 +25,8 @@ import { createPrivateHttpRoute, createPublicHttpRoute } from './runtime/http'
 import { routerFromPublicHttpHandlers } from './runtime/http/router'
 import { logAvailableRoutes } from './runtime/http/routes'
 import { Service } from './runtime/Service'
-import {
-  isStatusTrack,
-  statusTrackHandler,
-  trackStatus,
-} from './runtime/statusTrack'
-import {
-  HttpRoute,
-  ParamsContext,
-  RecorderState,
-  RouteHandler,
-  ServiceJSON,
-} from './runtime/typings'
+import { isStatusTrack, statusTrackHandler, trackStatus } from './runtime/statusTrack'
+import { HttpRoute, ParamsContext, RecorderState, RouteHandler, ServiceJSON } from './runtime/typings'
 
 const upSignal = () => {
   const data = JSON.stringify({ statusTrack: true })
@@ -96,11 +82,7 @@ const createAppHttpHandlers = (
           throw new Error(`Could not find route: ${routeId}. Please add ${routeId} route in your service.json file`)
         }
 
-        const {
-          path: servicePath,
-          public: publicRoute = false,
-          extensible = false,
-        } = serviceRoute
+        const { path: servicePath, public: publicRoute = false, extensible = false } = serviceRoute
 
         if (publicRoute || extensible) {
           acc.pub[routeId] = {
@@ -125,10 +107,8 @@ const createAppHttpHandlers = (
   return null
 }
 
-const routerFromPrivateHttpHandlers = (routes: Record<string, HttpRoute>) => Object.values(routes).reduce(
-  (router, { handler, path }) => router.all(path, handler as any),
-  new Router()
-)
+const routerFromPrivateHttpHandlers = (routes: Record<string, HttpRoute>) =>
+  Object.values(routes).reduce((router, { handler, path }) => router.all(path, handler as any), new Router())
 
 const createAppGraphQLHandler = (
   { config: { graphql, clients } }: Service<IOClients, RecorderState, ParamsContext>,
@@ -148,22 +128,20 @@ const createAppGraphQLHandler = (
   return null
 }
 
-const createAppEventHandlers = (
-  { config: { events, clients } }: Service<IOClients, RecorderState, ParamsContext>
-) => {
+const createAppEventHandlers = ({ config: { events, clients } }: Service<IOClients, RecorderState, ParamsContext>) => {
   if (events && clients) {
-    return Object.keys(events).reduce(
-      (acc, eventId) => {
-        acc[eventId] = createEventHandler(clients, events[eventId])
-        return acc
-      },
-      {} as Record<string, RouteHandler>
-    )
+    return Object.keys(events).reduce((acc, eventId) => {
+      acc[eventId] = createEventHandler(clients, events[eventId])
+      return acc
+    }, {} as Record<string, RouteHandler>)
   }
   return null
 }
 
-const createRuntimeHttpHandlers = (appEventHandlers: Record<string, RouteHandler> | null, serviceJSON: ServiceJSON): HttpHandlerByScope => ({
+const createRuntimeHttpHandlers = (
+  appEventHandlers: Record<string, RouteHandler> | null,
+  serviceJSON: ServiceJSON
+): HttpHandlerByScope => ({
   pvt: {
     __events: {
       handler: routerFromEventHandlers(appEventHandlers),
@@ -188,17 +166,15 @@ const createRuntimeHttpHandlers = (appEventHandlers: Record<string, RouteHandler
   },
 })
 
-const scaleClientCaches = (
-  scaleFactor: number,
-  options?: Record<string, InstanceOptions>
-) => Object.entries(options || {}).forEach(([name, opts]) => {
-  if (opts && opts.memoryCache && scaleFactor > 1) {
-    const previous = (opts.memoryCache as any).storage.max
-    const current = previous / scaleFactor;
-    (opts.memoryCache as any).storage.max = current
-    logOnceToDevConsole(`Scaling ${name} cache capacity from ${previous} to ${current}`, LogLevel.Warn)
-  }
-})
+const scaleClientCaches = (scaleFactor: number, options?: Record<string, InstanceOptions>) =>
+  Object.entries(options ?? {}).forEach(([name, opts]) => {
+    if (opts?.memoryCache && scaleFactor > 1) {
+      const previous = (opts.memoryCache as any).storage.max
+      const current = previous / scaleFactor
+      ;(opts.memoryCache as any).storage.max = current
+      logOnceToDevConsole(`Scaling ${name} cache capacity from ${previous} to ${current}`, LogLevel.Warn)
+    }
+  })
 
 export const startWorker = (serviceJSON: ServiceJSON) => {
   addProcessListeners()
@@ -213,7 +189,9 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
 
   const service = getService()
 
-  const { config: { clients } } = service
+  const {
+    config: { clients },
+  } = service
   if (clients) {
     scaleClientCaches(serviceJSON.workers, clients.options)
   }
@@ -222,13 +200,9 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
   const appGraphQLHandlers = createAppGraphQLHandler(service, serviceJSON)
   const appEventHandlers = createAppEventHandlers(service)
   const runtimeHttpHandlers = createRuntimeHttpHandlers(appEventHandlers, serviceJSON)
-  const httpHandlers = [
-    appHttpHandlers,
-    appGraphQLHandlers,
-    runtimeHttpHandlers,
-  ]
-  .filter(x => x != null)
-  .reduce(mergeDeepRight)
+  const httpHandlers = [appHttpHandlers, appGraphQLHandlers, runtimeHttpHandlers]
+    .filter(x => x != null)
+    .reduce(mergeDeepRight)
 
   if (httpHandlers?.pub) {
     const publicHandlersRouter = routerFromPublicHttpHandlers(httpHandlers.pub)

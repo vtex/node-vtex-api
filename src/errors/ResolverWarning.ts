@@ -3,7 +3,6 @@ import { AxiosError } from 'axios'
 import { LogLevel } from '../service/logger'
 import { ErrorLike, ResolverError } from './ResolverError'
 
-
 /**
  * Indicates a non-fatal error occurred and was handled.
  * ResolverWarnings are logged with level "warning" denoting they were handled by user code.

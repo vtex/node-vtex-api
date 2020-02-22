@@ -7,8 +7,7 @@ export class Billing extends AppClient {
     super('vtex.billing@0.x', context, options)
   }
 
-  public status = () =>
-    this.http.get<ContractStatus>('/_v/contractStatus')
+  public status = () => this.http.get<ContractStatus>('/_v/contractStatus')
 }
 
 export enum ContractStatus {
