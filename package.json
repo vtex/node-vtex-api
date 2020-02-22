@@ -9,10 +9,14 @@
     "watch": "tsc --watch",
     "build": "tsc",
     "gen": "typescript-json-schema tsconfig.json PublicAppManifest > gen/manifest.schema",
-    "lint": "tsc --noEmit && tslint --fix -c tslint.json './src/**/*.ts'",
     "test": "jest",
-    "prepublish": "run-s clean build gen",
-    "prereleasy": "yarn prepublish"
+    "lint": "eslint . --ext .ts --config .eslintrc",
+    "format": "prettier --config ./.prettierrc --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "format-lint": "yarn format && yarn lint",
+    "prepublishOnly": "bash ./scripts/publishLock.sh",
+    "ci:build": "yarn clean && yarn build && yarn gen",
+    "ci:test": "yarn test --ci",
+    "ci:prettier-check": "prettier --check --config ./.prettierrc \"src/**/*.ts\" \"src/**/*.js\""
   },
   "jest": {
     "transform": {
