@@ -4,6 +4,10 @@
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
+  "files": [
+    "lib/",
+    "gen/"
+  ],
   "scripts": {
     "clean": "rimraf lib/",
     "watch": "tsc --watch",
