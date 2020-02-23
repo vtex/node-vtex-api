@@ -14,7 +14,7 @@
     "build": "tsc",
     "gen": "typescript-json-schema tsconfig.json PublicAppManifest > gen/manifest.schema",
     "test": "jest",
-    "lint": "eslint . --ext .ts --config .eslintrc",
+    "lint": "tslint -c tslint.json './src/**/*.ts'",
     "format": "prettier --config ./.prettierrc --write \"src/**/*.ts\" \"src/**/*.js\"",
     "format-lint": "yarn format && yarn lint",
     "prepublishOnly": "bash ./scripts/publishLock.sh",
