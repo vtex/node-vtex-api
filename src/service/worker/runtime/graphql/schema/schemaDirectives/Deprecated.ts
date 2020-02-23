@@ -56,7 +56,7 @@ export class Deprecated extends SchemaDirectiveVisitor {
     const now = process.hrtime()
     const timeSinceLastLog = hrtimeToS([
       now[0] - lastLog[0],
-      now[1] - lastLog[1]
+      now[1] - lastLog[1],
     ])
     if (timeSinceLastLog > LOG_PERIOD_S) {
       lastLog = now
