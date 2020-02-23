@@ -16,7 +16,6 @@ jobs:
         with:
             node-version: 12
       - run: yarn install --ignore-scripts
-      - run: yarn run ci:prettier-check
       - run: yarn run lint
 
   test:
