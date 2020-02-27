@@ -3,6 +3,7 @@ import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
 
 const JANUS_ENV_COOKIE_KEY = 'vtex-commerce-env'
 const VTEX_ID_COOKIE_KEY = 'VtexIdclientAutCookie'
+const VTEX_ID_HEADER_KEY = 'x-vtex-credential'
 
 export async function authTokens <
   T extends IOClients,
@@ -11,7 +12,7 @@ export async function authTokens <
 > (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
   const { vtex: { account } } = ctx
 
-  ctx.vtex.adminUserAuthToken = ctx.cookies.get(VTEX_ID_COOKIE_KEY) || ctx.headers[VTEX_ID_COOKIE_KEY.toLocaleLowerCase()]
+  ctx.vtex.adminUserAuthToken = ctx.cookies.get(VTEX_ID_COOKIE_KEY) || ctx.headers[VTEX_ID_HEADER_KEY]
   ctx.vtex.storeUserAuthToken = ctx.cookies.get(`${VTEX_ID_COOKIE_KEY}_${account}`)
   ctx.vtex.janusEnv = ctx.cookies.get(JANUS_ENV_COOKIE_KEY)
 
