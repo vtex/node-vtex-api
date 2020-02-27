@@ -3,6 +3,7 @@ import { createHash } from 'crypto'
 import { IncomingMessage } from 'http'
 import compose from 'koa-compose'
 import pLimit from 'p-limit'
+import { gzipSync } from 'zlib'
 
 import {
   BINDING_HEADER,
@@ -27,6 +28,8 @@ import { recorderMiddleware } from './middlewares/recorder'
 import { defaultsMiddleware, requestMiddleware, routerCacheMiddleware } from './middlewares/request'
 import { InstanceOptions, IOResponse, MiddlewareContext, RequestConfig } from './typings'
 
+// https://webmasters.stackexchange.com/questions/31750/what-is-recommended-minimum-object-size-for-gzip-performance-benefits
+const GZIP_THRESHOLD = 860
 const DEFAULT_TIMEOUT_MS = 1000
 const noTransforms = [(data: any) => data]
 
@@ -115,11 +118,19 @@ export class HttpClient {
     return this.request(cacheableConfig)
   }
 
-  public getWithBody = <T = any>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
-    const bodyHash = createHash('md5').update(JSON.stringify(data)).digest('hex')
+  public getWithBody = <T = any>(url: string, rawData?: any, config: RequestConfig = {}): Promise<T> => {
+    const stringified = JSON.stringify(rawData)
+    const gzipped = stringified.length > GZIP_THRESHOLD && gzipSync(stringified)
+    const data = gzipped || stringified
+    const bodyHash = createHash('md5').update(data).digest('hex')
     const cacheableConfig = this.getConfig(url, {
       ...config,
       data,
+      headers: {
+        ...config?.headers,
+        'Content-Encoding': gzipped ? 'gzip' : 'identity',
+        'Content-Type': 'application/json',
+      },
       params: {
         ...config.params,
         [BODY_HASH]: bodyHash,
