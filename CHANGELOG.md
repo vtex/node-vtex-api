@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.19.0-beta] - 2020-02-27
+
 ## [6.18.0] - 2020-02-27
 ### Added
 - Adds stale while revalidating to apps get meta infos function
