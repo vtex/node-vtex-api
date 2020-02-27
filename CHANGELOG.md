@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
-- Get `adminUserAuthToken` from header `VtexIdclientAutCookie`.
+- Get `adminUserAuthToken` from header `X-Vtex-Credential`.
 
 ## [6.18.0] - 2020-02-27
 ### Added
