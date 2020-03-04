@@ -88,6 +88,7 @@ export interface ClientsConfig<ClientsT extends IOClients = IOClients> {
 
 export interface GraphQLOptions<ClientsT extends IOClients = IOClients, StateT extends RecorderState = RecorderState, CustomT extends ParamsContext = ParamsContext> {
   resolvers: Record<string, Record<string, Resolver<ClientsT, StateT, CustomT>> | GraphQLScalarType>
+  schema?: string
   schemaDirectives?: Record<string, typeof SchemaDirectiveVisitor>
 }
 

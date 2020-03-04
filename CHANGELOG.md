@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.20.0] - 2020-03-04
+### Added
+- Support for a external schema to be passed into graphql Service configuration.
+
 ## [6.19.0] - 2020-03-02
 ### Added
 - Get `adminUserAuthToken` from header `X-Vtex-Credential`.
