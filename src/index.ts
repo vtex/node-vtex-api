@@ -1,5 +1,3 @@
-import './httpsInterception'
-
 process.env.FORCE_COLOR = '1'
 
 export * from './caches'
