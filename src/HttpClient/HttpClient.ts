@@ -66,6 +66,7 @@ export class HttpClient {
       exponentialTimeoutCoefficient,
       initialBackoffDelay,
       exponentialBackoffCoefficient,
+      httpsAgent,
     } = opts
     this.name = name || baseURL || 'unknown'
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
@@ -90,7 +91,7 @@ export class HttpClient {
     const memoizedCache = new Map<string, Promise<Memoized>>()
 
     this.runMiddlewares = compose([...opts.middlewares || [],
-    defaultsMiddleware({ baseURL, rawHeaders: headers, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient }),
+    defaultsMiddleware({ baseURL, rawHeaders: headers, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient, httpsAgent }),
     metricsMiddleware({ metrics, serverTiming, name }),
     memoizationMiddleware({ memoizedCache }),
     ...recorder ? [recorderMiddleware(recorder)] : [],

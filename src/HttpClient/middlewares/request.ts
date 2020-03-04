@@ -74,9 +74,10 @@ export interface DefaultMiddlewareArgs {
   exponentialTimeoutCoefficient?: number
   initialBackoffDelay?: number
   exponentialBackoffCoefficient?: number
+  httpsAgent?: AxiosRequestConfig['httpsAgent']
 }
 
-export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient }: DefaultMiddlewareArgs) => {
+export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient, httpsAgent }: DefaultMiddlewareArgs) => {
   const countByMetric: Record<string, number> = {}
   const headers = renameBy(toLower, rawHeaders)
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
@@ -84,6 +85,7 @@ export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retri
       baseURL,
       exponentialBackoffCoefficient,
       exponentialTimeoutCoefficient,
+      httpsAgent: ctx.config.httpsAgent || httpsAgent,
       initialBackoffDelay,
       maxRedirects: 0,
       retries,
