@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- createHttpsAgent helper function so devs can import it in their apps and use our agent
+- httpsAgent added to instanceOptions so we can add the agent in the client's constructor
+
 ### Removed
 - Https interceptor agent
 
