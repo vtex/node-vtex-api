@@ -34,10 +34,11 @@ export const makeSchema = <
 >(options: GraphQLOptions<ClientsT, StateT, CustomT>) => {
   const {
     resolvers: appResolvers,
+    schema: appSchema,
     schemaDirectives: appDirectives,
   } = options
 
-  const appTypeDefs = readFileSync('./service/schema.graphql', 'utf8')
+  const appTypeDefs = appSchema || readFileSync('./service/schema.graphql', 'utf8')
 
   const schemaMetaData = extractSchemaMetaData(appTypeDefs!)
 
