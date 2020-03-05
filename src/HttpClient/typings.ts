@@ -91,6 +91,7 @@ export interface InstanceOptions {
   verbose?: boolean
   name?: string
   serverTimings?: Record<string, string>
+  httpsAgent?: AxiosRequestConfig['httpsAgent']
 }
 
 export interface IOResponse<T> {

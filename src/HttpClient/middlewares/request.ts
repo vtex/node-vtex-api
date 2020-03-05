@@ -1,5 +1,4 @@
-import Agent from 'agentkeepalive'
-import axios, { AxiosInstance } from 'axios'
+import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 import { Limit } from 'p-limit'
 import { stringify } from 'qs'
 import { mapObjIndexed, path, sum, toLower, values } from 'ramda'
@@ -7,12 +6,9 @@ import { mapObjIndexed, path, sum, toLower, values } from 'ramda'
 import { renameBy } from '../../utils/renameBy'
 import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../utils/retry'
 import { MiddlewareContext, RequestConfig } from '../typings'
+import { createHttpAgent } from './../agents'
 
-const httpAgent = new Agent({
-  freeSocketTimeout: 15 * 1000,
-  keepAlive: true,
-  maxFreeSockets: 50,
-})
+const httpAgent = createHttpAgent()
 
 const http = axios.create({
   httpAgent,
@@ -78,9 +74,10 @@ export interface DefaultMiddlewareArgs {
   exponentialTimeoutCoefficient?: number
   initialBackoffDelay?: number
   exponentialBackoffCoefficient?: number
+  httpsAgent?: AxiosRequestConfig['httpsAgent']
 }
 
-export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient }: DefaultMiddlewareArgs) => {
+export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient, httpsAgent }: DefaultMiddlewareArgs) => {
   const countByMetric: Record<string, number> = {}
   const headers = renameBy(toLower, rawHeaders)
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
@@ -88,6 +85,7 @@ export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retri
       baseURL,
       exponentialBackoffCoefficient,
       exponentialTimeoutCoefficient,
+      httpsAgent: ctx.config.httpsAgent || httpsAgent,
       initialBackoffDelay,
       maxRedirects: 0,
       retries,
