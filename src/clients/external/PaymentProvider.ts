@@ -1,5 +1,5 @@
+import { InstanceOptions, IOContext, Maybe } from '../..'
 import { ExternalClient } from './ExternalClient'
-import { IOContext, InstanceOptions, Maybe } from '../..'
 
 const routes = {
   callback: (transactionId: string, paymentId: string) =>
