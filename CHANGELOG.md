@@ -8,8 +8,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ## [6.21.0] - 2020-03-05
-
-## [6.20.0-beta] - 2020-03-04
 ### Added
 - createHttpsAgent helper function so devs can import it in their apps and use our agent
 - httpsAgent added to instanceOptions so we can add the agent in the client's constructor
