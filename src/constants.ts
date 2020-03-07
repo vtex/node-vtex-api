@@ -1,5 +1,8 @@
 import { versionToMajor } from './utils/app'
+// tslint:disable-next-line
+const pkg = require('../package.json')
 
+export const NODE_VTEX_API_VERSION = pkg.version
 export const DEFAULT_WORKSPACE = 'master'
 export const IS_IO = process.env.VTEX_IO
 export const PID = process.pid
