@@ -11,6 +11,8 @@ import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
 import { getService } from '../loaders'
 import { logOnceToDevConsole } from '../logger/console'
 import { LogLevel } from '../logger/logger'
+import { initServiceTracer } from '../tracing/initTracer'
+import { addTracingMiddleware } from '../tracing/tracingMiddlewares'
 import { addProcessListeners, logger } from './listeners'
 import {
   healthcheckHandler,
@@ -203,9 +205,11 @@ const scaleClientCaches = (
 export const startWorker = (serviceJSON: ServiceJSON) => {
   addProcessListeners()
 
+  const tracer = initServiceTracer()
   const app = new Koa()
   app.proxy = true
   app
+    .use(addTracingMiddleware(tracer))
     .use(prometheusLoggerMiddleware())
     .use(addMetricsLoggerMiddleware())
     .use(compress())
