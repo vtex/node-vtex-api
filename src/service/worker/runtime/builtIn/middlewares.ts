@@ -35,6 +35,8 @@ export const prometheusLoggerMiddleware = () => {
       gauge.dec(1)
       return
     }
+
+    ctx.tracing!.currentSpan.setOperationName('builtin:prometheus-metrics')
     ctx.set('Content-Type', register.contentType)
     ctx.body = register.metrics()
     ctx.status = 200
