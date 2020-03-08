@@ -156,7 +156,7 @@ const createAppEventHandlers = (
   if (events && clients) {
     return Object.keys(events).reduce(
       (acc, eventId) => {
-        acc[eventId] = createEventHandler(clients, events[eventId])
+        acc[eventId] = createEventHandler(clients, eventId, events[eventId])
         return acc
       },
       {} as Record<string, RouteHandler>
