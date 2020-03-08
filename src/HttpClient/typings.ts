@@ -1,5 +1,6 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { Middleware } from 'koa-compose'
+import { Span } from 'opentracing'
 
 import { CacheLayer } from '../caches/CacheLayer'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
@@ -36,6 +37,7 @@ export interface RequestConfig extends AxiosRequestConfig {
   forceMaxAge?: number
   responseEncoding?: BufferEncoding
   nullIfNotFound?: boolean
+  tracing?: { rootSpan?: Span }
 }
 
 export interface CacheHit {
