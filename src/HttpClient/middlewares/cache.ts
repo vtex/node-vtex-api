@@ -1,7 +1,9 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios'
+import { Span } from 'opentracing'
 
 import { CacheLayer } from '../../caches/CacheLayer'
 import { LOCALE_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../../constants'
+import { UserLandTracer } from '../../tracing/UserLandTracer'
 import { MiddlewareContext, RequestConfig } from '../typings'
 
 const RANGE_HEADER_QS_KEY = '__range_header'
@@ -163,3 +165,10 @@ export type CacheableRequestConfig = RequestConfig & {
   cacheable: CacheType,
   memoizable: boolean
 }
+
+export interface CacheableAndMaybeTraceableRequestConfig extends CacheableRequestConfig {
+  tracing?: {
+    tracer: UserLandTracer
+    rootSpan?: Span
+  }
+} 
