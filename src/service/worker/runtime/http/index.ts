@@ -1,4 +1,5 @@
 import { IOClients } from '../../../../clients/IOClients'
+import { insertUserLandTracer, nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
 import {
   ClientsConfig,
   ParamsContext,
@@ -32,15 +33,18 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
   const { implementation, options } = clientsConfig
   const middlewares = toArray(serviceHandler)
   const pipeline = [
+    nameSpanOperationMiddleware('private-handler', routeId),
     createPvtContextMiddleware(routeId, serviceRoute),
     cancellationToken,
     trackIncomingRequestStats,
     vary,
     authTokens,
+    insertUserLandTracer,
     clients(implementation!, options),
     ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     timings,
     error,
+    traceUserLandRemainingPipelineMiddleware(`user-private-handler:${routeId}`),
     ...middlewares,
   ]
   return compose(pipeline)
@@ -55,17 +59,20 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
   const { implementation, options } = clientsConfig
   const middlewares = toArray(serviceHandler)
   const pipeline = [
+    nameSpanOperationMiddleware('public-handler', routeId),
     createPubContextMiddleware(routeId, serviceRoute),
     cancellationToken,
     trackIncomingRequestStats,
     cdnNormalizer,
     vary,
     authTokens,
+    insertUserLandTracer,
     clients(implementation!, options),
     ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     removeSetCookie,
     timings,
     error,
+    traceUserLandRemainingPipelineMiddleware(`user-public-handler:${routeId}`),
     ...middlewares,
   ]
   return compose(pipeline)
