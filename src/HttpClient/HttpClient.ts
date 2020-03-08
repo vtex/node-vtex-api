@@ -2,6 +2,7 @@ import { AxiosResponse } from 'axios'
 import { createHash } from 'crypto'
 import { IncomingMessage } from 'http'
 import compose from 'koa-compose'
+import { Span } from 'opentracing'
 import pLimit from 'p-limit'
 
 import {
@@ -15,9 +16,10 @@ import {
   TENANT_HEADER,
 } from '../constants'
 import { IOContext } from '../service/worker/runtime/typings'
+import { UserLandTracer } from '../tracing/UserLandTracer'
 import { formatBindingHeaderValue } from '../utils/binding'
 import { formatTenantHeaderValue } from '../utils/tenant'
-import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
+import { CacheableAndMaybeTraceableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
 import { cancellationToken } from './middlewares/cancellationToken'
 import { singleFlightMiddleware } from './middlewares/inflight'
 import { memoizationMiddleware, Memoized } from './middlewares/memoization'
@@ -35,6 +37,7 @@ type ClientOptions = IOContext & Partial<InstanceOptions>
 export class HttpClient {
   public name: string
 
+  private tracer?: UserLandTracer
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor(opts: ClientOptions) {
@@ -67,8 +70,11 @@ export class HttpClient {
       initialBackoffDelay,
       exponentialBackoffCoefficient,
       httpsAgent,
+      tracer,
     } = opts
     this.name = name || baseURL || 'unknown'
+
+    this.tracer = tracer
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
       ...defaultHeaders,
@@ -175,10 +181,16 @@ export class HttpClient {
     return context.response!
   }
 
-  private getConfig = (url: string, config: RequestConfig = {}): CacheableRequestConfig => ({
+  private getConfig = (url: string, config: RequestConfig = {}): CacheableAndMaybeTraceableRequestConfig => ({
     cacheable: CacheType.Memory,
     memoizable: true,
     ...config,
     url,
+    ...(this.tracer ? {
+      tracing: {
+        rootSpan: config.tracing?.rootSpan,
+        tracer: this.tracer,
+      },
+    } : { tracing: undefined }),
   })
 }
