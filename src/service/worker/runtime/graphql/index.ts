@@ -27,7 +27,7 @@ export const createGraphQLRoute = <T extends IOClients, U extends RecorderState,
 ) => {
   const schema = makeSchema(graphql)
   const pipeline = [
-    nameSpanOperationMiddleware('graphql-handler', routeId),
+    nameSpanOperationMiddleware('graphql-handler', GRAPHQL_ROUTE),
     injectGraphqlContext,
     response,
     graphqlError,
