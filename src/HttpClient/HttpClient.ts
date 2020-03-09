@@ -2,7 +2,6 @@ import { AxiosResponse } from 'axios'
 import { createHash } from 'crypto'
 import { IncomingMessage } from 'http'
 import compose from 'koa-compose'
-import { Span } from 'opentracing'
 import pLimit from 'p-limit'
 
 import {
@@ -19,7 +18,7 @@ import { IOContext } from '../service/worker/runtime/typings'
 import { UserLandTracer } from '../tracing/UserLandTracer'
 import { formatBindingHeaderValue } from '../utils/binding'
 import { formatTenantHeaderValue } from '../utils/tenant'
-import { CacheableAndMaybeTraceableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
+import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
 import { cancellationToken } from './middlewares/cancellationToken'
 import { singleFlightMiddleware } from './middlewares/inflight'
 import { memoizationMiddleware, Memoized } from './middlewares/memoization'
@@ -27,7 +26,7 @@ import { metricsMiddleware } from './middlewares/metrics'
 import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewares/notFound'
 import { recorderMiddleware } from './middlewares/recorder'
 import { defaultsMiddleware, requestMiddleware, routerCacheMiddleware } from './middlewares/request'
-import { InstanceOptions, IOResponse, MiddlewareContext, RequestConfig } from './typings'
+import { InstanceOptions, IOResponse, MiddlewareContext, RequestConfig, TraceableRequestConfig } from './typings'
 
 const DEFAULT_TIMEOUT_MS = 1000
 const noTransforms = [(data: any) => data]
@@ -176,21 +175,20 @@ export class HttpClient {
   }
 
   protected request = async (config: RequestConfig): Promise<AxiosResponse> => {
+    (config as TraceableRequestConfig).tracing = this.tracer ? { 
+      rootSpan: config.tracing?.rootSpan,
+      tracer: this.tracer,
+    } : undefined
+
     const context: MiddlewareContext = { config }
     await this.runMiddlewares(context)
     return context.response!
   }
 
-  private getConfig = (url: string, config: RequestConfig = {}): CacheableAndMaybeTraceableRequestConfig => ({
+  private getConfig = (url: string, config: RequestConfig = {}): CacheableRequestConfig => ({
     cacheable: CacheType.Memory,
     memoizable: true,
     ...config,
     url,
-    ...(this.tracer ? {
-      tracing: {
-        rootSpan: config.tracing?.rootSpan,
-        tracer: this.tracer,
-      },
-    } : { tracing: undefined }),
   })
 }
