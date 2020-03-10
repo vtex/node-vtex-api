@@ -1,13 +1,13 @@
 import { AxiosRequestConfig } from 'axios'
 import { Limit } from 'p-limit'
 import { stringify } from 'qs'
-import { mapObjIndexed, path, sum, toLower, values } from 'ramda'
+import { path, toLower } from 'ramda'
 
 import { renameBy } from '../../../utils/renameBy'
 import { MiddlewareContext } from '../../typings'
 import { getConfiguredAxios } from './setupAxios'
 
-const { http, httpAgent } = getConfiguredAxios()
+const http = getConfiguredAxios()
 
 const paramsSerializer = (params: any) => {
   return stringify(params, { arrayFormat: 'repeat' })
@@ -90,30 +90,4 @@ export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContex
   const makeRequest = () => http.request(ctx.config)
 
   ctx.response = await (limit ? limit(makeRequest) : makeRequest())
-}
-
-function countPerOrigin(obj: { [key: string]: any[] }) {
-  try {
-    return mapObjIndexed(val => val.length, obj)
-  } catch (_) {
-    return {}
-  }
-}
-
-export function httpAgentStats() {
-  const socketsPerOrigin = countPerOrigin(httpAgent.sockets)
-  const sockets = sum(values(socketsPerOrigin))
-  const freeSocketsPerOrigin = countPerOrigin((httpAgent as any).freeSockets)
-  const freeSockets = sum(values(freeSocketsPerOrigin))
-  const pendingRequestsPerOrigin = countPerOrigin(httpAgent.requests)
-  const pendingRequests = sum(values(pendingRequestsPerOrigin))
-
-  return {
-    freeSockets,
-    freeSocketsPerOrigin,
-    pendingRequests,
-    pendingRequestsPerOrigin,
-    sockets,
-    socketsPerOrigin,
-  }
 }

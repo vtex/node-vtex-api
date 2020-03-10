@@ -5,7 +5,7 @@ import { Tags } from '../../../../../tracing/Tags'
 import { TestServer } from './TestServer'
 import { TracedTestRequest } from './TracedTestRequest'
 
-const { http: axios } = getConfiguredAxios()
+const axios = getConfiguredAxios()
 describe('Traces successfully on request and response success', () => {
   let testServer: TestServer
   beforeAll(async () => {

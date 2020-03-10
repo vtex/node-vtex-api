@@ -1,21 +1,13 @@
-import Agent from 'agentkeepalive'
-import axios, { AxiosInstance } from 'axios'
+import axios from 'axios'
+import { HttpAgentSingleton } from '../HttpAgentSingleton'
 import {
   addExponentialBackoffResponseInterceptor,
   addTracingPreRequestInterceptor,
   addTracingResponseInterceptor,
 } from './interceptors'
 
-export const getConfiguredAxios = (): {
-  http: AxiosInstance
-  httpAgent: Agent
-} => {
-  const httpAgent = new Agent({
-    freeSocketTimeout: 15 * 1000,
-    keepAlive: true,
-    maxFreeSockets: 50,
-  })
-
+export const getConfiguredAxios = () => {
+  const httpAgent = HttpAgentSingleton.getHttpAgent()
   const http = axios.create({
     httpAgent,
   })
@@ -25,5 +17,5 @@ export const getConfiguredAxios = (): {
   addTracingResponseInterceptor(http)
   addExponentialBackoffResponseInterceptor(http)
 
-  return { http, httpAgent }
+  return http
 }

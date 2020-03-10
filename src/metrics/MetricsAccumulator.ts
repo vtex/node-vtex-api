@@ -1,7 +1,7 @@
 import { assoc, flatten, map, mapObjIndexed, values } from 'ramda'
 import { mean, median, percentile } from 'stats-lite'
 
-import { httpAgentStats } from '../HttpClient/middlewares/request'
+import { HttpAgentSingleton } from '../HttpClient/middlewares/request/HttpAgentSingleton'
 import {
   incomingRequestStats,
 } from '../service/worker/runtime/http/middlewares/requestStats'
@@ -158,7 +158,7 @@ export class MetricsAccumulator {
         production,
       },
       {
-        ...httpAgentStats(),
+        ...HttpAgentSingleton.httpAgentStats(),
         name: 'httpAgent',
         production,
       },
