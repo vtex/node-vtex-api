@@ -24,7 +24,7 @@ export const isStatusTrackBroadcast = (message: any): message is typeof BROADCAS
   message === BROADCAST_STATUS_TRACK
 
 export const statusTrackHandler = async (ctx: ServiceContext) => {
-  ctx.tracing!.currentSpan.setOperationName('builtin:status-track')
+  ctx.tracing?.currentSpan.setOperationName('builtin:status-track')
   if (!LINKED) {
     process.send?.(BROADCAST_STATUS_TRACK)
   }
