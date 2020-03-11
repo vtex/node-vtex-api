@@ -1,4 +1,5 @@
 import { FORMAT_HTTP_HEADERS, SpanContext, Tracer } from 'opentracing'
+import { ACCOUNT_HEADER, WORKSPACE_HEADER } from '../../constants'
 import { Tags } from '../../tracing/Tags'
 import { UserLandTracer } from '../../tracing/UserLandTracer'
 import { ServiceContext } from '../worker/runtime/typings'
@@ -20,7 +21,9 @@ export const addTracingMiddleware = (tracer: Tracer) => {
         [Tags.SPAN_KIND]: Tags.SPAN_KIND_RPC_SERVER,
         [Tags.HTTP_URL]: ctx.request.originalUrl,
         [Tags.HTTP_METHOD]: ctx.request.method,
-        'http.path': ctx.request.path,
+        [Tags.HTTP_PATH]: ctx.request.path,
+        [Tags.VTEX_WORKSPACE]: ctx.headers[WORKSPACE_HEADER],
+        [Tags.VTEX_ACCOUNT]: ctx.headers[ACCOUNT_HEADER],
       },
     })
 
