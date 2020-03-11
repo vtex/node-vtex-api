@@ -1,6 +1,6 @@
 import { Tags as opentracingTags } from 'opentracing'
 
-const VTEX_INCOMING_REQUEST_SPECIAL_TAGS = {
+const VTEX_INCOMING_REQUEST_TAGS = {
   VTEX_ACCOUNT: 'vtex.account',
   VTEX_WORKSPACE: 'vtex.workspace',
 }
@@ -19,7 +19,7 @@ export const Tags = {
   HTTP_NO_RESPONSE: 'http.no-response',
   HTTP_PATH: 'http.path',
   HTTP_ROUTER_CACHE: 'http.router-cache',
-  ...VTEX_INCOMING_REQUEST_SPECIAL_TAGS,
+  ...VTEX_INCOMING_REQUEST_TAGS,
   ...APP_TAGS,
   ...opentracingTags,
 }
