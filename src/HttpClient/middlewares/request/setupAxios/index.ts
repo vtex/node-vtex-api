@@ -14,6 +14,8 @@ export const getConfiguredAxios = () => {
 
   addTracingPreRequestInterceptor(http)
 
+  // Do not change this order, otherwise each request span will
+  // wait all retries to finish before finishing the span 
   addTracingResponseInterceptor(http)
   addExponentialBackoffResponseInterceptor(http)
 
