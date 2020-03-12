@@ -17,14 +17,6 @@ const initTracer = (serviceName: string, defaultTags: Record<string, string | bo
   }
 
   const options: TracingOptions = {
-    logger: {
-      error(msg) {
-        console.log('ERROR', msg)
-      },
-      info(msg) {
-        console.log('INFO ', msg)
-      },
-    },
     tags: defaultTags,
   }
 
