@@ -4,19 +4,19 @@ import { createHttpAgent } from '../../agents'
 
 export class HttpAgentSingleton {
   public static getHttpAgent() {
-    if (!this.httpAgent) {
-      this.httpAgent = createHttpAgent()
+    if (!HttpAgentSingleton.httpAgent) {
+      HttpAgentSingleton.httpAgent = createHttpAgent()
     }
 
-    return this.httpAgent
+    return HttpAgentSingleton.httpAgent
   }
 
   public static httpAgentStats() {
-    const socketsPerOrigin = this.countPerOrigin(this.httpAgent.sockets)
+    const socketsPerOrigin = HttpAgentSingleton.countPerOrigin(HttpAgentSingleton.httpAgent.sockets)
     const sockets = sum(values(socketsPerOrigin))
-    const freeSocketsPerOrigin = this.countPerOrigin((this.httpAgent as any).freeSockets)
+    const freeSocketsPerOrigin = HttpAgentSingleton.countPerOrigin((HttpAgentSingleton.httpAgent as any).freeSockets)
     const freeSockets = sum(values(freeSocketsPerOrigin))
-    const pendingRequestsPerOrigin = this.countPerOrigin(this.httpAgent.requests)
+    const pendingRequestsPerOrigin = HttpAgentSingleton.countPerOrigin(HttpAgentSingleton.httpAgent.requests)
     const pendingRequests = sum(values(pendingRequestsPerOrigin))
 
     return {
