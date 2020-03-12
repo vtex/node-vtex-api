@@ -18,6 +18,7 @@ export const Tags = {
   ERROR_KIND: 'error.kind',
   HTTP_NO_RESPONSE: 'http.no-response',
   HTTP_PATH: 'http.path',
+  HTTP_RETRY_COUNT: 'http.retry-count',
   HTTP_ROUTER_CACHE: 'http.router-cache',
   ...VTEX_INCOMING_REQUEST_TAGS,
   ...APP_TAGS,

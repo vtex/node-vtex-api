@@ -14,6 +14,7 @@ export const injectRequestInfoOnSpan = (span: Span, http: AxiosInstance, config:
     [Tags.SPAN_KIND]: Tags.SPAN_KIND_RPC_CLIENT,
     [Tags.HTTP_METHOD]: config.method,
     [Tags.HTTP_URL]: fullUrl,
+    [Tags.HTTP_RETRY_COUNT]: (config as any).retryCount || 0
   })
 
   span.log({ event: 'request-headers', headers: config.headers })
