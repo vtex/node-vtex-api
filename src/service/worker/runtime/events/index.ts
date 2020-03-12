@@ -1,5 +1,5 @@
 import { IOClients } from '../../../../clients/IOClients'
-import { nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
+import { insertUserLandTracer, nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
 import { clients } from '../http/middlewares/clients'
 import { error } from '../http/middlewares/error'
 import { timings } from '../http/middlewares/timings'
@@ -26,6 +26,7 @@ export const createEventHandler = <T extends IOClients, U extends RecorderState,
     nameSpanOperationMiddleware('event-handler', eventId),
     eventContextMiddleware,
     parseBodyMiddleware,
+    insertUserLandTracer,
     clients<T, U, V>(implementation!, options),
     timings,
     error,
