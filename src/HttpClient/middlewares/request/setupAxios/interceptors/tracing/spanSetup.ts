@@ -6,7 +6,9 @@ import { Tags } from '../../../../../../tracing/Tags'
 
 export const injectRequestInfoOnSpan = (span: Span, http: AxiosInstance, config: AxiosRequestConfig) => {
   let fullUrl = null
-  if ((span.context() as any).isSampled?.() ?? true) {
+
+  const spanContext: any = span.context()
+  if (spanContext.isSampled == null || spanContext.isSampled()) {
     fullUrl = buildFullPath(config.baseURL, http.getUri(config))
   }
 
@@ -14,7 +16,7 @@ export const injectRequestInfoOnSpan = (span: Span, http: AxiosInstance, config:
     [Tags.SPAN_KIND]: Tags.SPAN_KIND_RPC_CLIENT,
     [Tags.HTTP_METHOD]: config.method,
     [Tags.HTTP_URL]: fullUrl,
-    [Tags.HTTP_RETRY_COUNT]: (config as any).retryCount || 0
+    [Tags.HTTP_RETRY_COUNT]: (config as any).retryCount || 0,
   })
 
   span.log({ event: 'request-headers', headers: config.headers })
