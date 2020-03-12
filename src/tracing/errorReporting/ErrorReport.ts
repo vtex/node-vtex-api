@@ -41,7 +41,7 @@ export class ErrorReport extends Error {
     }
 
     const { url, method, headers: requestHeaders, params, data: requestData, timeout: requestTimeout } = err.config
-    const { status, statusText, headers: responseHeaders, data: responseData } = err.response ?? {}
+    const { status, statusText, headers: responseHeaders, data: responseData } = err.response || {}
 
     return {
       requestConfig: {
