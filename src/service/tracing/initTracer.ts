@@ -10,8 +10,8 @@ const initTracer = (serviceName: string, defaultTags: Record<string, string | bo
       logSpans: true,
     },
     sampler: {
-      param: 1,
-      type: 'const',
+      param: 0.01,
+      type: 'probabilistic',
     },
     serviceName,
   }
