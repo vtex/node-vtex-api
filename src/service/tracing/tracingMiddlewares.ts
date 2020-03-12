@@ -64,8 +64,8 @@ export const traceUserLandRemainingPipelineMiddleware = (spanName: string, tags:
       injectErrorOnSpan(span, err)
       throw err
     } finally {
-      span.finish()
       ctx.tracing = tracingCtx
+      span.finish()
     }
   }
 }
