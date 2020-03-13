@@ -54,6 +54,7 @@ export interface BucketMetadata {
 export interface RootBillingOptions {
   termsURL: string
   support: Support
+  setupRoute?: string
 }
 
 export interface FreeBillingOptions extends RootBillingOptions {
@@ -99,7 +100,7 @@ export interface CalculatedByMetricUnit {
   metricId: string,
   metricName: string,
   ranges: Range[],
-  route?: string,
+  metricsRoute?: string,
 }
 
 export interface Range {
