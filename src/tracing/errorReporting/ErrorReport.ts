@@ -75,7 +75,7 @@ export class ErrorReport extends Error {
 
     this.errorDetails = ErrorReport.getRequestErrorMetadata(this.originalError as AxiosError)
     if (tryToParseError) {
-      if (this.errorDetails?.response.data?.message) {
+      if (this.errorDetails?.response?.data?.message) {
         this.message = this.errorDetails.response.data.message
       } else {
         this.message = this.originalError.message
