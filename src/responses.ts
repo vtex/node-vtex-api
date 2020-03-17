@@ -58,11 +58,25 @@ export interface RootBillingOptions {
 }
 
 export interface FreeBillingOptions extends RootBillingOptions {
-  free: boolean
+  type: 'free'
+}
+
+export interface LegacyFreeBillingOptions extends RootBillingOptions {
+  free: true
 }
 
 export interface ChargeableBillingOptions extends RootBillingOptions {
+  type: 'chargeable'
   policies: BillingPolicy[],
+}
+
+export interface LegacyChargeableBillingOptions extends RootBillingOptions {
+  free?: false
+  policies: BillingPolicy[]
+}
+
+export interface SponsoredBillingOptions extends RootBillingOptions {
+  type: 'sponsored'
 }
 
 export interface Support {
@@ -70,7 +84,7 @@ export interface Support {
   email: string
 }
 
-export type BillingOptions = FreeBillingOptions | ChargeableBillingOptions
+export type BillingOptions = FreeBillingOptions | ChargeableBillingOptions | SponsoredBillingOptions | LegacyFreeBillingOptions | LegacyChargeableBillingOptions
 
 export interface BillingPolicy {
   currency: string,
