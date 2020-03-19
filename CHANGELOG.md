@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 - Apps' Install API response type
+- Skidder topic names on logs are not based on account anymore
 
 ## [6.21.0] - 2020-03-05
 ### Added
