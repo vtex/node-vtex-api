@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Apps' Install API response type
 - Skidder topic names on logs are not based on account anymore
 
+### Fixed
+- Fixed params for VBase list
+
 ## [6.21.0] - 2020-03-05
 ### Added
 - createHttpsAgent helper function so devs can import it in their apps and use our agent

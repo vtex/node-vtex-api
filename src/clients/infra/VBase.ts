@@ -151,8 +151,8 @@ export interface BucketFileList {
 
 export interface VBaseOptions {
   prefix?: string,
-  _next?: string,
-  _limit?: number,
+  next?: string,
+  limit?: number,
 }
 
 export interface VBaseSaveOptions {
