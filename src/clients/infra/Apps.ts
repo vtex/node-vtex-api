@@ -115,7 +115,11 @@ export class Apps extends InfraClient {
     if (descriptor.startsWith('infra:service-')) {
       return this.installRuntime(descriptor)
     }
-    return this.http.post(this.routes.Apps(), { id: descriptor }, { metric: 'apps-install' })
+    return this.http.post<AppInstallResponse>(
+      this.routes.Apps(),
+      { id: descriptor },
+      { metric: 'apps-install' }
+    )
   }
 
   public uninstallApp = (app: string) => {
@@ -455,4 +459,8 @@ export interface ListFilesOptions {
 
 export interface AppsSettings {
   [app: string]: any,
+}
+
+export interface AppInstallResponse {
+  message: string
 }
