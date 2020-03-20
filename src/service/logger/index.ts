@@ -60,8 +60,8 @@ export class Logger {
 
     if (this.isThirdPartyApp()) {
       Object.assign(inflatedLog, {
-        __SKIDDER_TOPIC_1: `skidder.acc.${this.account}`,
-        __SKIDDER_TOPIC_2: `skidder.app.${this.account}.${vendor}.${appName}`,
+        __SKIDDER_TOPIC_1: `skidder.vendor.${vendor}`,
+        __SKIDDER_TOPIC_2: `skidder.app.${vendor}.${appName}`,
       })
     }
 

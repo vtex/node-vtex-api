@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.72.1] - 2020-03-20
+### Changed
+- Skidder topic names on logs are not based on account anymore
+
 ## [3.72.0] - 2020-02-20
 
 ## [3.72.0-beta] - 2020-02-19
