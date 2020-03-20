@@ -60,8 +60,8 @@ export class Logger {
     // Mark third-party apps logs to send to skidder
     if (APP.IS_THIRD_PARTY()) {
       Object.assign(inflatedLog, {
-        __SKIDDER_TOPIC_1: `skidder.acc.${this.account}`,
-        __SKIDDER_TOPIC_2: `skidder.app.${this.account}.${APP.VENDOR}.${APP.NAME}`,
+        __SKIDDER_TOPIC_1: `skidder.vendor.${APP.VENDOR}`,
+        __SKIDDER_TOPIC_2: `skidder.app.${APP.VENDOR}.${APP.NAME}`,
       })
     }
 
