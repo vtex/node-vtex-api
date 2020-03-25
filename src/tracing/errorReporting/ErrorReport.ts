@@ -1,6 +1,7 @@
 import { AxiosError } from 'axios'
 import { randomBytes } from 'crypto'
 import { ErrorKinds } from './ErrorKinds'
+import { truncateStringsFromObject } from './utils'
 
 interface ErrorReportArguments {
   kind: string
@@ -18,15 +19,21 @@ interface RequestErrorDetails {
     data?: any
     timeout?: string | number
   }
-  response: {
-    status?: number
-    statusText?: string
-    headers?: Record<string, any>
-    data?: any
-  }
+  response:
+    | {
+        status?: number
+        statusText?: string
+        headers?: Record<string, any>
+        data?: any
+      }
+    | undefined
 }
 
 export class ErrorReport extends Error {
+  public static readonly MAX_ERROR_STRING_LENGTH = process.env.MAX_ERROR_STRING_LENGTH
+    ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10)
+    : 8 * 1024
+
   public static createGenericErrorKind(error: AxiosError | Error | any) {
     if (error.config) {
       return ErrorKinds.REQUEST_ERROR
@@ -52,12 +59,14 @@ export class ErrorReport extends Error {
         timeout: requestTimeout,
         url,
       },
-      response: {
-        data: responseData,
-        headers: responseHeaders,
-        status,
-        statusText,
-      },
+      response: err.response
+        ? {
+            data: responseData,
+            headers: responseHeaders,
+            status,
+            statusText,
+          }
+        : undefined,
     }
   }
 
@@ -84,13 +93,16 @@ export class ErrorReport extends Error {
   }
 
   public toObject() {
-    return {
-      errorDetails: this.errorDetails,
-      errorId: this.errorId,
-      kind: this.kind,
-      message: this.message,
-      stack: this.stack,
-      ... this.originalError.code ? { code: this.originalError.code } : null,
-    }
+    return truncateStringsFromObject(
+      {
+        errorDetails: this.errorDetails,
+        errorId: this.errorId,
+        kind: this.kind,
+        message: this.message,
+        stack: this.stack,
+        ...(this.originalError.code ? { code: this.originalError.code } : null),
+      },
+      ErrorReport.MAX_ERROR_STRING_LENGTH
+    )
   }
 }
