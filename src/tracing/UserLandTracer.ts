@@ -14,8 +14,6 @@ export class UserLandTracer implements IUserLandTracer {
     this.tracer = tracer
     this.fallbackSpan = fallbackSpan
     this.fallbackSpanLock = false
-    
-    this.inject = this.tracer.inject.bind(this.tracer)
   }
 
   public lockFallbackSpan() {
