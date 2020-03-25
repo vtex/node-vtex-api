@@ -6,7 +6,7 @@ import { injectRequestInfoOnSpan, injectResponseInfoOnSpan } from './spanSetup'
 
 interface RequestTracingContext {
   tracer: IUserLandTracer
-  rootSpan: Span
+  rootSpan?: Span
   requestSpan?: Span
 }
 
