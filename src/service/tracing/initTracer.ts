@@ -7,10 +7,9 @@ const initTracer = (serviceName: string, defaultTags: Record<string, string | bo
   const config: TracingConfig = {
     reporter: {
       agentHost: process.env.VTEX_OWN_NODE_IP,
-      logSpans: true,
     },
     sampler: {
-      param: 0.50,
+      param: 0.5,
       type: 'probabilistic',
     },
     serviceName,
