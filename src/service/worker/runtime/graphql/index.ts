@@ -1,4 +1,5 @@
 import { IOClients } from '../../../../clients/IOClients'
+import { nameSpanOperationMiddleware } from '../../../tracing/tracingMiddlewares'
 import { createPrivateHttpRoute } from '../http'
 import {
   ClientsConfig,
@@ -26,6 +27,7 @@ export const createGraphQLRoute = <T extends IOClients, U extends RecorderState,
 ) => {
   const schema = makeSchema(graphql)
   const pipeline = [
+    nameSpanOperationMiddleware('graphql-handler', GRAPHQL_ROUTE),
     injectGraphqlContext,
     response,
     graphqlError,

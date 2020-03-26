@@ -1,5 +1,8 @@
 import { versionToMajor } from './utils/app'
+// tslint:disable-next-line
+const pkg = require('../package.json')
 
+export const NODE_VTEX_API_VERSION = pkg.version
 export const DEFAULT_WORKSPACE = 'master'
 export const IS_IO = process.env.VTEX_IO
 export const PID = process.pid
@@ -18,6 +21,7 @@ export const ETAG_HEADER = 'etag'
 export const ACCOUNT_HEADER = 'x-vtex-account'
 export const CREDENTIAL_HEADER = 'x-vtex-credential'
 export const REQUEST_ID_HEADER = 'x-request-id'
+export const ROUTER_CACHE_HEADER = 'x-router-cache'
 export const OPERATION_ID_HEADER = 'x-vtex-operation-id'
 export const PLATFORM_HEADER = 'x-vtex-platform'
 export const WORKSPACE_IS_PRODUCTION_HEADER = 'x-vtex-workspace-is-production'

@@ -8,10 +8,12 @@ import {
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 import { ParameterizedContext } from 'koa'
 import { Middleware } from 'koa-compose'
+import { Span, Tracer } from 'opentracing'
 import { ParsedUrlQuery } from 'querystring'
 
 import { ClientsImplementation, IOClients } from '../../../clients/IOClients'
 import { InstanceOptions } from '../../../HttpClient'
+import { UserLandTracer } from '../../../tracing/UserLandTracer'
 import { BindingHeader } from '../../../utils/binding'
 import { IOMessage } from '../../../utils/message'
 import { TenantHeader } from '../../../utils/tenant'
@@ -24,6 +26,11 @@ type ServerTiming = Record<string, string>
 
 export type Maybe<T> = T | null | undefined
 
+export interface TracingContext {
+  tracer: Tracer
+  currentSpan: Span
+}
+
 export interface Context<T extends IOClients> {
   clients: T
   vtex: IOContext
@@ -31,6 +38,7 @@ export interface Context<T extends IOClients> {
   metrics: Record<string, [number, number]>
   previousTimerStart: [number, number]
   serverTiming?: ServerTiming
+  tracing?: TracingContext
 }
 
 export interface EventContext<T extends IOClients, StateT = any> {
@@ -142,6 +150,7 @@ export interface IOContext {
   cancellation?: Cancellation
   // Some services may receive settings from other apps in the request
   settings?: any
+  tracer?: UserLandTracer
 }
 
 export interface EventBody {

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.23.1] - 2020-03-26
+### Fixed
+- Trace only 1% of the requests.
+
+## [6.23.0] - 2020-03-26
+### Added
+- Tracing instrumentation.
+
 ## [6.22.0] - 2020-03-20
 ### Changed
 - Updated `Billing Options` types

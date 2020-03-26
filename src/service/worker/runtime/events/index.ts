@@ -1,4 +1,5 @@
 import { IOClients } from '../../../../clients/IOClients'
+import { insertUserLandTracer, nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
 import { clients } from '../http/middlewares/clients'
 import { error } from '../http/middlewares/error'
 import { timings } from '../http/middlewares/timings'
@@ -16,16 +17,20 @@ import { eventContextMiddleware } from './middlewares/context'
 
 export const createEventHandler = <T extends IOClients, U extends RecorderState, V extends ParamsContext>(
   clientsConfig: ClientsConfig<T>,
+  eventId: string,
   handler: EventHandler<T, U> | Array<EventHandler<T, U>>
 ) => {
   const { implementation, options } = clientsConfig
   const middlewares = toArray(handler)
   const pipeline = [
+    nameSpanOperationMiddleware('event-handler', eventId),
     eventContextMiddleware,
     parseBodyMiddleware,
+    insertUserLandTracer,
     clients<T, U, V>(implementation!, options),
     timings,
     error,
+    traceUserLandRemainingPipelineMiddleware(`user-event-handler:${eventId}`),
     contextAdapter<T, U, V>(middlewares),
   ]
   return compose(pipeline)

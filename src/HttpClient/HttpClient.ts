@@ -15,6 +15,7 @@ import {
   TENANT_HEADER,
 } from '../constants'
 import { IOContext } from '../service/worker/runtime/typings'
+import { UserLandTracer } from '../tracing/UserLandTracer'
 import { formatBindingHeaderValue } from '../utils/binding'
 import { formatTenantHeaderValue } from '../utils/tenant'
 import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
@@ -25,7 +26,7 @@ import { metricsMiddleware } from './middlewares/metrics'
 import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewares/notFound'
 import { recorderMiddleware } from './middlewares/recorder'
 import { defaultsMiddleware, requestMiddleware, routerCacheMiddleware } from './middlewares/request'
-import { InstanceOptions, IOResponse, MiddlewareContext, RequestConfig } from './typings'
+import { InstanceOptions, IOResponse, MiddlewareContext, RequestConfig, TraceableRequestConfig } from './typings'
 
 const DEFAULT_TIMEOUT_MS = 1000
 const noTransforms = [(data: any) => data]
@@ -35,6 +36,7 @@ type ClientOptions = IOContext & Partial<InstanceOptions>
 export class HttpClient {
   public name: string
 
+  private tracer?: UserLandTracer
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor(opts: ClientOptions) {
@@ -67,8 +69,11 @@ export class HttpClient {
       initialBackoffDelay,
       exponentialBackoffCoefficient,
       httpsAgent,
+      tracer,
     } = opts
     this.name = name || baseURL || 'unknown'
+
+    this.tracer = tracer
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
       ...defaultHeaders,
@@ -170,6 +175,11 @@ export class HttpClient {
   }
 
   protected request = async (config: RequestConfig): Promise<AxiosResponse> => {
+    (config as TraceableRequestConfig).tracing = this.tracer ? { 
+      rootSpan: config.tracing?.rootSpan,
+      tracer: this.tracer,
+    } : undefined
+
     const context: MiddlewareContext = { config }
     await this.runMiddlewares(context)
     return context.response!

@@ -1,8 +1,10 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { Middleware } from 'koa-compose'
+import { Span } from 'opentracing'
 
 import { CacheLayer } from '../caches/CacheLayer'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
+import { UserLandTracer } from '../tracing/UserLandTracer'
 import { Cached, CacheType } from './middlewares/cache'
 
 export type InflightKeyGenerator = (x: RequestConfig) => string
@@ -36,6 +38,14 @@ export interface RequestConfig extends AxiosRequestConfig {
   forceMaxAge?: number
   responseEncoding?: BufferEncoding
   nullIfNotFound?: boolean
+  tracing?: { rootSpan?: Span }
+}
+
+export interface TraceableRequestConfig extends RequestConfig {
+  tracing?: { 
+    rootSpan?: Span, 
+    tracer: UserLandTracer 
+  }
 }
 
 export interface CacheHit {
