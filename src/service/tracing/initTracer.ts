@@ -9,7 +9,7 @@ const initTracer = (serviceName: string, defaultTags: Record<string, string | bo
       agentHost: process.env.VTEX_OWN_NODE_IP,
     },
     sampler: {
-      param: 0.5,
+      param: 0.01,
       type: 'probabilistic',
     },
     serviceName,
