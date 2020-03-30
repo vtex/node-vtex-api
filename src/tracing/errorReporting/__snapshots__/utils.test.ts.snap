@@ -56,3 +56,39 @@ Object {
   },
 }
 `;
+
+exports[`Works on testcase 6 - String limit 5 1`] = `
+Object {
+  "a": Array [
+    true,
+    false,
+    undefined,
+    null,
+  ],
+}
+`;
+
+exports[`Works on testcase 7 - String limit 5 1`] = `
+Object {
+  "namedFn": "[function: fn]",
+}
+`;
+
+exports[`Works on testcase 8 - String limit 5 1`] = `
+Object {
+  "arrowFunctionNamed": "[function: arrowFunctionNamed]",
+}
+`;
+
+exports[`Works on testcase 9 - String limit 5 1`] = `
+Array [
+  "[function: anonymous]",
+]
+`;
+
+exports[`Works on testcase 10 - String limit 5 1`] = `
+Object {
+  "a": Symbol(symbol description),
+  "b": Symbol(symbol description 2),
+}
+`;
