@@ -336,10 +336,10 @@ export class Apps extends InfraClient {
   }
 
   public getAppsMetaInfos = async (filter?: string, staleWhileRevalidate: boolean = true) => {
-    const { account, production, recorder} = this.context
+    const { account, production, recorder, workspace} = this.context
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
-    const key = getMetaInfoKey(account)
+    const key = getMetaInfoKey(account, workspace)
 
     const cachedResponse: {appsMetaInfo: AppMetaInfo[], headers: any} | undefined = await this.diskCache?.get(key)
     if (cachedResponse && recorder) {
