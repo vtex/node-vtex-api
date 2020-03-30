@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- [tracing] Fix `ErrorReport` object strings truncating (StackOverflow error in some cases).
+
+### Added
+- [tracing] Add `fallbackSpanContext` method to `UserLandTracer`.
 
 ## [6.23.1] - 2020-03-26
 ### Fixed
