@@ -1,5 +1,6 @@
 import { AxiosError } from 'axios'
 import { randomBytes } from 'crypto'
+import { IncomingMessage } from 'http'
 import { ErrorKinds } from './ErrorKinds'
 import { truncateStringsFromObject } from './utils'
 
@@ -61,7 +62,7 @@ export class ErrorReport extends Error {
       },
       response: err.response
         ? {
-            data: responseData,
+            ...(responseData instanceof IncomingMessage ? { data: '[IncomingMessage]' } : { data: responseData }),
             headers: responseHeaders,
             status,
             statusText,
