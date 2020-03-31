@@ -38,12 +38,6 @@ interface RequestErrorDetails {
 }
 
 export class ErrorReport extends Error {
-  private static readonly MAX_ERROR_STRING_LENGTH = process.env.MAX_ERROR_STRING_LENGTH
-    ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10)
-    : 8 * 1024
-
-  private static readonly DEFAULT_MAX_OBJECT_DEPTH = 6
-
   public static create(args: ErrorCreationArguments) {
     const kind = args.kind ?? this.createGenericErrorKind(args.originalError)
     const message = args.message ?? args.originalError?.message
@@ -52,10 +46,16 @@ export class ErrorReport extends Error {
     return new ErrorReport({
       kind,
       message,
-      tryToParseError,
       originalError: args.originalError,
+      tryToParseError,
     })
   }
+
+  private static readonly MAX_ERROR_STRING_LENGTH = process.env.MAX_ERROR_STRING_LENGTH
+    ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10)
+    : 8 * 1024
+
+  private static readonly DEFAULT_MAX_OBJECT_DEPTH = 6
 
   private static createGenericErrorKind(error: AxiosError | Error | any) {
     if (error.config) {

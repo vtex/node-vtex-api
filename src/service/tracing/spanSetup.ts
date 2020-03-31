@@ -10,7 +10,7 @@ export const injectErrorOnSpan = (span: Span, err: Error | ErrorReport) => {
     errorReport = ErrorReport.create({
       message: err.message,
       originalError: err,
-      tryToParseError: true
+      tryToParseError: true,
     })
   } else {
     errorReport = err
