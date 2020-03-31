@@ -3,6 +3,7 @@ import { Span, SpanContext, SpanOptions, Tracer } from 'opentracing'
 export interface IUserLandTracer {
   startSpan: Tracer['startSpan']
   inject: Tracer['inject']
+  fallbackSpanContext: () => SpanContext
 }
 
 export class UserLandTracer implements IUserLandTracer {
@@ -37,5 +38,9 @@ export class UserLandTracer implements IUserLandTracer {
 
   public inject(spanContext: SpanContext | Span, format: string, carrier: any) {
     return this.tracer.inject(spanContext, format, carrier)
+  }
+
+  public fallbackSpanContext(): SpanContext {
+    return this.fallbackSpan.context()
   }
 }
