@@ -4,6 +4,13 @@ import { IncomingMessage } from 'http'
 import { ErrorKinds } from './ErrorKinds'
 import { truncateStringsFromObject } from './utils'
 
+interface ErrorCreationArguments {
+  kind?: string
+  message?: string
+  originalError: Error
+  tryToParseError?: boolean
+}
+
 interface ErrorReportArguments {
   kind: string
   message: string
@@ -31,11 +38,24 @@ interface RequestErrorDetails {
 }
 
 export class ErrorReport extends Error {
-  public static readonly MAX_ERROR_STRING_LENGTH = process.env.MAX_ERROR_STRING_LENGTH
+  private static readonly MAX_ERROR_STRING_LENGTH = process.env.MAX_ERROR_STRING_LENGTH
     ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10)
     : 8 * 1024
 
-  public static createGenericErrorKind(error: AxiosError | Error | any) {
+  public static create(args: ErrorCreationArguments) {
+    const kind = args.kind ?? this.createGenericErrorKind(args.originalError)
+    const message = args.message ?? args.originalError?.message
+    const tryToParseError = args.tryToParseError ?? true
+
+    return new ErrorReport({
+      kind,
+      message,
+      tryToParseError,
+      originalError: args.originalError,
+    })
+  }
+
+  private static createGenericErrorKind(error: AxiosError | Error | any) {
     if (error.config) {
       return ErrorKinds.REQUEST_ERROR
     }
