@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.24.2] - 2020-03-31
+
 ## [6.24.1] - 2020-03-31
 ### Fixed
 - Workspaces sharing apps metainfo.
