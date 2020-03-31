@@ -54,7 +54,7 @@ export const traceUserLandRemainingPipelineMiddleware = (spanName: string, tags:
     ctx.tracing = undefined
 
     const span = tracingCtx.tracer.startSpan(spanName, { childOf: tracingCtx.currentSpan, tags })
-    const userLandTracer = ctx.vtex.tracer!
+    const userLandTracer = ctx.vtex.tracer! as UserLandTracer
     userLandTracer.setFallbackSpan(span)
     userLandTracer.lockFallbackSpan()
 
