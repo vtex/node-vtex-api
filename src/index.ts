@@ -16,3 +16,5 @@ export * from './service'
 export * from './service/logger'
 export * from './utils'
 export * from './constants'
+
+export * as tracingUtils from './tracing'
