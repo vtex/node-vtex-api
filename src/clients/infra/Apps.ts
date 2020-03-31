@@ -340,7 +340,10 @@ export class Apps extends InfraClient {
     const inflightKey = inflightURL
     const key = getMetaInfoKey(account, workspace)
 
-    const cachedResponse: {appsMetaInfo: AppMetaInfo[], headers: any} | undefined = await this.diskCache?.get(key)
+    const cachedResponse: StaleWorkspaceMetaInfo | undefined = production && staleWhileRevalidate
+      ? await this.diskCache?.get(key)
+      : undefined
+
     if (cachedResponse && recorder) {
       recorder.record(cachedResponse.headers)
     }
@@ -357,9 +360,8 @@ export class Apps extends InfraClient {
         return response
       })
 
-    const useCachedResponse = cachedResponse && production && staleWhileRevalidate
-    const appsMetaInfo: AppMetaInfo[] = useCachedResponse
-      ? cachedResponse!.appsMetaInfo
+    const appsMetaInfo: AppMetaInfo[] = cachedResponse
+      ? cachedResponse.appsMetaInfo
       : await metaInfoPromise.then(response => response.data.apps)
 
     if (filter) {
@@ -426,6 +428,12 @@ export interface AppMetaInfo {
 
 export interface WorkspaceMetaInfo {
   apps: AppMetaInfo[]
+}
+
+
+interface StaleWorkspaceMetaInfo {
+  appsMetaInfo: AppMetaInfo[]
+  headers: any
 }
 
 export interface AppsListItem {
