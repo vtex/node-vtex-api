@@ -21,7 +21,6 @@ import {
   getFallbackFile,
   getMetaInfoKey,
   saveVersion,
-  updateMetaInfoCache,
 } from '../../utils/appsStaleIfError'
 import { InfraClient } from './InfraClient'
 
@@ -349,7 +348,7 @@ export class Apps extends InfraClient {
     const metaInfoPromise = this.http.getRaw<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey})
       .then((response) => {
         const {data, headers: responseHeaders} = response
-        if (this.diskCache) {
+        if (this.diskCache && production) {
           this.diskCache.set(key, {
             appsMetaInfo: data.apps || [],
             headers: responseHeaders,
