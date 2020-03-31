@@ -350,10 +350,10 @@ export class Apps extends InfraClient {
 
     const metaInfoPromise = this.http
       .getRaw<WorkspaceMetaInfo>(this.routes.Meta(), {
-        params: { fields: workspaceFields },
-        metric,
-        inflightKey,
         ignoreRecorder: Boolean(cachedResponse),
+        inflightKey,
+        metric,
+        params: { fields: workspaceFields },
       })
       .then(response => {
         const { data, headers: responseHeaders } = response
