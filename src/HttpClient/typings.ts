@@ -4,7 +4,7 @@ import { Span } from 'opentracing'
 
 import { CacheLayer } from '../caches/CacheLayer'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
-import { UserLandTracer } from '../tracing/UserLandTracer'
+import { IUserLandTracer } from '../tracing/UserLandTracer'
 import { Cached, CacheType } from './middlewares/cache'
 
 export type InflightKeyGenerator = (x: RequestConfig) => string
@@ -44,7 +44,7 @@ export interface RequestConfig extends AxiosRequestConfig {
 export interface TraceableRequestConfig extends RequestConfig {
   tracing?: { 
     rootSpan?: Span, 
-    tracer: UserLandTracer 
+    tracer: IUserLandTracer 
   }
 }
 

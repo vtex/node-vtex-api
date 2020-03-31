@@ -13,7 +13,7 @@ import { ParsedUrlQuery } from 'querystring'
 
 import { ClientsImplementation, IOClients } from '../../../clients/IOClients'
 import { InstanceOptions } from '../../../HttpClient'
-import { UserLandTracer } from '../../../tracing/UserLandTracer'
+import { IUserLandTracer } from '../../../tracing/UserLandTracer'
 import { BindingHeader } from '../../../utils/binding'
 import { IOMessage } from '../../../utils/message'
 import { TenantHeader } from '../../../utils/tenant'
@@ -150,7 +150,7 @@ export interface IOContext {
   cancellation?: Cancellation
   // Some services may receive settings from other apps in the request
   settings?: any
-  tracer?: UserLandTracer
+  tracer: IUserLandTracer
 }
 
 export interface EventBody {

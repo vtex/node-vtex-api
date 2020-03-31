@@ -15,7 +15,7 @@ import {
   TENANT_HEADER,
 } from '../constants'
 import { IOContext } from '../service/worker/runtime/typings'
-import { UserLandTracer } from '../tracing/UserLandTracer'
+import { IUserLandTracer } from '../tracing/UserLandTracer'
 import { formatBindingHeaderValue } from '../utils/binding'
 import { formatTenantHeaderValue } from '../utils/tenant'
 import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
@@ -36,7 +36,7 @@ type ClientOptions = IOContext & Partial<InstanceOptions>
 export class HttpClient {
   public name: string
 
-  private tracer?: UserLandTracer
+  private tracer?: IUserLandTracer
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor(opts: ClientOptions) {
