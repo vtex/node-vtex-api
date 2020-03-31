@@ -5,6 +5,11 @@ import {
 
 export const recorderMiddleware = (recorder: Recorder) =>
   async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+    if (ctx.config?.ignoreRecorder) {
+      await next()
+      return
+    }
+
     try {
       await next()
       if (ctx.response) {
