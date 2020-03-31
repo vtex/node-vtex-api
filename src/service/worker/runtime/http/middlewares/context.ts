@@ -5,6 +5,7 @@ import {
   COLOSSUS_PARAMS_HEADER,
   COLOSSUS_ROUTE_DECLARER_HEADER,
 } from '../../../../../constants'
+import { UserLandTracer } from '../../../../../tracing/UserLandTracer'
 import { prepareHandlerCtx } from '../../utils/context'
 import {
   ParamsContext,
@@ -34,6 +35,7 @@ export const createPvtContextMiddleware = (
         params,
         type: 'private',
       },
+      tracer: new UserLandTracer(ctx.tracing!.tracer, ctx.tracing!.currentSpan),
     }
     await next()
   }
@@ -61,6 +63,7 @@ export const createPubContextMiddleware = (
         params: qsParse(header[COLOSSUS_PARAMS_HEADER]),
         type: 'public',
       },
+      tracer: new UserLandTracer(ctx.tracing!.tracer, ctx.tracing!.currentSpan),
     }
     await next()
   }

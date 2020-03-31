@@ -23,7 +23,7 @@ import { Logger } from '../../../logger'
 import { IOContext } from '../typings'
 import { parseBindingHeaderValue } from './../../../../utils/binding'
 
-type HandlerContext = Omit<IOContext, 'route'>
+type HandlerContext = Omit<IOContext, 'route' | 'tracer'>
 
 const getPlatform = (account: string): string => {
   return account.startsWith('gc-') ? 'gocommerce' : 'vtex'
