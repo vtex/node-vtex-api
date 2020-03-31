@@ -69,8 +69,3 @@ export const traceUserLandRemainingPipelineMiddleware = (spanName: string, tags:
     }
   }
 }
-
-export async function insertUserLandTracer(ctx: ServiceContext, next: () => Promise<void>) {
-  ctx.vtex.tracer = new UserLandTracer(ctx.tracing!.tracer, ctx.tracing!.currentSpan)
-  return next()
-}
