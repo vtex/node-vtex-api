@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Fixed
 - [tracing] Fix `ErrorReport` object strings truncating (StackOverflow error in some cases).
+- [tracing] Make `ctx.vtex.tracer` a required field on `IOContext`.
 
 ### Added
 - [tracing] Add `fallbackSpanContext` method to `UserLandTracer`.
