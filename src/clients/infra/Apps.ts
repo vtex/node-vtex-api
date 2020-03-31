@@ -335,7 +335,7 @@ export class Apps extends InfraClient {
   }
 
   public getAppsMetaInfos = async (filter?: string, staleWhileRevalidate: boolean = true) => {
-    const { account, production, recorder, workspace} = this.context
+    const { account, production, recorder, workspace, logger} = this.context
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
     const key = getMetaInfoKey(account, workspace)
@@ -366,9 +366,15 @@ export class Apps extends InfraClient {
         return response
       })
 
-    const appsMetaInfo: AppMetaInfo[] = cachedResponse
-      ? cachedResponse.appsMetaInfo
-      : await metaInfoPromise.then(response => response.data.apps)
+    let appsMetaInfo: AppMetaInfo[]
+    if (cachedResponse) {
+      appsMetaInfo = cachedResponse.appsMetaInfo
+      metaInfoPromise.catch(error => {
+        logger.warn({ message: 'Unable to update stale cache', error })
+      })
+    } else {
+      appsMetaInfo = await metaInfoPromise.then(response => response.data.apps)
+    }
 
     if (filter) {
       return appsMetaInfo.filter(appMeta => appMeta?._resolvedDependencies?.filter)
