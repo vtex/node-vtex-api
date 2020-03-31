@@ -21,7 +21,6 @@ import {
   getFallbackFile,
   getMetaInfoKey,
   saveVersion,
-  updateMetaInfoCache,
 } from '../../utils/appsStaleIfError'
 import { InfraClient } from './InfraClient'
 
@@ -336,20 +335,29 @@ export class Apps extends InfraClient {
   }
 
   public getAppsMetaInfos = async (filter?: string, staleWhileRevalidate: boolean = true) => {
-    const { account, production, recorder} = this.context
+    const { account, production, recorder, workspace, logger} = this.context
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
-    const key = getMetaInfoKey(account)
+    const key = getMetaInfoKey(account, workspace)
 
-    const cachedResponse: {appsMetaInfo: AppMetaInfo[], headers: any} | undefined = await this.diskCache?.get(key)
+    const cachedResponse: StaleWorkspaceMetaInfo | undefined = production && staleWhileRevalidate
+      ? await this.diskCache?.get(key)
+      : undefined
+
     if (cachedResponse && recorder) {
       recorder.record(cachedResponse.headers)
     }
 
-    const metaInfoPromise = this.http.getRaw<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey})
-      .then((response) => {
-        const {data, headers: responseHeaders} = response
-        if (this.diskCache) {
+    const metaInfoPromise = this.http
+      .getRaw<WorkspaceMetaInfo>(this.routes.Meta(), {
+        ignoreRecorder: Boolean(cachedResponse),
+        inflightKey,
+        metric,
+        params: { fields: workspaceFields },
+      })
+      .then(response => {
+        const { data, headers: responseHeaders } = response
+        if (this.diskCache && production) {
           this.diskCache.set(key, {
             appsMetaInfo: data.apps || [],
             headers: responseHeaders,
@@ -358,10 +366,15 @@ export class Apps extends InfraClient {
         return response
       })
 
-    const useCachedResponse = cachedResponse && production && staleWhileRevalidate
-    const appsMetaInfo: AppMetaInfo[] = useCachedResponse
-      ? cachedResponse!.appsMetaInfo
-      : await metaInfoPromise.then(response => response.data.apps)
+    let appsMetaInfo: AppMetaInfo[]
+    if (cachedResponse) {
+      appsMetaInfo = cachedResponse.appsMetaInfo
+      metaInfoPromise.catch(error => {
+        logger.warn({ message: 'Unable to update stale cache', error })
+      })
+    } else {
+      appsMetaInfo = await metaInfoPromise.then(response => response.data.apps)
+    }
 
     if (filter) {
       return appsMetaInfo.filter(appMeta => appMeta?._resolvedDependencies?.filter)
@@ -427,6 +440,12 @@ export interface AppMetaInfo {
 
 export interface WorkspaceMetaInfo {
   apps: AppMetaInfo[]
+}
+
+
+interface StaleWorkspaceMetaInfo {
+  appsMetaInfo: AppMetaInfo[]
+  headers: any
 }
 
 export interface AppsListItem {

@@ -39,12 +39,13 @@ export interface RequestConfig extends AxiosRequestConfig {
   responseEncoding?: BufferEncoding
   nullIfNotFound?: boolean
   tracing?: { rootSpan?: Span }
+  ignoreRecorder?: boolean
 }
 
 export interface TraceableRequestConfig extends RequestConfig {
-  tracing?: { 
-    rootSpan?: Span, 
-    tracer: UserLandTracer 
+  tracing?: {
+    rootSpan?: Span,
+    tracer: UserLandTracer
   }
 }
 

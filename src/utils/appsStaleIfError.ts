@@ -6,7 +6,7 @@ import { AppMetaInfo, Apps } from '..'
 import { CacheLayer } from '../caches'
 import { Logger } from '../service/logger'
 
-export const getMetaInfoKey = (account: string) => `${account}-meta-infos`
+export const getMetaInfoKey = (account: string, workspace: string) => `${account}-${workspace}-meta-infos`
 
 const hashMD5 = (text: string) =>
   crypto
@@ -18,7 +18,7 @@ export const updateMetaInfoCache = async (cacheStorage: CacheLayer<string, AppMe
   if (workspace !== 'master') {
     return
   }
-  const key = getMetaInfoKey(account)
+  const key = getMetaInfoKey(account, workspace)
   const hash = hashMD5(dependencies.toString())
 
   try {
