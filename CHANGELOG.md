@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.23.2-beta.0] - 2020-03-31
+
 ## [6.23.2-beta] - 2020-03-31
 ### Fixed
 - [tracing] Fix `ErrorReport` object strings truncating (StackOverflow error in some cases).
