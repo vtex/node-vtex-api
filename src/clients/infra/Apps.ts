@@ -348,9 +348,15 @@ export class Apps extends InfraClient {
       recorder.record(cachedResponse.headers)
     }
 
-    const metaInfoPromise = this.http.getRaw<WorkspaceMetaInfo>(this.routes.Meta(), {params: {fields: workspaceFields}, metric, inflightKey})
-      .then((response) => {
-        const {data, headers: responseHeaders} = response
+    const metaInfoPromise = this.http
+      .getRaw<WorkspaceMetaInfo>(this.routes.Meta(), {
+        params: { fields: workspaceFields },
+        metric,
+        inflightKey,
+        ignoreRecorder: Boolean(cachedResponse),
+      })
+      .then(response => {
+        const { data, headers: responseHeaders } = response
         if (this.diskCache && production) {
           this.diskCache.set(key, {
             appsMetaInfo: data.apps || [],
