@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.24.0] - 2020-03-31
+## Changed
+- Send events using `Courier` instead of `Colossus`.
+
 ## [6.23.1] - 2020-03-26
 ### Fixed
 - Trace only 1% of the requests.
