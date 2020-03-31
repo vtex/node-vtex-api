@@ -42,6 +42,8 @@ export class ErrorReport extends Error {
     ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10)
     : 8 * 1024
 
+  private static readonly DEFAULT_MAX_OBJECT_DEPTH = 6
+
   public static create(args: ErrorCreationArguments) {
     const kind = args.kind ?? this.createGenericErrorKind(args.originalError)
     const message = args.message ?? args.originalError?.message
@@ -113,7 +115,7 @@ export class ErrorReport extends Error {
     }
   }
 
-  public toObject() {
+  public toObject(objectDepth = ErrorReport.DEFAULT_MAX_OBJECT_DEPTH) {
     return truncateStringsFromObject(
       {
         errorDetails: this.errorDetails,
@@ -123,7 +125,8 @@ export class ErrorReport extends Error {
         stack: this.stack,
         ...(this.originalError.code ? { code: this.originalError.code } : null),
       },
-      ErrorReport.MAX_ERROR_STRING_LENGTH
+      ErrorReport.MAX_ERROR_STRING_LENGTH,
+      objectDepth
     )
   }
 }
