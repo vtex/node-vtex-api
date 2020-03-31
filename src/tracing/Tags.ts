@@ -14,13 +14,17 @@ const APP_TAGS = {
   VTEX_APP_WORKSPACE: 'app.workspace',
 }
 
-export const Tags = {
+export const USERLAND_TAGS = {
   ERROR_KIND: 'error.kind',
+  ...opentracingTags,
+}
+
+export const Tags = {
   HTTP_NO_RESPONSE: 'http.no-response',
   HTTP_PATH: 'http.path',
   HTTP_RETRY_COUNT: 'http.retry-count',
   HTTP_ROUTER_CACHE: 'http.router-cache',
+  ...USERLAND_TAGS,
   ...VTEX_INCOMING_REQUEST_TAGS,
   ...APP_TAGS,
-  ...opentracingTags,
 }
