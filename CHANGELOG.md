@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [6.24.3] - 2020-04-01
 ### Fixed
 - [tracing] Fix `ErrorReport` object strings truncating (StackOverflow error in some cases).
 - [tracing] Make `ctx.vtex.tracer` a required field on `IOContext`.
