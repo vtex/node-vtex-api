@@ -1,5 +1,5 @@
 import { IOClients } from '../../../../clients/IOClients'
-import { insertUserLandTracer, nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
+import { nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
 import {
   ClientsConfig,
   ParamsContext,
@@ -39,7 +39,6 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
     trackIncomingRequestStats,
     vary,
     authTokens,
-    insertUserLandTracer,
     clients(implementation!, options),
     ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     timings,
@@ -66,7 +65,6 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
     cdnNormalizer,
     vary,
     authTokens,
-    insertUserLandTracer,
     clients(implementation!, options),
     ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     removeSetCookie,

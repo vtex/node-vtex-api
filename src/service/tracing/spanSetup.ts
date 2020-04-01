@@ -7,9 +7,7 @@ export const injectErrorOnSpan = (span: Span, err: Error | ErrorReport) => {
 
   let errorReport: ErrorReport
   if (!(err instanceof ErrorReport)) {
-    const kind = ErrorReport.createGenericErrorKind(err)
-    errorReport = new ErrorReport({
-      kind,
+    errorReport = ErrorReport.create({
       message: err.message,
       originalError: err,
       tryToParseError: true,
@@ -19,5 +17,5 @@ export const injectErrorOnSpan = (span: Span, err: Error | ErrorReport) => {
   }
 
   span.setTag(Tags.ERROR_KIND, errorReport.kind)
-  span.log({ event: 'error', ...(errorReport as ErrorReport).toObject() })
+  span.log({ event: 'error', ...errorReport.toObject() })
 }

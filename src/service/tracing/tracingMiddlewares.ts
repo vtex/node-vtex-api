@@ -54,7 +54,7 @@ export const traceUserLandRemainingPipelineMiddleware = (spanName: string, tags:
     ctx.tracing = undefined
 
     const span = tracingCtx.tracer.startSpan(spanName, { childOf: tracingCtx.currentSpan, tags })
-    const userLandTracer = ctx.vtex.tracer!
+    const userLandTracer = ctx.vtex.tracer! as UserLandTracer
     userLandTracer.setFallbackSpan(span)
     userLandTracer.lockFallbackSpan()
 
@@ -68,9 +68,4 @@ export const traceUserLandRemainingPipelineMiddleware = (spanName: string, tags:
       span.finish()
     }
   }
-}
-
-export async function insertUserLandTracer(ctx: ServiceContext, next: () => Promise<void>) {
-  ctx.vtex.tracer = new UserLandTracer(ctx.tracing!.tracer, ctx.tracing!.currentSpan)
-  return next()
 }

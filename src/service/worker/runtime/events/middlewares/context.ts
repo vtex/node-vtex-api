@@ -5,6 +5,7 @@ import {
   EVENT_SENDER_HEADER,
   EVENT_SUBJECT_HEADER,
 } from '../../../../../constants'
+import { UserLandTracer } from '../../../../../tracing/UserLandTracer'
 import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
 import { prepareHandlerCtx } from '../../utils/context'
 
@@ -22,6 +23,7 @@ export async function eventContextMiddleware <T extends IOClients, U extends Rec
       params: {},
       type: 'event',
     },
+    tracer: new UserLandTracer(ctx.tracing!.tracer, ctx.tracing!.currentSpan),
   }
   await next()
 }

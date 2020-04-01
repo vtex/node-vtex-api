@@ -1,7 +1,15 @@
 import { AxiosError } from 'axios'
 import { randomBytes } from 'crypto'
+import { IncomingMessage } from 'http'
 import { ErrorKinds } from './ErrorKinds'
 import { truncateStringsFromObject } from './utils'
+
+interface ErrorCreationArguments {
+  kind?: string
+  message?: string
+  originalError: Error
+  tryToParseError?: boolean
+}
 
 interface ErrorReportArguments {
   kind: string
@@ -30,11 +38,26 @@ interface RequestErrorDetails {
 }
 
 export class ErrorReport extends Error {
-  public static readonly MAX_ERROR_STRING_LENGTH = process.env.MAX_ERROR_STRING_LENGTH
+  public static create(args: ErrorCreationArguments) {
+    const kind = args.kind ?? this.createGenericErrorKind(args.originalError)
+    const message = args.message ?? args.originalError?.message
+    const tryToParseError = args.tryToParseError ?? true
+
+    return new ErrorReport({
+      kind,
+      message,
+      originalError: args.originalError,
+      tryToParseError,
+    })
+  }
+
+  private static readonly MAX_ERROR_STRING_LENGTH = process.env.MAX_ERROR_STRING_LENGTH
     ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10)
     : 8 * 1024
 
-  public static createGenericErrorKind(error: AxiosError | Error | any) {
+  private static readonly DEFAULT_MAX_OBJECT_DEPTH = 6
+
+  private static createGenericErrorKind(error: AxiosError | Error | any) {
     if (error.config) {
       return ErrorKinds.REQUEST_ERROR
     }
@@ -61,7 +84,7 @@ export class ErrorReport extends Error {
       },
       response: err.response
         ? {
-            data: responseData,
+            ...(responseData instanceof IncomingMessage ? { data: '[IncomingMessage]' } : { data: responseData }),
             headers: responseHeaders,
             status,
             statusText,
@@ -92,7 +115,7 @@ export class ErrorReport extends Error {
     }
   }
 
-  public toObject() {
+  public toObject(objectDepth = ErrorReport.DEFAULT_MAX_OBJECT_DEPTH) {
     return truncateStringsFromObject(
       {
         errorDetails: this.errorDetails,
@@ -102,7 +125,8 @@ export class ErrorReport extends Error {
         stack: this.stack,
         ...(this.originalError.code ? { code: this.originalError.code } : null),
       },
-      ErrorReport.MAX_ERROR_STRING_LENGTH
+      ErrorReport.MAX_ERROR_STRING_LENGTH,
+      objectDepth
     )
   }
 }

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.24.3] - 2020-04-01
+### Fixed
+- [tracing] Fix `ErrorReport` object strings truncating (StackOverflow error in some cases).
+- [tracing] Make `ctx.vtex.tracer` a required field on `IOContext`.
+
+### Added
+- [tracing] Add `fallbackSpanContext` method to `UserLandTracer`.
+
 ## [6.24.2] - 2020-03-31
 - Workspaces sharing apps metainfo.
 
