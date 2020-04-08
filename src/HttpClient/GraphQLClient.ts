@@ -10,6 +10,7 @@ interface QueryOptions<Variables extends object> {
   variables: Variables
   inflight?: boolean
   throwOnError?: boolean
+  extensions?: Record<string, any>
 }
 
 interface MutateOptions<Variables extends object> {
@@ -39,11 +40,11 @@ export class GraphQLClient {
   ) {}
 
   public query = <Data extends Serializable, Variables extends object>(
-    { query, variables, inflight, throwOnError }: QueryOptions<Variables>,
+    { query, variables, inflight, extensions, throwOnError }: QueryOptions<Variables>,
     config: RequestConfig = {}
   ): Promise<GraphQLResponse<Data>> => this.http.getWithBody<GraphQLResponse<Data>>(
     config.url || '',
-    { query, variables },
+    { query, variables, extensions },
     {
       inflightKey: inflight !== false ? inflightUrlWithQuery : undefined,
       ...config,
