@@ -4,7 +4,7 @@ import { InfraClient } from './InfraClient'
 
 export class BillingMetrics extends InfraClient {
   constructor(context: IOContext, options?: InstanceOptions) {
-    super('colossus0.x', context, options)
+    super('colossus@0.x', context, options)
   }
 
   public sendMetric = (metric: BillingMetric) =>
