@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.24.4] - 2020-04-08
+### Fixed
+- Adds missing `@` in BillingMetrics client
+
 ## [6.24.3] - 2020-04-01
 ### Fixed
 - [tracing] Fix `ErrorReport` object strings truncating (StackOverflow error in some cases).
