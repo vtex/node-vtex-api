@@ -1,9 +1,23 @@
-import { Span, SpanContext, SpanOptions, Tracer } from 'opentracing'
+import { FORMAT_HTTP_HEADERS, Span, SpanContext, SpanOptions, Tracer } from 'opentracing'
+import { TracerSingleton } from '../service/tracing/TracerSingleton'
 
 export interface IUserLandTracer {
   startSpan: Tracer['startSpan']
   inject: Tracer['inject']
   fallbackSpanContext: () => SpanContext
+}
+
+export const createTracingContextFromCarrier = (newSpanName: string, carrier: Record<string, any>): { span: Span, tracer: IUserLandTracer } => {
+  const tracer = TracerSingleton.getTracer()
+  const rootSpan = tracer.extract(FORMAT_HTTP_HEADERS, carrier) as SpanContext | undefined
+  if (rootSpan == null) {
+    throw new Error('Missing span context data on carrier')
+  }
+
+  const span = tracer.startSpan(newSpanName, { childOf: rootSpan })
+  const userlandTracer = new UserLandTracer(tracer, span)
+  userlandTracer.lockFallbackSpan()
+  return { span, tracer: userlandTracer}
 }
 
 export class UserLandTracer implements IUserLandTracer {
