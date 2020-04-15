@@ -1,7 +1,5 @@
 process.env.FORCE_COLOR = '1'
 
-import * as tracingUtils from './tracing'
-
 export * from './caches'
 export * from './clients'
 export * from './errors'
@@ -18,5 +16,5 @@ export * from './service'
 export * from './service/logger'
 export * from './utils'
 export * from './constants'
-export { tracingUtils }
+export * from './tracing'
 
