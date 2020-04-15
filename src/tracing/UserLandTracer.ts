@@ -22,18 +22,19 @@ export class UserLandTracer implements IUserLandTracer {
   }
 
   public setFallbackSpan(newSpan: Span) {
-    if(this.fallbackSpanLock) {
+    if (this.fallbackSpanLock) {
       throw new Error(`FallbackSpan is locked, can't change it`)
     }
 
     this.fallbackSpan = newSpan
   }
 
-  public startSpan(name: string, options: SpanOptions = {}) {
-    if(!options.childOf) {
-        return this.tracer.startSpan(name, { ...options, childOf: this.fallbackSpan })
+  public startSpan(name: string, options?: SpanOptions) {
+    if (options && (options.childOf || options.references?.length)) {
+      return this.tracer.startSpan(name, options)
     }
-    return this.tracer.startSpan(name, options)
+
+    return this.tracer.startSpan(name, { ...options, childOf: this.fallbackSpan })
   }
 
   public inject(spanContext: SpanContext | Span, format: string, carrier: any) {
