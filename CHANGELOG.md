@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.25.0] - 2020-04-15
+### Added
+- Extensions field to graphql client.
+
 ## [6.24.4] - 2020-04-08
 ### Fixed
 - Adds missing `@` in BillingMetrics client
