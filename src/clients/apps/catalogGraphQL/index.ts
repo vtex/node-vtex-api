@@ -2,6 +2,7 @@ import { prop } from 'ramda'
 
 import { AppGraphQLClient } from '..'
 import { InstanceOptions, IOContext } from '../../..'
+import { RequestTracingConfig } from '../../../HttpClient'
 import { Brand, query as getBrand } from './brand'
 import { Category, query as getCategory } from './category'
 import { Product, query as getProduct } from './product'
@@ -17,7 +18,7 @@ export class CatalogGraphQL extends AppGraphQLClient {
       }})
   }
 
-  public sku = (id: string) => {
+  public sku = (id: string, tracingConfig?: RequestTracingConfig) => {
     const variables = {
       identifier: {
         field: 'id',
@@ -32,11 +33,15 @@ export class CatalogGraphQL extends AppGraphQLClient {
       },
       {
         forceMaxAge: 5,
+        tracing: {
+          requestSpanNameSuffix: 'catalog-sku',
+          ...tracingConfig?.tracing,
+        },
       })
       .then(prop('data'))
   }
 
-  public product = (id: string) => {
+  public product = (id: string, tracingConfig?: RequestTracingConfig) => {
     const variables = {
       identifier: {
         field: 'id',
@@ -51,11 +56,15 @@ export class CatalogGraphQL extends AppGraphQLClient {
       },
       {
         forceMaxAge: 5,
+        tracing: {
+          requestSpanNameSuffix: 'catalog-product',
+          ...tracingConfig?.tracing,
+        },
       })
       .then(prop('data'))
   }
 
-  public category = (id: string) =>
+  public category = (id: string, tracingConfig?: RequestTracingConfig) =>
     this.graphql
       .query<{category: Category}, { id: string }>({
         inflight: true,
@@ -64,10 +73,14 @@ export class CatalogGraphQL extends AppGraphQLClient {
       },
       {
         forceMaxAge: 5,
+        tracing: {
+          requestSpanNameSuffix: 'catalog-category',
+          ...tracingConfig?.tracing,
+        },
       })
       .then(prop('data'))
 
-  public brand = (id: string) =>
+  public brand = (id: string, tracingConfig?: RequestTracingConfig) =>
     this.graphql
       .query<{brand: Brand}, { id: string }>({
         inflight: true,
@@ -76,6 +89,10 @@ export class CatalogGraphQL extends AppGraphQLClient {
       },
       {
         forceMaxAge: 5,
+        tracing: {
+          requestSpanNameSuffix: 'catalog-brand',
+          ...tracingConfig?.tracing,
+        },
       })
       .then(prop('data'))
 }

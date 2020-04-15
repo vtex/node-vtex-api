@@ -1,6 +1,7 @@
 import parseCookie from 'cookie'
 import { prop } from 'ramda'
 
+import { RequestTracingConfig } from '../../HttpClient'
 import { JanusClient } from './JanusClient'
 
 const SESSION_COOKIE = 'vtex_session'
@@ -13,7 +14,8 @@ export class Session extends JanusClient {
   /**
    * Get the session data using the given token
    */
-  public getSession = async (token: string, items: string[]) => {
+  public getSession = async (token: string, items: string[], tracingConfig?: RequestTracingConfig) => {
+    const metric = 'session-get'
     const {
       data: sessionData,
       headers: {
@@ -24,9 +26,13 @@ export class Session extends JanusClient {
         'Content-Type': 'application/json',
         'Cookie': `vtex_session=${token};`,
       },
-      metric: 'session-get',
+      metric,
       params: {
         items: items.join(','),
+      },
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
       },
     }))
 
@@ -42,16 +48,21 @@ export class Session extends JanusClient {
   /**
    * Update the public portion of this session
    */
-  public updateSession = (key: string, value: any, items: string[], token: any) => {
+  public updateSession = (key: string, value: any, items: string[], token: any, tracingConfig?: RequestTracingConfig) => {
     const data = { public: { [key]: { value } } }
+    const metric = 'session-update' 
     const config = {
       headers: {
         'Content-Type': 'application/json',
         'Cookie': `vtex_session=${token};`,
       },
-      metric: 'session-update',
+      metric,
       params: {
         items: items.join(','),
+      },
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
       },
     }
 

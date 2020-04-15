@@ -9,6 +9,7 @@ import {
   inflightURL,
   inflightUrlWithQuery,
   InstanceOptions,
+  RequestTracingConfig,
 } from '../../HttpClient'
 import {
   IgnoreNotFoundRequestConfig,
@@ -39,17 +40,24 @@ export class VBase extends InfraClient {
     }
   }
 
-  public getBucket = (bucket: string) => {
+  public getBucket = (bucket: string, tracingConfig?: RequestTracingConfig) => {
     const inflightKey = inflightURL
     const metric = 'vbase-get-bucket'
-    return this.http.get<BucketMetadata>(routes.Bucket(bucket), {metric, inflightKey})
+    return this.http.get<BucketMetadata>(routes.Bucket(bucket), {inflightKey, metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public resetBucket = (bucket: string) => {
-    return this.http.delete(routes.Files(bucket), {metric: 'vbase-reset-bucket'})
+  public resetBucket = (bucket: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'vbase-reset-bucket'
+    return this.http.delete(routes.Files(bucket), {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public listFiles = (bucket: string, opts?: string | VBaseOptions) => {
+  public listFiles = (bucket: string, opts?: string | VBaseOptions, tracingConfig?: RequestTracingConfig) => {
     let params: VBaseOptions = {}
     if (isVBaseOptions(opts)) {
       params = opts
@@ -58,20 +66,29 @@ export class VBase extends InfraClient {
     }
     const metric = 'vbase-list'
     const inflightKey = inflightUrlWithQuery
-    return this.http.get<BucketFileList>(routes.Files(bucket), {params, metric, inflightKey})
+    return this.http.get<BucketFileList>(routes.Files(bucket), {inflightKey, metric, params, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public getFile = (bucket: string, path: string) => {
+  public getFile = (bucket: string, path: string, tracingConfig?: RequestTracingConfig) => {
     const inflightKey = inflightURL
     const metric = 'vbase-get-file'
-    return this.http.getBuffer(routes.File(bucket, path), {metric, inflightKey})
+    return this.http.getBuffer(routes.File(bucket, path), {inflightKey, metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public getJSON = <T>(bucket: string, path: string, nullIfNotFound?: boolean, conflictsResolver?: ConflictsResolver<T>) => {
+  public getJSON = <T>(bucket: string, path: string, nullIfNotFound?: boolean, conflictsResolver?: ConflictsResolver<T>, tracingConfig?: RequestTracingConfig) => {
     const headers = conflictsResolver? {'X-Vtex-Detect-Conflicts': true}: {}
     const inflightKey = inflightURL
     const metric = 'vbase-get-json'
-    return this.http.get<T>(routes.File(bucket, path), { nullIfNotFound, metric, inflightKey, headers } as IgnoreNotFoundRequestConfig)
+    return this.http.get<T>(routes.File(bucket, path), { headers, inflightKey, metric, nullIfNotFound, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }} as IgnoreNotFoundRequestConfig)
       .catch((error: AxiosError) => {
         const { response } = error
         if (response && response.status === 409 && conflictsResolver) {
@@ -81,46 +98,70 @@ export class VBase extends InfraClient {
       })
   }
 
-  public getFileStream = (bucket: string, path: string): Promise<IncomingMessage> => {
-    return this.http.getStream(routes.File(bucket, path), {metric: 'vbase-get-file-s'})
+  public getFileStream = (bucket: string, path: string, tracingConfig?: RequestTracingConfig): Promise<IncomingMessage> => {
+    const metric = 'vbase-get-file-s'
+    return this.http.getStream(routes.File(bucket, path), {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public saveFile = (bucket: string, path: string, stream: Readable, gzip: boolean = true, ttl?: number) => {
-    return this.saveContent(bucket, path, stream, {gzip, ttl})
+  public saveFile = (bucket: string, path: string, stream: Readable, gzip: boolean = true, ttl?: number, tracingConfig?: RequestTracingConfig) => {
+    return this.saveContent(bucket, path, stream, {gzip, ttl }, tracingConfig)
   }
 
-  public getFileMetadata = (bucket:string, path:string) => {
-    return this.http.head(routes.File(bucket, path), {metric: 'vbase-get-file-metadata'})
+  public getFileMetadata = (bucket:string, path:string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'vbase-get-file-metadata'
+    return this.http.head(routes.File(bucket, path), {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public saveJSON = <T>(bucket: string, path: string, data: T) => {
+  public saveJSON = <T>(bucket: string, path: string, data: T, tracingConfig?: RequestTracingConfig) => {
     const headers = {'Content-Type': 'application/json'}
     const metric = 'vbase-save-json'
-    return this.http.put(routes.File(bucket, path), data, {headers, metric})
+    return this.http.put(routes.File(bucket, path), data, {headers, metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public saveZippedContent = (bucket: string, path: string, stream: Readable) => {
-    return this.saveContent(bucket, path, stream, {unzip: true})
+  public saveZippedContent = (bucket: string, path: string, stream: Readable, tracingConfig?: RequestTracingConfig) => {
+    return this.saveContent(bucket, path, stream, {unzip: true}, tracingConfig)
   }
 
-  public deleteFile = (bucket: string, path: string) => {
-    return this.http.delete(routes.File(bucket, path), {metric: 'vbase-delete-file'})
+  public deleteFile = (bucket: string, path: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'vbase-delete-file'
+    return this.http.delete(routes.File(bucket, path), {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public getConflicts = <T>(bucket: string) => {
-    return this.http.get<T>(routes.Conflicts(bucket), {metric: 'vbase-get-conflicts'})
+  public getConflicts = <T>(bucket: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'vbase-get-conflicts'
+    return this.http.get<T>(routes.Conflicts(bucket), {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public resolveConflict = <T>(bucket: string, path: string, content: any) => {
+  public resolveConflict = <T>(bucket: string, path: string, content: any, tracingConfig?: RequestTracingConfig) => {
     const data = [{
       op: 'replace',
       path,
       value: content,
     }]
-    return this.http.patch<T>(routes.Conflicts(bucket), data,  {metric: 'vbase-resolve-conflicts'})
+
+    const metric = 'vbase-resolve-conflicts'
+    return this.http.patch<T>(routes.Conflicts(bucket), data,  {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  private saveContent = (bucket: string, path: string, stream: Readable, opts: VBaseSaveOptions = {}) => {
+  private saveContent = (bucket: string, path: string, stream: Readable, opts: VBaseSaveOptions = {}, tracingConfig?: RequestTracingConfig) => {
     if (!stream.pipe || !stream.on) {
       throw new Error(`Argument stream must be a readable stream`)
     }
@@ -137,7 +178,10 @@ export class VBase extends InfraClient {
       headers['X-VTEX-TTL'] = opts.ttl
     }
     const metric = 'vbase-save-blob'
-    return this.http.put(routes.File(bucket, path), finalStream, {headers, params, metric})
+    return this.http.put(routes.File(bucket, path), finalStream, {headers, metric, params, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 }
 

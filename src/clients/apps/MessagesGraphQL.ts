@@ -1,6 +1,6 @@
 import { flatten, path, splitEvery, values } from 'ramda'
 
-import { InstanceOptions } from '../../HttpClient'
+import { InstanceOptions, RequestTracingConfig } from '../../HttpClient'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { AppGraphQLClient } from './AppGraphQLClient'
 
@@ -61,7 +61,7 @@ export class MessagesGraphQL extends AppGraphQLClient {
     super('vtex.messages@1.x', vtex, options)
   }
 
-  public translateV2 (args: TranslateInput) {
+  public translateV2 (args: TranslateInput, tracingConfig?: RequestTracingConfig) {
     const { indexedByFrom, ...rest } = args
 
     const allMessages: Array<{from: string, message: Omit<Message, 'from'>}> = indexedByFrom.reduce((acc, {from, messages}) => {
@@ -69,6 +69,7 @@ export class MessagesGraphQL extends AppGraphQLClient {
     }, [] as Array<{from: string, message: Omit<Message, 'from'>}>)
 
     const batchedMessages = splitEvery(MAX_BATCH_SIZE, allMessages)
+    const metric = 'messages-translate-v2'
     return Promise.all(batchedMessages.map(batch => {
       const indexedBatch = batch.reduce((acc, {from, message}) => {
         if (!acc[from]) {
@@ -92,12 +93,17 @@ export class MessagesGraphQL extends AppGraphQLClient {
       `,
         variables: { args: batchArgs },
       }, {
-        metric: 'messages-translate-v2',
+        metric,
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
       }).then(path(['data', 'translate'])) as Promise<TranslatedV2['translate']>
     })).then(flatten)
   }
 
-  public async translate (args: TranslateInput) {
+  public async translate (args: TranslateInput, tracingConfig?: RequestTracingConfig) {
+    const metric = 'messages-translate-v2'
     const response = await this.graphql.query<TranslatedV2, { args: TranslateInput }>(
       {
         query: `query Translate($args: TranslateArgs!) {
@@ -106,13 +112,18 @@ export class MessagesGraphQL extends AppGraphQLClient {
         variables: { args },
       },
       {
-        metric: 'messages-translate-v2',
+        metric,
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
       }
     )
     return response.data!.translate
   }
 
-  public async translateWithDependencies (args: TranslateWithDependenciesInput) {
+  public async translateWithDependencies (args: TranslateWithDependenciesInput, tracingConfig?: RequestTracingConfig) {
+    const metric = 'messages-translate-with-deps-v2'
     const response = await this.graphql.query<TranslatedWithDependencies, { args: TranslateWithDependenciesInput }>(
       {
         query: `query TranslateWithDeps($args: TranslateWithDependenciesArgs!) {
@@ -121,14 +132,19 @@ export class MessagesGraphQL extends AppGraphQLClient {
         variables: { args },
       },
       {
-        metric: 'messages-translate-with-deps-v2',
+        metric,
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
       }
     )
     return response.data!.translateWithDependencies
   }
 
 
-  public async saveV2 (args: SaveInput) {
+  public async saveV2 (args: SaveInput, tracingConfig?: RequestTracingConfig) {
+    const metric = 'messages-saveV2-translation'
     const response = await this.graphql.mutate<{ saveV2: boolean }, { args: SaveInput }>(
       {
         mutate: `mutation SaveV2($args: SaveArgsV2!) {
@@ -137,7 +153,11 @@ export class MessagesGraphQL extends AppGraphQLClient {
         variables: { args },
       },
       {
-        metric: 'messages-saveV2-translation',
+        metric,
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
       }
     )
     return response.data!.saveV2

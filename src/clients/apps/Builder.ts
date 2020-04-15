@@ -1,7 +1,7 @@
 import archiver from 'archiver'
 import { ZlibOptions } from 'zlib'
 
-import { InstanceOptions } from '../../HttpClient'
+import { InstanceOptions, RequestTracingConfig } from '../../HttpClient'
 import { CacheType } from '../../HttpClient/middlewares/cache'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { Change } from '../infra/Apps'
@@ -26,7 +26,7 @@ export class Builder extends AppClient {
     super('vtex.builder-hub@0.x', ioContext, opts)
   }
 
-  public availability = async (app: string, hintIndex: number) => {
+  public availability = async (app: string, hintIndex: number, tracingConfig?: RequestTracingConfig) => {
     const stickyHint = hintIndex === undefined || hintIndex === null ?
       `request:${this.context.account}:${this.context.workspace}:${app}` :
       `request:${this.context.account}:${this.context.workspace}:${app}:${hintIndex}`
@@ -37,46 +37,60 @@ export class Builder extends AppClient {
     const metric = 'bh-availability'
     const {data: {availability},
            headers: {'x-vtex-sticky-host': host},
-          } = await this.http.getRaw(routes.Availability(app), {headers, metric, cacheable: CacheType.None})
+          } = await this.http.getRaw(routes.Availability(app), {cacheable: CacheType.None, headers, metric, tracing: {
+            requestSpanNameSuffix: metric,
+            ...tracingConfig?.tracing,
+          }})
     const {hostname, score} = availability as AvailabilityResponse
     return {host, hostname, score}
   }
 
-  public clean = (app: string) => {
+  public clean = (app: string, tracingConfig?: RequestTracingConfig) => {
     const headers = {
       'Content-Type': 'application/json',
       ...this.stickyHost && {'x-vtex-sticky-host': this.stickyHost},
     }
     const metric = 'bh-clean'
-    return this.http.post<BuildResult>(routes.Clean(app), {headers, metric})
+    return this.http.post<BuildResult>(routes.Clean(app), {headers, metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public getPinnedDependencies = () => {
-    return this.http.get(routes.PinnedDependencies())
+  public getPinnedDependencies = (tracingConfig?: RequestTracingConfig) => {
+    return this.http.get(routes.PinnedDependencies(), {
+      tracing: {
+        requestSpanNameSuffix: 'pinned-dependencies',
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public linkApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}) => {
-    return this.zipAndSend(routes.Link(app), app, files, zipOptions, params)
+  public linkApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}, tracingConfig?: RequestTracingConfig) => {
+    return this.zipAndSend(routes.Link(app), app, files, zipOptions, params, tracingConfig)
   }
 
-  public publishApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}) => {
-    return this.zipAndSend(routes.Publish(app), app, files, zipOptions, params)
+  public publishApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}, tracingConfig?: RequestTracingConfig) => {
+    return this.zipAndSend(routes.Publish(app), app, files, zipOptions, params, tracingConfig)
   }
 
-  public relinkApp = (app: string, changes: Change[], params: RequestParams = {}) => {
+  public relinkApp = (app: string, changes: Change[], params: RequestParams = {}, tracingConfig?: RequestTracingConfig) => {
     const headers = {
       'Content-Type': 'application/json',
       ...this.stickyHost && {'x-vtex-sticky-host': this.stickyHost},
     }
     const metric = 'bh-relink'
-    return this.http.put<BuildResult>(routes.Relink(app), changes, {headers, metric, params})
+    return this.http.put<BuildResult>(routes.Relink(app), changes, {headers, metric, params, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public testApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}) => {
-    return this.zipAndSend(routes.Test(app), app, files, zipOptions, params)
+  public testApp = (app: string, files: File[], zipOptions: ZipOptions = {sticky: true}, params: RequestParams = {}, tracingConfig?: RequestTracingConfig) => {
+    return this.zipAndSend(routes.Test(app), app, files, zipOptions, params, tracingConfig)
   }
 
-  private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky, stickyHint, zlib}: ZipOptions = {}, requestParams: RequestParams = {}) => {
+  private zipAndSend = async (route: string, app: string, files: File[], {tag, sticky, stickyHint, zlib}: ZipOptions = {}, requestParams: RequestParams = {}, tracingConfig?: RequestTracingConfig) => {
     if (!(files[0] && files[0].path && files[0].content)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -99,6 +113,10 @@ export class Builder extends AppClient {
       },
       metric,
       params,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     })
 
     files.forEach(({content, path}) => zip.append(content, {name: path}))

@@ -1,4 +1,4 @@
-import { InstanceOptions } from '../../HttpClient'
+import { InstanceOptions, RequestTracingConfig } from '../../HttpClient'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { InfraClient } from './InfraClient'
 
@@ -16,44 +16,75 @@ export class Router extends InfraClient {
     super('router', ioContext, opts, true)
   }
 
-  public listAvailableIoVersions = () => {
-    return this.http.get<AvaiableIO[]>(routes.AvailableIoVersions)
+  public listAvailableIoVersions = (tracingConfig?: RequestTracingConfig) => {
+    return this.http.get<AvaiableIO[]>(routes.AvailableIoVersions, { tracing: {
+      requestSpanNameSuffix: 'list-io-versions',
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public getInstalledIoVersion = () => {
+  public getInstalledIoVersion = (tracingConfig?: RequestTracingConfig) => {
     if (!this.context.account || !this.context.workspace) {
       throw new Error('Missing client parameters: {account, workspace}')
     }
-    return this.http.get<InstalledIO>(routes.InstalledIoVersion(this.context.account, this.context.workspace))
+    return this.http.get<InstalledIO>(routes.InstalledIoVersion(this.context.account, this.context.workspace), {
+      tracing: {
+        requestSpanNameSuffix: 'get-installed-io-version',
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public installIo = (version: string) => {
+  public installIo = (version: string, tracingConfig?: RequestTracingConfig) => {
     if (!this.context.account || !this.context.workspace) {
       throw new Error('Missing client parameters: {account, workspace}')
     }
-    return this.http.put(routes.InstalledIoVersion(this.context.account, this.context.workspace), {version})
+    return this.http.put(routes.InstalledIoVersion(this.context.account, this.context.workspace), {version}, { tracing: {
+      requestSpanNameSuffix: 'install-io',
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public listAvailableServices = () => {
-    return this.http.get<AvailableServices>(routes.AvailableServices)
+  public listAvailableServices = (tracingConfig?: RequestTracingConfig) => {
+    return this.http.get<AvailableServices>(routes.AvailableServices, {
+      tracing: {
+        requestSpanNameSuffix: 'list-available-services',
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public getAvailableVersions = (name: string) => {
-    return this.http.get<AvailableServiceVersions>(routes.AvailableServiceVersions(name))
+  public getAvailableVersions = (name: string, tracingConfig?: RequestTracingConfig) => {
+    return this.http.get<AvailableServiceVersions>(routes.AvailableServiceVersions(name), {
+      tracing: {
+        requestSpanNameSuffix: 'get-versions',
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public listInstalledServices = () => {
+  public listInstalledServices = (tracingConfig?: RequestTracingConfig) => {
     if (!this.context.account || !this.context.workspace) {
       throw new Error('Missing client parameters: {account, workspace}')
     }
-    return this.http.get<InstalledService[]>(routes.InstalledServices(this.context.account, this.context.workspace))
+    return this.http.get<InstalledService[]>(routes.InstalledServices(this.context.account, this.context.workspace), {
+      tracing: {
+        requestSpanNameSuffix: 'list-installed-services',
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public installService = (name: string, version: string) => {
+  public installService = (name: string, version: string, tracingConfig?: RequestTracingConfig) => {
     if (!this.context.account || !this.context.workspace) {
       throw new Error('Missing client parameters: {account, workspace}')
     }
-    return this.http.post(routes.InstalledServices(this.context.account, this.context.workspace), {name, version})
+    return this.http.post(routes.InstalledServices(this.context.account, this.context.workspace), {name, version}, {
+      tracing: {
+        requestSpanNameSuffix: 'install-service',
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 }
 

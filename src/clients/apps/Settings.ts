@@ -1,6 +1,6 @@
 import { any } from 'ramda'
 
-import { inflightUrlWithQuery, InstanceOptions } from '../../HttpClient'
+import { inflightUrlWithQuery, InstanceOptions, RequestTracingConfig } from '../../HttpClient'
 import { getDependenciesHash, getFilteredDependencies } from '../../service/worker/runtime/http/middlewares/settings'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { isLinkedApp } from '../../utils/app'
@@ -29,17 +29,22 @@ export class Settings extends AppClient {
     return getDependenciesHash(dependencies)
   }
 
-  public async getSettings(dependencies: AppMetaInfo[], appAtMajor: string, params?: SettingsParams) {
+  public async getSettings(dependencies: AppMetaInfo[], appAtMajor: string, params?: SettingsParams, tracingConfig?: RequestTracingConfig) {
     const filtered = this.getFilteredDependencies(appAtMajor, dependencies)
     // Settings server exposes a smartCache-enabled route for when the workspace contains links.
     const lastSegment = containsLinks(filtered)
       ? LINKED_ROUTE
       : this.getDependenciesHash(filtered)
 
+    const metric = 'settings-get'
     return this.http.get(`/settings/${appAtMajor}/${lastSegment}`, {
       inflightKey: inflightUrlWithQuery,
-      metric: 'settings-get',
+      metric,
       params,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     })
   }
 }

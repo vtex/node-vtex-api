@@ -2,7 +2,7 @@ import parseCookie from 'cookie'
 import { prop } from 'ramda'
 
 import { PRODUCT_HEADER } from '../../constants'
-import { inflightUrlWithQuery } from '../../HttpClient'
+import { inflightUrlWithQuery, RequestTracingConfig } from '../../HttpClient'
 import { JanusClient } from './JanusClient'
 
 export interface SegmentData {
@@ -50,24 +50,24 @@ export class Segment extends JanusClient {
    *
    * @memberof Segment
    */
-  public getSegment = () =>
-    this.rawSegment(this.context!.segmentToken).then(prop('data'))
+  public getSegment = (tracingConfig?: RequestTracingConfig) =>
+    this.rawSegment(this.context!.segmentToken, undefined, tracingConfig).then(prop('data'))
 
   /**
    * Get the segment data from this specific segment token
    *
    * @memberof Segment
    */
-  public getSegmentByToken = (token: string | null) =>
-    this.rawSegment(token).then(prop('data'))
+  public getSegmentByToken = (token: string | null, tracingConfig?: RequestTracingConfig) =>
+    this.rawSegment(token, undefined, tracingConfig).then(prop('data'))
 
-  public getOrCreateSegment = async (query?: Record<string, string>, token?: string) => {
+  public getOrCreateSegment = async (query?: Record<string, string>, token?: string, tracingConfig?: RequestTracingConfig) => {
     const {
       data: segmentData,
       headers: {
         'set-cookie': [setCookies],
       },
-    } = await this.rawSegment(token, query)
+    } = await this.rawSegment(token, query, tracingConfig)
     const parsedCookie = parseCookie.parse(setCookies)
     const segmentToken = prop(SEGMENT_COOKIE, parsedCookie)
     return {
@@ -76,10 +76,11 @@ export class Segment extends JanusClient {
     }
   }
 
-  private rawSegment = (token?: string | null, query?: Record<string, string>) => {
+  private rawSegment = (token?: string | null, query?: Record<string, string>, tracingConfig?: RequestTracingConfig) => {
     const { product } = this.context
     const filteredQuery = filterAndSortQuery(query)
 
+    const metric = token ? 'segment-get-token' : 'segment-get-new'
     return this.http.getRaw<SegmentData>(routes.segments(token), ({
       forceMaxAge: SEGMENT_MAX_AGE_S,
       headers: {
@@ -87,10 +88,14 @@ export class Segment extends JanusClient {
         [PRODUCT_HEADER]: product || '',
       },
       inflightKey: inflightUrlWithQuery,
-      metric: token ? 'segment-get-token' : 'segment-get-new',
+      metric,
       params: {
         ...filteredQuery,
         session_path: product || '',
+      },
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
       },
     }))
   }

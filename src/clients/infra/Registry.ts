@@ -10,6 +10,7 @@ import {
   inflightURL,
   inflightUrlWithQuery,
   InstanceOptions,
+  RequestTracingConfig,
 } from '../../HttpClient'
 import {
   IgnoreNotFoundRequestConfig,
@@ -39,66 +40,91 @@ export class Registry extends InfraClient {
     super('apps@0.x', {...context, workspace: DEFAULT_WORKSPACE}, options)
   }
 
-  public publishApp = (files: File[], tag?: string, {zlib}: ZipOptions = {}) => {
-    return this.publish(routes.Publish, files, tag, {zlib})
+  public publishApp = (files: File[], tag?: string, {zlib}: ZipOptions = {}, tracingConfig?: RequestTracingConfig) => {
+    return this.publish(routes.Publish, files, tag, {zlib}, tracingConfig)
   }
 
-  public publishAppRc = (files: File[], tag?: string, {zlib}: ZipOptions = {}) => {
-    return this.publish(routes.PublishRc, files, tag, {zlib})
+  public publishAppRc = (files: File[], tag?: string, {zlib}: ZipOptions = {}, tracingConfig?: RequestTracingConfig) => {
+    return this.publish(routes.PublishRc, files, tag, {zlib}, tracingConfig)
   }
 
-  public listApps = () => {
+  public listApps = (tracingConfig?: RequestTracingConfig) => {
     const inflightKey = inflightURL
     const metric = 'registry-list'
-    return this.http.get<RegistryAppsList>(routes.Registry, {metric, inflightKey})
+    return this.http.get<RegistryAppsList>(routes.Registry, {inflightKey, metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public listVersionsByApp = (app: string) => {
+  public listVersionsByApp = (app: string, tracingConfig?: RequestTracingConfig) => {
     const inflightKey = inflightURL
     const metric = 'registry-list-versions'
-    return this.http.get<RegistryAppVersionsList>(routes.App(app), {metric, inflightKey})
+    return this.http.get<RegistryAppVersionsList>(routes.App(app), {inflightKey, metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public deprecateApp = (app: string, version: string) => {
+  public deprecateApp = (app: string, version: string, tracingConfig?: RequestTracingConfig) => {
     const metric = 'registry-deprecate'
-    return this.http.patch(routes.AppVersion(app, version), {patchState: 'deprecate'}, {metric})
+    return this.http.patch(routes.AppVersion(app, version), {patchState: 'deprecate'}, {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public undeprecateApp = (app: string, version: string) => {
+  public undeprecateApp = (app: string, version: string, tracingConfig?: RequestTracingConfig) => {
     const metric = 'registry-undeprecate'
-    return this.http.patch(routes.AppVersion(app, version), {patchState: 'undeprecate'}, {metric})
+    return this.http.patch(routes.AppVersion(app, version), {patchState: 'undeprecate'}, {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public validateApp = (app: string, version: string) => {
+  public validateApp = (app: string, version: string, tracingConfig?: RequestTracingConfig) => {
     const metric = 'registry-validate'
-    return this.http.patch(routes.AppVersion(app, version), {patchState: 'validate'}, {metric})
+    return this.http.patch(routes.AppVersion(app, version), {patchState: 'validate'}, {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public getAppManifest = (app: string, version: string, opts?: AppsManifestOptions) => {
+  public getAppManifest = (app: string, version: string, opts?: AppsManifestOptions, tracingConfig?: RequestTracingConfig) => {
     const inflightKey = inflightUrlWithQuery
     const params = opts
     const metric = 'registry-manifest'
-    return this.http.get<AppManifest>(routes.AppVersion(app, version), {params, metric, inflightKey})
+    return this.http.get<AppManifest>(routes.AppVersion(app, version), {inflightKey, metric, params, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public listAppFiles = (app: string, version: string, opts?: ListAppFilesOptions) => {
+  public listAppFiles = (app: string, version: string, opts?: ListAppFilesOptions, tracingConfig?: RequestTracingConfig) => {
     const inflightKey = inflightUrlWithQuery
     const params = opts
     const metric = 'registry-list-files'
-    return this.http.get<AppFilesList>(routes.AppFiles(app, version), {params, metric, inflightKey})
+    return this.http.get<AppFilesList>(routes.AppFiles(app, version), {inflightKey, metric, params, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public getAppFile = (app: string, version: string, path: string) => {
+  public getAppFile = (app: string, version: string, path: string, tracingConfig?: RequestTracingConfig) => {
     const inflightKey = inflightURL
     const metric = 'registry-get-file'
     return this.http.getBuffer(routes.AppFile(app, version, path), {
       cacheable: CacheType.Disk,
       inflightKey,
       metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     })
   }
 
-  public getAppJSON = <T extends object | null>(app: string, version: string, path: string, nullIfNotFound?: boolean) => {
+  public getAppJSON = <T extends object | null>(app: string, version: string, path: string, nullIfNotFound?: boolean, tracingConfig?: RequestTracingConfig) => {
     const inflightKey = inflightURL
     const metric = 'registry-get-json'
     return this.http.get<T>(routes.AppFile(app, version, path), {
@@ -106,14 +132,25 @@ export class Registry extends InfraClient {
       inflightKey,
       metric,
       nullIfNotFound,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     } as IgnoreNotFoundRequestConfig)
   }
 
-  public getAppFileStream = (app: string, version: string, path: string): Promise<IncomingMessage> => {
-    return this.http.getStream(routes.AppFile(app, version, path), {metric: 'registry-get-file-s'})
+  public getAppFileStream = (app: string, version: string, path: string, tracingConfig?: RequestTracingConfig): Promise<IncomingMessage> => {
+    const metric = 'registry-get-file-s'
+    return this.http.getStream(routes.AppFile(app, version, path), {
+      metric, 
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public getAppBundle = (app: string, version: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
+  public getAppBundle = (app: string, version: string, bundlePath: string, generatePackageJson: boolean, tracingConfig?: RequestTracingConfig): Promise<Readable> => {
     const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
     const metric = 'registry-get-bundle'
     return this.http.getStream(routes.AppBundle(app, version, bundlePath), {
@@ -123,24 +160,31 @@ export class Registry extends InfraClient {
       },
       metric,
       params,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     })
   }
 
-  public unpackAppBundle = (app: string, version: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean): Promise<Writable> => {
-    return this.getAppBundle(app, version, bundlePath, generatePackageJson)
+  public unpackAppBundle = (app: string, version: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean, tracingConfig?: RequestTracingConfig): Promise<Writable> => {
+    return this.getAppBundle(app, version, bundlePath, generatePackageJson, tracingConfig)
       .then(stream => stream
         .pipe(createGunzip())
         .pipe(extract(unpackPath))
       )
   }
 
-  public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {
+  public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '', tracingConfig?: RequestTracingConfig) => {
     const params = {filter}
     const metric = 'registry-resolve-deps'
-    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {params, metric})
+    return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {metric, params, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  private publish = async (route: string, files: File[], tag?: string, {zlib}: ZipOptions = {}) => {
+  private publish = async (route: string, files: File[], tag?: string, {zlib}: ZipOptions = {}, tracingConfig?: RequestTracingConfig) => {
     if (!(files[0] && files[0].path && files[0].content)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -158,6 +202,10 @@ export class Registry extends InfraClient {
       headers: {'Content-Type': 'application/zip'},
       metric,
       params: tag ? {tag} : EMPTY_OBJECT,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     })
 
     files.forEach(({content, path}) => zip.append(content, {name: path}))
