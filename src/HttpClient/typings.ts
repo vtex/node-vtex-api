@@ -4,12 +4,31 @@ import { Span } from 'opentracing'
 
 import { CacheLayer } from '../caches/CacheLayer'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
+import { SpanReferenceTypes } from '../tracing'
 import { IUserLandTracer } from '../tracing/UserLandTracer'
 import { Cached, CacheType } from './middlewares/cache'
 
 export type InflightKeyGenerator = (x: RequestConfig) => string
 
-export interface RequestConfig extends AxiosRequestConfig {
+interface RequestTracingUserConfiguration {
+  rootSpan?: Span
+  referenceType?: SpanReferenceTypes
+  requestSpanNameSuffix?: string
+}
+
+export interface AxiosTracingConfig extends RequestTracingUserConfiguration {
+  tracer: IUserLandTracer
+}
+
+export interface TraceableRequestConfig extends RequestConfig {
+  tracing?: AxiosTracingConfig
+}
+
+export interface RequestTracingConfig {
+  tracing?: RequestTracingUserConfiguration
+}
+
+export interface RequestConfig extends AxiosRequestConfig, RequestTracingConfig {
   retries?: number
   exponentialTimeoutCoefficient?: number
   initialBackoffDelay?: number
@@ -38,17 +57,8 @@ export interface RequestConfig extends AxiosRequestConfig {
   forceMaxAge?: number
   responseEncoding?: BufferEncoding
   nullIfNotFound?: boolean
-  tracing?: { rootSpan?: Span }
   ignoreRecorder?: boolean
 }
-
-export interface TraceableRequestConfig extends RequestConfig {
-  tracing?: {
-    rootSpan?: Span
-    tracer: IUserLandTracer 
-  }
-}
-
 export interface CacheHit {
   disk?: 0 | 1
   memory?: 0 | 1
@@ -68,36 +78,36 @@ export type CacheStorage = CacheLayer<string, Cached>
 
 export interface InstanceOptions {
   authType?: AuthType
-  timeout?: number,
-  memoryCache?: CacheLayer<string, Cached>,
-  diskCache?: CacheLayer<string, Cached>,
-  baseURL?: string,
-  retries?: number,
-  exponentialTimeoutCoefficient?: number,
-  initialBackoffDelay?: number,
-  exponentialBackoffCoefficient?: number,
-  metrics?: MetricsAccumulator,
+  timeout?: number
+  memoryCache?: CacheLayer<string, Cached>
+  diskCache?: CacheLayer<string, Cached>
+  baseURL?: string
+  retries?: number
+  exponentialTimeoutCoefficient?: number
+  initialBackoffDelay?: number
+  exponentialBackoffCoefficient?: number
+  metrics?: MetricsAccumulator
   /**
    * Maximum number of concurrent requests
    *
    * @type {number}
    * @memberof InstanceOptions
    */
-  concurrency?: number,
+  concurrency?: number
   /**
    * Default headers to be sent with every request
    *
    * @type {Record<string, string>}
    * @memberof InstanceOptions
    */
-  headers?: Record<string, string>,
+  headers?: Record<string, string>
   /**
    * Default query string parameters to be sent with every request
    *
    * @type {Record<string, string>}
    * @memberof InstanceOptions
    */
-  params?: Record<string, string>,
+  params?: Record<string, string>
   middlewares?: Array<Middleware<MiddlewareContext>>
   verbose?: boolean
   name?: string

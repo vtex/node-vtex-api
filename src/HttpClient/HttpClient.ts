@@ -176,7 +176,7 @@ export class HttpClient {
 
   protected request = async (config: RequestConfig): Promise<AxiosResponse> => {
     (config as TraceableRequestConfig).tracing = this.tracer ? { 
-      rootSpan: config.tracing?.rootSpan,
+      ...config.tracing,
       tracer: this.tracer,
     } : undefined
 
