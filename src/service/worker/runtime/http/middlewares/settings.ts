@@ -4,6 +4,7 @@ import { join, pluck } from 'ramda'
 import { AppMetaInfo, Apps } from '../../../../../clients/infra/Apps'
 import { IOClients } from '../../../../../clients/IOClients'
 import { APP } from '../../../../../constants'
+import { RequestTracingConfig } from '../../../../../HttpClient'
 import { Assets } from './../../../../../clients/infra/Assets'
 import { appIdToAppAtMajor } from './../../../../../utils/app'
 import {
@@ -41,12 +42,12 @@ export const getDependenciesHash = (dependencies: AppMetaInfo[]): string => {
     .digest('hex')
 }
 
-export const getDependenciesSettings = async (apps: Apps, assets: Assets) => {
+export const getDependenciesSettings = async (apps: Apps, assets: Assets, tracingConfig?: RequestTracingConfig) => {
   const appId = APP.ID
-  const metaInfos = await apps.getAppsMetaInfos()
+  const metaInfos = await apps.getAppsMetaInfos(undefined, undefined, tracingConfig)
   const appAtMajor = appIdToAppAtMajor(appId)
 
-  return await assets.getSettings(metaInfos, appAtMajor)
+  return await assets.getSettings(metaInfos, appAtMajor, undefined, tracingConfig)
 }
 
 export const getServiceSettings = () => {
@@ -59,7 +60,8 @@ export const getServiceSettings = () => {
       clients: { apps, assets },
     } = ctx
 
-    const dependenciesSettings = await getDependenciesSettings(apps, assets)
+    const rootSpan = ctx.tracing!.currentSpan
+    const dependenciesSettings = await getDependenciesSettings(apps, assets, { tracing: { rootSpan } })
 
     // TODO: for now returning all settings, but the ideia is to do merge
     ctx.vtex.settings = dependenciesSettings
