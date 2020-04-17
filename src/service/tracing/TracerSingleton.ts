@@ -1,11 +1,10 @@
 import { initTracer as initJaegerTracer, TracingConfig, TracingOptions } from 'jaeger-client'
 import { Tracer } from 'opentracing'
-import { APP, LINKED, NODE_VTEX_API_VERSION, PRODUCTION, REGION, WORKSPACE } from '../../constants'
+import { APP, LINKED, NODE_ENV, NODE_VTEX_API_VERSION, PRODUCTION, REGION, WORKSPACE } from '../../constants'
 import { Tags } from '../../tracing/Tags'
 import { appIdToAppAtMajor } from '../../utils'
 
 export class TracerSingleton {
-
   public static getTracer() {
     if (!TracerSingleton.singleton) {
       TracerSingleton.singleton = TracerSingleton.initServiceTracer()
@@ -24,6 +23,7 @@ export class TracerSingleton {
       [Tags.VTEX_APP_REGION]: REGION,
       [Tags.VTEX_APP_VERSION]: APP.VERSION,
       [Tags.VTEX_APP_WORKSPACE]: WORKSPACE,
+      [Tags.VTEX_APP_NODE_ENV]: NODE_ENV ?? 'undefined',
     })
   }
 
