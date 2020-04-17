@@ -41,14 +41,14 @@
                 "metricName": {
                     "type": "string"
                 },
+                "metricsRoute": {
+                    "type": "string"
+                },
                 "ranges": {
                     "items": {
                         "$ref": "#/definitions/Range"
                     },
                     "type": "array"
-                },
-                "route": {
-                    "type": "string"
                 }
             },
             "type": "object"
@@ -61,10 +61,19 @@
                     },
                     "type": "array"
                 },
+                "setupRoute": {
+                    "type": "string"
+                },
                 "support": {
                     "$ref": "#/definitions/Support"
                 },
                 "termsURL": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "chargeable"
+                    ],
                     "type": "string"
                 }
             },
@@ -83,8 +92,60 @@
         },
         "FreeBillingOptions": {
             "properties": {
+                "setupRoute": {
+                    "type": "string"
+                },
+                "support": {
+                    "$ref": "#/definitions/Support"
+                },
+                "termsURL": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "free"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "LegacyChargeableBillingOptions": {
+            "properties": {
                 "free": {
+                    "enum": [
+                        false
+                    ],
                     "type": "boolean"
+                },
+                "policies": {
+                    "items": {
+                        "$ref": "#/definitions/BillingPolicy"
+                    },
+                    "type": "array"
+                },
+                "setupRoute": {
+                    "type": "string"
+                },
+                "support": {
+                    "$ref": "#/definitions/Support"
+                },
+                "termsURL": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "LegacyFreeBillingOptions": {
+            "properties": {
+                "free": {
+                    "enum": [
+                        true
+                    ],
+                    "type": "boolean"
+                },
+                "setupRoute": {
+                    "type": "string"
                 },
                 "support": {
                     "$ref": "#/definitions/Support"
@@ -134,6 +195,26 @@
             },
             "type": "object"
         },
+        "SponsoredBillingOptions": {
+            "properties": {
+                "setupRoute": {
+                    "type": "string"
+                },
+                "support": {
+                    "$ref": "#/definitions/Support"
+                },
+                "termsURL": {
+                    "type": "string"
+                },
+                "type": {
+                    "enum": [
+                        "sponsored"
+                    ],
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
         "Support": {
             "properties": {
                 "email": {
@@ -153,7 +234,16 @@
                     "$ref": "#/definitions/FreeBillingOptions"
                 },
                 {
+                    "$ref": "#/definitions/LegacyFreeBillingOptions"
+                },
+                {
                     "$ref": "#/definitions/ChargeableBillingOptions"
+                },
+                {
+                    "$ref": "#/definitions/LegacyChargeableBillingOptions"
+                },
+                {
+                    "$ref": "#/definitions/SponsoredBillingOptions"
                 }
             ]
         },
