@@ -10,6 +10,7 @@ import {
   inflightURL,
   inflightUrlWithQuery,
   InstanceOptions,
+  RequestTracingConfig,
 } from '../../HttpClient'
 import {
   IgnoreNotFoundRequestConfig,
@@ -110,26 +111,48 @@ export class Apps extends InfraClient {
     this._routes = createRoutes(context)
   }
 
-  public installApp = (descriptor: string) => {
+  public installApp = (descriptor: string, tracingConfig?: RequestTracingConfig) => {
     if (descriptor.startsWith('infra:service-')) {
-      return this.installRuntime(descriptor)
+      return this.installRuntime(descriptor, tracingConfig)
     }
+
+    const metric = 'apps-install' 
     return this.http.post<AppInstallResponse>(
       this.routes.Apps(),
       { id: descriptor },
-      { metric: 'apps-install' }
+      { 
+        metric,
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
+      }
     )
   }
 
-  public uninstallApp = (app: string) => {
-    return this.http.delete(this.routes.App(app), { metric: 'apps-uninstall' })
+  public uninstallApp = (app: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'apps-uninstall' 
+    return this.http.delete(this.routes.App(app), { 
+      metric, 
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public acknowledgeApp = (app: string, service: string) => {
-    return this.http.put(this.routes.Acknowledge(app, service), null, { metric: 'apps-ack' })
+  public acknowledgeApp = (app: string, service: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'apps-ack' 
+    return this.http.put(this.routes.Acknowledge(app, service), null, { 
+      metric, 
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public link = async (app: string, files: Change[], { zlib }: ZipOptions = {}) => {
+  public link = async (app: string, files: Change[], { zlib }: ZipOptions = {}, tracingConfig?: RequestTracingConfig) => {
     if (!(files[0] && files[0].path)) {
       throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -148,9 +171,15 @@ export class Apps extends InfraClient {
     zip.on('error', (e) => {
       throw e
     })
+
+    const metric = 'apps-link'
     const request = this.http.put<AppBundleLinked>(this.routes.Link(app), zip, {
       headers: { 'Content-Type': 'application/zip' },
-      metric: 'apps-link',
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     })
 
     files.forEach(({ content, path }) => zip.append(content, { name: path }))
@@ -166,7 +195,7 @@ export class Apps extends InfraClient {
     }
   }
 
-  public patch = async (app: string, changes: Change[], { zlib }: ZipOptions = {}) => {
+  public patch = async (app: string, changes: Change[], { zlib }: ZipOptions = {}, tracingConfig?: RequestTracingConfig) => {
     if (!(changes[0] && changes[0].path)) {
       throw new Error('Argument changes must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
     }
@@ -182,10 +211,16 @@ export class Apps extends InfraClient {
     zip.on('error', (e) => {
       throw e
     })
+
+    const metric = 'apps-patch' 
     const request = this.http.patch(this.routes.Link(app), zip, {
       headers: { 'Content-Type': 'application/zip' },
-      metric: 'apps-patch',
+      metric,
       params: { deletedFiles },
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     })
 
     files.forEach(({ content, path }) => zip.append(content, { name: path }))
@@ -195,21 +230,38 @@ export class Apps extends InfraClient {
     return response
   }
 
-  public unlink = (app: string) => {
-    return this.http.delete(this.routes.Unlink(app))
+  public unlink = (app: string, tracingConfig?: RequestTracingConfig) => {
+    return this.http.delete(this.routes.Unlink(app), {
+      tracing: {
+        requestSpanNameSuffix: 'apps-unlink',
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public unlinkAll = () => {
-    return this.http.delete(this.routes.Links())
+  public unlinkAll = (tracingConfig?: RequestTracingConfig) => {
+    return this.http.delete(this.routes.Links(), {
+      tracing: {
+        requestSpanNameSuffix: 'apps-unlink-all',
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public saveAppSettings = (app: string, settings: any) => {
+  public saveAppSettings = (app: string, settings: any, tracingConfig?: RequestTracingConfig) => {
     const headers = {'Content-Type': 'application/json'}
     const metric = 'apps-save'
-    return this.http.put(this.routes.Settings(app), settings, {headers, metric})
+    return this.http.put(this.routes.Settings(app), settings, {
+      headers, 
+      metric, 
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public listApps = ({oldVersion, since, service}: ListAppsOptions = {}) => {
+  public listApps = ({oldVersion, since, service}: ListAppsOptions = {}, tracingConfig?: RequestTracingConfig) => {
     const params = {
       oldVersion,
       service,
@@ -217,10 +269,18 @@ export class Apps extends InfraClient {
     }
     const metric = 'apps-list'
     const inflightKey = inflightUrlWithQuery
-    return this.http.get<AppsList>(this.routes.Apps(), {params, metric, inflightKey})
+    return this.http.get<AppsList>(this.routes.Apps(), {
+      inflightKey,
+      metric,
+      params,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public listAppFiles = (app: string, {prefix, nextMarker}: ListFilesOptions = {}) => {
+  public listAppFiles = (app: string, {prefix, nextMarker}: ListFilesOptions = {}, tracingConfig?: RequestTracingConfig) => {
     const locator = parseAppId(app)
     const linked = !!locator.build
     const params = {
@@ -229,15 +289,31 @@ export class Apps extends InfraClient {
     }
     const metric = linked ? 'apps-list-files' : 'registry-list-files'
     const inflightKey = inflightUrlWithQuery
-    return this.http.get<AppFilesList>(this.routes.Files(locator), {params, metric, inflightKey})
+    return this.http.get<AppFilesList>(this.routes.Files(locator), {
+      inflightKey,
+      metric,
+      params,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public listLinks = () => {
+  public listLinks = (tracingConfig?: RequestTracingConfig) => {
     const inflightKey = inflightURL
-    return this.http.get<string[]>(this.routes.Links(), {metric: 'apps-list-links', inflightKey})
+    const metric = 'apps-list-links' 
+    return this.http.get<string[]>(this.routes.Links(), {
+      inflightKey,
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public getAppFile = (app: string, path: string, staleIfError?: boolean) => {
+  public getAppFile = (app: string, path: string, staleIfError?: boolean, tracingConfig?: RequestTracingConfig) => {
     const { logger } = this.context
     const locator = parseAppId(app)
     const linked = !!locator.build
@@ -247,11 +323,17 @@ export class Apps extends InfraClient {
       saveVersion(app, this.memoryCache)
     }
 
+    const metric = linked ? 'apps-get-file' : 'registry-get-file'
+
     try {
       return this.http.getBuffer(this.routes.File(locator, path), {
         cacheable: linked ? CacheType.Memory : CacheType.Disk,
         inflightKey,
-        metric: linked ? 'apps-get-file' : 'registry-get-file',
+        metric,
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
       })
     } catch (error) {
       logger.error({ error, message: 'getAppFile failed', app, path })
@@ -262,57 +344,87 @@ export class Apps extends InfraClient {
     }
   }
 
-  public getAppJSON = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
+  public getAppJSON = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean, tracingConfig?: RequestTracingConfig) => {
     const locator = parseAppId(app)
     const linked = !!locator.build
     const inflightKey = inflightURL
+    const metric = linked ? 'apps-get-json' : 'registry-get-json'
     return this.http.get<T>(this.routes.File(locator, path), {
       cacheable: linked ? CacheType.Memory : CacheType.Any,
       inflightKey,
-      metric: linked ? 'apps-get-json' : 'registry-get-json',
+      metric,
       nullIfNotFound,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     } as IgnoreNotFoundRequestConfig)
   }
 
-  public getFileFromApps = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean) => {
+  public getFileFromApps = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean, tracingConfig?: RequestTracingConfig) => {
     const inflightKey = inflightURL
+    const metric = 'get-file-from-apps' 
     return this.http.get<T>(this.routes.FileFromApps(app, path), {
       cacheable: CacheType.Memory,
       inflightKey,
-      metric: 'get-file-from-apps',
+      metric,
       nullIfNotFound,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     } as IgnoreNotFoundRequestConfig)
   }
 
-  public getAppFileStream = (app: string, path: string): Promise<IncomingMessage> => {
+  public getAppFileStream = (app: string, path: string, tracingConfig?: RequestTracingConfig): Promise<IncomingMessage> => {
     const locator = parseAppId(app)
     const metric = locator.build ? 'apps-get-file-s' : 'registry-get-file-s'
-    return this.http.getStream(this.routes.File(locator, path), {metric})
+    return this.http.getStream(this.routes.File(locator, path), {
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public getApp = (app: string) => {
+  public getApp = (app: string, tracingConfig?: RequestTracingConfig) => {
     const metric = 'apps-get-app'
     const inflightKey = inflightURL
-    return this.http.get<AppManifest>(this.routes.App(app), {metric, inflightKey})
+    return this.http.get<AppManifest>(this.routes.App(app), {
+      inflightKey,
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public getAppSettings = (app: string) => {
+  public getAppSettings = (app: string, tracingConfig?: RequestTracingConfig) => {
     const inflightKey = inflightURL
     const metric = 'apps-get-settings'
-    return this.http.get<any>(this.routes.Settings(app), {inflightKey, metric})
+    return this.http.get<any>(this.routes.Settings(app), {
+      inflightKey,
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public getAllAppsSettings = (listAppsOptions: ListAppsOptions = {}): Promise<AppsSettings> => {
-    return this.listApps(listAppsOptions).then(({data: installedApps}: AppsList) => {
+  public getAllAppsSettings = (listAppsOptions: ListAppsOptions = {}, tracingConfig?: RequestTracingConfig): Promise<AppsSettings> => {
+    return this.listApps(listAppsOptions, tracingConfig).then(({data: installedApps}: AppsList) => {
       const names = installedApps.map(getVendorAndName)
-      const settingsPromises = names.map(vendorAndName => this.getAppSettings(vendorAndName).catch(notFound))
+      const settingsPromises = names.map(vendorAndName => this.getAppSettings(vendorAndName, tracingConfig).catch(notFound))
       return Promise.all(settingsPromises).then((settings: any[]) => {
         return zipObj(names, settings)
       })
     })
   }
 
-  public getAppBundle = (app: string, bundlePath: string, generatePackageJson: boolean): Promise<Readable> => {
+  public getAppBundle = (app: string, bundlePath: string, generatePackageJson: boolean, tracingConfig?: RequestTracingConfig): Promise<Readable> => {
     const locator = parseAppId(app)
     const params = generatePackageJson && {_packageJSONEngine: 'npm', _packageJSONFilter: 'vtex.render-builder@x'}
     const metric = locator.build ? 'apps-get-bundle' : 'registry-get-bundle'
@@ -323,18 +435,22 @@ export class Apps extends InfraClient {
       },
       metric,
       params,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     })
   }
 
-  public unpackAppBundle = (app: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean): Promise<Writable> => {
-    return this.getAppBundle(app, bundlePath, generatePackageJson)
+  public unpackAppBundle = (app: string, bundlePath: string, unpackPath: string, generatePackageJson: boolean, tracingConfig?: RequestTracingConfig): Promise<Writable> => {
+    return this.getAppBundle(app, bundlePath, generatePackageJson, tracingConfig)
       .then(stream => stream
         .pipe(createGunzip())
         .pipe(extract(unpackPath))
       )
   }
 
-  public getAppsMetaInfos = async (filter?: string, staleWhileRevalidate: boolean = true) => {
+  public getAppsMetaInfos = async (filter?: string, staleWhileRevalidate: boolean = true, tracingConfig?: RequestTracingConfig) => {
     const { account, production, recorder, workspace, logger} = this.context
     const metric = 'get-apps-meta'
     const inflightKey = inflightURL
@@ -354,6 +470,10 @@ export class Apps extends InfraClient {
         inflightKey,
         metric,
         params: { fields: workspaceFields },
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
       })
       .then(response => {
         const { data, headers: responseHeaders } = response
@@ -383,35 +503,72 @@ export class Apps extends InfraClient {
     return appsMetaInfo
   }
 
-  public getDependencies = (filter: string = '') => {
+  public getDependencies = (filter: string = '', tracingConfig?: RequestTracingConfig) => {
     const params = {filter}
     const metric = 'apps-get-deps'
     const inflightKey = inflightUrlWithQuery
-    return this.http.get<Record<string, string[]>>(this.routes.Dependencies(), {params, metric, inflightKey})
+    return this.http.get<Record<string, string[]>>(this.routes.Dependencies(), {
+      inflightKey,
+      metric,
+      params,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public updateDependencies = () => {
-    return this.http.put<Record<string, string[]>>(this.routes.Dependencies(), null, {metric: 'apps-update-deps'})
+  public updateDependencies = (tracingConfig?: RequestTracingConfig) => {
+    const metric = 'apps-update-deps' 
+    return this.http.put<Record<string, string[]>>(this.routes.Dependencies(), null, {
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public updateDependency = (name: string, version: string, registry: string) => {
-    return this.http.patch(this.routes.Apps(), [{name, version, registry}], {metric: 'apps-update-dep'})
+  public updateDependency = (name: string, version: string, registry: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'apps-update-dep' 
+    return this.http.patch(this.routes.Apps(), [{name, version, registry}], {
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public resolveDependencies = (apps: string[], registries: string[], filter: string = '') => {
+  public resolveDependencies = (apps: string[], registries: string[], filter: string = '', tracingConfig?: RequestTracingConfig) => {
     const params = {apps, registries, filter}
     const metric = 'apps-resolve-deps'
     const inflightKey = inflightUrlWithQuery
-    return this.http.get(this.routes.ResolveDependencies(), {params, metric, inflightKey})
+    return this.http.get(this.routes.ResolveDependencies(), {
+      inflightKey,
+      metric,
+      params,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '') => {
+  public resolveDependenciesWithManifest = (manifest: AppManifest, filter: string = '', tracingConfig?: RequestTracingConfig) => {
     const params = {filter}
     const metric = 'apps-resolve-deps-m'
-    return this.http.post<Record<string, string[]>>(this.routes.ResolveDependenciesWithManifest(), manifest, {params, metric})
+    return this.http.post<Record<string, string[]>>(this.routes.ResolveDependenciesWithManifest(), manifest, {
+      metric,
+      params,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
-  private installRuntime = (descriptor: string) => {
+  private installRuntime = (descriptor: string, tracingConfig?: RequestTracingConfig) => {
     const { account, workspace } = this.context
     const [name, version] = descriptor.split('@')
     return this.http.patch(
@@ -421,7 +578,13 @@ export class Apps extends InfraClient {
           name,
           version,
         },
-      ]
+      ],
+      {
+        tracing: {
+          requestSpanNameSuffix: 'apps-install-runtime',
+          ...tracingConfig?.tracing,
+        },
+      }
     )
   }
 }

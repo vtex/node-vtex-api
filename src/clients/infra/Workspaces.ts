@@ -1,5 +1,5 @@
 import { DEFAULT_WORKSPACE } from '../../constants'
-import { InstanceOptions } from '../../HttpClient'
+import { InstanceOptions, RequestTracingConfig } from '../../HttpClient'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { InfraClient } from './InfraClient'
 
@@ -14,34 +14,61 @@ export class Workspaces extends InfraClient {
     super('router', context, options, true)
   }
 
-  public list = (account: string) => {
-    return this.http.get<WorkspaceMetadata[]>(routes.Account(account), {metric: 'workspaces-list'})
+  public list = (account: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'workspaces-list'
+    return this.http.get<WorkspaceMetadata[]>(routes.Account(account), {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public get = (account: string, workspace: string) => {
-    return this.http.get<WorkspaceMetadata>(routes.Workspace(account, workspace), {metric: 'workspaces-get'})
+  public get = (account: string, workspace: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'workspaces-get'
+    return this.http.get<WorkspaceMetadata>(routes.Workspace(account, workspace), {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public set = (account: string, workspace: string, metadata: Partial<WorkspaceMetadata>) => {
-    return this.http.put(routes.Workspace(account, workspace), metadata, {metric: 'workspaces-set'})
+  public set = (account: string, workspace: string, metadata: Partial<WorkspaceMetadata>, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'workspaces-set'
+    return this.http.put(routes.Workspace(account, workspace), metadata, {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public create = (account: string, workspace: string, production: boolean) => {
-    return this.http.post(routes.Account(account), {name: workspace, production}, {metric: 'workspaces-create'})
+  public create = (account: string, workspace: string, production: boolean, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'workspaces-create'
+    return this.http.post(routes.Account(account), {name: workspace, production}, {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public delete = (account: string, workspace: string) => {
-    return this.http.delete(routes.Workspace(account, workspace), {metric: 'workspaces-delete'})
+  public delete = (account: string, workspace: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'workspaces-delete'
+    return this.http.delete(routes.Workspace(account, workspace), {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public reset = (account: string, workspace: string, metadata: Partial<WorkspaceMetadata> = {}) => {
+  public reset = (account: string, workspace: string, metadata: Partial<WorkspaceMetadata> = {}, tracingConfig?: RequestTracingConfig) => {
     const params = {reset: true}
     const metric = 'workspaces-reset'
-    return this.http.put(routes.Workspace(account, workspace), metadata, {params, metric})
+    return this.http.put(routes.Workspace(account, workspace), metadata, {metric, params, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public promote = (account: string, workspace: string) => {
-    return this.http.put(routes.Promote(account), {workspace}, {metric: 'workspaces-promote'})
+  public promote = (account: string, workspace: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'workspaces-promote'
+    return this.http.put(routes.Promote(account), {workspace}, {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 }
 

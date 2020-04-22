@@ -1,4 +1,4 @@
-import { InstanceOptions } from '../../HttpClient'
+import { InstanceOptions, RequestTracingConfig } from '../../HttpClient'
 import { BucketMetadata } from '../../responses'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { InfraClient } from './InfraClient'
@@ -31,11 +31,15 @@ export class Metadata extends InfraClient {
     }
   }
 
-  public getBuckets = (bucket: string) => {
-    return this.http.get<BucketMetadata>(routes.Bucket(bucket), {metric: 'meta-get-buckets'})
+  public getBuckets = (bucket: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'meta-get-buckets'
+    return this.http.get<BucketMetadata>(routes.Bucket(bucket), {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public list = (bucket: string, includeValue: boolean, limit?: number, nextMarker?: string) => {
+  public list = (bucket: string, includeValue: boolean, limit?: number, nextMarker?: string, tracingConfig?: RequestTracingConfig) => {
     const query: {value: boolean, _limit: number, _marker?: string} = {value: includeValue, _limit: 10}
     if (limit && limit > 0) {
       query._limit = limit
@@ -45,32 +49,58 @@ export class Metadata extends InfraClient {
     }
     const metric = 'meta-list'
 
-    return this.http.get<MetadataEntryList>(routes.Metadata(bucket), {params: query, metric})
+    return this.http.get<MetadataEntryList>(routes.Metadata(bucket), {metric, params: query, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public listAll = (bucket: string, includeValue: boolean) => {
+  public listAll = (bucket: string, includeValue: boolean, tracingConfig?: RequestTracingConfig) => {
     const query = {value: includeValue, _limit: 1000}
     const metric = 'meta-list-all'
-    return this.http.get<MetadataEntryList>(routes.Metadata(bucket), {params: query, metric})
+    return this.http.get<MetadataEntryList>(routes.Metadata(bucket), {metric, params: query, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public get = (bucket: string, key: string) => {
-    return this.http.get<any>(routes.MetadataKey(bucket, key), {metric: 'meta-get'})
+  public get = (bucket: string, key: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'meta-get'
+    return this.http.get<any>(routes.MetadataKey(bucket, key), {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public save = (bucket: string, key: string, data: any) => {
-    return this.http.put(routes.MetadataKey(bucket, key), data, {metric: 'meta-save'})
+  public save = (bucket: string, key: string, data: any, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'meta-save'
+    return this.http.put(routes.MetadataKey(bucket, key), data, {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public saveAll = (bucket: string, data: {[key: string]: any}) => {
-    return this.http.put(routes.Metadata(bucket), data, {metric: 'meta-save-all'})
+  public saveAll = (bucket: string, data: {[key: string]: any}, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'meta-save-all'
+    return this.http.put(routes.Metadata(bucket), data, {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public delete = (bucket: string, key: string) => {
-    return this.http.delete(routes.MetadataKey(bucket, key), {metric: 'meta-delete'})
+  public delete = (bucket: string, key: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'meta-delete'
+    return this.http.delete(routes.MetadataKey(bucket, key), {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 
-  public deleteAll = (bucket: string) => {
-    return this.http.delete(routes.Metadata(bucket), {metric: 'meta-delete-all'})
+  public deleteAll = (bucket: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'meta-delete-all'
+    return this.http.delete(routes.Metadata(bucket), {metric, tracing: {
+      requestSpanNameSuffix: metric,
+      ...tracingConfig?.tracing,
+    }})
   }
 }

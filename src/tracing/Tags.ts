@@ -7,6 +7,7 @@ const VTEX_INCOMING_REQUEST_TAGS = {
 
 const APP_TAGS = {
   VTEX_APP_LINKED: 'app.linked',
+  VTEX_APP_NODE_ENV: 'app.node-env',
   VTEX_APP_NODE_VTEX_API_VERSION: 'app.node-vtex-api-version',
   VTEX_APP_PRODUCTION: 'app.production',
   VTEX_APP_REGION: 'app.region',

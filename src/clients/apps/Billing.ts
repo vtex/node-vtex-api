@@ -1,4 +1,4 @@
-import { InstanceOptions } from '../../HttpClient'
+import { InstanceOptions, RequestTracingConfig } from '../../HttpClient'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { AppClient } from './AppClient'
 
@@ -7,8 +7,13 @@ export class Billing extends AppClient {
     super('vtex.billing@0.x', context, options)
   }
 
-  public status = () =>
-    this.http.get<ContractStatus>('/_v/contractStatus')
+  public status = (tracingConfig?: RequestTracingConfig) =>
+    this.http.get<ContractStatus>('/_v/contractStatus', {
+      tracing: {
+        requestSpanNameSuffix: 'billing-status',
+        ...tracingConfig?.tracing,
+      },
+    })
 }
 
 export enum ContractStatus {

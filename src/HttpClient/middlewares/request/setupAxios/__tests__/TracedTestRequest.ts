@@ -1,27 +1,36 @@
+import { MockReport, MockSpan } from '@tiagonapoli/opentracing-alternate-mock'
 import { AxiosInstance, AxiosResponse } from 'axios'
-import { MockSpan } from 'opentracing/lib/mock_tracer'
-import MockReport from 'opentracing/lib/mock_tracer/mock_report'
-import { CustomMockTracer } from './CustomMockTracer'
+import { Span } from 'opentracing'
+import { RequestTracingConfig, TraceableRequestConfig } from '../../../../typings'
+import { TestTracer } from './TestTracer'
+
+interface TracedTestRequestConfig extends RequestTracingConfig {
+  url: string
+  params?: any
+  retries?: number
+  timeout?: number
+  baseURL?: string
+}
 
 export class TracedTestRequest {
-  public static async doRequest(http: AxiosInstance, { url, params, retries, timeout, baseURL }: any) {
+  public static async doRequest(http: AxiosInstance, reqConfig: TracedTestRequestConfig) {
     const request = new TracedTestRequest(http)
-    await request.runRequest({ url, retries, timeout, params, baseURL })
+    await request.runRequest(reqConfig)
     return request
   }
 
-  public tracer: CustomMockTracer
+  public tracer: TestTracer
   public rootSpan: MockSpan
   public tracerReport?: MockReport
-  public requestSpan?: MockSpan
-  public url?: string
+  public lastRequestSpan?: MockSpan
+
   // tslint:disable-next-line
   private _res?: AxiosResponse
   // tslint:disable-next-line
   private _error?: any
 
   constructor(private http: AxiosInstance) {
-    this.tracer = new CustomMockTracer()
+    this.tracer = new TestTracer()
     this.rootSpan = this.tracer.startSpan('root-span') as MockSpan
   }
 
@@ -40,26 +49,36 @@ export class TracedTestRequest {
   }
 
   get allRequestSpans() {
-    return this.tracerReport?.spans.filter(span => span.operationName() === 'http-request')
+    const spans = this.tracerReport?.spans.filter((span) => span.operationName().startsWith('http-request'))
+    if (!spans?.length) {
+      throw new Error('No request spans')
+    }
+
+    return spans
   }
 
-  public async runRequest({ url, retries, timeout, params, baseURL }: any) {
+  public async runRequest(reqConf: TracedTestRequestConfig) {
     try {
-      this.url = url
-      this._res = await this.http.get(url, {
-        // @ts-ignore
-        tracing: { rootSpan: this.rootSpan, tracer: this.tracer },
-        ...(baseURL ? { baseURL } : null),
-        ...(params ? { params } : null),
-        ...(retries ? { retries } : null),
-        ...(timeout ? { timeout } : null),
-      })
+      const axiosReqConf: TraceableRequestConfig = {
+        ...reqConf,
+        tracing: {
+          ...reqConf.tracing,
+          rootSpan: (this.rootSpan as unknown) as Span,
+          tracer: this.tracer,
+        },
+      }
+
+      this._res = await this.http.get(reqConf.url, axiosReqConf)
     } catch (err) {
       this._error = err
     } finally {
       this.rootSpan.finish()
-      this.tracerReport = this.tracer.report()
-      this.requestSpan = this.tracerReport.spans.find(span => span.operationName() === 'http-request')
+      this.tracerReport = this.tracer.mockTracer.report()
+
+      this.lastRequestSpan = this.tracerReport.spans
+        .slice()
+        .reverse()
+        .find((span) => span.operationName().startsWith('http-request'))
     }
   }
 }

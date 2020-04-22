@@ -1,4 +1,4 @@
-import { InstanceOptions } from '../../HttpClient/typings'
+import { InstanceOptions, RequestTracingConfig } from '../../HttpClient/typings'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { InfraClient } from './InfraClient'
 
@@ -7,15 +7,25 @@ export class Sphinx extends InfraClient {
     super('sphinx@0.x', ioContext, opts, false)
   }
 
-  public validatePolicies = (policies: PolicyRequest[]) => {
+  public validatePolicies = (policies: PolicyRequest[], tracingConfig?: RequestTracingConfig) => {
+    const metric = 'sphinx-validate-policy'
     return this.http.post<void>('/policies/validate', { policies }, {
-      metric: 'sphinx-validate-policy',
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     })
   }
 
-  public isAdmin = (email: string) => {
+  public isAdmin = (email: string, tracingConfig?: RequestTracingConfig) => {
+    const metric = 'sphinx-is-admin'
     return this.http.get<boolean>(`/user/${email}/isAdmin`, {
-      metric: 'sphinx-is-admin',
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     })
   }
 }

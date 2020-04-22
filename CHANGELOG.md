@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.26.0] - 2020-04-22
+### Changed
+- Tracing utilities export.
+
+### Added
+- `NODE_ENV` tag to process tracing tags.
+- `tracingConfig` argument to all clients request functions.
+- Option on request spans to define if request is childOf rootSpan or followsFrom it. 
+- Option on request span to add suffix on request span name - it will be `http-request:suffx`.
+- Helper `createTracingContextFromCarrier` to allow worker threads and child processes to be traced.
+
 ## [6.25.0] - 2020-04-15
 ### Added
 - Extensions field to graphql client.

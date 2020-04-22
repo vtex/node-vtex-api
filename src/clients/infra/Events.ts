@@ -1,4 +1,4 @@
-import { InstanceOptions } from '../../HttpClient'
+import { InstanceOptions, RequestTracingConfig } from '../../HttpClient'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { InfraClient } from './InfraClient'
 
@@ -9,7 +9,7 @@ export class Events extends InfraClient {
     super('courier@0.x', { ...context, recorder: undefined }, options)
   }
 
-  public sendEvent = (subject: string, route: string, message?: any) => {
+  public sendEvent = (subject: string, route: string, message?: any, tracingConfig?: RequestTracingConfig) => {
     const resource =
       subject === ''
         ? ''
@@ -17,6 +17,10 @@ export class Events extends InfraClient {
     return this.http.put(eventRoute(route), message, {
       metric: 'events-send',
       params: { resource },
+      tracing: {
+        requestSpanNameSuffix: 'events-send',
+        ...tracingConfig?.tracing,
+      },
     })
   }
 }

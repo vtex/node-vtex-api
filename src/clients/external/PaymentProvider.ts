@@ -1,4 +1,5 @@
 import { InstanceOptions, IOContext, Maybe } from '../..'
+import { RequestTracingConfig } from '../../HttpClient'
 import { ExternalClient } from './ExternalClient'
 
 const routes = {
@@ -28,29 +29,43 @@ export class PaymentProvider extends ExternalClient {
   public callback = (
     transactionId: string,
     paymentId: string,
-    callback: AuthorizationCallback
-  ) =>
-    this.http.post<unknown>(
+    callback: AuthorizationCallback,
+    tracingConfig?: RequestTracingConfig
+  ) => {
+    const metric = 'gateway-callback' 
+    return this.http.post<unknown>(
       routes.callback(transactionId, paymentId),
       callback,
       {
-        metric: 'gateway-callback',
+        metric,
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
       }
     )
+  }
 
   public inbound = <TRequest, TResponse>(
     transactionId: string,
     paymentId: string,
     action: string,
-    payload: TRequest
-  ) =>
-    this.http.post<TResponse>(
+    payload: TRequest,
+    tracingConfig?: RequestTracingConfig
+  ) => {
+    const metric = 'gateway-inbound-request' 
+    return this.http.post<TResponse>(
       routes.inbound(transactionId, paymentId, action),
       payload,
       {
-        metric: 'gateway-inbound-request',
+        metric,
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
       }
     )
+  }
 }
 
 export interface AuthorizationCallback {

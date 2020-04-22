@@ -1,6 +1,6 @@
 import { stringify } from 'qs'
 
-import { RequestConfig } from '../../HttpClient'
+import { RequestConfig, RequestTracingConfig } from '../../HttpClient'
 import { JanusClient } from './JanusClient'
 
 const TWO_MINUTES_S = 2 * 60
@@ -18,32 +18,47 @@ const inflightKey = ({baseURL, url, params}: RequestConfig) => {
 }
 
 export class LicenseManager extends JanusClient {
-  public getAccountData (VtexIdclientAutCookie: string) {
+  public getAccountData (VtexIdclientAutCookie: string, tracingConfig?: RequestTracingConfig) {
+    const metric = 'lm-account-data'
     return this.http.get(routes.accountData, {
       forceMaxAge: TWO_MINUTES_S,
       headers: {
         VtexIdclientAutCookie,
       },
       inflightKey,
-      metric: 'lm-account-data',
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     })
   }
 
-  public getTopbarData (VtexIdclientAutCookie: string) {
+  public getTopbarData (VtexIdclientAutCookie: string, tracingConfig?: RequestTracingConfig) {
+    const metric = 'lm-topbar-data'
     return this.http.get(routes.topbarData, {
       headers: {
         VtexIdclientAutCookie,
       },
-      metric: 'lm-topbar-data',
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     })
   }
 
-  public canAccessResource (VtexIdclientAutCookie: string, resourceKey: string) {
+  public canAccessResource (VtexIdclientAutCookie: string, resourceKey: string, tracingConfig?: RequestTracingConfig) {
+    const metric = 'lm-resource-access'
     return this.http.get(`${routes.resourceAccess}/${resourceKey}/access`, {
       headers: {
         VtexIdclientAutCookie,
       },
-      metric: 'lm-resource-access',
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
     }).then(() => true, () => false)
   }
 }

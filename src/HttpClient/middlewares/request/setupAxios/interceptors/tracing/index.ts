@@ -1,22 +1,24 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { FORMAT_HTTP_HEADERS, Span } from 'opentracing'
 import { injectErrorOnSpan } from '../../../../../../service/tracing/spanSetup'
-import { IUserLandTracer } from '../../../../../../tracing/UserLandTracer'
+import { createSpanReference } from '../../../../../../tracing'
+import { SpanReferenceTypes } from '../../../../../../tracing/spanReference/SpanReferenceTypes'
+import { AxiosTracingConfig } from '../../../../../typings'
 import { injectRequestInfoOnSpan, injectResponseInfoOnSpan } from './spanSetup'
 
-interface RequestTracingContext {
-  tracer: IUserLandTracer
-  rootSpan?: Span
+interface AxiosRequestTracingContext extends AxiosTracingConfig {
   requestSpan?: Span
 }
 
 interface TraceableAxiosRequestConfig extends AxiosRequestConfig {
-  tracing?: RequestTracingContext
+  tracing?: AxiosRequestTracingContext
 }
 
 interface TraceableAxiosResponse extends AxiosResponse {
   config: TraceableAxiosRequestConfig
 }
+
+export const requestSpanPrefix = 'http-request'
 
 const preRequestInterceptor = (http: AxiosInstance) => (
   config: TraceableAxiosRequestConfig
@@ -25,8 +27,21 @@ const preRequestInterceptor = (http: AxiosInstance) => (
     return config
   }
 
-  const { rootSpan, tracer } = config.tracing
-  const span = tracer.startSpan('http-request', { childOf: rootSpan })
+  const {
+    tracer,
+    rootSpan,
+    requestSpanNameSuffix,
+    referenceType = SpanReferenceTypes.CHILD_OF,
+  } = config.tracing
+
+  const spanName = requestSpanNameSuffix ? `${requestSpanPrefix}:${requestSpanNameSuffix}` : requestSpanPrefix
+
+  const span = rootSpan
+    ? tracer.startSpan(spanName, {
+        references: [createSpanReference(rootSpan, referenceType)],
+      })
+    : tracer.startSpan(spanName)
+
   injectRequestInfoOnSpan(span, http, config)
 
   config.tracing.requestSpan = span

@@ -1,5 +1,5 @@
 import { Span } from 'opentracing'
-import { ErrorReport } from '../../tracing/errorReporting/ErrorReport'
+import { ErrorReport } from '../../tracing'
 import { Tags } from '../../tracing/Tags'
 
 export const injectErrorOnSpan = (span: Span, err: Error | ErrorReport) => {

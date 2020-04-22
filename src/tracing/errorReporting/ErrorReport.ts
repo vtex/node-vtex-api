@@ -1,6 +1,8 @@
 import { AxiosError } from 'axios'
 import { randomBytes } from 'crypto'
 import { IncomingMessage } from 'http'
+import { Span } from 'opentracing'
+import { TracingTags } from '..'
 import { ErrorKinds } from './ErrorKinds'
 import { truncateStringsFromObject } from './utils'
 
@@ -128,5 +130,12 @@ export class ErrorReport extends Error {
       ErrorReport.MAX_ERROR_STRING_LENGTH,
       objectDepth
     )
+  }
+
+  public injectOnSpan(span: Span) {
+    span.setTag(TracingTags.ERROR, 'true')
+    span.setTag(TracingTags.ERROR_KIND, this.kind)
+    span.log({ event: 'error', ...this.toObject() })
+    return this
   }
 }

@@ -1,9 +1,23 @@
-import { Span, SpanContext, SpanOptions, Tracer } from 'opentracing'
+import { FORMAT_HTTP_HEADERS, Span, SpanContext, SpanOptions, Tracer } from 'opentracing'
+import { TracerSingleton } from '../service/tracing/TracerSingleton'
 
 export interface IUserLandTracer {
   startSpan: Tracer['startSpan']
   inject: Tracer['inject']
   fallbackSpanContext: () => SpanContext
+}
+
+export const createTracingContextFromCarrier = (newSpanName: string, carrier: Record<string, any>): { span: Span, tracer: IUserLandTracer } => {
+  const tracer = TracerSingleton.getTracer()
+  const rootSpan = tracer.extract(FORMAT_HTTP_HEADERS, carrier) as SpanContext | undefined
+  if (rootSpan == null) {
+    throw new Error('Missing span context data on carrier')
+  }
+
+  const span = tracer.startSpan(newSpanName, { childOf: rootSpan })
+  const userlandTracer = new UserLandTracer(tracer, span)
+  userlandTracer.lockFallbackSpan()
+  return { span, tracer: userlandTracer}
 }
 
 export class UserLandTracer implements IUserLandTracer {
@@ -22,18 +36,19 @@ export class UserLandTracer implements IUserLandTracer {
   }
 
   public setFallbackSpan(newSpan: Span) {
-    if(this.fallbackSpanLock) {
+    if (this.fallbackSpanLock) {
       throw new Error(`FallbackSpan is locked, can't change it`)
     }
 
     this.fallbackSpan = newSpan
   }
 
-  public startSpan(name: string, options: SpanOptions = {}) {
-    if(!options.childOf) {
-        return this.tracer.startSpan(name, { ...options, childOf: this.fallbackSpan })
+  public startSpan(name: string, options?: SpanOptions) {
+    if (options && (options.childOf || options.references?.length)) {
+      return this.tracer.startSpan(name, options)
     }
-    return this.tracer.startSpan(name, options)
+
+    return this.tracer.startSpan(name, { ...options, childOf: this.fallbackSpan })
   }
 
   public inject(spanContext: SpanContext | Span, format: string, carrier: any) {
