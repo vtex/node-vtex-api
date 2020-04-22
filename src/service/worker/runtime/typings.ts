@@ -169,6 +169,13 @@ export interface ServiceRoute {
   settingsType?: RouteSettingsType
 }
 
+export interface ServiceEvent {
+  keys?: string[],
+  sender?: string,
+  subject?: string,
+  settingsType?: RouteSettingsType,
+}
+
 export interface RawServiceJSON {
   stack: 'nodejs',
   memory: number,
@@ -176,13 +183,7 @@ export interface RawServiceJSON {
   timeout?: number,
  runtimeArgs?: string[],
   routes?: Record<string, ServiceRoute>,
-  events?: {
-    [handler: string]: {
-      keys?: string[],
-      sender?: string,
-      subject?: string,
-    },
-  },
+  events?: Record<string, ServiceEvent>,
   minReplicas?: number,
   maxReplicas?: number,
   workers?: number

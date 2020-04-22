@@ -157,7 +157,8 @@ const createAppEventHandlers = (
   if (events && clients) {
     return Object.keys(events).reduce(
       (acc, eventId) => {
-        acc[eventId] = createEventHandler(clients, eventId, events[eventId], serviceJSON.events)
+        const serviceEvent = serviceJSON.events?.[eventId]
+        acc[eventId] = createEventHandler(clients, eventId, events[eventId], serviceEvent)
         return acc
       },
       {} as Record<string, RouteHandler>
