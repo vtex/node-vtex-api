@@ -9,28 +9,19 @@ import {
   EventHandler,
   ParamsContext,
   RecorderState,
-  RouteSettingsType,
   ServiceContext,
+  ServiceEvent,
 } from '../typings'
 import { compose, composeForEvents } from '../utils/compose'
 import { toArray } from '../utils/toArray'
 import { parseBodyMiddleware } from './middlewares/body'
 import { eventContextMiddleware } from './middlewares/context'
 
-interface ServiceEvent {
-  [handler: string]: {
-    keys?: string[] | undefined
-    sender?: string | undefined
-    subject?: string | undefined
-    settingsType?: RouteSettingsType
-  }
-}
-
 export const createEventHandler = <T extends IOClients, U extends RecorderState, V extends ParamsContext>(
   clientsConfig: ClientsConfig<T>,
   eventId: string,
   handler: EventHandler<T, U> | Array<EventHandler<T, U>>,
-  serviceEvents?: ServiceEvent
+  serviceEvent: ServiceEvent | undefined
 ) => {
   const { implementation, options } = clientsConfig
   const middlewares = toArray(handler)
@@ -40,7 +31,7 @@ export const createEventHandler = <T extends IOClients, U extends RecorderState,
     parseBodyMiddleware,
     insertUserLandTracer,
     clients<T, U, V>(implementation!, options),
-    ...(serviceEvents?.settingsType === 'workspace' || serviceEvents?.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
+    ...(serviceEvent?.settingsType === 'workspace' || serviceEvent?.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     timings,
     error,
     traceUserLandRemainingPipelineMiddleware(`user-event-handler:${eventId}`),
