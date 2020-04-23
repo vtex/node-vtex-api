@@ -1,8 +1,7 @@
-import { MockReport, MockSpan } from '@tiagonapoli/opentracing-alternate-mock'
+import { MockReport, MockSpan, MockUserlandTracer } from '@vtex/node-tracing-mocks'
 import { AxiosInstance, AxiosResponse } from 'axios'
 import { Span } from 'opentracing'
 import { RequestTracingConfig, TraceableRequestConfig } from '../../../../typings'
-import { TestTracer } from './TestTracer'
 
 interface TracedTestRequestConfig extends RequestTracingConfig {
   url: string
@@ -19,7 +18,7 @@ export class TracedTestRequest {
     return request
   }
 
-  public tracer: TestTracer
+  public tracer: MockUserlandTracer
   public rootSpan: MockSpan
   public tracerReport?: MockReport
   public lastRequestSpan?: MockSpan
@@ -30,7 +29,7 @@ export class TracedTestRequest {
   private _error?: any
 
   constructor(private http: AxiosInstance) {
-    this.tracer = new TestTracer()
+    this.tracer = new MockUserlandTracer()
     this.rootSpan = this.tracer.startSpan('root-span') as MockSpan
   }
 

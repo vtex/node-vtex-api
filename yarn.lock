@@ -410,13 +410,6 @@
   dependencies:
     type-detect "4.0.8"
 
-"@tiagonapoli/opentracing-alternate-mock@^0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@tiagonapoli/opentracing-alternate-mock/-/opentracing-alternate-mock-0.0.3.tgz#bdec9aca7702057872d16488e28170063494a9cb"
-  integrity sha512-8+EFKQeNHtPneYwcOG4eg3vIOSL1hK3y3jyazsUIL8DUSzz6EI/xaZB8Hrm71VXUD+wB/IIf296bhclvfu1jxg==
-  dependencies:
-    opentracing "^0.14.4"
-
 "@types/accepts@*":
   version "1.3.5"
   resolved "https://registry.yarnpkg.com/@types/accepts/-/accepts-1.3.5.tgz#c34bec115cfc746e04fe5a059df4ce7e7b391575"
@@ -755,6 +748,13 @@
   integrity sha512-9T1auFmbPZoxHz0enUFlUuKRy3it01R+hlggyVUMtnCTQRunsQYifnSGb8hET4Xo8yiC0o0r1paW3ud5+rbURg==
   dependencies:
     "@types/yargs-parser" "*"
+
+"@vtex/node-tracing-mocks@^0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@vtex/node-tracing-mocks/-/node-tracing-mocks-0.0.1.tgz#1caf804c73c8e6cb69039c114912f905c982b7e2"
+  integrity sha512-FI8FKoDXQx7LuOlE/30E5ds2IAoDIan4/sW6loelklJ/UkKuHqcTY9/gMAfoUzcwM1nUPO1SKpgH8emd2ToQSA==
+  dependencies:
+    opentracing "^0.14.4"
 
 "@wry/equality@^0.1.2", "@wry/equality@^0.1.9":
   version "0.1.9"
