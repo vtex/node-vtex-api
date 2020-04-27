@@ -21,6 +21,7 @@ it.each([
   // tslint:disable-next-line
   [5, [() => {}]],
   [5, { a: Symbol('symbol description'), b: Symbol('symbol description 2') }],
+  [5, { buf: Buffer.from('this is a test'), b: 'a string' }],
 ])('Works on testcase %# - String limit %d', (limit: number, obj: any) => {
   expect(truncateStringsFromObject(obj, limit)).toMatchSnapshot()
 })
