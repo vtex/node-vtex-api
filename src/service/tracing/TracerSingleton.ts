@@ -34,7 +34,7 @@ export class TracerSingleton {
       },
       sampler: {
         param: 0.01,
-        type: 'probabilistic',
+        type: 'remote',
       },
       serviceName,
     }
