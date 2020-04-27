@@ -2,12 +2,17 @@ import { FORMAT_HTTP_HEADERS, Span, SpanContext, SpanOptions, Tracer } from 'ope
 import { TracerSingleton } from '../service/tracing/TracerSingleton'
 
 export interface IUserLandTracer {
+  traceId: string
+  isTraceSampled: boolean
   startSpan: Tracer['startSpan']
   inject: Tracer['inject']
   fallbackSpanContext: () => SpanContext
 }
 
-export const createTracingContextFromCarrier = (newSpanName: string, carrier: Record<string, any>): { span: Span, tracer: IUserLandTracer } => {
+export const createTracingContextFromCarrier = (
+  newSpanName: string,
+  carrier: Record<string, any>
+): { span: Span; tracer: IUserLandTracer } => {
   const tracer = TracerSingleton.getTracer()
   const rootSpan = tracer.extract(FORMAT_HTTP_HEADERS, carrier) as SpanContext | undefined
   if (rootSpan == null) {
@@ -17,7 +22,7 @@ export const createTracingContextFromCarrier = (newSpanName: string, carrier: Re
   const span = tracer.startSpan(newSpanName, { childOf: rootSpan })
   const userlandTracer = new UserLandTracer(tracer, span)
   userlandTracer.lockFallbackSpan()
-  return { span, tracer: userlandTracer}
+  return { span, tracer: userlandTracer }
 }
 
 export class UserLandTracer implements IUserLandTracer {
@@ -25,10 +30,25 @@ export class UserLandTracer implements IUserLandTracer {
   private fallbackSpan: Span
   private fallbackSpanLock: boolean
 
+  private _isSampled: boolean
+  private _traceId: string
+
   constructor(tracer: Tracer, fallbackSpan: Span) {
     this.tracer = tracer
     this.fallbackSpan = fallbackSpan
     this.fallbackSpanLock = false
+
+    const spanContext = fallbackSpan.context()
+    this._traceId = spanContext.toTraceId()
+    this._isSampled = (spanContext as any)?.isSampled()
+  }
+
+  get traceId() {
+    return this._traceId
+  }
+
+  get isTraceSampled() {
+    return this._isSampled
   }
 
   public lockFallbackSpan() {
