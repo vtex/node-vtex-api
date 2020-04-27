@@ -92,3 +92,13 @@ Object {
   "b": Symbol(symbol description 2),
 }
 `;
+
+exports[`Works on testcase 11 - String limit 5 1`] = `
+Object {
+  "b": "a str[...TRUNCATED]",
+  "buf": Object {
+    "byteLength": 14,
+    "type": "buffer",
+  },
+}
+`;

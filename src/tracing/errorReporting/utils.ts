@@ -10,6 +10,10 @@ export function truncateStringsFromObject(element: any, maxStrSize: number, dept
       return '[circular]'
     }
 
+    if(Buffer.isBuffer(element)) {
+      return { type: 'buffer', byteLength: Buffer.byteLength(element) } 
+    }
+
     if (depth === 0) {
       return Array.isArray(element) ? `[array]` : `[object]`
     }
