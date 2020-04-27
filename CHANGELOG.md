@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- [tracing:init] Increase sampling rate to 5%.
+- [ErrorReport] Serialize buffer only as a `byteCount` and a `type: buffer`.
+
+### Added
+- [tracing:entrypoint-span] Add `vtex.request-id` tag. 
+- [ErrorReport] Add `error.server.code`, `error.server.source`, `error.server.request-id` to tags added to error spans.
+- [response:headers] Add `x-trace-id` when request is traced.
+- [logger] Log `trace-id` when request is traced.
+
 
 ## [6.26.0] - 2020-04-22
 ### Changed
