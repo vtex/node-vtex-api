@@ -18,18 +18,19 @@ import {
   WORKSPACE_HEADER,
   WORKSPACE_IS_PRODUCTION_HEADER,
 } from '../../../../constants'
+import { UserLandTracer } from '../../../../tracing/UserLandTracer'
 import { parseTenantHeaderValue } from '../../../../utils/tenant'
 import { Logger } from '../../../logger'
-import { IOContext } from '../typings'
+import { IOContext, TracingContext } from '../typings'
 import { parseBindingHeaderValue } from './../../../../utils/binding'
 
-type HandlerContext = Omit<IOContext, 'route' | 'tracer'>
+type HandlerContext = Omit<IOContext, 'route'>
 
 const getPlatform = (account: string): string => {
   return account.startsWith('gc-') ? 'gocommerce' : 'vtex'
 }
 
-export const prepareHandlerCtx = (header: Context['request']['header']): HandlerContext => {
+export const prepareHandlerCtx = (header: Context['request']['header'], tracingContext: TracingContext): HandlerContext => {
   const partialContext = {
     account: header[ACCOUNT_HEADER],
     authToken: header[CREDENTIAL_HEADER],
@@ -45,9 +46,11 @@ export const prepareHandlerCtx = (header: Context['request']['header']): Handler
     segmentToken: header[SEGMENT_HEADER],
     sessionToken: header[SESSION_HEADER],
     tenant: header[TENANT_HEADER] ? parseTenantHeaderValue(header[TENANT_HEADER]) : undefined,
+    tracer: new UserLandTracer(tracingContext.tracer, tracingContext.currentSpan),
     userAgent: process.env.VTEX_APP_ID || '',
     workspace: header[WORKSPACE_HEADER],
   }
+
   return {
     ...partialContext,
     logger: new Logger(partialContext),
