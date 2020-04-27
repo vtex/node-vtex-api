@@ -1,5 +1,6 @@
 import { FORMAT_HTTP_HEADERS, SpanContext, Tracer } from 'opentracing'
-import { ACCOUNT_HEADER, WORKSPACE_HEADER } from '../../constants'
+import { ACCOUNT_HEADER, TRACE_ID_HEADER, WORKSPACE_HEADER } from '../../constants'
+import { getTraceInfo } from '../../tracing'
 import { Tags } from '../../tracing/Tags'
 import { UserLandTracer } from '../../tracing/UserLandTracer'
 import { ServiceContext } from '../worker/runtime/typings'
@@ -37,6 +38,11 @@ export const addTracingMiddleware = (tracer: Tracer) => {
     } finally {
       currentSpan.setTag(Tags.HTTP_STATUS_CODE, ctx.response.status)
       currentSpan.finish()
+
+      const traceInfo = getTraceInfo(currentSpan)
+      if(traceInfo.isSampled) {
+        ctx.set(TRACE_ID_HEADER, traceInfo.traceId)
+      }
     }
   }
 }
