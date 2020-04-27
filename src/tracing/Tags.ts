@@ -2,6 +2,7 @@ import { Tags as opentracingTags } from 'opentracing'
 
 const VTEX_INCOMING_REQUEST_TAGS = {
   VTEX_ACCOUNT: 'vtex.incoming.account',
+  VTEX_REQUEST_ID: 'vtex.request-id',
   VTEX_WORKSPACE: 'vtex.incoming.workspace',
 }
 
