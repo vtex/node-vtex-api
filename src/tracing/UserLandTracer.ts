@@ -1,5 +1,6 @@
 import { FORMAT_HTTP_HEADERS, Span, SpanContext, SpanOptions, Tracer } from 'opentracing'
 import { TracerSingleton } from '../service/tracing/TracerSingleton'
+import { getTraceInfo } from './utils'
 
 export interface IUserLandTracer {
   traceId: string
@@ -30,7 +31,9 @@ export class UserLandTracer implements IUserLandTracer {
   private fallbackSpan: Span
   private fallbackSpanLock: boolean
 
+  // tslint:disable-next-line
   private _isSampled: boolean
+  // tslint:disable-next-line
   private _traceId: string
 
   constructor(tracer: Tracer, fallbackSpan: Span) {
@@ -38,9 +41,9 @@ export class UserLandTracer implements IUserLandTracer {
     this.fallbackSpan = fallbackSpan
     this.fallbackSpanLock = false
 
-    const spanContext = fallbackSpan.context()
-    this._traceId = spanContext.toTraceId()
-    this._isSampled = (spanContext as any)?.isSampled()
+    const { traceId, isSampled } = getTraceInfo(fallbackSpan)
+    this._traceId = traceId
+    this._isSampled = isSampled
   }
 
   get traceId() {

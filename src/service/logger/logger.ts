@@ -1,4 +1,5 @@
 import { APP } from '../../constants'
+import { IUserLandTracer } from '../../tracing'
 import { cleanError } from '../../utils/error'
 import { IOContext } from '../worker/runtime/typings'
 import { logOnceToDevConsole } from './console'
@@ -7,6 +8,10 @@ const linked = !!process.env.VTEX_APP_LINK
 const app = APP.ID
 const EMPTY_MESSAGE = 'Logger.log was called with null or undefined message'
 
+export interface LoggerTracingContext {
+  requestTracer: IUserLandTracer
+}
+
 export enum LogLevel {
   Debug = 'debug',
   Info = 'info',
@@ -14,19 +19,25 @@ export enum LogLevel {
   Error = 'error',
 }
 
+interface LoggerContext extends  Pick<IOContext, 'account'|'workspace'|'requestId'|'operationId'|'production'> {
+  tracer?: IOContext['tracer']
+} 
+
 export class Logger {
   private account: string
   private workspace: string
   private operationId: string
   private requestId: string
   private production: boolean
+  private requestTracer?: IOContext['tracer']
 
-  constructor(ctx: Pick<IOContext, 'account'|'workspace'|'requestId'|'operationId'|'production'>) {
+  constructor(ctx: LoggerContext) {
     this.account = ctx.account
     this.workspace = ctx.workspace
     this.requestId = ctx.requestId
     this.operationId = ctx.operationId
     this.production = ctx.production
+    this.requestTracer = ctx.tracer
   }
 
   public debug = (message: any) =>
@@ -55,6 +66,7 @@ export class Logger {
       data,
       operationId: this.operationId,
       requestId: this.requestId,
+      ... (this.requestTracer?.isTraceSampled ? { traceId: this.requestTracer.traceId } : null),
     }
 
     // Mark third-party apps logs to send to skidder

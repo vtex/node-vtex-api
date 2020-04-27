@@ -6,10 +6,17 @@ export class TestTracer implements IUserLandTracer {
   public fallbackSpan: MockSpan
   public mockTracer: MockTracer
 
+  public traceId: string
+  public isTraceSampled: boolean
+
   constructor() {
     this.mockTracer = new MockTracer()
     this.fallbackSpan = this.mockTracer.startSpan('fallback-span') as MockSpan
     this.fallbackSpan.finish()
+
+    const spanContext = this.fallbackSpan.context()
+    this.traceId = spanContext.toTraceId()
+    this.isTraceSampled = true
   }
 
   public startSpan(name: string, options?: SpanOptions) {
