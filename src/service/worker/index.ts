@@ -151,12 +151,14 @@ const createAppGraphQLHandler = (
 }
 
 const createAppEventHandlers = (
-  { config: { events, clients } }: Service<IOClients, RecorderState, ParamsContext>
+  { config: { events, clients } }: Service<IOClients, RecorderState, ParamsContext>,
+  serviceJSON: ServiceJSON
 ) => {
   if (events && clients) {
     return Object.keys(events).reduce(
       (acc, eventId) => {
-        acc[eventId] = createEventHandler(clients, eventId, events[eventId])
+        const serviceEvent = serviceJSON.events?.[eventId]
+        acc[eventId] = createEventHandler(clients, eventId, events[eventId], serviceEvent)
         return acc
       },
       {} as Record<string, RouteHandler>
@@ -224,7 +226,7 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
 
   const appHttpHandlers = createAppHttpHandlers(service, serviceJSON)
   const appGraphQLHandlers = createAppGraphQLHandler(service, serviceJSON)
-  const appEventHandlers = createAppEventHandlers(service)
+  const appEventHandlers = createAppEventHandlers(service, serviceJSON)
   const runtimeHttpHandlers = createRuntimeHttpHandlers(appEventHandlers, serviceJSON)
   const httpHandlers = [
     appHttpHandlers,

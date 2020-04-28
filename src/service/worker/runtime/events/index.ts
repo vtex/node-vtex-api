@@ -2,6 +2,7 @@ import { IOClients } from '../../../../clients/IOClients'
 import { nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
 import { clients } from '../http/middlewares/clients'
 import { error } from '../http/middlewares/error'
+import { getServiceSettings } from '../http/middlewares/settings'
 import { timings } from '../http/middlewares/timings'
 import {
   ClientsConfig,
@@ -9,6 +10,7 @@ import {
   ParamsContext,
   RecorderState,
   ServiceContext,
+  ServiceEvent,
 } from '../typings'
 import { compose, composeForEvents } from '../utils/compose'
 import { toArray } from '../utils/toArray'
@@ -18,7 +20,8 @@ import { eventContextMiddleware } from './middlewares/context'
 export const createEventHandler = <T extends IOClients, U extends RecorderState, V extends ParamsContext>(
   clientsConfig: ClientsConfig<T>,
   eventId: string,
-  handler: EventHandler<T, U> | Array<EventHandler<T, U>>
+  handler: EventHandler<T, U> | Array<EventHandler<T, U>>,
+  serviceEvent: ServiceEvent | undefined
 ) => {
   const { implementation, options } = clientsConfig
   const middlewares = toArray(handler)
@@ -27,6 +30,7 @@ export const createEventHandler = <T extends IOClients, U extends RecorderState,
     eventContextMiddleware,
     parseBodyMiddleware,
     clients<T, U, V>(implementation!, options),
+    ...(serviceEvent?.settingsType === 'workspace' || serviceEvent?.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     timings,
     error,
     traceUserLandRemainingPipelineMiddleware(`user-event-handler:${eventId}`),
