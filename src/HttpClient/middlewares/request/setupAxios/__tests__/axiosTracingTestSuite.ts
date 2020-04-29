@@ -1,4 +1,4 @@
-import { MockSpanContext } from '@tiagonapoli/opentracing-alternate-mock'
+import { MockSpanContext } from '@vtex/node-tracing-mocks'
 import { AxiosError, AxiosInstance } from 'axios'
 import { REFERENCE_CHILD_OF, REFERENCE_FOLLOWS_FROM } from 'opentracing'
 import { ROUTER_CACHE_HEADER } from '../../../../../constants'

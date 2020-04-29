@@ -88,7 +88,6 @@
     "xss": "^1.0.6"
   },
   "devDependencies": {
-    "@tiagonapoli/opentracing-alternate-mock": "^0.0.3",
     "@types/archiver": "^2.0.1",
     "@types/bluebird": "^3.5.27",
     "@types/co-body": "^0.0.3",
@@ -110,6 +109,7 @@
     "@types/rwlock": "^5.0.2",
     "@types/semver": "^5.5.0",
     "@types/uuid": "^3.4.6",
+    "@vtex/node-tracing-mocks": "^0.0.1",
     "get-port": "^5.1.1",
     "jest": "^25.1.0",
     "npm-run-all": "^4.1.3",
