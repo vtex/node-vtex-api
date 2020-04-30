@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.28.0-beta.0] - 2020-04-30
+
 ## [6.28.0-beta] - 2020-04-28
 ### Changed
 - [tracing:init] Increase sampling rate to 5%.
