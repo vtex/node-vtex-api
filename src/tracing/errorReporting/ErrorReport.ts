@@ -59,7 +59,7 @@ export class ErrorReport extends Error {
     ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10)
     : 8 * 1024
 
-  private static readonly DEFAULT_MAX_OBJECT_DEPTH = 6
+  private static readonly DEFAULT_MAX_OBJECT_DEPTH = 8
 
   private static createGenericErrorKind(error: AxiosError | Error | any) {
     if (error.config) {
