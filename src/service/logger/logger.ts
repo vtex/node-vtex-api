@@ -21,7 +21,12 @@ export enum LogLevel {
 
 interface LoggerContext extends  Pick<IOContext, 'account'|'workspace'|'requestId'|'operationId'|'production'> {
   tracer?: IOContext['tracer']
-} 
+}
+
+interface TracingState {
+  isTraceSampled: boolean,
+  traceId: string
+}
 
 export class Logger {
   private account: string
@@ -29,7 +34,7 @@ export class Logger {
   private operationId: string
   private requestId: string
   private production: boolean
-  private requestTracer?: IOContext['tracer']
+  private tracingState?: TracingState
 
   constructor(ctx: LoggerContext) {
     this.account = ctx.account
@@ -37,7 +42,13 @@ export class Logger {
     this.requestId = ctx.requestId
     this.operationId = ctx.operationId
     this.production = ctx.production
-    this.requestTracer = ctx.tracer
+
+    if(ctx.tracer) {
+      this.tracingState = {
+        isTraceSampled: ctx.tracer.isTraceSampled,
+        traceId: ctx.tracer.traceId,
+      }
+    }
   }
 
   public debug = (message: any) =>
@@ -66,7 +77,7 @@ export class Logger {
       data,
       operationId: this.operationId,
       requestId: this.requestId,
-      ... (this.requestTracer?.isTraceSampled ? { traceId: this.requestTracer.traceId } : null),
+      ... (this.tracingState?.isTraceSampled ? { traceId: this.tracingState.traceId } : null),
     }
 
     // Mark third-party apps logs to send to skidder
