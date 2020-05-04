@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - [ErrorReport] Log ErrorReport errors created on `HttpClient` requests or thrown by user handlers to splunk.
 - [ErrorReport] Add error metadata on span logs instead of on span tags.
 - [tracing:entrypoint] Log incoming request headers and outgoing response headers.
+- [tracing] Use remote sampling.
 
 ### Fixed
 - [tracing:entrypoint] Fix URL tag on entrypoint span - use `ctx.request.href` instead of `ctx.request.originalUrl`.
@@ -28,9 +29,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Create an option to disable conditional segment/session vary
 - Set vary: x-vtex-session if the scope is private
-
-### Changed
-- [tracing:ErrorReport] Log ErrorReport errors created on `HttpClient` requests or thrown by user handlers to splunk.
 
 ## [6.28.3] - 2020-05-15
 ### Fixed
