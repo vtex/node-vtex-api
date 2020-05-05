@@ -1,4 +1,4 @@
-import { truncateStringsFromObject } from './utils'
+import { sanitizeJwtToken, truncateAndSanitizeStringsFromObject } from './utils'
 
 it.each([
   [5, ['123456', '12345', '1234']],
@@ -14,16 +14,17 @@ it.each([
     },
   ],
   [5, { a: [true, false, undefined, null] }],
-  // tslint:disable-next-line
   [5, { namedFn: function fn() {} }],
-  // tslint:disable-next-line
   [5, { arrowFunctionNamed: () => {} }],
-  // tslint:disable-next-line
   [5, [() => {}]],
   [5, { a: Symbol('symbol description'), b: Symbol('symbol description 2') }],
+  [5, { token: 'a.b.c', b: 'any' }],
+  [20, { AuThOrIzAtIoN: 'Bearer aa.bb.cc', authToken: 'a.b.c', auth: 'b.c.d', AuthToken: '!jwt' }],
+  [20, { auth: { authToken: 'm.n.o' } }],
+  [5, '123456'],
   [5, { buf: Buffer.from('this is a test'), b: 'a string' }],
 ])('Works on testcase %# - String limit %d', (limit: number, obj: any) => {
-  expect(truncateStringsFromObject(obj, limit)).toMatchSnapshot()
+  expect(truncateAndSanitizeStringsFromObject(obj, limit)).toMatchSnapshot()
 })
 
 describe('Circular checkings', () => {
@@ -44,8 +45,8 @@ describe('Circular checkings', () => {
       },
       { a: '12345[...TRUNCATED]', b: { c: '[circular]', d: 'abcde[...TRUNCATED]' } },
     ],
-  ])(`Doesn't throw on circular %#`, (objCreator, expected) => {
-    expect(truncateStringsFromObject(objCreator(), 5)).toStrictEqual(expected)
+  ] as [() => any, any][])(`Doesn't throw on circular %#`, (objCreator, expected) => {
+    expect(truncateAndSanitizeStringsFromObject(objCreator(), 5)).toStrictEqual(expected)
   })
 
   it.each([
@@ -57,7 +58,24 @@ describe('Circular checkings', () => {
       },
       { a: 'abc', b: { d: '12345[...TRUNCATED]' }, c: { d: '12345[...TRUNCATED]' } },
     ],
-  ])(`Doesn't add '[circular]' when references another node but it's not circular %#`, (objCreator, expected) => {
-    expect(truncateStringsFromObject(objCreator(), 5)).toStrictEqual(expected)
+  ] as [() => any, any][])(
+    `Doesn't add '[circular]' when references another node but it's not circular %#`,
+    (objCreator, expected) => {
+      expect(truncateAndSanitizeStringsFromObject(objCreator(), 5)).toStrictEqual(expected)
+    }
+  )
+})
+
+describe('sanitizeJwtToken', () => {
+  it.each([
+    ['a.b.c', 'a.b'],
+    ['aa.bb.cc', 'aa.bb'],
+    ['Bearer aa.bb.cc', 'Bearer aa.bb'],
+  ])('Sanitizes strings with three parts separated by dots (just like jwt): %s', (str: string, expected: string) => {
+    expect(sanitizeJwtToken(str)).toEqual(expected)
+  })
+
+  it.each([['a.b'], ['aaa']])("Returns the string itself in case it couldn't be jwt: %s", (str: string) => {
+    expect(sanitizeJwtToken(str)).toEqual(str)
   })
 })
