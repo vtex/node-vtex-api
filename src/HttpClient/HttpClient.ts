@@ -36,7 +36,8 @@ type ClientOptions = IOContext & Partial<InstanceOptions>
 export class HttpClient {
   public name: string
 
-  private tracer?: IUserLandTracer
+  private tracer: IOContext['tracer']
+  private logger: IOContext['logger']
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor(opts: ClientOptions) {
@@ -70,10 +71,13 @@ export class HttpClient {
       exponentialBackoffCoefficient,
       httpsAgent,
       tracer,
+      logger
     } = opts
     this.name = name || baseURL || 'unknown'
 
     this.tracer = tracer
+    this.logger = logger
+
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
       ...defaultHeaders,
@@ -177,6 +181,7 @@ export class HttpClient {
   protected request = async (config: RequestConfig): Promise<AxiosResponse> => {
     (config as TraceableRequestConfig).tracing = this.tracer ? { 
       ...config.tracing,
+      logger: this.logger,
       tracer: this.tracer,
     } : undefined
 

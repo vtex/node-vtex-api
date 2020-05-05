@@ -7,6 +7,7 @@ import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { SpanReferenceTypes } from '../tracing'
 import { IUserLandTracer } from '../tracing/UserLandTracer'
 import { Cached, CacheType } from './middlewares/cache'
+import { IOContext } from '../service/worker/runtime/typings'
 
 export type InflightKeyGenerator = (x: RequestConfig) => string
 
@@ -18,6 +19,7 @@ interface RequestTracingUserConfiguration {
 
 export interface AxiosTracingConfig extends RequestTracingUserConfiguration {
   tracer: IUserLandTracer
+  logger: IOContext['logger']
 }
 
 export interface TraceableRequestConfig extends RequestConfig {

@@ -136,7 +136,7 @@ export class ErrorReport extends Error {
     )
   }
 
-  public injectOnSpan(span: Span) {
+  public injectOnSpan(span: Span, logger?: IOContext['logger']) {
     span.setTag(TracingTags.ERROR, 'true')
     span.setTag(TracingTags.ERROR_KIND, this.kind)
 
@@ -153,6 +153,7 @@ export class ErrorReport extends Error {
     }
 
     span.log({ event: 'error', ...this.toObject() })
+    logger?.error(this.toObject())
     return this
   }
 }
