@@ -2,10 +2,10 @@ import { AxiosError } from 'axios'
 import { randomBytes } from 'crypto'
 import { Span } from 'opentracing'
 import { TracingTags } from '..'
-import { ErrorKinds } from './ErrorKinds'
-import { truncateAndSanitizeStringsFromObject } from './utils'
 import { IOContext } from '../../service/worker/runtime/typings'
+import { ErrorKinds } from './ErrorKinds'
 import {  parseError } from './errorParsing'
+import { truncateAndSanitizeStringsFromObject } from './utils'
 
 interface ErrorCreationArguments {
   kind?: string

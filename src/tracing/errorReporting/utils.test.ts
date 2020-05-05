@@ -14,8 +14,11 @@ it.each([
     },
   ],
   [5, { a: [true, false, undefined, null] }],
+  // tslint:disable-next-line
   [5, { namedFn: function fn() {} }],
+  // tslint:disable-next-line
   [5, { arrowFunctionNamed: () => {} }],
+  // tslint:disable-next-line
   [5, [() => {}]],
   [5, { a: Symbol('symbol description'), b: Symbol('symbol description 2') }],
   [5, { token: 'a.b.c', b: 'any' }],
@@ -45,7 +48,7 @@ describe('Circular checkings', () => {
       },
       { a: '12345[...TRUNCATED]', b: { c: '[circular]', d: 'abcde[...TRUNCATED]' } },
     ],
-  ] as [() => any, any][])(`Doesn't throw on circular %#`, (objCreator, expected) => {
+  ] as Array<[() => any, any]>)(`Doesn't throw on circular %#`, (objCreator, expected) => {
     expect(truncateAndSanitizeStringsFromObject(objCreator(), 5)).toStrictEqual(expected)
   })
 
@@ -58,7 +61,7 @@ describe('Circular checkings', () => {
       },
       { a: 'abc', b: { d: '12345[...TRUNCATED]' }, c: { d: '12345[...TRUNCATED]' } },
     ],
-  ] as [() => any, any][])(
+  ] as Array<[() => any, any]>)(
     `Doesn't add '[circular]' when references another node but it's not circular %#`,
     (objCreator, expected) => {
       expect(truncateAndSanitizeStringsFromObject(objCreator(), 5)).toStrictEqual(expected)
@@ -75,7 +78,7 @@ describe('sanitizeJwtToken', () => {
     expect(sanitizeJwtToken(str)).toEqual(expected)
   })
 
-  it.each([['a.b'], ['aaa']])("Returns the string itself in case it couldn't be jwt: %s", (str: string) => {
+  it.each([['a.b'], ['aaa']])('Returns the string itself in case it couldn\'t be jwt: %s', (str: string) => {
     expect(sanitizeJwtToken(str)).toEqual(str)
   })
 })

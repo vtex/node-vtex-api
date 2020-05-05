@@ -71,7 +71,7 @@ export class HttpClient {
       exponentialBackoffCoefficient,
       httpsAgent,
       tracer,
-      logger
+      logger,
     } = opts
     this.name = name || baseURL || 'unknown'
 
