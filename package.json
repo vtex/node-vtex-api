@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "6.27.0",
+  "version": "6.28.1",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -65,7 +65,7 @@
     "graphql": "^14.5.8",
     "graphql-tools": "^4.0.6",
     "graphql-upload": "^8.1.0",
-    "jaeger-client": "^3.17.2",
+    "jaeger-client": "^3.18.0",
     "js-base64": "^2.5.1",
     "koa": "^2.11.0",
     "koa-compose": "^4.1.0",

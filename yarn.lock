@@ -2670,13 +2670,13 @@ iterall@^1.1.3, iterall@^1.2.2:
   resolved "https://registry.yarnpkg.com/iterall/-/iterall-1.3.0.tgz#afcb08492e2915cbd8a0884eb93a8c94d0d72fea"
   integrity sha512-QZ9qOMdF+QLHxy1QIpUHUU1D5pS2CG2P69LF6L6CPjPYA/XMOmKV3PZpawHoAjHNyB0swdVTRxdYT4tbBbxqwg==
 
-jaeger-client@^3.17.2:
-  version "3.17.2"
-  resolved "https://registry.yarnpkg.com/jaeger-client/-/jaeger-client-3.17.2.tgz#92cf26752c5c66f3e66adf595cdde2f548cc0804"
-  integrity sha512-19YloSidmKbrXHgecLWod8eXo7rm2ieUnsfg0ripTFGRCW5v2OWE96Gte4/tOQG/8N+T39VoLU2nMBdjbdMUJg==
+jaeger-client@^3.18.0:
+  version "3.18.0"
+  resolved "https://registry.yarnpkg.com/jaeger-client/-/jaeger-client-3.18.0.tgz#95c9183e06a9b14b957bce33b5e2ddaecb2ed51f"
+  integrity sha512-xZ9WvZDWLkZFq7SObpLwu1asMCKCgBRNcDxxGSvK+ZQ7OZyJC5xPlU+rJa4+s/P6autPBVwHpqMGbOERFxWuuA==
   dependencies:
     node-int64 "^0.4.0"
-    opentracing "^0.13.0"
+    opentracing "^0.14.4"
     thriftrw "^3.5.0"
     uuid "^3.2.1"
     xorshift "^0.2.0"
@@ -3787,11 +3787,6 @@ only@~0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/only/-/only-0.0.2.tgz#2afde84d03e50b9a8edc444e30610a70295edfb4"
   integrity sha1-Kv3oTQPlC5qO3EROMGEKcCle37Q=
-
-opentracing@^0.13.0:
-  version "0.13.0"
-  resolved "https://registry.yarnpkg.com/opentracing/-/opentracing-0.13.0.tgz#6a341442f09d7d866bc11ed03de1e3828e3d6aab"
-  integrity sha1-ajQUQvCdfYZrwR7QPeHjgo49aqs=
 
 opentracing@^0.14.4, opentracing@~0.14.3:
   version "0.14.4"

@@ -10,14 +10,12 @@ interface ErrorCreationArguments {
   kind?: string
   message?: string
   originalError: Error
-  tryToParseError?: boolean
 }
 
 interface ErrorReportArguments {
   kind: string
   message: string
   originalError: Error
-  tryToParseError?: boolean
 }
 
 interface RequestErrorDetails {
@@ -39,17 +37,21 @@ interface RequestErrorDetails {
     | undefined
 }
 
+interface RequestErrorParsedInfo {
+  serverErrorCode: string
+  serverErrorSource?: string
+  serverErrorRequestId?: string
+}
+
 export class ErrorReport extends Error {
   public static create(args: ErrorCreationArguments) {
     const kind = args.kind ?? this.createGenericErrorKind(args.originalError)
     const message = args.message ?? args.originalError?.message
-    const tryToParseError = args.tryToParseError ?? true
 
     return new ErrorReport({
       kind,
       message,
       originalError: args.originalError,
-      tryToParseError,
     })
   }
 
@@ -57,7 +59,7 @@ export class ErrorReport extends Error {
     ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10)
     : 8 * 1024
 
-  private static readonly DEFAULT_MAX_OBJECT_DEPTH = 6
+  private static readonly DEFAULT_MAX_OBJECT_DEPTH = 8
 
   private static createGenericErrorKind(error: AxiosError | Error | any) {
     if (error.config) {
@@ -97,22 +99,24 @@ export class ErrorReport extends Error {
 
   public readonly kind: string
   public readonly originalError: any
-  public readonly errorDetails: any
   public readonly errorId: string
+  public readonly errorDetails?: any
+  public readonly parsedInfo?: RequestErrorParsedInfo
 
-  constructor({ kind, message, originalError, tryToParseError = false }: ErrorReportArguments) {
+  constructor({ kind, message, originalError }: ErrorReportArguments) {
     super(message)
     this.kind = kind
     this.originalError = originalError
     this.errorId = randomBytes(16).toString('hex')
     this.stack = originalError.stack
+    this.message = originalError.message
 
     this.errorDetails = ErrorReport.getRequestErrorMetadata(this.originalError as AxiosError)
-    if (tryToParseError) {
-      if (this.errorDetails?.response?.data?.message) {
-        this.message = this.errorDetails.response.data.message
-      } else {
-        this.message = this.originalError.message
+    if (this.errorDetails?.response?.data?.code) {
+      this.parsedInfo = {
+        serverErrorCode: this.errorDetails.response.data.code,
+        ...(this.errorDetails.response.data.source ? { serverErrorSource: this.errorDetails.response.data.source } : null),
+        ...(this.errorDetails.response.data.requestId ? { serverErrorRequestId: this.errorDetails.response.data.requestId } : null),
       }
     }
   }
@@ -120,11 +124,11 @@ export class ErrorReport extends Error {
   public toObject(objectDepth = ErrorReport.DEFAULT_MAX_OBJECT_DEPTH) {
     return truncateStringsFromObject(
       {
-        errorDetails: this.errorDetails,
         errorId: this.errorId,
         kind: this.kind,
         message: this.message,
         stack: this.stack,
+        ...(this.errorDetails ? { errorDetails: this.errorDetails } : null),
         ...(this.originalError.code ? { code: this.originalError.code } : null),
       },
       ErrorReport.MAX_ERROR_STRING_LENGTH,
@@ -135,6 +139,19 @@ export class ErrorReport extends Error {
   public injectOnSpan(span: Span) {
     span.setTag(TracingTags.ERROR, 'true')
     span.setTag(TracingTags.ERROR_KIND, this.kind)
+
+    if (this.parsedInfo) {
+      span.setTag(TracingTags.ERROR_SERVER_CODE, this.parsedInfo.serverErrorCode)
+
+      if(this.parsedInfo.serverErrorSource) {
+        span.setTag(TracingTags.ERROR_SERVER_SOURCE, this.parsedInfo.serverErrorSource)
+      }
+
+      if(this.parsedInfo.serverErrorRequestId) {
+        span.setTag(TracingTags.ERROR_SERVER_REQUEST_ID, this.parsedInfo.serverErrorRequestId)
+      }
+    }
+
     span.log({ event: 'error', ...this.toObject() })
     return this
   }
