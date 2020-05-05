@@ -1,10 +1,11 @@
 import { AxiosError } from 'axios'
 import { randomBytes } from 'crypto'
-import { IncomingMessage } from 'http'
 import { Span } from 'opentracing'
 import { TracingTags } from '..'
 import { ErrorKinds } from './ErrorKinds'
-import { truncateStringsFromObject } from './utils'
+import { truncateAndSanitizeStringsFromObject } from './utils'
+import { IOContext } from '../../service/worker/runtime/typings'
+import {  parseError } from './errorParsing'
 
 interface ErrorCreationArguments {
   kind?: string
@@ -18,24 +19,6 @@ interface ErrorReportArguments {
   originalError: Error
 }
 
-interface RequestErrorDetails {
-  requestConfig: {
-    url?: string
-    method?: string
-    params?: any
-    headers?: Record<string, any>
-    data?: any
-    timeout?: string | number
-  }
-  response:
-    | {
-        status?: number
-        statusText?: string
-        headers?: Record<string, any>
-        data?: any
-      }
-    | undefined
-}
 
 interface RequestErrorParsedInfo {
   serverErrorCode: string
@@ -69,34 +52,6 @@ export class ErrorReport extends Error {
     return ErrorKinds.GENERIC_ERROR
   }
 
-  private static getRequestErrorMetadata(err: AxiosError): RequestErrorDetails | null {
-    if (!err.config) {
-      return null
-    }
-
-    const { url, method, headers: requestHeaders, params, data: requestData, timeout: requestTimeout } = err.config
-    const { status, statusText, headers: responseHeaders, data: responseData } = err.response || {}
-
-    return {
-      requestConfig: {
-        data: requestData,
-        headers: requestHeaders,
-        method,
-        params,
-        timeout: requestTimeout,
-        url,
-      },
-      response: err.response
-        ? {
-            ...(responseData instanceof IncomingMessage ? { data: '[IncomingMessage]' } : { data: responseData }),
-            headers: responseHeaders,
-            status,
-            statusText,
-          }
-        : undefined,
-    }
-  }
-
   public readonly kind: string
   public readonly originalError: any
   public readonly errorId: string
@@ -111,7 +66,7 @@ export class ErrorReport extends Error {
     this.stack = originalError.stack
     this.message = originalError.message
 
-    this.errorDetails = ErrorReport.getRequestErrorMetadata(this.originalError as AxiosError)
+    this.errorDetails = parseError(this.originalError as AxiosError)
     if (this.errorDetails?.response?.data?.code) {
       this.parsedInfo = {
         serverErrorCode: this.errorDetails.response.data.code,
@@ -122,7 +77,7 @@ export class ErrorReport extends Error {
   }
 
   public toObject(objectDepth = ErrorReport.DEFAULT_MAX_OBJECT_DEPTH) {
-    return truncateStringsFromObject(
+    return truncateAndSanitizeStringsFromObject(
       {
         errorId: this.errorId,
         kind: this.kind,
