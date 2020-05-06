@@ -12,6 +12,12 @@ interface ErrorCreationArguments {
   originalError: Error
 }
 
+interface ReportedError extends Error {
+  errorReportMetadata: {
+    errorId: string
+  }
+}
+
 interface ErrorReportArguments {
   kind: string
   message: string
@@ -56,13 +62,25 @@ export class ErrorReport extends Error {
   public readonly errorDetails?: any
   public readonly parsedInfo?: RequestErrorParsedInfo
 
+  public readonly alreadyReported?: boolean
+
   constructor({ kind, message, originalError }: ErrorReportArguments) {
     super(message)
     this.kind = kind
     this.originalError = originalError
-    this.errorId = randomBytes(16).toString('hex')
     this.stack = originalError.stack
     this.message = originalError.message
+
+    if ((originalError as ReportedError).errorReportMetadata) {
+      this.alreadyReported = true
+      this.errorId = (originalError as ReportedError).errorReportMetadata.errorId
+    } else {
+      this.alreadyReported = false
+      this.errorId = randomBytes(16).toString('hex')
+      ;(originalError as ReportedError).errorReportMetadata = {
+        errorId: this.errorId,
+      }
+    }
 
     this.errorDetails = parseError(this.originalError)
     if (this.errorDetails?.response?.data?.code) {
@@ -77,6 +95,7 @@ export class ErrorReport extends Error {
   public toObject(objectDepth = ErrorReport.DEFAULT_MAX_OBJECT_DEPTH) {
     return truncateAndSanitizeStringsFromObject(
       {
+        alreadyReported: this.alreadyReported,
         errorId: this.errorId,
         kind: this.kind,
         message: this.message,
