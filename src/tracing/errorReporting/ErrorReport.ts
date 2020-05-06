@@ -4,7 +4,7 @@ import { IncomingMessage } from 'http'
 import { Span } from 'opentracing'
 import { TracingTags } from '..'
 import { ErrorKinds } from './ErrorKinds'
-import { truncateStringsFromObject } from './utils'
+import { truncateAndSanitizeStringsFromObject } from './utils'
 
 interface ErrorCreationArguments {
   kind?: string
@@ -122,7 +122,7 @@ export class ErrorReport extends Error {
   }
 
   public toObject(objectDepth = ErrorReport.DEFAULT_MAX_OBJECT_DEPTH) {
-    return truncateStringsFromObject(
+    return truncateAndSanitizeStringsFromObject(
       {
         errorId: this.errorId,
         kind: this.kind,

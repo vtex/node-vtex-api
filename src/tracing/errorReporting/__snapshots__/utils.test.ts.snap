@@ -95,6 +95,32 @@ Object {
 
 exports[`Works on testcase 11 - String limit 5 1`] = `
 Object {
+  "b": "any",
+  "token": "a.b",
+}
+`;
+
+exports[`Works on testcase 12 - String limit 20 1`] = `
+Object {
+  "AuThOrIzAtIoN": "Bearer aa.bb",
+  "AuthToken": "!jwt",
+  "auth": "b.c",
+  "authToken": "a.b",
+}
+`;
+
+exports[`Works on testcase 13 - String limit 20 1`] = `
+Object {
+  "auth": Object {
+    "authToken": "m.n",
+  },
+}
+`;
+
+exports[`Works on testcase 14 - String limit 5 1`] = `"12345[...TRUNCATED]"`;
+
+exports[`Works on testcase 15 - String limit 5 1`] = `
+Object {
   "b": "a str[...TRUNCATED]",
   "buf": Object {
     "byteLength": 14,
