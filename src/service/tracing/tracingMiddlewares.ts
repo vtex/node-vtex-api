@@ -34,14 +34,14 @@ export const addTracingMiddleware = (tracer: Tracer) => {
     try {
       await next()
     } catch (err) {
-      injectErrorOnSpan(currentSpan, err)
+      injectErrorOnSpan(currentSpan, err, ctx.vtex?.logger)
       throw err
     } finally {
       currentSpan.setTag(Tags.HTTP_STATUS_CODE, ctx.response.status)
       currentSpan.finish()
 
       const traceInfo = getTraceInfo(currentSpan)
-      if(traceInfo.isSampled) {
+      if (traceInfo.isSampled) {
         ctx.set(TRACE_ID_HEADER, traceInfo.traceId)
       }
     }
@@ -68,7 +68,7 @@ export const traceUserLandRemainingPipelineMiddleware = (spanName: string, tags:
     try {
       await next()
     } catch (err) {
-      injectErrorOnSpan(span, err)
+      injectErrorOnSpan(span, err, ctx.vtex.logger)
       throw err
     } finally {
       ctx.tracing = tracingCtx
