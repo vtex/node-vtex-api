@@ -2,6 +2,8 @@ import { AxiosError } from 'axios'
 import { randomBytes } from 'crypto'
 import { Span } from 'opentracing'
 import { TracingTags } from '..'
+import { IOContext } from '../../service/worker/runtime/typings'
+import { getTraceInfo } from '../utils'
 import { ErrorKinds } from './ErrorKinds'
 import { parseError } from './errorParsing'
 import { truncateAndSanitizeStringsFromObject } from './utils'
@@ -108,23 +110,28 @@ export class ErrorReport extends Error {
     )
   }
 
-  public injectOnSpan(span: Span) {
+  public injectOnSpan(span: Span, logger?: IOContext['logger']) {
     span.setTag(TracingTags.ERROR, 'true')
     span.setTag(TracingTags.ERROR_KIND, this.kind)
 
     if (this.parsedInfo) {
       span.setTag(TracingTags.ERROR_SERVER_CODE, this.parsedInfo.serverErrorCode)
 
-      if(this.parsedInfo.serverErrorSource) {
+      if (this.parsedInfo.serverErrorSource) {
         span.setTag(TracingTags.ERROR_SERVER_SOURCE, this.parsedInfo.serverErrorSource)
       }
 
-      if(this.parsedInfo.serverErrorRequestId) {
+      if (this.parsedInfo.serverErrorRequestId) {
         span.setTag(TracingTags.ERROR_SERVER_REQUEST_ID, this.parsedInfo.serverErrorRequestId)
       }
     }
 
     span.log({ event: 'error', ...this.toObject() })
+
+    if (!this.alreadyReported && getTraceInfo(span).isSampled) {
+      logger?.error(this.toObject())
+    }
+
     return this
   }
 }
