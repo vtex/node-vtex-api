@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+- [tracing:ErrorReport] Log ErrorReport errors to splunk.
+
 ## [6.28.3] - 2020-05-15
 ### Fixed
 - [ErrorReport] Update `@vtex/node-error-report` package:
