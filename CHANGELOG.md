@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Create an option to disable conditional segment/session vary
 - Set vary: x-vtex-session if the scope is private
 
+### Changed
+- [tracing:ErrorReport] Log ErrorReport errors created on `HttpClient` requests or thrown by user handlers to splunk.
+
 ## [6.28.3] - 2020-05-15
 ### Fixed
 - [ErrorReport] Update `@vtex/node-error-report` package:
