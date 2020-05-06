@@ -4,7 +4,7 @@ import { Span } from 'opentracing'
 import { TracingTags } from '..'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { ErrorKinds } from './ErrorKinds'
-import {  parseError } from './errorParsing'
+import { parseError } from './errorParsing'
 import { truncateAndSanitizeStringsFromObject } from './utils'
 
 interface ErrorCreationArguments {
@@ -13,12 +13,17 @@ interface ErrorCreationArguments {
   originalError: Error
 }
 
+interface ReportedError extends Error {
+  errorReportMetadata: {
+    errorId: string
+  }
+}
+
 interface ErrorReportArguments {
   kind: string
   message: string
-  originalError: Error
+  originalError: Error | ReportedError
 }
-
 
 interface RequestErrorParsedInfo {
   serverErrorCode: string
@@ -53,7 +58,7 @@ export class ErrorReport extends Error {
   }
 
   public readonly kind: string
-  public readonly originalError: any
+  public readonly originalError: Error | ReportedError | any
   public readonly errorId: string
   public readonly errorDetails?: any
   public readonly parsedInfo?: RequestErrorParsedInfo
@@ -62,7 +67,16 @@ export class ErrorReport extends Error {
     super(message)
     this.kind = kind
     this.originalError = originalError
-    this.errorId = randomBytes(16).toString('hex')
+
+    if ((originalError as ReportedError).errorReportMetadata) {
+      this.errorId = (originalError as ReportedError).errorReportMetadata.errorId
+    } else {
+      this.errorId = randomBytes(16).toString('hex')
+      ;(originalError as ReportedError).errorReportMetadata = {
+        errorId: this.errorId,
+      }
+    }
+
     this.stack = originalError.stack
     this.message = originalError.message
 
@@ -70,8 +84,12 @@ export class ErrorReport extends Error {
     if (this.errorDetails?.response?.data?.code) {
       this.parsedInfo = {
         serverErrorCode: this.errorDetails.response.data.code,
-        ...(this.errorDetails.response.data.source ? { serverErrorSource: this.errorDetails.response.data.source } : null),
-        ...(this.errorDetails.response.data.requestId ? { serverErrorRequestId: this.errorDetails.response.data.requestId } : null),
+        ...(this.errorDetails.response.data.source
+          ? { serverErrorSource: this.errorDetails.response.data.source }
+          : null),
+        ...(this.errorDetails.response.data.requestId
+          ? { serverErrorRequestId: this.errorDetails.response.data.requestId }
+          : null),
       }
     }
   }
@@ -98,11 +116,11 @@ export class ErrorReport extends Error {
     if (this.parsedInfo) {
       span.setTag(TracingTags.ERROR_SERVER_CODE, this.parsedInfo.serverErrorCode)
 
-      if(this.parsedInfo.serverErrorSource) {
+      if (this.parsedInfo.serverErrorSource) {
         span.setTag(TracingTags.ERROR_SERVER_SOURCE, this.parsedInfo.serverErrorSource)
       }
 
-      if(this.parsedInfo.serverErrorRequestId) {
+      if (this.parsedInfo.serverErrorRequestId) {
         span.setTag(TracingTags.ERROR_SERVER_REQUEST_ID, this.parsedInfo.serverErrorRequestId)
       }
     }
