@@ -1,6 +1,7 @@
 import { MockReport, MockSpan } from '@tiagonapoli/opentracing-alternate-mock'
 import { AxiosInstance, AxiosResponse } from 'axios'
 import { Span } from 'opentracing'
+import { Logger } from '../../../../../service/logger'
 import { RequestTracingConfig, TraceableRequestConfig } from '../../../../typings'
 import { TestTracer } from './TestTracer'
 
@@ -63,6 +64,13 @@ export class TracedTestRequest {
         ...reqConf,
         tracing: {
           ...reqConf.tracing,
+          logger: new Logger({
+            account: 'mock-account',
+            operationId: 'mock-operation-id',
+            production: false,
+            requestId: 'mock-request-id',
+            workspace: 'mock-workspace',
+          }),
           rootSpan: (this.rootSpan as unknown) as Span,
           tracer: this.tracer,
         },
