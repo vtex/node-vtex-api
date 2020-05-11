@@ -1,6 +1,6 @@
 import { FORMAT_HTTP_HEADERS, Span } from 'opentracing'
 
-export { ErrorKinds } from './errorReporting/ErrorKinds'
+export { ErrorKindsBase as ErrorKinds } from '@vtex/node-error-report'
 export { ErrorReport } from './errorReporting/ErrorReport'
 export { createSpanReference } from './spanReference/createSpanReference'
 export { SpanReferenceTypes } from './spanReference/SpanReferenceTypes'
