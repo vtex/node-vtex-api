@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.28.2-beta.0] - 2020-05-11
+
 ## [6.28.2-beta] - 2020-05-11
 ### Changes
 - [tracing] Use remote sampling.
