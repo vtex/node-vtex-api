@@ -100,17 +100,22 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
 
   it('Logs request information into the spans', async () => {
     const { allRequestSpans } = await TracedTestRequest.doRequest(http, testSuiteConfig.requestsConfig)
-    let expectedLen = 2
+    let expectedLen = 3
     if (testSuiteConfig.expects.error && !testSuiteConfig.expects.error.isClientError) {
-      expectedLen = 3
+      expectedLen = 4
     }
 
     allRequestSpans.forEach((requestSpan) => {
       expect((requestSpan as any)._logs.length).toEqual(expectedLen)
       expect((requestSpan as any)._logs[0].fields.event).toEqual('request-headers')
+      let timingsLogIndex = 1
       if (!testSuiteConfig.expects.error?.isClientError) {
         expect((requestSpan as any)._logs[1].fields.event).toEqual('response-headers')
+        timingsLogIndex = 2
       }
+      console.log((requestSpan as any)._logs[timingsLogIndex].fields)
+      expect((requestSpan as any)._logs[timingsLogIndex].fields.event).toEqual('timings')
+      expect((requestSpan as any)._logs[timingsLogIndex].fields.phases).toBeDefined()
     })
   })
 

@@ -1,7 +1,9 @@
 import { getConfiguredAxios } from '..'
 import { registerSharedTestSuite, TestSuiteConfig } from './axiosTracingTestSuite'
 import { TestServer } from './TestServer'
+import { wrapHttpAndHttps } from '@tiagonapoli/http-timer-shim'
 
+wrapHttpAndHttps()
 const axios = getConfiguredAxios()
 
 describe('Traces successfully on request and response success', () => {
