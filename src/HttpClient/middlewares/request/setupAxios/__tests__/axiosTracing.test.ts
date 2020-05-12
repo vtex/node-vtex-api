@@ -1,7 +1,7 @@
+import { wrapHttpAndHttps } from '@tiagonapoli/http-timer-shim'
 import { getConfiguredAxios } from '..'
 import { registerSharedTestSuite, TestSuiteConfig } from './axiosTracingTestSuite'
 import { TestServer } from './TestServer'
-import { wrapHttpAndHttps } from '@tiagonapoli/http-timer-shim'
 
 wrapHttpAndHttps()
 const axios = getConfiguredAxios()

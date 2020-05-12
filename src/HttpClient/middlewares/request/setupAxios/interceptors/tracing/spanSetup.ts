@@ -1,9 +1,9 @@
+import { ClientRequestWithTimings } from '@tiagonapoli/http-timer-shim'
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import buildFullPath from 'axios/lib/core/buildFullPath'
 import { Span } from 'opentracing'
 import { ROUTER_CACHE_HEADER } from '../../../../../../constants'
 import { Tags } from '../../../../../../tracing/Tags'
-import { ClientRequestWithTimings } from '@tiagonapoli/http-timer-shim'
 
 export const injectRequestInfoOnSpan = (span: Span, http: AxiosInstance, config: AxiosRequestConfig) => {
   let fullUrl = null

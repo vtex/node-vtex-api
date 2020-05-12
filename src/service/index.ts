@@ -1,5 +1,5 @@
-import cluster from 'cluster'
 import { wrapHttpAndHttps } from '@tiagonapoli/http-timer-shim'
+import cluster from 'cluster'
 
 import { HTTP_SERVER_PORT } from '../constants'
 import { getServiceJSON } from './loaders'
