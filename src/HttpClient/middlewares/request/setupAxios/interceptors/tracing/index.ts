@@ -4,7 +4,7 @@ import { injectErrorOnSpan } from '../../../../../../service/tracing/spanSetup'
 import { createSpanReference } from '../../../../../../tracing'
 import { SpanReferenceTypes } from '../../../../../../tracing/spanReference/SpanReferenceTypes'
 import { AxiosTracingConfig } from '../../../../../typings'
-import { injectRequestInfoOnSpan, injectResponseInfoOnSpan } from './spanSetup'
+import { injectRequestInfoOnSpan, injectRequestTimingsOnSpan, injectResponseInfoOnSpan } from './spanSetup'
 
 interface AxiosRequestTracingContext extends AxiosTracingConfig {
   requestSpan?: Span
@@ -56,6 +56,7 @@ const onResponseSuccess = (response: TraceableAxiosResponse): TraceableAxiosResp
 
   const requestSpan = response.config.tracing.requestSpan!
   injectResponseInfoOnSpan(requestSpan, response)
+  injectRequestTimingsOnSpan(requestSpan, response.request)
   requestSpan.finish()
   return response
 }
@@ -66,7 +67,9 @@ const onResponseError = (err: any) => {
   }
 
   const { requestSpan } = err.config.tracing
+
   injectResponseInfoOnSpan(requestSpan, err.response)
+  injectRequestTimingsOnSpan(requestSpan, err.request)
   injectErrorOnSpan(requestSpan, err)
   requestSpan.finish()
   return Promise.reject(err)

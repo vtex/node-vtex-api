@@ -3,6 +3,7 @@ import buildFullPath from 'axios/lib/core/buildFullPath'
 import { Span } from 'opentracing'
 import { ROUTER_CACHE_HEADER } from '../../../../../../constants'
 import { Tags } from '../../../../../../tracing/Tags'
+import { ClientRequestWithTimings } from '@tiagonapoli/http-timer-shim'
 
 export const injectRequestInfoOnSpan = (span: Span, http: AxiosInstance, config: AxiosRequestConfig) => {
   let fullUrl = null
@@ -20,6 +21,17 @@ export const injectRequestInfoOnSpan = (span: Span, http: AxiosInstance, config:
   })
 
   span.log({ event: 'request-headers', headers: config.headers })
+}
+
+export const injectRequestTimingsOnSpan = (span: Span, request: any) => {
+  if (!request) {
+    return
+  }
+
+  const timings = request.timings || request._currentRequest?.timings
+  if (timings) {
+    span.log({ event: 'timings', phases: timings.phases })
+  }
 }
 
 // Response may be undefined in case of client timeout, invalid URL, ...
