@@ -31,7 +31,7 @@ const shouldVaryByHeader = <T extends IOClients, U, V>(
   header: VaryHeaders,
   strategy?: CachingStrategy
 ) => {
-  if (strategy?.vary?.includes(header)) {
+  if (strategy && strategy.vary.includes(header)) {
     return true
   }
 
