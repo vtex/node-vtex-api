@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.28.2] - 2020-05-13
+### Changed
+- [ErrorReport] Use `@vtex/node-error-report` package.
+
 ## [6.28.1] - 2020-05-05
 ### Fixed
 - [tracing:logger] Make Logger serializable again.
