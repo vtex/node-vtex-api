@@ -4,7 +4,6 @@ import { RouteHandler } from '../typings'
 import { compose } from '../utils/compose'
 import { authTokens } from './middlewares/authTokens'
 import { cancellationToken } from './middlewares/cancellationToken'
-import { cdnNormalizer } from './middlewares/cdnNormalizer'
 import { clients } from './middlewares/clients'
 import { error } from './middlewares/error'
 import { trackIncomingRequestStats } from './middlewares/requestStats'
@@ -18,7 +17,7 @@ export const createHttpRoute = <ClientsT extends IOClients, StateT, CustomT>(
 ) => {
   return (handler: RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>) => {
     const middlewares = Array.isArray(handler) ? handler : [handler]
-    const pipeline = [cancellationToken, trackIncomingRequestStats, cdnNormalizer, vary, authTokens, clients(Clients, options), removeSetCookie, timings, error, ...middlewares]
+    const pipeline = [cancellationToken, trackIncomingRequestStats, vary, authTokens, clients(Clients, options), removeSetCookie, timings, error, ...middlewares]
     return compose(pipeline)
   }
 }

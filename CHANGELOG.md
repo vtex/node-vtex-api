@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.74.0] - 2020-05-14
+### Changed
+- Create an option to disable conditional segment/session vary
+- Set vary: x-vtex-session if the scope is private
+
 ## [3.73.0] - 2020-04-13
 ## Changed
 - Send events using `Courier` instead of `Colossus`.
@@ -84,7 +89,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Allows filter dependencies from app list
 
 ## [3.65.2] - 2019-11-25
-### Added 
+### Added
 - New attribute to messages API
 
 ## [3.65.1] - 2019-11-21
