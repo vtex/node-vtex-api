@@ -11,7 +11,6 @@ import { compose } from '../utils/compose'
 import { toArray } from '../utils/toArray'
 import { authTokens } from './middlewares/authTokens'
 import { cancellationToken } from './middlewares/cancellationToken'
-import { cdnNormalizer } from './middlewares/cdnNormalizer'
 import { clients } from './middlewares/clients'
 import {
   createPubContextMiddleware,
@@ -62,7 +61,6 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
     createPubContextMiddleware(routeId, serviceRoute),
     cancellationToken,
     trackIncomingRequestStats,
-    cdnNormalizer,
     vary,
     authTokens,
     clients(implementation!, options),
