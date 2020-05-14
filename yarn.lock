@@ -756,10 +756,10 @@
   dependencies:
     "@types/yargs-parser" "*"
 
-"@vtex/node-error-report@^0.0.1":
-  version "0.0.1"
-  resolved "https://registry.yarnpkg.com/@vtex/node-error-report/-/node-error-report-0.0.1.tgz#a3d950c33cc831ce248d5e822894e0e85f63761f"
-  integrity sha512-Qt75bBYx0Ig13o8M6xpNgz6OkEUjWScsiOeZc+SXLCHZcTQVQrWn5MxMz+baXSmiN6v1ut0Kq/MwheQi9U/+Cw==
+"@vtex/node-error-report@^0.0.2-beta":
+  version "0.0.2-beta"
+  resolved "https://registry.yarnpkg.com/@vtex/node-error-report/-/node-error-report-0.0.2-beta.tgz#df5052a11f0c929ce19cbb7f015a7a00dc0f526b"
+  integrity sha512-q5I9BX8WQ4417neuXAt71+HZY3Q1J7MpdfZQpw3Iv/oEOk6n7cXZ7RbNqToK50rtmUy3X3PY4cVaK66pKja2sw==
   dependencies:
     is-stream "^2.0.0"
 
