@@ -18,7 +18,7 @@ function setVaryHeaders (ctx: GraphQLServiceContext, scope: string, segment: boo
   } else if (ctx.vtex.sessionToken) {
     ctx.vtex.logger.warn({
       message: 'GraphQL resolver receiving session token without private scope',
-      userAgent: ctx.headers['user-agent'],
+      userAgent: ctx.get('user-agent'),
     })
   }
 }
