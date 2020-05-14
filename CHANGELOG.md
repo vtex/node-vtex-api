@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.28.3-beta] - 2020-05-14
+
 ## [6.28.2] - 2020-05-13
 ### Changed
 - [ErrorReport] Use `@vtex/node-error-report` package.
