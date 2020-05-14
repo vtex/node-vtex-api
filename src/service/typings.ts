@@ -154,6 +154,7 @@ export interface ServiceDescriptor {
       subject?: string,
     },
   },
+  deterministicVary?: boolean
 }
 
 export type JanusEnv = string
