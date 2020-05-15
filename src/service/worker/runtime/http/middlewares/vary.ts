@@ -31,7 +31,7 @@ const cachingStrategies: CachingStrategy[] = [
   },
 ]
 
-const shouldVaryByHeader = <T extends IOClients, U, V>(
+const shouldVaryByHeader = <T extends IOClients, U extends RecorderState, V extends ParamsContext>(
   ctx: ServiceContext<T, U, V>,
   header: VaryHeaders,
   strategy?: CachingStrategy
