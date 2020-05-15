@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.28.3] - 2020-05-15
+### Fixed
+- [ErrorReport] Update `@vtex/node-error-report` package:
+  - Clone objects before sanitizing them.
+
 ## [6.28.2] - 2020-05-13
 ### Changed
 - [ErrorReport] Use `@vtex/node-error-report` package.
