@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- [ErrorReport] Update `@vtex/node-error-report` package:
+  - Clone objects before sanitizing them.
 
 ## [6.28.2] - 2020-05-13
 ### Changed
