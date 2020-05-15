@@ -4,11 +4,29 @@ import {
   FORWARDED_HOST_HEADER,
   META_HEADER,
   SEGMENT_HEADER,
+  SESSION_HEADER,
 } from '../../../../../constants'
 import { Maybe } from '../../typings'
 import { Recorder } from '../../utils/recorder'
-import { GraphQLServiceContext } from '../typings'
+import { GraphQLServiceContext, GraphQLCacheControl } from '../typings'
 import { cacheControlHTTP } from '../utils/cacheControl'
+
+function setVaryHeaders (ctx: GraphQLServiceContext, cacheControl: GraphQLCacheControl) {
+  ctx.vary(FORWARDED_HOST_HEADER)
+  if (cacheControl.scope === 'segment') {
+    ctx.vary(SEGMENT_HEADER)
+  }
+
+  if (cacheControl.scope === 'private' || ctx.query.scope === 'private') {
+    ctx.vary(SEGMENT_HEADER)
+    ctx.vary(SESSION_HEADER)
+  } else if (ctx.vtex.sessionToken) {
+    ctx.vtex.logger.warn({
+      message: 'GraphQL resolver receiving session token without private scope',
+      userAgent: ctx.get('user-agent'),
+    })
+  }
+}
 
 export async function response (ctx: GraphQLServiceContext, next: () => Promise<void>) {
 
@@ -31,9 +49,8 @@ export async function response (ctx: GraphQLServiceContext, next: () => Promise<
     ctx.vtex.recorder?.clear()
   }
 
-  ctx.vary(FORWARDED_HOST_HEADER)
-  if (cacheControl.scope === 'segment') {
-    ctx.vary(SEGMENT_HEADER)
+  if (ctx.method.toUpperCase() === 'GET') {
+    setVaryHeaders(ctx, cacheControl)
   }
 
   ctx.body = graphqlResponse
