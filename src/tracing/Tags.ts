@@ -16,15 +16,7 @@ const APP_TAGS = {
   VTEX_APP_WORKSPACE: 'app.workspace',
 }
 
-const ERROR_REPORT_TAGS = {
-  ERROR_KIND: 'error.kind',
-  ERROR_SERVER_CODE: 'error.server.code',
-  ERROR_SERVER_REQUEST_ID: 'error.server.request_id',
-  ERROR_SERVER_SOURCE: 'error.server.source',
-}
-
 export const USERLAND_TAGS = {
-  ...ERROR_REPORT_TAGS,
   ...opentracingTags,
 }
 
