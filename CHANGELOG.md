@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Create an option to disable conditional segment/session vary
+- Set vary: x-vtex-session if the scope is private
 
 ## [6.28.3] - 2020-05-15
 ### Fixed
@@ -27,7 +30,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - [ErrorReport] Increase ErrorReport serialization depth from 6 to 8.
 
 ### Added
-- [tracing:entrypoint-span] Add `vtex.request_id` tag. 
+- [tracing:entrypoint-span] Add `vtex.request_id` tag.
 - [ErrorReport] Add `error.server.code`, `error.server.source`, `error.server.request_id` to tags added to error spans.
 - [response:headers] Add `x-trace-id` when request is traced.
 - [logger] Log `trace-id` when request is traced.
@@ -51,7 +54,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - `NODE_ENV` tag to process tracing tags.
 - `tracingConfig` argument to all clients request functions.
-- Option on request spans to define if request is childOf rootSpan or followsFrom it. 
+- Option on request spans to define if request is childOf rootSpan or followsFrom it.
 - Option on request span to add suffix on request span name - it will be `http-request:suffx`.
 - Helper `createTracingContextFromCarrier` to allow worker threads and child processes to be traced.
 
