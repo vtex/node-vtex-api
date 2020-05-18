@@ -77,6 +77,10 @@ const handleSignal: NodeJS.SignalsListener = signal => {
 export const startMaster = (service: ServiceJSON) => {
   const { workers: numWorkers } = service
 
+  if (service.deterministicVary) {
+    process.env.DETERMINISTIC_VARY = 'true'
+  }
+
   // Setup dubugger
   if (LINKED) {
     cluster.setupMaster({inspectPort: INSPECT_DEBUGGER_PORT})

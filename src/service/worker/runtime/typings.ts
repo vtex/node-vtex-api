@@ -181,12 +181,13 @@ export interface RawServiceJSON {
   memory: number,
   ttl?: number,
   timeout?: number,
- runtimeArgs?: string[],
+  runtimeArgs?: string[],
   routes?: Record<string, ServiceRoute>,
   events?: Record<string, ServiceEvent>,
   minReplicas?: number,
   maxReplicas?: number,
   workers?: number
+  deterministicVary?: boolean
 }
 
 export interface ServiceJSON extends RawServiceJSON {

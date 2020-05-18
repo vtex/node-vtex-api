@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "6.28.3",
+  "version": "6.29.0",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -10,15 +10,15 @@
   ],
   "scripts": {
     "clean": "rimraf lib/",
-    "watch": "tsc --watch",
-    "build": "tsc",
+    "watch": "yarn clean && tsc --watch",
+    "build": "yarn clean && tsc",
     "gen": "typescript-json-schema tsconfig.json PublicAppManifest > gen/manifest.schema",
     "test": "jest",
     "lint": "tslint -c tslint.json './src/**/*.ts'",
     "format": "prettier --config ./.prettierrc --write \"src/**/*.ts\" \"src/**/*.js\"",
     "format-lint": "yarn format && yarn lint",
     "prepublishOnly": "bash ./scripts/publishLock.sh",
-    "ci:build": "yarn clean && yarn build && yarn gen",
+    "ci:build": "yarn build && yarn gen",
     "ci:test": "yarn test --ci",
     "ci:prettier-check": "prettier --check --config ./.prettierrc \"src/**/*.ts\" \"src/**/*.js\""
   },
