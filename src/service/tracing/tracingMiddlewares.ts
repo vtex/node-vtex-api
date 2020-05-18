@@ -20,7 +20,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       childOf: rootSpan,
       tags: {
         [Tags.SPAN_KIND]: Tags.SPAN_KIND_RPC_SERVER,
-        [Tags.HTTP_URL]: ctx.request.originalUrl,
+        [Tags.HTTP_URL]: ctx.request.href,
         [Tags.HTTP_METHOD]: ctx.request.method,
         [Tags.HTTP_PATH]: ctx.request.path,
         [Tags.VTEX_REQUEST_ID]: ctx.get(REQUEST_ID_HEADER),
