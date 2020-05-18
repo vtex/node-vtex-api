@@ -3,6 +3,7 @@ import { AxiosError, AxiosInstance } from 'axios'
 import { REFERENCE_CHILD_OF, REFERENCE_FOLLOWS_FROM } from 'opentracing'
 import { ROUTER_CACHE_HEADER } from '../../../../../constants'
 import { SpanReferenceTypes } from '../../../../../tracing'
+import { LOG_FIELDS } from '../../../../../tracing/LogFields'
 import { Tags } from '../../../../../tracing/Tags'
 import { requestSpanPrefix } from '../interceptors/tracing'
 import { TestServer } from './TestServer'
@@ -107,9 +108,9 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
 
     allRequestSpans.forEach((requestSpan) => {
       expect((requestSpan as any)._logs.length).toEqual(expectedLen)
-      expect((requestSpan as any)._logs[0].fields.event).toEqual('request-headers')
+      expect((requestSpan as any)._logs[0].fields[LOG_FIELDS.EVENT]).toEqual('request-headers')
       if (!testSuiteConfig.expects.error?.isClientError) {
-        expect((requestSpan as any)._logs[1].fields.event).toEqual('response-headers')
+        expect((requestSpan as any)._logs[1].fields[LOG_FIELDS.EVENT]).toEqual('response-headers')
       }
     })
   })
@@ -188,9 +189,10 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
         allRequestSpans.forEach((requestSpan) => {
           expect(requestSpan!.tags()[Tags.ERROR]).toEqual('true')
           const len = (requestSpan as any)._logs.length
-          expect((requestSpan as any)._logs[len - 1].fields.event).toEqual('error')
-          expect((requestSpan as any)._logs[len - 1].fields.stack).toBeDefined()
-          expect((requestSpan as any)._logs[len - 1].fields.message).toEqual(
+          expect((requestSpan as any)._logs[len - 1].fields[LOG_FIELDS.EVENT]).toEqual('error')
+          expect((requestSpan as any)._logs[len - 1].fields[LOG_FIELDS.ERROR_ID]).toBeDefined()
+          expect((requestSpan as any)._logs[len - 1].fields[LOG_FIELDS.ERROR_KIND]).toBeDefined()
+          expect((requestSpan as any)._logs[len - 1].fields.error.message).toEqual(
             testSuiteConfig.expects.error!.errorMessage
           )
         })
