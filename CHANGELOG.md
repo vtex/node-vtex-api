@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Changed
-- [tracing:ErrorReport] Log ErrorReport errors created on `HttpClient` requests or thrown by user handlers to splunk.
+- [ErrorReport] Log ErrorReport errors created on `HttpClient` requests or thrown by user handlers to splunk.
+- [ErrorReport] Add error metadata on span logs instead of on span tags.
 
 ## [6.30.1] - 2020-05-21
 ### Changed
