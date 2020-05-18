@@ -8,7 +8,7 @@ import {
 } from '../../../../../constants'
 import { Maybe } from '../../typings'
 import { Recorder } from '../../utils/recorder'
-import { GraphQLServiceContext, GraphQLCacheControl } from '../typings'
+import { GraphQLCacheControl, GraphQLServiceContext } from '../typings'
 import { cacheControlHTTP } from '../utils/cacheControl'
 
 function setVaryHeaders (ctx: GraphQLServiceContext, cacheControl: GraphQLCacheControl) {
