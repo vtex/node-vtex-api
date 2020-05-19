@@ -44,7 +44,7 @@ export class MasterData extends ExternalClient {
     schemaBody: object,
     tracingConfig?: RequestTracingConfig
   ) {
-    const metric = 'masterdata-getSchema'
+    const metric = 'masterdata-createOrUpdateSchema'
     return this.http.put<T>(this.routes.schema(dataEntity, schemaName), schemaBody, {
       metric,
       tracing: {
