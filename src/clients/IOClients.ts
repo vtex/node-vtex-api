@@ -3,6 +3,7 @@ import { IOContext } from '../service/worker/runtime/typings'
 import { Billing, Builder, MessagesGraphQL, Settings } from './apps'
 import { CatalogGraphQL } from './apps/catalogGraphQL/index'
 import { ID, PaymentProvider } from './external'
+import { MasterData } from './external/Masterdata'
 import {
   Apps,
   Assets,
@@ -60,6 +61,10 @@ export class IOClients {
 
   public get licenseManager() {
     return this.getOrSet('licenseManager', LicenseManager)
+  }
+
+  public get masterdata() {
+    return this.getOrSet('masterdata', MasterData)
   }
 
   public get messagesGraphQL() {
