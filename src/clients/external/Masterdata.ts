@@ -2,34 +2,31 @@ import FormData from 'form-data'
 import { InstanceOptions, IOContext, RequestTracingConfig, UserInputError } from '../..'
 import { ExternalClient } from './ExternalClient'
 
+const routes = {
+  attachments: (dataEntity: string, id: string, fields: string) =>
+    `${dataEntity}/documents/${id}/${fields}/attachments`,
+  document: (dataEntity: string, id: string) => `${dataEntity}/documents/${id}`,
+  documents: (dataEntity: string) => `${dataEntity}/documents`,
+  publicSchema: (dataEntity: string, schema: string) => `${dataEntity}/schemas/${schema}/public`,
+  schema: (dataEntity: string, schema: string) => `${dataEntity}/schemas/${schema}`,
+  scroll: (dataEntity: string) => `${dataEntity}/scroll`,
+  search: (dataEntity: string) => `${dataEntity}/search`,
+}
 export class MasterData extends ExternalClient {
   public constructor(ctx: IOContext, options?: InstanceOptions) {
     super(`http://api.vtex.com/${ctx.account}/dataentities`, ctx, {
       ...options,
       headers: {
-        ...(options && options.headers),
-        ...{ Accept: 'application/vnd.vtex.ds.v10+json' },
+        Accept: 'application/vnd.vtex.ds.v10+json',
         VtexIdclientAutCookie: ctx.authToken,
+        ...options?.headers,
       },
     })
   }
 
-  private get routes() {
-    return {
-      attachments: (dataEntity: string, id: string, fields: string) =>
-        `${dataEntity}/documents/${id}/${fields}/attachments`,
-      document: (dataEntity: string, id: string) => `${dataEntity}/documents/${id}`,
-      documents: (dataEntity: string) => `${dataEntity}/documents`,
-      publicSchema: (dataEntity: string, schema: string) => `${dataEntity}/schemas/${schema}/public`,
-      schema: (dataEntity: string, schema: string) => `${dataEntity}/schemas/${schema}`,
-      scroll: (dataEntity: string) => `${dataEntity}/scroll`,
-      search: (dataEntity: string) => `${dataEntity}/search`,
-    }
-  }
-
-  public getSchema<T>(dataEntity: string, schema: string, tracingConfig?: RequestTracingConfig) {
+  public getSchema<T>({ dataEntity, schema }: GetSchemaInput, tracingConfig?: RequestTracingConfig) {
     const metric = 'masterdata-getSchema'
-    return this.http.get<T>(this.routes.schema(dataEntity, schema), {
+    return this.http.get<T>(routes.schema(dataEntity, schema), {
       metric,
       tracing: {
         requestSpanNameSuffix: metric,
@@ -39,13 +36,11 @@ export class MasterData extends ExternalClient {
   }
 
   public createOrUpdateSchema<T>(
-    dataEntity: string,
-    schemaName: string,
-    schemaBody: object,
+    { dataEntity, schemaName, schemaBody }: CreateSchemaInput,
     tracingConfig?: RequestTracingConfig
   ) {
     const metric = 'masterdata-createOrUpdateSchema'
-    return this.http.put<T>(this.routes.schema(dataEntity, schemaName), schemaBody, {
+    return this.http.put<T>(routes.schema(dataEntity, schemaName), schemaBody, {
       metric,
       tracing: {
         requestSpanNameSuffix: metric,
@@ -54,9 +49,9 @@ export class MasterData extends ExternalClient {
     })
   }
 
-  public getPublicSchema<T>(dataEntity: string, schema: string, tracingConfig?: RequestTracingConfig) {
+  public getPublicSchema<T>({ dataEntity, schema }: GetSchemaInput, tracingConfig?: RequestTracingConfig) {
     const metric = 'masterdata-getPublicSchema'
-    return this.http.get<T>(this.routes.publicSchema(dataEntity, schema), {
+    return this.http.get<T>(routes.publicSchema(dataEntity, schema), {
       metric,
       tracing: {
         requestSpanNameSuffix: metric,
@@ -65,9 +60,9 @@ export class MasterData extends ExternalClient {
     })
   }
 
-  public getDocument<T>(dataEntity: string, id: string, fields: string[], tracingConfig?: RequestTracingConfig) {
+  public getDocument<T>({ dataEntity, id, fields }: GetDocumentInput, tracingConfig?: RequestTracingConfig) {
     const metric = 'masterdata-getDocument'
-    return this.http.get<T>(this.routes.document(dataEntity, id), {
+    return this.http.get<T>(routes.document(dataEntity, id), {
       metric,
       params: {
         _fields: generateFieldsArg(fields),
@@ -79,9 +74,9 @@ export class MasterData extends ExternalClient {
     })
   }
 
-  public createDocument(dataEntity: string, fields: object, schema?: string, tracingConfig?: RequestTracingConfig) {
+  public createDocument({ dataEntity, fields, schema }: CreateDocumentInput, tracingConfig?: RequestTracingConfig) {
     const metric = 'masterdata-createDocument'
-    return this.http.post<DocumentResponse>(this.routes.documents(dataEntity), fields, {
+    return this.http.post<DocumentResponse>(routes.documents(dataEntity), fields, {
       metric,
       params: {
         ...(schema ? { _schema: schema } : null),
@@ -94,15 +89,12 @@ export class MasterData extends ExternalClient {
   }
 
   public createOrUpdateEntireDocument(
-    dataEntity: string,
-    fields: object,
-    id?: string,
-    schema?: string,
+    { dataEntity, fields, id, schema }: CreateOrUpdateInput,
     tracingConfig?: RequestTracingConfig
   ) {
     const metric = 'masterdata-createOrUpdateEntireDocument'
     return this.http.put<DocumentResponse>(
-      this.routes.documents(dataEntity),
+      routes.documents(dataEntity),
       { id, ...fields },
       {
         metric,
@@ -118,15 +110,12 @@ export class MasterData extends ExternalClient {
   }
 
   public createOrUpdatePartialDocument(
-    dataEntity: string,
-    fields: object,
-    id?: string,
-    schema?: string,
+    { dataEntity, fields, id, schema }: CreateOrUpdateInput,
     tracingConfig?: RequestTracingConfig
   ) {
     const metric = 'masterdata-createOrUpdatePartialDocument'
     return this.http.patch<DocumentResponse>(
-      this.routes.documents(dataEntity),
+      routes.documents(dataEntity),
       { id, ...fields },
       {
         metric,
@@ -141,15 +130,9 @@ export class MasterData extends ExternalClient {
     )
   }
 
-  public updateEntireDocument(
-    dataEntity: string,
-    id: string,
-    fields: object,
-    schema?: string,
-    tracingConfig?: RequestTracingConfig
-  ) {
+  public updateEntireDocument({ dataEntity, id, fields, schema }: UpdateInput, tracingConfig?: RequestTracingConfig) {
     const metric = 'masterdata-updateEntireDocument'
-    return this.http.put(this.routes.document(dataEntity, id), fields, {
+    return this.http.put(routes.document(dataEntity, id), fields, {
       metric,
       params: {
         ...(schema ? { _schema: schema } : null),
@@ -161,15 +144,9 @@ export class MasterData extends ExternalClient {
     })
   }
 
-  public updatePartialDocument(
-    dataEntity: string,
-    id: string,
-    fields: object,
-    schema?: string,
-    tracingConfig?: RequestTracingConfig
-  ) {
+  public updatePartialDocument({ dataEntity, id, fields, schema }: UpdateInput, tracingConfig?: RequestTracingConfig) {
     const metric = 'masterdata-updatePartialDocument'
-    return this.http.patch(this.routes.document(dataEntity, id), fields, {
+    return this.http.patch(routes.document(dataEntity, id), fields, {
       metric,
       params: {
         ...(schema ? { _schema: schema } : null),
@@ -182,23 +159,18 @@ export class MasterData extends ExternalClient {
   }
 
   public searchDocuments<T>(
-    dataEntity: string,
-    fields: string[],
-    where: string,
-    pagination: PaginationArgs,
-    schema?: string,
-    sort?: string,
+    { dataEntity, fields, where, pagination, schema, sort }: SearchInput,
     tracingConfig?: RequestTracingConfig
   ) {
     const metric = 'masterdata-searchDocuments'
-    return this.http.get<T[]>(this.routes.search(dataEntity), {
+    return this.http.get<T[]>(routes.search(dataEntity), {
       headers: paginationArgsToHeaders(pagination),
       metric,
       params: {
         _fields: generateFieldsArg(fields),
+        _schema: schema,
         _sort: sort,
         _where: where,
-        ...(schema ? { _schema: schema } : null),
       },
       tracing: {
         requestSpanNameSuffix: metric,
@@ -208,17 +180,17 @@ export class MasterData extends ExternalClient {
   }
 
   public scrollDocuments<T>(
-    dataEntity: string,
-    fields: string[],
-    pagination: PaginationArgs,
+    { dataEntity, fields, pagination, schema, sort }: ScrollInput,
     tracingConfig?: RequestTracingConfig
   ) {
     const metric = 'masterdata-scrollDocuments'
-    return this.http.get<T[]>(this.routes.scroll(dataEntity), {
+    return this.http.get<T[]>(routes.scroll(dataEntity), {
       headers: paginationArgsToHeaders(pagination),
       metric,
       params: {
         _fields: generateFieldsArg(fields),
+        _schema: schema,
+        _sort: sort,
       },
       tracing: {
         requestSpanNameSuffix: metric,
@@ -227,9 +199,9 @@ export class MasterData extends ExternalClient {
     })
   }
 
-  public deleteDocument(dataEntity: string, id: string, tracingConfig?: RequestTracingConfig) {
+  public deleteDocument({ dataEntity, id }: DeleteInput, tracingConfig?: RequestTracingConfig) {
     const metric = 'masterdata-deleteDocument'
-    return this.http.delete(this.routes.document(dataEntity, id), {
+    return this.http.delete(routes.document(dataEntity, id), {
       metric,
       tracing: {
         requestSpanNameSuffix: metric,
@@ -239,14 +211,11 @@ export class MasterData extends ExternalClient {
   }
 
   public uploadAttachment(
-    dataEntity: string,
-    id: string,
-    fields: string,
-    formData: FormData,
+    { dataEntity, id, fields, formData }: UploadAttachmentInput,
     tracingConfig?: RequestTracingConfig
   ) {
     const metric = 'masterdata-uploadAttachment'
-    return this.http.post<any>(this.routes.attachments(dataEntity, id, fields), formData, {
+    return this.http.post<any>(routes.attachments(dataEntity, id, fields), formData, {
       headers: formData.getHeaders(),
       metric,
       tracing: {
@@ -283,4 +252,71 @@ interface DocumentResponse {
   Id: string
   Href: string
   DocumentId: string
+}
+
+interface GetSchemaInput {
+  dataEntity: string
+  schema: string
+}
+
+interface CreateSchemaInput {
+  dataEntity: string
+  schemaName: string
+  schemaBody: object
+}
+
+interface GetDocumentInput {
+  dataEntity: string
+  id: string
+  fields: string[]
+}
+
+interface CreateDocumentInput {
+  dataEntity: string
+  fields: object
+  id?: string
+  schema?: string
+}
+
+interface CreateOrUpdateInput {
+  dataEntity: string
+  fields: object
+  id?: string
+  schema?: string
+}
+
+interface UpdateInput {
+  dataEntity: string
+  id: string
+  fields: object
+  schema?: string
+}
+
+interface SearchInput {
+  dataEntity: string
+  fields: string[]
+  where: string
+  pagination: PaginationArgs
+  schema?: string
+  sort?: 'ASC' | 'DESC'
+}
+
+interface ScrollInput {
+  dataEntity: string
+  fields: string[]
+  pagination: PaginationArgs
+  schema?: string
+  sort?: 'ASC' | 'DESC'
+}
+
+interface DeleteInput {
+  dataEntity: string
+  id: string
+}
+
+interface UploadAttachmentInput {
+  dataEntity: string
+  id: string
+  fields: string
+  formData: FormData
 }
