@@ -27,9 +27,8 @@ export class MasterData extends ExternalClient {
     }
   }
 
-  public getSchema<T>(dataEntity: string, schema: string, tracingConfig?: RequestTracingConfig){
+  public getSchema<T>(dataEntity: string, schema: string, tracingConfig?: RequestTracingConfig) {
     const metric = 'masterdata-getSchema'
-
     return this.http.get<T>(this.routes.schema(dataEntity, schema), {
       metric,
       tracing: {
@@ -39,7 +38,12 @@ export class MasterData extends ExternalClient {
     })
   }
 
-  public createOrUpdateSchema<T>(dataEntity: string, schemaName: string, schemaBody: object, tracingConfig?: RequestTracingConfig ){
+  public createOrUpdateSchema<T>(
+    dataEntity: string,
+    schemaName: string,
+    schemaBody: object,
+    tracingConfig?: RequestTracingConfig
+  ) {
     const metric = 'masterdata-getSchema'
     return this.http.put<T>(this.routes.schema(dataEntity, schemaName), schemaBody, {
       metric,
@@ -50,10 +54,8 @@ export class MasterData extends ExternalClient {
     })
   }
 
-
-  public getPublicSchema<T>(dataEntity: string, schema: string, tracingConfig?: RequestTracingConfig){
+  public getPublicSchema<T>(dataEntity: string, schema: string, tracingConfig?: RequestTracingConfig) {
     const metric = 'masterdata-getPublicSchema'
-
     return this.http.get<T>(this.routes.publicSchema(dataEntity, schema), {
       metric,
       tracing: {
@@ -63,10 +65,8 @@ export class MasterData extends ExternalClient {
     })
   }
 
-
-  public getDocument<T>(dataEntity: string, id: string, fields: string[], tracingConfig?: RequestTracingConfig){
+  public getDocument<T>(dataEntity: string, id: string, fields: string[], tracingConfig?: RequestTracingConfig) {
     const metric = 'masterdata-getDocument'
-
     return this.http.get<T>(this.routes.document(dataEntity, id), {
       metric,
       params: {
@@ -79,10 +79,8 @@ export class MasterData extends ExternalClient {
     })
   }
 
-
-  public createDocument (dataEntity: string, fields: object, schema?: string, tracingConfig?: RequestTracingConfig){
+  public createDocument(dataEntity: string, fields: object, schema?: string, tracingConfig?: RequestTracingConfig) {
     const metric = 'masterdata-createDocument'
-
     return this.http.post<DocumentResponse>(this.routes.documents(dataEntity), fields, {
       metric,
       params: {
@@ -95,10 +93,14 @@ export class MasterData extends ExternalClient {
     })
   }
 
-
-  public createOrUpdateEntireDocument (dataEntity: string, fields: object, id?: string, schema?: string, tracingConfig?: RequestTracingConfig){
+  public createOrUpdateEntireDocument(
+    dataEntity: string,
+    fields: object,
+    id?: string,
+    schema?: string,
+    tracingConfig?: RequestTracingConfig
+  ) {
     const metric = 'masterdata-createOrUpdateEntireDocument'
-
     return this.http.put<DocumentResponse>(
       this.routes.documents(dataEntity),
       { id, ...fields },
@@ -115,10 +117,14 @@ export class MasterData extends ExternalClient {
     )
   }
 
-
-  public createOrUpdatePartialDocument (dataEntity: string, fields: object, id?: string, schema?: string, tracingConfig?: RequestTracingConfig){
+  public createOrUpdatePartialDocument(
+    dataEntity: string,
+    fields: object,
+    id?: string,
+    schema?: string,
+    tracingConfig?: RequestTracingConfig
+  ) {
     const metric = 'masterdata-createOrUpdatePartialDocument'
-
     return this.http.patch<DocumentResponse>(
       this.routes.documents(dataEntity),
       { id, ...fields },
@@ -135,8 +141,13 @@ export class MasterData extends ExternalClient {
     )
   }
 
-
-  public updateEntireDocument (dataEntity: string, id: string, fields: object, schema?: string, tracingConfig?: RequestTracingConfig){
+  public updateEntireDocument(
+    dataEntity: string,
+    id: string,
+    fields: object,
+    schema?: string,
+    tracingConfig?: RequestTracingConfig
+  ) {
     const metric = 'masterdata-updateEntireDocument'
 
     return this.http.put(this.routes.document(dataEntity, id), fields, {
@@ -151,10 +162,14 @@ export class MasterData extends ExternalClient {
     })
   }
 
-
-  public updatePartialDocument (dataEntity: string, id: string, fields: object, schema?: string, tracingConfig?: RequestTracingConfig){
+  public updatePartialDocument(
+    dataEntity: string,
+    id: string,
+    fields: object,
+    schema?: string,
+    tracingConfig?: RequestTracingConfig
+  ) {
     const metric = 'masterdata-updatePartialDocument'
-
     return this.http.patch(this.routes.document(dataEntity, id), fields, {
       metric,
       params: {
@@ -173,10 +188,10 @@ export class MasterData extends ExternalClient {
     where: string,
     pagination: PaginationArgs,
     schema?: string,
-    sort?: string, tracingConfig?: RequestTracingConfig
-  ){
+    sort?: string,
+    tracingConfig?: RequestTracingConfig
+  ) {
     const metric = 'masterdata-searchDocuments'
-
     return this.http.get<T[]>(this.routes.search(dataEntity), {
       headers: paginationArgsToHeaders(pagination),
       metric,
@@ -196,10 +211,10 @@ export class MasterData extends ExternalClient {
   public scrollDocuments<T>(
     dataEntity: string,
     fields: string[],
-    pagination: PaginationArgs, tracingConfig?: RequestTracingConfig
-  ){
+    pagination: PaginationArgs,
+    tracingConfig?: RequestTracingConfig
+  ) {
     const metric = 'masterdata-scrollDocuments'
-
     return this.http.get<T[]>(this.routes.scroll(dataEntity), {
       headers: paginationArgsToHeaders(pagination),
       metric,
@@ -213,9 +228,8 @@ export class MasterData extends ExternalClient {
     })
   }
 
-  public deleteDocument(dataEntity: string, id: string, tracingConfig?: RequestTracingConfig){
+  public deleteDocument(dataEntity: string, id: string, tracingConfig?: RequestTracingConfig) {
     const metric = 'masterdata-deleteDocument'
-
     return this.http.delete(this.routes.document(dataEntity, id), {
       metric,
       tracing: {
@@ -225,9 +239,14 @@ export class MasterData extends ExternalClient {
     })
   }
 
-  public uploadAttachment(dataEntity: string, id: string, fields: string, formData: FormData, tracingConfig?: RequestTracingConfig){
+  public uploadAttachment(
+    dataEntity: string,
+    id: string,
+    fields: string,
+    formData: FormData,
+    tracingConfig?: RequestTracingConfig
+  ) {
     const metric = 'masterdata-uploadAttachment'
-
     return this.http.post<any>(this.routes.attachments(dataEntity, id, fields), formData, {
       headers: formData.getHeaders(),
       metric,
