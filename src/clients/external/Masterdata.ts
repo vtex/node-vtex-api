@@ -32,6 +32,11 @@ export class MasterData extends ExternalClient {
       metric: 'masterdata-getSchema',
     })
 
+  public createOrUpdateSchema = <T>(dataEntity: string, schemaName: string, schemaBody: object ) =>
+    this.http.put<T>(this.routes.schema(dataEntity, schemaName), schemaBody, {
+      metric: 'masterdata-getSchema',
+    })
+
   public getPublicSchema = <T>(dataEntity: string, schema: string) =>
     this.http.get<T>(this.routes.publicSchema(dataEntity, schema), {
       metric: 'masterdata-getPublicSchema',
