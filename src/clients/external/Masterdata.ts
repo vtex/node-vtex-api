@@ -1,5 +1,5 @@
 import FormData from 'form-data'
-import { InstanceOptions, IOContext, UserInputError, RequestTracingConfig } from '../..'
+import { InstanceOptions, IOContext, RequestTracingConfig, UserInputError } from '../..'
 import { ExternalClient } from './ExternalClient'
 
 export class MasterData extends ExternalClient {
@@ -149,7 +149,6 @@ export class MasterData extends ExternalClient {
     tracingConfig?: RequestTracingConfig
   ) {
     const metric = 'masterdata-updateEntireDocument'
-
     return this.http.put(this.routes.document(dataEntity, id), fields, {
       metric,
       params: {
