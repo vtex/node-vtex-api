@@ -282,7 +282,7 @@ interface UpdateInput {
 interface SearchInput {
   dataEntity: string
   fields: string[]
-  where: string
+  where?: string
   pagination: PaginationArgs
   schema?: string
   sort?: 'ASC' | 'DESC'
