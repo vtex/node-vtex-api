@@ -62,7 +62,6 @@
     "cookie": "^0.3.1",
     "dataloader": "^1.4.0",
     "fast-json-stable-stringify": "^2.0.0",
-    "form-data": "^3.0.0",
     "fs-extra": "^7.0.0",
     "graphql": "^14.5.8",
     "graphql-tools": "^4.0.6",

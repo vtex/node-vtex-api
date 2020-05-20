@@ -1,4 +1,3 @@
-import FormData from 'form-data'
 import { InstanceOptions, IOContext, RequestTracingConfig, UserInputError } from '../..'
 import { ExternalClient } from './ExternalClient'
 
@@ -14,12 +13,15 @@ const routes = {
 }
 export class MasterData extends ExternalClient {
   public constructor(ctx: IOContext, options?: InstanceOptions) {
-    super(`http://api.vtex.com/${ctx.account}/dataentities`, ctx, {
+    super(`http://api.vtex.com/dataentities`, ctx, {
       ...options,
       headers: {
         Accept: 'application/vnd.vtex.ds.v10+json',
         VtexIdclientAutCookie: ctx.authToken,
         ...options?.headers,
+      },
+      params: {
+        an: ctx.account,
       },
     })
   }
@@ -297,11 +299,4 @@ interface ScrollInput {
 interface DeleteInput {
   dataEntity: string
   id: string
-}
-
-interface UploadAttachmentInput {
-  dataEntity: string
-  id: string
-  fields: string
-  formData: FormData
 }
