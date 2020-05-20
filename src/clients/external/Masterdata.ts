@@ -17,10 +17,12 @@ export class MasterData extends ExternalClient {
       headers: {
         Accept: 'application/vnd.vtex.ds.v10+json',
         VtexIdclientAutCookie: ctx.authToken,
+        'x-vtex-api-appService': ctx.userAgent,
         ...options?.headers,
       },
       params: {
         an: ctx.account,
+        ...options?.params,
       },
     })
   }
