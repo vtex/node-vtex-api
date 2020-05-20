@@ -2,8 +2,7 @@ import { InstanceOptions } from '../HttpClient'
 import { IOContext } from '../service/worker/runtime/typings'
 import { Billing, Builder, MessagesGraphQL, Settings } from './apps'
 import { CatalogGraphQL } from './apps/catalogGraphQL/index'
-import { ID, PaymentProvider } from './external'
-import { MasterData } from './external/Masterdata'
+import { ID, MasterData, PaymentProvider } from './external'
 import {
   Apps,
   Assets,
