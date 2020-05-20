@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Masterdata client
+
 ## [6.29.0] - 2020-05-18
 ### Changed
 - Create an option to disable conditional segment/session vary
