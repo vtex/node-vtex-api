@@ -209,21 +209,6 @@ export class MasterData extends ExternalClient {
       },
     })
   }
-
-  public uploadAttachment(
-    { dataEntity, id, fields, formData }: UploadAttachmentInput,
-    tracingConfig?: RequestTracingConfig
-  ) {
-    const metric = 'masterdata-uploadAttachment'
-    return this.http.post<any>(routes.attachments(dataEntity, id, fields), formData, {
-      headers: formData.getHeaders(),
-      metric,
-      tracing: {
-        requestSpanNameSuffix: metric,
-        ...tracingConfig?.tracing,
-      },
-    })
-  }
 }
 
 function paginationArgsToHeaders({ page, pageSize }: PaginationArgs) {
