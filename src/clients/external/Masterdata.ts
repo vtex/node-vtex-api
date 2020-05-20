@@ -2,8 +2,6 @@ import { InstanceOptions, IOContext, RequestTracingConfig, UserInputError } from
 import { ExternalClient } from './ExternalClient'
 
 const routes = {
-  attachments: (dataEntity: string, id: string, fields: string) =>
-    `${dataEntity}/documents/${id}/${fields}/attachments`,
   document: (dataEntity: string, id: string) => `${dataEntity}/documents/${id}`,
   documents: (dataEntity: string) => `${dataEntity}/documents`,
   publicSchema: (dataEntity: string, schema: string) => `${dataEntity}/schemas/${schema}/public`,
