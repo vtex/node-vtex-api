@@ -11,6 +11,7 @@ const routes = {
   scroll: (dataEntity: string) => `${dataEntity}/scroll`,
   search: (dataEntity: string) => `${dataEntity}/search`,
 }
+
 export class MasterData extends ExternalClient {
   public constructor(ctx: IOContext, options?: InstanceOptions) {
     super(`http://api.vtex.com/dataentities`, ctx, {
@@ -261,7 +262,6 @@ interface GetDocumentInput {
 interface CreateDocumentInput {
   dataEntity: string
   fields: object
-  id?: string
   schema?: string
 }
 
