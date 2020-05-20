@@ -14,7 +14,7 @@ const routes = {
 
 export class MasterData extends ExternalClient {
   public constructor(ctx: IOContext, options?: InstanceOptions) {
-    super(`http://api.vtex.com/dataentities`, ctx, {
+    super(`http://api.vtex.com/api/dataentities`, ctx, {
       ...options,
       headers: {
         Accept: 'application/vnd.vtex.ds.v10+json',
