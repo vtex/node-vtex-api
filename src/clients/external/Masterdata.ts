@@ -15,7 +15,7 @@ export class MasterData extends ExternalClient {
     super(`http://api.vtex.com/api/dataentities`, ctx, {
       ...options,
       headers: {
-        Accept: 'application/vnd.vtex.ds.v10+json',
+        Accept: 'application/json',
         VtexIdclientAutCookie: ctx.authToken,
         'x-vtex-api-appService': ctx.userAgent,
         ...options?.headers,
@@ -82,7 +82,7 @@ export class MasterData extends ExternalClient {
     return this.http.post<DocumentResponse>(routes.documents(dataEntity), fields, {
       metric,
       params: {
-        ...(schema ? { _schema: schema } : null),
+        _schema: schema,
       },
       tracing: {
         requestSpanNameSuffix: metric,
@@ -102,7 +102,7 @@ export class MasterData extends ExternalClient {
       {
         metric,
         params: {
-          ...(schema ? { _schema: schema } : null),
+          _schema: schema,
         },
         tracing: {
           requestSpanNameSuffix: metric,
@@ -123,7 +123,7 @@ export class MasterData extends ExternalClient {
       {
         metric,
         params: {
-          ...(schema ? { _schema: schema } : null),
+          _schema: schema,
         },
         tracing: {
           requestSpanNameSuffix: metric,
@@ -138,7 +138,7 @@ export class MasterData extends ExternalClient {
     return this.http.put(routes.document(dataEntity, id), fields, {
       metric,
       params: {
-        ...(schema ? { _schema: schema } : null),
+        _schema: schema,
       },
       tracing: {
         requestSpanNameSuffix: metric,
@@ -152,7 +152,7 @@ export class MasterData extends ExternalClient {
     return this.http.patch(routes.document(dataEntity, id), fields, {
       metric,
       params: {
-        ...(schema ? { _schema: schema } : null),
+        _schema: schema,
       },
       tracing: {
         requestSpanNameSuffix: metric,
