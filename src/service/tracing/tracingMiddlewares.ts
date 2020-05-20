@@ -20,7 +20,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       childOf: rootSpan,
       tags: {
         [Tags.SPAN_KIND]: Tags.SPAN_KIND_RPC_SERVER,
-        [Tags.HTTP_URL]: ctx.request.originalUrl,
+        [Tags.HTTP_URL]: ctx.request.href,
         [Tags.HTTP_METHOD]: ctx.request.method,
         [Tags.HTTP_PATH]: ctx.request.path,
         [Tags.VTEX_REQUEST_ID]: ctx.get(REQUEST_ID_HEADER),
@@ -31,6 +31,8 @@ export const addTracingMiddleware = (tracer: Tracer) => {
 
     ctx.tracing = { currentSpan, tracer }
 
+    currentSpan.log({ event: 'request-headers', headers: ctx.request.headers })
+
     try {
       await next()
     } catch (err) {
@@ -38,6 +40,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       throw err
     } finally {
       currentSpan.setTag(Tags.HTTP_STATUS_CODE, ctx.response.status)
+      currentSpan.log({ event: 'response-headers', headers: ctx.response.headers })
       currentSpan.finish()
 
       const traceInfo = getTraceInfo(currentSpan)
