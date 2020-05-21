@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - [tracing:entrypoint] Fix URL tag on entrypoint span - use `ctx.request.href` instead of `ctx.request.originalUrl`.
 
+### Fixed
+
+- Masterdata sort typing
+
 ## [6.30.0] - 2020-05-20
 
 ### Added
