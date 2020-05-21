@@ -22,7 +22,7 @@ export interface TestSuiteConfig {
     totalOfSpans: number
     statusCode: number | undefined
     error?: {
-      errorMessage: string
+      errorMessagePrefix: string
       isClientError: boolean
     }
   }
@@ -181,7 +181,7 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
       it('Throws an axios error', async () => {
         const { error } = await TracedTestRequest.doRequest(http, testSuiteConfig.requestsConfig)
         expect((error as AxiosError).isAxiosError).toBe(true)
-        expect((error as AxiosError).message).toEqual(testSuiteConfig.expects.error!.errorMessage)
+        expect((error as AxiosError).message.startsWith(testSuiteConfig.expects.error!.errorMessagePrefix)).toBeTruthy()
       })
 
       it('Assigns error tags and error logs to all request spans', async () => {
@@ -192,9 +192,11 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
           expect((requestSpan as any)._logs[len - 1].fields[LOG_FIELDS.EVENT]).toEqual('error')
           expect((requestSpan as any)._logs[len - 1].fields[LOG_FIELDS.ERROR_ID]).toBeDefined()
           expect((requestSpan as any)._logs[len - 1].fields[LOG_FIELDS.ERROR_KIND]).toBeDefined()
-          expect((requestSpan as any)._logs[len - 1].fields.error.message).toEqual(
-            testSuiteConfig.expects.error!.errorMessage
-          )
+          expect(
+            ((requestSpan as any)._logs[len - 1].fields.error.message as string).startsWith(
+              testSuiteConfig.expects.error!.errorMessagePrefix
+            )
+          ).toBeTruthy()
         })
       })
     })
