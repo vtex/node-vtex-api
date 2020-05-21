@@ -292,7 +292,6 @@ interface SearchInput {
 interface ScrollInput {
   dataEntity: string
   fields: string[]
-  pagination: PaginationArgs
   schema?: string
   sort?: string
   size?: number
