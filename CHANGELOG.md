@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - [tracing:entrypoint] Fix URL tag on entrypoint span - use `ctx.request.href` instead of `ctx.request.originalUrl`.
+- Masterdata sort typing and scroll pagination.
 
 ## [6.30.1] - 2020-05-21
 ### Changed
