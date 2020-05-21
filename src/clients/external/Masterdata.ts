@@ -285,7 +285,7 @@ interface SearchInput {
   where?: string
   pagination: PaginationArgs
   schema?: string
-  sort?: 'ASC' | 'DESC'
+  sort?: string
 }
 
 interface ScrollInput {
@@ -293,7 +293,7 @@ interface ScrollInput {
   fields: string[]
   pagination: PaginationArgs
   schema?: string
-  sort?: 'ASC' | 'DESC'
+  sort?: string
 }
 
 interface DeleteInput {
