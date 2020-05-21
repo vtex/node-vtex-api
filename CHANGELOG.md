@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.30.1] - 2020-05-21
+### Changed
+- Remove `serverTiming` metrics from client headers.
+- Add `serverTiming` metrics on error report.
+
 ## [6.30.0] - 2020-05-20
 
 ### Added

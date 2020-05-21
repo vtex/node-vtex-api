@@ -72,6 +72,7 @@ export async function error<
           id,
           params,
         },
+        serverTiming,
       },
       headers: {
         'x-forwarded-path': forwardedPath,
@@ -105,6 +106,7 @@ export async function error<
       query,
       requestId,
       routeId: id,
+      serverTiming,
       status,
     }
 
