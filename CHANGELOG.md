@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [6.31.0-beta] - 2020-05-21
 ### Changed
 - [ErrorReport] Log ErrorReport errors created on `HttpClient` requests or thrown by user handlers to splunk.
 - [ErrorReport] Add error metadata on span logs instead of on span tags.
