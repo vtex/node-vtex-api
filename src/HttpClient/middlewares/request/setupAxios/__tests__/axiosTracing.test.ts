@@ -34,7 +34,7 @@ describe('Traces successfully on response error', () => {
     axiosInstance: axios,
     expects: {
       error: {
-        errorMessage: 'Request failed with status code 400',
+        errorMessagePrefix: 'Request failed with status code 400',
         isClientError: false,
       },
       numberOfRequestSpans: 1,
@@ -68,7 +68,7 @@ describe('Traces successfully on request error (response is undefined)', () => {
     axiosInstance: axios,
     expects: {
       error: {
-        errorMessage: 'getaddrinfo EAI_AGAIN invalidurl',
+        errorMessagePrefix: 'getaddrinfo',
         isClientError: true,
       },
       numberOfRequestSpans: 1,
@@ -88,7 +88,7 @@ describe('Axios retries are traced independently - forcing ECONNREFUSED', () => 
     axiosInstance: axios,
     expects: {
       error: {
-        errorMessage: 'connect ECONNREFUSED 127.0.0.1:32123',
+        errorMessagePrefix: 'connect ECONNREFUSED 127.0.0.1:32123',
         isClientError: true,
       },
       numberOfRequestSpans: 4,
@@ -109,7 +109,7 @@ describe('Traces successfully and independently on response error with retries',
     axiosInstance: axios,
     expects: {
       error: {
-        errorMessage: 'Request failed with status code 504',
+        errorMessagePrefix: 'Request failed with status code 504',
         isClientError: false,
       },
       numberOfRequestSpans: 4,

@@ -4,6 +4,7 @@ import { Span } from 'opentracing'
 
 import { CacheLayer } from '../caches/CacheLayer'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
+import { IOContext } from '../service/worker/runtime/typings'
 import { SpanReferenceTypes } from '../tracing'
 import { IUserLandTracer } from '../tracing/UserLandTracer'
 import { Cached, CacheType } from './middlewares/cache'
@@ -18,6 +19,7 @@ interface RequestTracingUserConfiguration {
 
 export interface AxiosTracingConfig extends RequestTracingUserConfiguration {
   tracer: IUserLandTracer
+  logger: IOContext['logger']
 }
 
 export interface TraceableRequestConfig extends RequestConfig {
