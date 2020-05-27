@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.31.0-beta.0] - 2020-05-27
+
 ## [6.31.0-beta] - 2020-05-27
 ### Added
 - Support to `If-Match` header usage on VBase client.
