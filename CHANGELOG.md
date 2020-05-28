@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.75.0] - 2020-05-28
+### Added
+- Add support for router binding header format.
+
+### Changed
+- Use binding locale in TranslatableV2 directive if present.
+
 ## [3.74.1] - 2020-05-14
 ### Fixed
 - Add deterministicVary to ServiceDescriptor interface.
