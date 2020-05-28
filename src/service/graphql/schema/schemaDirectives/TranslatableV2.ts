@@ -58,7 +58,7 @@ const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2, behavi
   }
 
   const { content, context, from: maybeFrom } = parseTranslatableStringV2(rawMessage)
-  const { locale: to, tenant } = ctx
+  const { binding, locale: to, tenant } = ctx
 
   if (content == null) {
     throw new Error(`@translatableV2 directive needs a content to translate, but received ${JSON.stringify(rawMessage)}`)
@@ -68,7 +68,7 @@ const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2, behavi
     throw new Error('@translatableV2 directive needs the locale variable available in IOContext. You can do this by either setting \`ctx.vtex.locale\` directly or calling this app with \`x-vtex-locale\` header')
   }
 
-  const from = maybeFrom || (tenant && tenant.locale)
+  const from = maybeFrom || (binding && binding.locale) || (tenant && tenant.locale)
 
   if (from == null) {
     throw new Error('@translatableV2 directive needs a source language to translate from. You can do this by either setting \`ctx.vtex.tenant\` variable, call this app with the header \`x-vtex-tenant\` or format the string with the \`formatTranslatableStringV2\` function with the \`from\` option set')
