@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 ### Added
-- add `salesChannel` to IOContext interface.
+- `salesChannel` to IOContext interface.
 
 ## [6.30.1] - 2020-05-21
 ### Changed
