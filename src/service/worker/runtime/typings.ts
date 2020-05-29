@@ -123,6 +123,7 @@ export interface IOContext {
   // Identifies the user based on the cookie `VtexIdclientAutCookie_${account}`. Cookies are only available in private routes.
   storeUserAuthToken?: string
   locale?: string
+  salesChannel?: number
   production: boolean
   product: string
   recorder?: Recorder
