@@ -6,12 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Added
-- Support to `If-Match` header usage on VBase client.
+### Fixed
+- Release the 6.31.0 again due to issues.
 
 ## [6.31.0] - 2020-06-04
 ### Added
 - Add `putRaw` method on HttpClient.
+- Support to `If-Match` header usage on VBase client.
 
 ### Changed
 - [ErrorReport] Log ErrorReport errors created on `HttpClient` requests or thrown by user handlers to splunk.
