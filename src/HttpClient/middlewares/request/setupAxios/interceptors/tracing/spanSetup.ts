@@ -2,6 +2,7 @@ import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import buildFullPath from 'axios/lib/core/buildFullPath'
 import { Span } from 'opentracing'
 import { ROUTER_CACHE_HEADER } from '../../../../../../constants'
+import { LOG_FIELDS } from '../../../../../../tracing/LogFields'
 import { Tags } from '../../../../../../tracing/Tags'
 
 export const injectRequestInfoOnSpan = (span: Span, http: AxiosInstance, config: AxiosRequestConfig) => {
@@ -19,7 +20,7 @@ export const injectRequestInfoOnSpan = (span: Span, http: AxiosInstance, config:
     [Tags.HTTP_RETRY_COUNT]: (config as any).retryCount || 0,
   })
 
-  span.log({ event: 'request-headers', headers: config.headers })
+  span.log({ [LOG_FIELDS.EVENT]: 'request-headers', headers: config.headers })
 }
 
 // Response may be undefined in case of client timeout, invalid URL, ...
@@ -29,7 +30,7 @@ export const injectResponseInfoOnSpan = (span: Span, response: AxiosResponse | n
     return
   }
 
-  span.log({ event: 'response-headers', headers: response.headers })
+  span.log({ [LOG_FIELDS.EVENT]: 'response-headers', headers: response.headers })
   span.setTag(Tags.HTTP_STATUS_CODE, response.status)
   if (response.headers[ROUTER_CACHE_HEADER]) {
     span.setTag(Tags.HTTP_ROUTER_CACHE, response.headers[ROUTER_CACHE_HEADER])

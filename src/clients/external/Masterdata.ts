@@ -183,23 +183,24 @@ export class MasterData extends ExternalClient {
   }
 
   public scrollDocuments<T>(
-    { dataEntity, fields, pagination, schema, sort }: ScrollInput,
+    { dataEntity, fields, mdToken, schema, size, sort, }: ScrollInput,
     tracingConfig?: RequestTracingConfig
   ) {
     const metric = 'masterdata-scrollDocuments'
-    return this.http.get<T[]>(routes.scroll(dataEntity), {
-      headers: paginationArgsToHeaders(pagination),
+    return this.http.getRaw<ScrollResponse<T>>(routes.scroll(dataEntity), {
       metric,
       params: {
         _fields: generateFieldsArg(fields),
         _schema: schema,
+        _size: size,
         _sort: sort,
+        _token: mdToken,
       },
       tracing: {
         requestSpanNameSuffix: metric,
         ...tracingConfig?.tracing,
       },
-    })
+    }).then(({headers: {'x-vtex-md-token': resToken}, data}) => ({mdToken: resToken, data}))
   }
 
   public deleteDocument({ dataEntity, id }: DeleteInput, tracingConfig?: RequestTracingConfig) {
@@ -285,18 +286,24 @@ interface SearchInput {
   where?: string
   pagination: PaginationArgs
   schema?: string
-  sort?: 'ASC' | 'DESC'
+  sort?: string
 }
 
 interface ScrollInput {
   dataEntity: string
   fields: string[]
-  pagination: PaginationArgs
   schema?: string
-  sort?: 'ASC' | 'DESC'
+  sort?: string
+  size?: number
+  mdToken?: string
 }
 
 interface DeleteInput {
   dataEntity: string
   id: string
+}
+
+interface ScrollResponse<T> {
+  data: T[]
+  mdToken: string
 }

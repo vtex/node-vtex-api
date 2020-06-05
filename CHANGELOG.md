@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.31.1] - 2020-06-05
+### Fixed
+- Release the 6.31.0 again due to issues.
+
+## [6.31.0] - 2020-06-04
+### Added
+- Add `putRaw` method on HttpClient.
+- Support to `If-Match` header usage on VBase client.
+
+### Changed
+- [ErrorReport] Log ErrorReport errors created on `HttpClient` requests or thrown by user handlers to splunk.
+- [ErrorReport] Add error metadata on span logs instead of on span tags.
+- [tracing:entrypoint] Log incoming request headers and outgoing response headers.
+- [tracing] Use remote sampling.
+
+### Fixed
+- [tracing:entrypoint] Fix URL tag on entrypoint span - use `ctx.request.href` instead of `ctx.request.originalUrl`.
+- Masterdata sort typing and scroll pagination.
+
 ## [6.30.1] - 2020-05-21
 ### Changed
 - Remove `serverTiming` metrics from client headers.
