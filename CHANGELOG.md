@@ -16,7 +16,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - [ErrorReport] Log ErrorReport errors created on `HttpClient` requests or thrown by user handlers to splunk.
 - [ErrorReport] Add error metadata on span logs instead of on span tags.
-- [tracing:entrypoint] Log incoming request headers and outgoing response headers.
 - [tracing] Use remote sampling.
 
 ### Fixed

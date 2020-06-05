@@ -31,8 +31,6 @@ export const addTracingMiddleware = (tracer: Tracer) => {
 
     ctx.tracing = { currentSpan, tracer }
 
-    currentSpan.log({ event: 'request-headers', headers: ctx.request.headers })
-
     try {
       await next()
     } catch (err) {
@@ -40,7 +38,6 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       throw err
     } finally {
       currentSpan.setTag(Tags.HTTP_STATUS_CODE, ctx.response.status)
-      currentSpan.log({ event: 'response-headers', headers: ctx.response.headers })
       currentSpan.finish()
 
       const traceInfo = getTraceInfo(currentSpan)
