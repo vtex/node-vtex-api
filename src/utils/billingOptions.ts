@@ -1,9 +1,43 @@
-import { isNil } from 'ramda'
+export const isFreeBillingOptions = (billingOptions: BillingOptions): boolean =>
 
-import { BillingOptions, CalculationItem, FixedCalculationItem, FreeBillingOptions, LegacyFreeBillingOptions } from '../responses'
+  billingOptions.type === BILLING_TYPE.FREE
+export interface BillingOptions {
+  type: string
+  support: Support
+  availableCountries: string[]
+  plans?: Plan[]
+}
 
-export const isFreeBillingOptions = (billingOptions: BillingOptions): billingOptions is FreeBillingOptions | LegacyFreeBillingOptions =>
-  (billingOptions as LegacyFreeBillingOptions).free || (billingOptions as FreeBillingOptions).type === 'free'
+export enum BILLING_TYPE {
+  FREE = 'free',
+  BILLABLE = 'billable',
+  SPONSORED = 'sponsored',
+}
 
-export const isFixedCalculationItem = (item: CalculationItem): item is FixedCalculationItem =>
-  !isNil((item as FixedCalculationItem).fixed)
+export interface Metric {
+  id: string
+  ranges: Range[]
+  customUrl: string
+}
+
+export interface Range {
+  exclusiveFrom: number
+  inclusiveTo: number
+  multiplier: number
+}
+
+export interface Plan {
+  id: string
+  currency: string
+  price: Price
+}
+
+export interface Price {
+  subscription: number
+  metrics?: Metric[]
+}
+
+export interface Support {
+  url: string
+  email: string
+}
