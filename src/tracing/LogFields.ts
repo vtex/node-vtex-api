@@ -22,3 +22,21 @@ export const LOG_FIELDS = {
   EVENT: 'event',
   ...ERROR_REPORT,
 }
+
+export const LOG_EVENTS = {
+  // Request headers on the incoming request or
+  // outgoing requests on clients
+  REQUEST_HEADERS: 'request-headers',
+
+  // Outgoing response headers on the server
+  // or incoming request headers on clients
+  RESPONSE_HEADERS: 'response-headers',
+
+  // Incoming request on the server or
+  // the outgoing request on clients was aborted
+  REQUEST_ABORTED: 'request-aborted',
+
+  // Incoming request on the server finished running all middlewares
+  // However the response streaming may be still running 
+  REQUEST_MIDDLEWARES_FINISHED: 'request-middlewares-finished',
+}
