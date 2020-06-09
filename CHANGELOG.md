@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - [tracing] Finish entrypoint span when response finishes streaming.
 
 ### Changed
-- New `billingOptions` type.
+- Update `billingOptions` type.
 
 ## [6.34.0] - 2020-07-03
 ### Fixed
