@@ -1,168 +1,47 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
     "definitions": {
-        "BillingChargeElements": {
+        "BILLING_TYPE": {
+            "enum": [
+                "billable",
+                "free",
+                "sponsored"
+            ],
+            "type": "string"
+        },
+        "BillingOptions": {
             "properties": {
-                "items": {
+                "availableCountries": {
                     "items": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/definitions/FixedCalculationItem"
-                            },
-                            {
-                                "$ref": "#/definitions/MetricBasedCalculationItem"
-                            }
-                        ]
+                        "type": "string"
                     },
                     "type": "array"
                 },
-                "taxClassification": {
-                    "type": "string"
+                "plans": {
+                    "items": {
+                        "$ref": "#/definitions/Plan"
+                    },
+                    "type": "array"
+                },
+                "support": {
+                    "$ref": "#/definitions/Support"
+                },
+                "type": {
+                    "$ref": "#/definitions/BILLING_TYPE"
                 }
             },
             "type": "object"
         },
-        "BillingPolicy": {
+        "Plan": {
             "properties": {
-                "billing": {
-                    "$ref": "#/definitions/BillingChargeElements"
-                },
                 "currency": {
                     "type": "string"
-                }
-            },
-            "type": "object"
-        },
-        "CalculatedByMetricUnit": {
-            "properties": {
-                "metricId": {
+                },
+                "id": {
                     "type": "string"
                 },
-                "metricName": {
-                    "type": "string"
-                },
-                "metricsRoute": {
-                    "type": "string"
-                },
-                "ranges": {
-                    "items": {
-                        "$ref": "#/definitions/Range"
-                    },
-                    "type": "array"
-                }
-            },
-            "type": "object"
-        },
-        "ChargeableBillingOptions": {
-            "properties": {
-                "policies": {
-                    "items": {
-                        "$ref": "#/definitions/BillingPolicy"
-                    },
-                    "type": "array"
-                },
-                "setupRoute": {
-                    "type": "string"
-                },
-                "support": {
-                    "$ref": "#/definitions/Support"
-                },
-                "termsURL": {
-                    "type": "string"
-                },
-                "type": {
-                    "enum": [
-                        "chargeable"
-                    ],
-                    "type": "string"
-                }
-            },
-            "type": "object"
-        },
-        "FixedCalculationItem": {
-            "properties": {
-                "fixed": {
-                    "type": "number"
-                },
-                "itemCurrency": {
-                    "type": "string"
-                }
-            },
-            "type": "object"
-        },
-        "FreeBillingOptions": {
-            "properties": {
-                "setupRoute": {
-                    "type": "string"
-                },
-                "support": {
-                    "$ref": "#/definitions/Support"
-                },
-                "termsURL": {
-                    "type": "string"
-                },
-                "type": {
-                    "enum": [
-                        "free"
-                    ],
-                    "type": "string"
-                }
-            },
-            "type": "object"
-        },
-        "LegacyChargeableBillingOptions": {
-            "properties": {
-                "free": {
-                    "enum": [
-                        false
-                    ],
-                    "type": "boolean"
-                },
-                "policies": {
-                    "items": {
-                        "$ref": "#/definitions/BillingPolicy"
-                    },
-                    "type": "array"
-                },
-                "setupRoute": {
-                    "type": "string"
-                },
-                "support": {
-                    "$ref": "#/definitions/Support"
-                },
-                "termsURL": {
-                    "type": "string"
-                }
-            },
-            "type": "object"
-        },
-        "LegacyFreeBillingOptions": {
-            "properties": {
-                "free": {
-                    "enum": [
-                        true
-                    ],
-                    "type": "boolean"
-                },
-                "setupRoute": {
-                    "type": "string"
-                },
-                "support": {
-                    "$ref": "#/definitions/Support"
-                },
-                "termsURL": {
-                    "type": "string"
-                }
-            },
-            "type": "object"
-        },
-        "MetricBasedCalculationItem": {
-            "properties": {
-                "calculatedByMetricUnit": {
-                    "$ref": "#/definitions/CalculatedByMetricUnit"
-                },
-                "itemCurrency": {
-                    "type": "string"
+                "price": {
+                    "$ref": "#/definitions/Price"
                 }
             },
             "type": "object"
@@ -181,6 +60,37 @@
             },
             "type": "object"
         },
+        "Price": {
+            "properties": {
+                "metrics": {
+                    "items": {
+                        "$ref": "#/definitions/PriceMetric"
+                    },
+                    "type": "array"
+                },
+                "subscription": {
+                    "type": "number"
+                }
+            },
+            "type": "object"
+        },
+        "PriceMetric": {
+            "properties": {
+                "customUrl": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "ranges": {
+                    "items": {
+                        "$ref": "#/definitions/Range"
+                    },
+                    "type": "array"
+                }
+            },
+            "type": "object"
+        },
         "Range": {
             "properties": {
                 "exclusiveFrom": {
@@ -191,26 +101,6 @@
                 },
                 "multiplier": {
                     "type": "number"
-                }
-            },
-            "type": "object"
-        },
-        "SponsoredBillingOptions": {
-            "properties": {
-                "setupRoute": {
-                    "type": "string"
-                },
-                "support": {
-                    "$ref": "#/definitions/Support"
-                },
-                "termsURL": {
-                    "type": "string"
-                },
-                "type": {
-                    "enum": [
-                        "sponsored"
-                    ],
-                    "type": "string"
                 }
             },
             "type": "object"
@@ -229,23 +119,7 @@
     },
     "properties": {
         "billingOptions": {
-            "anyOf": [
-                {
-                    "$ref": "#/definitions/FreeBillingOptions"
-                },
-                {
-                    "$ref": "#/definitions/LegacyFreeBillingOptions"
-                },
-                {
-                    "$ref": "#/definitions/ChargeableBillingOptions"
-                },
-                {
-                    "$ref": "#/definitions/LegacyChargeableBillingOptions"
-                },
-                {
-                    "$ref": "#/definitions/SponsoredBillingOptions"
-                }
-            ]
+            "$ref": "#/definitions/BillingOptions"
         },
         "builders": {
             "additionalProperties": {

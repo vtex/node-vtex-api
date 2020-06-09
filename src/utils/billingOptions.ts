@@ -1,8 +1,7 @@
 export const isFreeBillingOptions = (billingOptions: BillingOptions): boolean =>
-
   billingOptions.type === BILLING_TYPE.FREE
 export interface BillingOptions {
-  type: string
+  type: BILLING_TYPE
   support: Support
   availableCountries: string[]
   plans?: Plan[]
@@ -14,7 +13,7 @@ export enum BILLING_TYPE {
   SPONSORED = 'sponsored',
 }
 
-export interface Metric {
+export interface PriceMetric {
   id: string
   ranges: Range[]
   customUrl: string
@@ -34,7 +33,7 @@ export interface Plan {
 
 export interface Price {
   subscription: number
-  metrics?: Metric[]
+  metrics?: PriceMetric[]
 }
 
 export interface Support {
