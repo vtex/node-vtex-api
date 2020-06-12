@@ -16,6 +16,18 @@ export class ErrorReport extends ErrorReportBase {
     return new ErrorReport(createErrorReportBaseArgs(args))
   }
 
+  /**
+   * In case the err argument is a ErrorReport already it just return it
+   * If it's not, it returns a new generic ErrorReport wrapping the error
+   */
+  public static maybeWrapError(err: Error | ErrorReport): ErrorReport {
+    if (err instanceof ErrorReport) {
+      return err
+    }
+
+    return ErrorReport.create({ originalError: err })
+  }
+
   public injectOnSpan(span: Span, logger?: IOContext['logger']) {
     span.setTag(TracingTags.ERROR, 'true')
 
