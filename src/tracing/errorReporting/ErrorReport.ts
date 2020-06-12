@@ -13,7 +13,7 @@ import { getTraceInfo } from '../utils'
 
 export class ErrorReport extends ErrorReportBase {
   /**
-   * Create a new ErrorReport wrapping the args.originalError
+   * Create a new ErrorReport wrapping args.originalError
    *
    * In case the args.originalError argument is a ErrorReport already it just return it
    * If it's not, it returns a new ErrorReport wrapping the error.
