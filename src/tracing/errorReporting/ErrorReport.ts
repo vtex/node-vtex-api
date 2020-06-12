@@ -15,9 +15,10 @@ export class ErrorReport extends ErrorReportBase {
   /**
    * Create a new ErrorReport wrapping args.originalError
    *
-   * In case the args.originalError argument is a ErrorReport already it just return it
-   * If it's not, it returns a new ErrorReport wrapping the error.
-   * This way you can use this function as a catchAll, e.g.:
+   * In case the args.originalError argument is already an ErrorReport
+   * instance, then ErrorReport.create just returns it. If it's not,
+   * it returns a new ErrorReport wrapping the error. This way you can
+   * use ErrorReport.create on a catchAll, e.g.:
    *
    * ```
    * try {
@@ -27,7 +28,7 @@ export class ErrorReport extends ErrorReportBase {
    * }
    * ```
    *
-   * More docs on ErrorReport available on: https://github.com/vtex/node-error-report
+   * More docs on the ErrorReport available on: https://github.com/vtex/node-error-report
    */
   public static create(args: ErrorReportCreateArgs): ErrorReport {
     if (args.originalError instanceof ErrorReport) {
@@ -38,9 +39,9 @@ export class ErrorReport extends ErrorReportBase {
   }
 
   /**
-   * Inject information about the error on the provided Span.
-   * If a logger is provided and the span is part of a **sampled**
-   * trace, then the error will be logged.
+   * Inject information about the error wrapped by this ErrorReport
+   * instance on the provided Span. If a logger is provided and the
+   * span is part of a **sampled** trace, then the error will be logged.
    */
   public injectOnSpan(span: Span, logger?: IOContext['logger']) {
     span.setTag(TracingTags.ERROR, 'true')
