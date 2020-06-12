@@ -1,10 +1,9 @@
 import { FORMAT_HTTP_HEADERS, SpanContext, Tracer } from 'opentracing'
 import { ACCOUNT_HEADER, REQUEST_ID_HEADER, TRACE_ID_HEADER, WORKSPACE_HEADER } from '../../constants'
-import { getTraceInfo } from '../../tracing'
+import { ErrorReport, getTraceInfo } from '../../tracing'
 import { Tags } from '../../tracing/Tags'
 import { UserLandTracer } from '../../tracing/UserLandTracer'
 import { ServiceContext } from '../worker/runtime/typings'
-import { injectErrorOnSpan } from './spanSetup'
 
 const PATHS_BLACKLISTED_FOR_TRACING = ['/metrics', '/_status', '/healthcheck']
 
@@ -36,7 +35,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
     try {
       await next()
     } catch (err) {
-      injectErrorOnSpan(currentSpan, err, ctx.vtex?.logger)
+      ErrorReport.create({ originalError: err }).injectOnSpan(currentSpan)
       throw err
     } finally {
       currentSpan.setTag(Tags.HTTP_STATUS_CODE, ctx.response.status)
@@ -71,7 +70,7 @@ export const traceUserLandRemainingPipelineMiddleware = (spanName: string, tags:
     try {
       await next()
     } catch (err) {
-      injectErrorOnSpan(span, err, ctx.vtex.logger)
+      ErrorReport.create({ originalError: err }).injectOnSpan(span)
       throw err
     } finally {
       ctx.tracing = tracingCtx
