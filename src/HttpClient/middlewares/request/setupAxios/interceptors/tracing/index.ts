@@ -1,7 +1,6 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { FORMAT_HTTP_HEADERS, Span } from 'opentracing'
-import { injectErrorOnSpan } from '../../../../../../service/tracing/spanSetup'
-import { createSpanReference } from '../../../../../../tracing'
+import { createSpanReference, ErrorReport } from '../../../../../../tracing'
 import { SpanReferenceTypes } from '../../../../../../tracing/spanReference/SpanReferenceTypes'
 import { AxiosTracingConfig } from '../../../../../typings'
 import { injectRequestInfoOnSpan, injectResponseInfoOnSpan } from './spanSetup'
@@ -67,7 +66,7 @@ const onResponseError = (err: any) => {
 
   const { requestSpan } = err.config.tracing
   injectResponseInfoOnSpan(requestSpan, err.response)
-  injectErrorOnSpan(requestSpan, err, err.config.tracing.logger)
+  ErrorReport.maybeWrapError(err).injectOnSpan(requestSpan)
   requestSpan.finish()
   return Promise.reject(err)
 }
