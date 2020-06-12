@@ -26,7 +26,7 @@ type ServerTiming = Record<string, string>
 
 export type Maybe<T> = T | null | undefined
 
-export interface TracingContext {
+export interface RuntimeTracingContext {
   tracer: Tracer
   currentSpan: Span
 }
@@ -38,7 +38,7 @@ export interface Context<T extends IOClients> {
   metrics: Record<string, [number, number]>
   previousTimerStart: [number, number]
   serverTiming?: ServerTiming
-  tracing?: TracingContext
+  tracing?: RuntimeTracingContext
 }
 
 export interface EventContext<T extends IOClients, StateT = any> {

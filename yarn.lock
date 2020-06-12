@@ -410,13 +410,6 @@
   dependencies:
     type-detect "4.0.8"
 
-"@tiagonapoli/opentracing-alternate-mock@^0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@tiagonapoli/opentracing-alternate-mock/-/opentracing-alternate-mock-0.0.3.tgz#bdec9aca7702057872d16488e28170063494a9cb"
-  integrity sha512-8+EFKQeNHtPneYwcOG4eg3vIOSL1hK3y3jyazsUIL8DUSzz6EI/xaZB8Hrm71VXUD+wB/IIf296bhclvfu1jxg==
-  dependencies:
-    opentracing "^0.14.4"
-
 "@types/accepts@*":
   version "1.3.5"
   resolved "https://registry.yarnpkg.com/@types/accepts/-/accepts-1.3.5.tgz#c34bec115cfc746e04fe5a059df4ce7e7b391575"
@@ -762,6 +755,13 @@
   integrity sha512-Q6V8E1IR/U0H6uTB1G+gH4ugL4Kw1l/WsK7W46LQBsxv4ISlZcO7dXPlWrL4RzRcVam5yzGAwNkv2wJdW61tAA==
   dependencies:
     is-stream "^2.0.0"
+
+"@vtex/node-tracing-mocks@^0.0.2":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/@vtex/node-tracing-mocks/-/node-tracing-mocks-0.0.2.tgz#cf5ddd69d146452b8c7d6334d494a304f76c7fb7"
+  integrity sha512-CjtvDsypniE1z7laLNbbQtJ5J04c2+Tb+6euqD+u7WQ0UUe19rfanSkFQ1zqQKIFpleYdqd/R8PxWhNCwAGVyA==
+  dependencies:
+    opentracing "^0.14.4"
 
 "@wry/equality@^0.1.2", "@wry/equality@^0.1.9":
   version "0.1.9"
@@ -1910,6 +1910,11 @@ expand-brackets@^2.1.4:
     regex-not "^1.0.0"
     snapdragon "^0.8.1"
     to-regex "^3.0.1"
+
+expect-type@^0.7.4:
+  version "0.7.4"
+  resolved "https://registry.yarnpkg.com/expect-type/-/expect-type-0.7.4.tgz#588739f5e86e6713df49ae43812570f11225f9d7"
+  integrity sha512-/ykfDxhYq9vz/EgqH8YTeIehvb9YCP2W7qztpEqm84LaA23nOeGe6+H7huxxfncehig2bV0S0Gyhf+ncUwt2Mg==
 
 expect@^25.1.0:
   version "25.1.0"
@@ -5056,10 +5061,10 @@ typescript@^3.5.3:
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.7.5.tgz#0692e21f65fd4108b9330238aac11dd2e177a1ae"
   integrity sha512-/P5lkRXkWHNAbcJIiHPfRoKqyd7bsyCma1hZNUGfn20qm64T6ZBlrzprymeu918H+mB/0rIg2gGK/BXkhhYgBw==
 
-typescript@^3.8.3:
-  version "3.8.3"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.8.3.tgz#409eb8544ea0335711205869ec458ab109ee1061"
-  integrity sha512-MYlEfn5VrLNsgudQTVJeNaQFUAI7DkhnOjdpAp4T+ku1TfQClewlbSuTVHiA+8skNBgaf02TL/kLOvig4y3G8w==
+typescript@^3.9.5:
+  version "3.9.5"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-3.9.5.tgz#586f0dba300cde8be52dd1ac4f7e1009c1b13f36"
+  integrity sha512-hSAifV3k+i6lEoCJ2k6R2Z/rp/H3+8sdmcn5NrS3/3kE7+RyZXm9aqvxWqjEXHAd8b0pShatpcdMTvEdvAJltQ==
 
 union-value@^1.0.0:
   version "1.0.1"

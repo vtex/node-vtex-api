@@ -21,7 +21,7 @@ import {
 import { UserLandTracer } from '../../../../tracing/UserLandTracer'
 import { parseTenantHeaderValue } from '../../../../utils/tenant'
 import { Logger } from '../../../logger'
-import { IOContext, TracingContext } from '../typings'
+import { IOContext, RuntimeTracingContext } from '../typings'
 import { parseBindingHeaderValue } from './../../../../utils/binding'
 
 type HandlerContext = Omit<IOContext, 'route'>
@@ -30,7 +30,7 @@ const getPlatform = (account: string): string => {
   return account.startsWith('gc-') ? 'gocommerce' : 'vtex'
 }
 
-export const prepareHandlerCtx = (header: Context['request']['header'], tracingContext: TracingContext): HandlerContext => {
+export const prepareHandlerCtx = (header: Context['request']['header'], tracingContext: RuntimeTracingContext): HandlerContext => {
   const partialContext = {
     account: header[ACCOUNT_HEADER],
     authToken: header[CREDENTIAL_HEADER],
