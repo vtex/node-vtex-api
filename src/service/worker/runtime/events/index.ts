@@ -33,7 +33,7 @@ export const createEventHandler = <T extends IOClients, U extends RecorderState,
     ...(serviceEvent?.settingsType === 'workspace' || serviceEvent?.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     timings,
     error,
-    traceUserLandRemainingPipelineMiddleware(`user-event-handler:${eventId}`),
+    traceUserLandRemainingPipelineMiddleware(),
     contextAdapter<T, U, V>(middlewares),
   ]
   return compose(pipeline)
