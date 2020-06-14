@@ -5,6 +5,7 @@ import { LOG_EVENTS, LOG_FIELDS } from '../../tracing/LogFields'
 import { Tags } from '../../tracing/Tags'
 import { UserLandTracer } from '../../tracing/UserLandTracer'
 import { hrToMillis } from '../../utils'
+import { addPrefixOntoObjectKeys } from '../../utils/addPrefixOntoObjectKeys'
 import { ServiceContext } from '../worker/runtime/typings'
 
 const PATHS_BLACKLISTED_FOR_TRACING = ['/metrics', '/_status', '/healthcheck']
@@ -16,23 +17,8 @@ export const addTracingMiddleware = (tracer: Tracer) => {
     }
 
     const rootSpan = tracer.extract(FORMAT_HTTP_HEADERS, ctx.request.headers) as undefined | SpanContext
-
-    const currentSpan = tracer.startSpan('unknown-operation', {
-      childOf: rootSpan,
-      tags: {
-        [Tags.SPAN_KIND]: Tags.SPAN_KIND_RPC_SERVER,
-        [Tags.HTTP_URL]: ctx.request.href,
-        [Tags.HTTP_METHOD]: ctx.request.method,
-        [Tags.HTTP_PATH]: ctx.request.path,
-        [Tags.VTEX_REQUEST_ID]: ctx.get(REQUEST_ID_HEADER),
-        [Tags.VTEX_WORKSPACE]: ctx.get(WORKSPACE_HEADER),
-        [Tags.VTEX_ACCOUNT]: ctx.get(ACCOUNT_HEADER),
-      },
-    })
-
+    const currentSpan = tracer.startSpan('unknown-operation', { childOf: rootSpan })
     ctx.tracing = { currentSpan, tracer }
-
-    currentSpan.log({ event: 'request-headers', headers: ctx.request.headers })
 
     try {
       await next()
@@ -40,14 +26,25 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       ErrorReport.create({ originalError: err }).injectOnSpan(currentSpan, ctx.vtex?.logger)
       throw err
     } finally {
-      currentSpan.setTag(Tags.HTTP_STATUS_CODE, ctx.response.status)
-      currentSpan.log({ event: 'response-headers', headers: ctx.response.headers })
-      currentSpan.finish()
-
       const traceInfo = getTraceInfo(currentSpan)
       if (traceInfo.isSampled) {
+        currentSpan.addTags({
+          [Tags.SPAN_KIND]: Tags.SPAN_KIND_RPC_SERVER,
+          [Tags.HTTP_URL]: ctx.request.href,
+          [Tags.HTTP_METHOD]: ctx.request.method,
+          [Tags.HTTP_PATH]: ctx.request.path,
+          [Tags.HTTP_STATUS_CODE]: ctx.response.status,
+          [Tags.VTEX_REQUEST_ID]: ctx.get(REQUEST_ID_HEADER),
+          [Tags.VTEX_WORKSPACE]: ctx.get(WORKSPACE_HEADER),
+          [Tags.VTEX_ACCOUNT]: ctx.get(ACCOUNT_HEADER),
+        })
+
+        currentSpan.log(addPrefixOntoObjectKeys('req.headers', ctx.request.headers))
+        currentSpan.log(addPrefixOntoObjectKeys('res.headers', ctx.response.headers))
         ctx.set(TRACE_ID_HEADER, traceInfo.traceId)
       }
+
+      currentSpan.finish()
     }
   }
 }
