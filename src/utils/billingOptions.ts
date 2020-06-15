@@ -37,6 +37,7 @@ export interface Price {
 }
 
 export interface Support {
-  url: string
   email: string
+  url?: string
+  phone?: string
 }
