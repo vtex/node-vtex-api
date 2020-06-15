@@ -66,7 +66,7 @@ const onResponseError = (err: any) => {
 
   const { requestSpan } = err.config.tracing
   injectResponseInfoOnSpan(requestSpan, err.response)
-  ErrorReport.create({ originalError: err }).injectOnSpan(requestSpan)
+  ErrorReport.create({ originalError: err }).injectOnSpan(requestSpan, err.config.tracing.logger)
   requestSpan.finish()
   return Promise.reject(err)
 }
