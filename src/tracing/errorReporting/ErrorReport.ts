@@ -12,10 +12,37 @@ import { LOG_FIELDS } from '../LogFields'
 import { getTraceInfo } from '../utils'
 
 export class ErrorReport extends ErrorReportBase {
-  public static create(args: ErrorReportCreateArgs) {
+  /**
+   * Create a new ErrorReport wrapping args.originalError
+   *
+   * In case the args.originalError argument is already an ErrorReport
+   * instance, then ErrorReport.create just returns it. If it's not,
+   * it returns a new ErrorReport wrapping the error. This way you can
+   * use ErrorReport.create on a catchAll, e.g.:
+   *
+   * ```
+   * try {
+   *   await next()
+   * } catch(err) {
+   *   ErrorReport.create({ originalError: err }).injectOnSpan(span)
+   * }
+   * ```
+   *
+   * More docs on the ErrorReport available on: https://github.com/vtex/node-error-report
+   */
+  public static create(args: ErrorReportCreateArgs): ErrorReport {
+    if (args.originalError instanceof ErrorReport) {
+      return args.originalError
+    }
+
     return new ErrorReport(createErrorReportBaseArgs(args))
   }
 
+  /**
+   * Inject information about the error wrapped by this ErrorReport
+   * instance on the provided Span. If a logger is provided and the
+   * span is part of a **sampled** trace, then the error will be logged.
+   */
   public injectOnSpan(span: Span, logger?: IOContext['logger']) {
     span.setTag(TracingTags.ERROR, 'true')
 
