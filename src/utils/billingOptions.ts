@@ -21,7 +21,7 @@ export interface PriceMetric {
 
 export interface Range {
   exclusiveFrom: number
-  inclusiveTo: number
+  inclusiveTo?: number
   multiplier: number
 }
 
@@ -32,7 +32,7 @@ export interface Plan {
 }
 
 export interface Price {
-  subscription: number
+  subscription?: number
   metrics?: PriceMetric[]
 }
 
