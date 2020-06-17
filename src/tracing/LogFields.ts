@@ -8,7 +8,7 @@
  * strings and can be searched in the jaeger-ui
  */
 
-const ERROR_REPORT = {
+export const ErrorReportLogFields = {
   /**
    * ErrorReport class has some meta info on the error
    * The following log fields hold this meta info
@@ -22,20 +22,4 @@ const ERROR_REPORT = {
    */
   ERROR_SERVER_CODE: 'error.server.code',
   ERROR_SERVER_REQUEST_ID: 'error.server.request_id',
-}
-
-export const LOG_FIELDS = {
-  EVENT: 'event',
-  
-  /** Time in ms spent to run the user middlewares */
-  USER_MIDDLEWARES_DURATION: 'user-middlewares-duration',
-  ...ERROR_REPORT,
-}
-
-export const LOG_EVENTS = {
-  /** Event representing that userland middlewares are about to start */
-  USER_MIDDLEWARES_START: 'user-middlewares-start',
-
-  /** Event representing that userland middlewares just finished */
-  USER_MIDDLEWARES_FINISH: 'user-middlewares-finish',
 }
