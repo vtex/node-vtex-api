@@ -26,6 +26,9 @@ const ERROR_REPORT = {
 
 export const LOG_FIELDS = {
   EVENT: 'event',
+  
+  /** Time in ms spent to run the user middlewares */
+  USER_MIDDLEWARES_DURATION: 'user-middlewares-duration',
   ...ERROR_REPORT,
 }
 
