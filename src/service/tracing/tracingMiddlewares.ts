@@ -1,8 +1,10 @@
 import { FORMAT_HTTP_HEADERS, SpanContext, Tracer } from 'opentracing'
 import { ACCOUNT_HEADER, REQUEST_ID_HEADER, TRACE_ID_HEADER, WORKSPACE_HEADER } from '../../constants'
 import { ErrorReport, getTraceInfo } from '../../tracing'
+import { LOG_EVENTS, LOG_FIELDS } from '../../tracing/LogFields'
 import { Tags } from '../../tracing/Tags'
 import { UserLandTracer } from '../../tracing/UserLandTracer'
+import { hrToMillis } from '../../utils'
 import { ServiceContext } from '../worker/runtime/typings'
 
 const PATHS_BLACKLISTED_FOR_TRACING = ['/metrics', '/_status', '/healthcheck']
@@ -57,24 +59,26 @@ export const nameSpanOperationMiddleware = (operationType: string, operationName
   }
 }
 
-export const traceUserLandRemainingPipelineMiddleware = (spanName: string, tags: Record<string, string> = {}) => {
+export const traceUserLandRemainingPipelineMiddleware = () => {
   return async function traceUserLandRemainingPipeline(ctx: ServiceContext, next: () => Promise<void>) {
     const tracingCtx = ctx.tracing!
     ctx.tracing = undefined
 
-    const span = tracingCtx.tracer.startSpan(spanName, { childOf: tracingCtx.currentSpan, tags })
+    const span = tracingCtx.currentSpan
     const userLandTracer = ctx.vtex.tracer! as UserLandTracer
     userLandTracer.setFallbackSpan(span)
     userLandTracer.lockFallbackSpan()
+    const startTime = process.hrtime()
 
     try {
+      span.log({ event: LOG_EVENTS.USER_MIDDLEWARES_START })
       await next()
     } catch (err) {
       ErrorReport.create({ originalError: err }).injectOnSpan(span, ctx.vtex.logger)
       throw err
     } finally {
+      span.log({ event: LOG_EVENTS.USER_MIDDLEWARES_FINISH, [LOG_FIELDS.USER_MIDDLEWARES_DURATION]: hrToMillis(process.hrtime(startTime)) })
       ctx.tracing = tracingCtx
-      span.finish()
     }
   }
 }
