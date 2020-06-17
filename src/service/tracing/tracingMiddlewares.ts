@@ -1,7 +1,7 @@
 import { FORMAT_HTTP_HEADERS, SpanContext, Tracer } from 'opentracing'
 import { ACCOUNT_HEADER, REQUEST_ID_HEADER, TRACE_ID_HEADER, WORKSPACE_HEADER } from '../../constants'
 import { ErrorReport, getTraceInfo } from '../../tracing'
-import { LOG_EVENTS } from '../../tracing/LogFields'
+import { LOG_EVENTS, LOG_FIELDS } from '../../tracing/LogFields'
 import { Tags } from '../../tracing/Tags'
 import { UserLandTracer } from '../../tracing/UserLandTracer'
 import { hrToMillis } from '../../utils'
@@ -77,7 +77,7 @@ export const traceUserLandRemainingPipelineMiddleware = () => {
       ErrorReport.create({ originalError: err }).injectOnSpan(span, ctx.vtex.logger)
       throw err
     } finally {
-      span.log({ event: LOG_EVENTS.USER_MIDDLEWARES_FINISH, 'duration-ms': hrToMillis(process.hrtime(startTime)) })
+      span.log({ event: LOG_EVENTS.USER_MIDDLEWARES_FINISH, [LOG_FIELDS.USER_MIDDLEWARES_DURATION]: hrToMillis(process.hrtime(startTime)) })
       ctx.tracing = tracingCtx
     }
   }
