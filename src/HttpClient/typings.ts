@@ -11,23 +11,14 @@ import { Cached, CacheType } from './middlewares/cache'
 
 export type InflightKeyGenerator = (x: RequestConfig) => string
 
-interface RequestTracingUserConfiguration {
+interface RequestTracingUserConfig {
   rootSpan?: Span
   referenceType?: SpanReferenceTypes
   requestSpanNameSuffix?: string
 }
 
-export interface AxiosTracingConfig extends RequestTracingUserConfiguration {
-  tracer: IUserLandTracer
-  logger: IOContext['logger']
-}
-
-export interface TraceableRequestConfig extends RequestConfig {
-  tracing?: AxiosTracingConfig
-}
-
 export interface RequestTracingConfig {
-  tracing?: RequestTracingUserConfiguration
+  tracing?: RequestTracingUserConfig
 }
 
 export interface RequestConfig extends AxiosRequestConfig, RequestTracingConfig {
@@ -61,6 +52,7 @@ export interface RequestConfig extends AxiosRequestConfig, RequestTracingConfig 
   nullIfNotFound?: boolean
   ignoreRecorder?: boolean
 }
+
 export interface CacheHit {
   disk?: 0 | 1
   memory?: 0 | 1
@@ -68,8 +60,16 @@ export interface CacheHit {
   router?: 0 | 1
 }
 
+export interface MiddlewaresTracingContext extends Omit<RequestTracingUserConfig, 'rootSpan'> {
+  tracer: IUserLandTracer
+  logger: IOContext['logger']
+  rootSpan: Span
+  isSampled: boolean
+}
+
 export interface MiddlewareContext {
   config: RequestConfig
+  tracing?: MiddlewaresTracingContext
   response?: AxiosResponse
   cacheHit?: CacheHit
   inflightHit?: boolean

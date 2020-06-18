@@ -40,6 +40,7 @@ const onResponseError = (http: AxiosInstance) => (error: any) => {
     exponentialBackoffCoefficient = 2,
     exponentialTimeoutCoefficient,
   } = config
+
   const retryCount = config.retryCount || 0
   const shouldRetry =
     isAbortedOrNetworkErrorOrRouterTimeout(error) && retryCount < config.retries
@@ -51,6 +52,7 @@ const onResponseError = (http: AxiosInstance) => (error: any) => {
       config.retryCount
     )
 
+
     // Axios fails merging this configuration to the default configuration because it has an issue
     // with circular structures: https://github.com/mzabriskie/axios/issues/370
     fixConfig(http, config)
@@ -59,10 +61,9 @@ const onResponseError = (http: AxiosInstance) => (error: any) => {
       ? (config.timeout as number) * exponentialTimeoutCoefficient
       : config.timeout
     config.transformRequest = [data => data]
-
-    return new Promise(resolve =>
-      setTimeout(() => resolve(http(config)), delay)
-    )
+    
+    config.tracing!.rootSpan!.log({ event: 'retryable-request-fail', retryCount: config.retryCount, retryInMs: delay })
+    return new Promise(resolve => setTimeout(() => resolve(http(config)), delay))
   }
   return Promise.reject(error)
 }

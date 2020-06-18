@@ -15,7 +15,6 @@ import {
   TENANT_HEADER,
 } from '../constants'
 import { IOContext } from '../service/worker/runtime/typings'
-import { IUserLandTracer } from '../tracing/UserLandTracer'
 import { formatBindingHeaderValue } from '../utils/binding'
 import { formatTenantHeaderValue } from '../utils/tenant'
 import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
@@ -26,7 +25,8 @@ import { metricsMiddleware } from './middlewares/metrics'
 import { acceptNotFoundMiddleware, notFoundFallbackMiddleware } from './middlewares/notFound'
 import { recorderMiddleware } from './middlewares/recorder'
 import { defaultsMiddleware, requestMiddleware, routerCacheMiddleware } from './middlewares/request'
-import { InstanceOptions, IOResponse, MiddlewareContext, RequestConfig, TraceableRequestConfig } from './typings'
+import { createHttpClientTracingMiddleware } from './middlewares/tracing'
+import { InstanceOptions, IOResponse, MiddlewareContext, RequestConfig } from './typings'
 
 const DEFAULT_TIMEOUT_MS = 1000
 const noTransforms = [(data: any) => data]
@@ -36,8 +36,6 @@ type ClientOptions = IOContext & Partial<InstanceOptions>
 export class HttpClient {
   public name: string
 
-  private tracer: IOContext['tracer']
-  private logger: IOContext['logger']
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor(opts: ClientOptions) {
@@ -75,9 +73,6 @@ export class HttpClient {
     } = opts
     this.name = name || baseURL || 'unknown'
 
-    this.tracer = tracer
-    this.logger = logger
-
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
       ...defaultHeaders,
@@ -99,19 +94,21 @@ export class HttpClient {
 
     const memoizedCache = new Map<string, Promise<Memoized>>()
 
-    this.runMiddlewares = compose([...opts.middlewares || [],
-    defaultsMiddleware({ baseURL, rawHeaders: headers, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient, httpsAgent }),
-    metricsMiddleware({ metrics, serverTiming, name }),
-    memoizationMiddleware({ memoizedCache }),
-    ...recorder ? [recorderMiddleware(recorder)] : [],
-    cancellationToken(cancellation),
+    this.runMiddlewares = compose([
+      createHttpClientTracingMiddleware({ tracer, logger, clientName: this.name, hasDiskCacheMiddleware: !!diskCache, hasMemoryCacheMiddleware: !!memoryCache }),
+      ...(opts.middlewares || []),
+      defaultsMiddleware({ baseURL, rawHeaders: headers, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient, httpsAgent }),
+      metricsMiddleware({ metrics, serverTiming, name }),
+      memoizationMiddleware({ memoizedCache }),
+      ...recorder ? [recorderMiddleware(recorder)] : [],
+      cancellationToken(cancellation),
       singleFlightMiddleware,
       acceptNotFoundMiddleware,
-    ...memoryCache ? [cacheMiddleware({ type: CacheType.Memory, storage: memoryCache })] : [],
-    ...diskCache ? [cacheMiddleware({ type: CacheType.Disk, storage: diskCache })] : [],
+      ...memoryCache ? [cacheMiddleware({ type: CacheType.Memory, storage: memoryCache })] : [],
+      ...diskCache ? [cacheMiddleware({ type: CacheType.Disk, storage: diskCache })] : [],
       notFoundFallbackMiddleware,
       routerCacheMiddleware,
-    requestMiddleware(limit),
+      requestMiddleware(limit),
     ])
   }
 
@@ -184,12 +181,6 @@ export class HttpClient {
   }
 
   protected request = async (config: RequestConfig): Promise<AxiosResponse> => {
-    (config as TraceableRequestConfig).tracing = this.tracer ? { 
-      ...config.tracing,
-      logger: this.logger,
-      tracer: this.tracer,
-    } : undefined
-
     const context: MiddlewareContext = { config }
     await this.runMiddlewares(context)
     return context.response!

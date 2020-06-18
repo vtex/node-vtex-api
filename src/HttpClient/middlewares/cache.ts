@@ -2,6 +2,8 @@ import { AxiosRequestConfig, AxiosResponse } from 'axios'
 
 import { CacheLayer } from '../../caches/CacheLayer'
 import { LOCALE_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../../constants'
+import { HttpLogEvents } from '../../tracing/LogEvents'
+import { CustomHttpTags } from '../../tracing/Tags'
 import { MiddlewareContext, RequestConfig } from '../typings'
 
 const RANGE_HEADER_QS_KEY = '__range_header'
@@ -60,39 +62,65 @@ export enum CacheType {
   Any,
 }
 
+export const CacheResult = {
+  HIT: 'HIT',
+  MISS: 'MISS',
+  STALE: 'STALE',
+}
+
+const CacheTypeNames = {
+  [CacheType.None]: 'none',
+  [CacheType.Memory]: 'memory',
+  [CacheType.Disk]: 'disk',
+  [CacheType.Any]: 'any',
+}
+
 interface CacheOptions {
   type: CacheType
   storage: CacheLayer<string, Cached>
 }
 
-export const cacheMiddleware = ({type, storage}: CacheOptions) => {
+export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
+  const CACHE_RESULT_TAG = type === CacheType.Disk ? CustomHttpTags.HTTP_DISK_CACHE_RESULT : CustomHttpTags.HTTP_MEMORY_CACHE_RESULT
+  const cacheType = CacheTypeNames[type]
+
   return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
     if (!isLocallyCacheable(ctx.config, type)) {
       return await next()
     }
+    
+    const span = ctx.tracing!.rootSpan
     const key = cacheKey(ctx.config)
     const segmentToken = ctx.config.headers[SEGMENT_HEADER]
     const keyWithSegment = key + segmentToken
 
+    span.log({ event: HttpLogEvents.CACHE_KEY_CREATE, cacheType, key, keyWithSegment })
     const cacheHasWithSegment = await storage.has(keyWithSegment)
     const cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
 
     if (cached && cached.response) {
       const {etag: cachedEtag, response, expiration, responseType, responseEncoding} = cached as Cached
+
       if (type === CacheType.Disk && responseType === 'arraybuffer') {
         response.data = Buffer.from(response.data, responseEncoding)
       }
 
-      if (expiration > Date.now()) {
+      const now = Date.now()
+      span.log({ event: HttpLogEvents.LOCAL_CACHE_HIT_INFO, etag: cachedEtag, timeToExpirate: expiration-now, responseType, responseEncoding })
+
+      if (expiration > now) {
         ctx.response = response as AxiosResponse
         ctx.cacheHit = {
           memory: 1,
           revalidated: 0,
           router: 0,
         }
+
+        span.setTag(CACHE_RESULT_TAG, CacheResult.HIT)
         return
       }
 
+      span.setTag(CACHE_RESULT_TAG, CacheResult.STALE)
       const validateStatus = addNotModified(ctx.config.validateStatus!)
       if (cachedEtag && validateStatus(response.status as number)) {
         ctx.config.headers['if-none-match'] = cachedEtag
@@ -117,12 +145,17 @@ export const cacheMiddleware = ({type, storage}: CacheOptions) => {
     }
 
     const {data, headers, status} = ctx.response as AxiosResponse
-    const {age, etag, maxAge: headerMaxAge, noStore, noCache} = parseCacheHeaders(headers)
+    const parsedCacheHeaders = parseCacheHeaders(headers)
+    const {age, etag, maxAge: headerMaxAge, noStore, noCache} = parsedCacheHeaders
+    
     const {forceMaxAge} = ctx.config
     const maxAge = forceMaxAge && cacheableStatusCodes.includes(status) ? Math.max(forceMaxAge, headerMaxAge) : headerMaxAge
 
+    span.log({ event: HttpLogEvents.CACHE_CONFIG, ...parsedCacheHeaders, forceMaxAge, calculatedMaxAge: maxAge })
+
     // Indicates this should NOT be cached and this request will not be considered a miss.
     if (!forceMaxAge && (noStore || (noCache && !etag))) {
+      span.log({ event: HttpLogEvents.NO_LOCAL_CACHE_SAVE })
       return
     }
 
@@ -138,13 +171,16 @@ export const cacheMiddleware = ({type, storage}: CacheOptions) => {
         ? (data as Buffer).toString(responseEncoding)
         : data
 
+      const expiration = Date.now() + (maxAge - currentAge) * 1000
       await storage.set(setKey, {
         etag,
-        expiration: Date.now() + (maxAge - currentAge) * 1000,
+        expiration,
         response: {data: cacheableData, headers, status},
         responseEncoding,
         responseType,
       })
+
+      span.log({ event: HttpLogEvents.LOCAL_CACHE_SAVED, key: setKey, currentAge, expiration, etag })
       return
     }
   }
