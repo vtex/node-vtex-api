@@ -23,3 +23,8 @@ export const ErrorReportLogFields = {
   ERROR_SERVER_CODE: 'error.server.code',
   ERROR_SERVER_REQUEST_ID: 'error.server.request_id',
 }
+
+export const RuntimeLogFields = {
+  /** Time in ms spent to run the user middlewares */
+  USER_MIDDLEWARES_DURATION: 'user-middlewares-duration',
+}

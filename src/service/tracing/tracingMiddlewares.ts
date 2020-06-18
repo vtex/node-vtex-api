@@ -1,8 +1,9 @@
 import { FORMAT_HTTP_HEADERS, SpanContext, Tracer } from 'opentracing'
 import { ACCOUNT_HEADER, REQUEST_ID_HEADER, TRACE_ID_HEADER, WORKSPACE_HEADER } from '../../constants'
 import { ErrorReport, getTraceInfo } from '../../tracing'
-import { LOG_EVENTS, LOG_FIELDS } from '../../tracing/LogFields'
-import { Tags } from '../../tracing/Tags'
+import { RuntimeLogEvents } from '../../tracing/LogEvents'
+import { RuntimeLogFields } from '../../tracing/LogFields'
+import { CustomHttpTags, OpentracingTags, VTEXIncomingRequestTags } from '../../tracing/Tags'
 import { UserLandTracer } from '../../tracing/UserLandTracer'
 import { hrToMillis } from '../../utils'
 import { addPrefixOntoObjectKeys } from '../../utils/addPrefixOntoObjectKeys'
@@ -29,14 +30,14 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       const traceInfo = getTraceInfo(currentSpan)
       if (traceInfo.isSampled) {
         currentSpan.addTags({
-          [Tags.SPAN_KIND]: Tags.SPAN_KIND_RPC_SERVER,
-          [Tags.HTTP_URL]: ctx.request.href,
-          [Tags.HTTP_METHOD]: ctx.request.method,
-          [Tags.HTTP_PATH]: ctx.request.path,
-          [Tags.HTTP_STATUS_CODE]: ctx.response.status,
-          [Tags.VTEX_REQUEST_ID]: ctx.get(REQUEST_ID_HEADER),
-          [Tags.VTEX_WORKSPACE]: ctx.get(WORKSPACE_HEADER),
-          [Tags.VTEX_ACCOUNT]: ctx.get(ACCOUNT_HEADER),
+          [OpentracingTags.SPAN_KIND]: OpentracingTags.SPAN_KIND_RPC_SERVER,
+          [OpentracingTags.HTTP_URL]: ctx.request.href,
+          [OpentracingTags.HTTP_METHOD]: ctx.request.method,
+          [OpentracingTags.HTTP_STATUS_CODE]: ctx.response.status,
+          [CustomHttpTags.HTTP_PATH]: ctx.request.path,
+          [VTEXIncomingRequestTags.VTEX_REQUEST_ID]: ctx.get(REQUEST_ID_HEADER),
+          [VTEXIncomingRequestTags.VTEX_WORKSPACE]: ctx.get(WORKSPACE_HEADER),
+          [VTEXIncomingRequestTags.VTEX_ACCOUNT]: ctx.get(ACCOUNT_HEADER),
         })
 
         currentSpan.log(addPrefixOntoObjectKeys('req.headers', ctx.request.headers))
@@ -68,13 +69,16 @@ export const traceUserLandRemainingPipelineMiddleware = () => {
     const startTime = process.hrtime()
 
     try {
-      span.log({ event: LOG_EVENTS.USER_MIDDLEWARES_START })
+      span.log({ event: RuntimeLogEvents.USER_MIDDLEWARES_START })
       await next()
     } catch (err) {
       ErrorReport.create({ originalError: err }).injectOnSpan(span, ctx.vtex.logger)
       throw err
     } finally {
-      span.log({ event: LOG_EVENTS.USER_MIDDLEWARES_FINISH, [LOG_FIELDS.USER_MIDDLEWARES_DURATION]: hrToMillis(process.hrtime(startTime)) })
+      span.log({
+        event: RuntimeLogEvents.USER_MIDDLEWARES_FINISH,
+        [RuntimeLogFields.USER_MIDDLEWARES_DURATION]: hrToMillis(process.hrtime(startTime)),
+      })
       ctx.tracing = tracingCtx
     }
   }
