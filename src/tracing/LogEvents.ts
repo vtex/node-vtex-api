@@ -8,36 +8,33 @@
  * ```
  */
 
-export const HttpLogEvents = {
+export const enum HttpLogEvents {
   /** Event holding the cache key created */
-  CACHE_KEY_CREATE: 'cache-key-created',
+  CACHE_KEY_CREATE = 'cache-key-created',
 
   /** Event representing that the memoization cache has just saved a response */
-  MEMOIZATION_CACHE_SAVED: 'memoization-cache-saved',
+  MEMOIZATION_CACHE_SAVED = 'memoization-cache-saved',
 
   /** Event representing that the memoization cache has just saved a error response */
-  MEMOIZATION_CACHE_SAVED_ERROR: 'memoization-cache-saved-error',
-
-  /** Event holding stats on the client's memoization map */
-  MEMOIZATION_STATS: 'memoization-cache-stats',
+  MEMOIZATION_CACHE_SAVED_ERROR = 'memoization-cache-saved-error',
 
   /** Event holding information on a local cache hit that just happened */
-  LOCAL_CACHE_HIT_INFO: 'local-cache-hit-info',
+  LOCAL_CACHE_HIT_INFO = 'local-cache-hit-info',
 
   /** Event holding information on the cache config to decide on updating the local cache */
-  CACHE_CONFIG: 'cache-config',
+  CACHE_CONFIG = 'cache-config',
 
-  /** Event informing the decision to not update the local cache */
-  NO_LOCAL_CACHE_SAVE: 'no-local-cache-save',
+  /** Event informing the decision to not update or save to local cache */
+  NO_LOCAL_CACHE_SAVE = 'no-local-cache-save',
 
   /** Event holding information on the local cache save that just happened */
-  LOCAL_CACHE_SAVED: 'local-cache-saved',
+  LOCAL_CACHE_SAVED = 'local-cache-saved',
 }
 
-export const RuntimeLogEvents = {
+export const enum RuntimeLogEvents {
   /** Event representing that userland middlewares are about to start */
-  USER_MIDDLEWARES_START: 'user-middlewares-start',
+  USER_MIDDLEWARES_START = 'user-middlewares-start',
 
   /** Event representing that userland middlewares just finished */
-  USER_MIDDLEWARES_FINISH: 'user-middlewares-finish',
+  USER_MIDDLEWARES_FINISH = 'user-middlewares-finish',
 }

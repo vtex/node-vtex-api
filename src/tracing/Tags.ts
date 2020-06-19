@@ -19,23 +19,23 @@ export const AppTags = {
   VTEX_APP_WORKSPACE: 'app.workspace',
 }
 
-export const CustomHttpTags = {
-  HTTP_PATH: 'http.path',
+export const enum CustomHttpTags {
+  HTTP_PATH = 'http.path',
 
   /** Set to true when the client had no response, probably meaning that there was a client error */
-  HTTP_NO_RESPONSE: 'http.no_response',
+  HTTP_NO_RESPONSE = 'http.no_response',
 
   /** The HTTP client name (e.g. Apps, Registry, Router) */
-  HTTP_CLIENT_NAME: 'http.client.name',
+  HTTP_CLIENT_NAME = 'http.client.name',
 
   /**
    * CACHE_ENABLED tags indicate if the Cache strategy is enabled
    * for the specific request.
    *
    */
-  HTTP_MEMOIZATION_CACHE_ENABLED: 'http.cache.memoization.enabled',
-  HTTP_DISK_CACHE_ENABLED: 'http.cache.disk.enabled',
-  HTTP_MEMORY_CACHE_ENABLED: 'http.cache.memory.enabled',
+  HTTP_MEMOIZATION_CACHE_ENABLED = 'http.cache.memoization.enabled',
+  HTTP_DISK_CACHE_ENABLED = 'http.cache.disk.enabled',
+  HTTP_MEMORY_CACHE_ENABLED = 'http.cache.memory.enabled',
 
   /**
    * CACHE_RESULT tags indicate the result for that cache strategy
@@ -43,10 +43,10 @@ export const CustomHttpTags = {
    * of cache a ENABLED flag for a strategy may be 'true', but
    * the RESULT for that strategy may not be present.
    */
-  HTTP_MEMORY_CACHE_RESULT: 'http.cache.memory',
-  HTTP_MEMOIZATION_CACHE_RESULT: 'http.cache.memoization',
-  HTTP_DISK_CACHE_RESULT: 'http.cache.disk',
-  HTTP_ROUTER_CACHE_RESULT: 'http.cache.router',
+  HTTP_MEMORY_CACHE_RESULT = 'http.cache.memory',
+  HTTP_MEMOIZATION_CACHE_RESULT = 'http.cache.memoization',
+  HTTP_DISK_CACHE_RESULT = 'http.cache.disk',
+  HTTP_ROUTER_CACHE_RESULT = 'http.cache.router',
 }
 
 export const UserlandTags = {
