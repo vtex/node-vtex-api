@@ -1,6 +1,9 @@
 import { AxiosInstance } from 'axios'
 import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../../../../utils/retry'
 import { RequestConfig } from '../../../../typings'
+import { HttpLogEvents } from '../../../../../tracing/LogEvents'
+import { HttpRetryLogFields } from '../../../../../tracing/LogFields'
+import { MiddlewaresTracingContext } from '../../../..'
 
 function fixConfig(axiosInstance: AxiosInstance, config: RequestConfig) {
   if (axiosInstance.defaults.httpAgent === config.httpAgent) {
@@ -62,7 +65,10 @@ const onResponseError = (http: AxiosInstance) => (error: any) => {
       : config.timeout
     config.transformRequest = [data => data]
     
-    config.tracing!.rootSpan!.log({ event: 'retryable-request-fail', retryCount: config.retryCount, retryInMs: delay })
+    if((config.tracing! as MiddlewaresTracingContext).isSampled) {
+      config.tracing!.rootSpan!.log({ event: HttpLogEvents.SETUP_REQUEST_RETRY, [HttpRetryLogFields.RETRY_NUMBER]: config.retryCount, [HttpRetryLogFields.RETRY_NUMBER]: delay })
+    }
+
     return new Promise(resolve => setTimeout(() => resolve(http(config)), delay))
   }
   return Promise.reject(error)

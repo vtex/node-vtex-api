@@ -66,3 +66,11 @@ export const enum HttpCacheLogFields {
   NO_STORE = 'no-store',
   MAX_AGE = 'max-age',
 }
+
+export const enum HttpRetryLogFields {
+  /** The retry number that will be scheduled (e.g, 1, 2, meaning that is the first or second retry) */
+  RETRY_NUMBER = 'retry-number',
+
+  /** How much time in ms will be waited until this retry happens */
+  RETRY_IN = 'retry-in',
+}

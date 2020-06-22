@@ -29,6 +29,9 @@ export const enum HttpLogEvents {
 
   /** Event holding information on the local cache save that just happened */
   LOCAL_CACHE_SAVED = 'local-cache-saved',
+
+  /** A request that is retryable just failed - this event will hold info on the retry that may happen */
+  SETUP_REQUEST_RETRY = 'setup-request-retry'
 }
 
 export const enum RuntimeLogEvents {
