@@ -44,7 +44,7 @@ export const memoizationMiddleware = ({ memoizedCache }: MemoizationOptions) => 
           })
 
           if(isTraceSampled) {
-            span.log({ event: HttpLogEvents.MEMOIZATION_CACHE_SAVED_ERROR, [HttpCacheLogFields.KEY_SET]: key })
+            span.log({ event: HttpLogEvents.MEMOIZATION_CACHE_SAVED, [HttpCacheLogFields.KEY_SET]: key })
           }
         } catch (err) {
           reject(err)
