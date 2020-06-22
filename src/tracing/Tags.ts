@@ -3,20 +3,20 @@ export { OpentracingTags }
 
 /* tslint:disable:object-literal-sort-keys */
 
-export const VTEXIncomingRequestTags = {
-  VTEX_ACCOUNT: 'vtex.incoming.account',
-  VTEX_REQUEST_ID: 'vtex.request_id',
-  VTEX_WORKSPACE: 'vtex.incoming.workspace',
+export const enum VTEXIncomingRequestTags {
+  VTEX_ACCOUNT = 'vtex.incoming.account',
+  VTEX_REQUEST_ID = 'vtex.request_id',
+  VTEX_WORKSPACE = 'vtex.incoming.workspace',
 }
 
-export const AppTags = {
-  VTEX_APP_LINKED: 'app.linked',
-  VTEX_APP_NODE_ENV: 'app.node_env',
-  VTEX_APP_NODE_VTEX_API_VERSION: 'app.node_vtex_api_version',
-  VTEX_APP_PRODUCTION: 'app.production',
-  VTEX_APP_REGION: 'app.region',
-  VTEX_APP_VERSION: 'app.version',
-  VTEX_APP_WORKSPACE: 'app.workspace',
+export const enum AppTags {
+  VTEX_APP_LINKED = 'app.linked',
+  VTEX_APP_NODE_ENV = 'app.node_env',
+  VTEX_APP_NODE_VTEX_API_VERSION = 'app.node_vtex_api_version',
+  VTEX_APP_PRODUCTION = 'app.production',
+  VTEX_APP_REGION = 'app.region',
+  VTEX_APP_VERSION = 'app.version',
+  VTEX_APP_WORKSPACE = 'app.workspace',
 }
 
 export const enum CustomHttpTags {
