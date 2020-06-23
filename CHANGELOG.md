@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.32.0-beta.0] - 2020-06-23
+
 ## [6.32.0-beta] - 2020-06-23
 ### Changed
 - [tracing] Remove span wrapping user middlewares.
