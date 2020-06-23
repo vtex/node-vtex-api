@@ -163,7 +163,7 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
         allRequestSpans.forEach((requestSpan) => {
           expect(requestSpan!.tags()[OpentracingTags.ERROR]).toEqual('true')
           const len = (requestSpan as any)._logs.length
-          expect((requestSpan as any)._logs[len - 1].fields['event']).toEqual('error')
+          expect((requestSpan as any)._logs[len - 1].fields.event).toEqual('error')
           expect((requestSpan as any)._logs[len - 1].fields[ErrorReportLogFields.ERROR_ID]).toBeDefined()
           expect((requestSpan as any)._logs[len - 1].fields[ErrorReportLogFields.ERROR_KIND]).toBeDefined()
           expect(
