@@ -8,6 +8,7 @@ import { JanusClient } from './JanusClient'
 export interface SegmentData {
   campaigns?: any
   channel: number
+  channelPrivacy?: 'public' | 'private'
   priceTables?: any
   utm_campaign: string
   regionId?: string
