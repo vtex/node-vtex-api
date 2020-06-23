@@ -1,7 +1,7 @@
 import { initTracer as initJaegerTracer, TracingConfig, TracingOptions } from 'jaeger-client'
 import { Tracer } from 'opentracing'
 import { APP, LINKED, NODE_ENV, NODE_VTEX_API_VERSION, PRODUCTION, REGION, WORKSPACE } from '../../constants'
-import { Tags } from '../../tracing/Tags'
+import { AppTags } from '../../tracing/Tags'
 import { appIdToAppAtMajor } from '../../utils'
 
 export class TracerSingleton {
@@ -17,13 +17,13 @@ export class TracerSingleton {
 
   private static initServiceTracer() {
     return TracerSingleton.createJaegerTracer(appIdToAppAtMajor(APP.ID), {
-      [Tags.VTEX_APP_LINKED]: LINKED,
-      [Tags.VTEX_APP_NODE_VTEX_API_VERSION]: NODE_VTEX_API_VERSION,
-      [Tags.VTEX_APP_PRODUCTION]: PRODUCTION,
-      [Tags.VTEX_APP_REGION]: REGION,
-      [Tags.VTEX_APP_VERSION]: APP.VERSION,
-      [Tags.VTEX_APP_WORKSPACE]: WORKSPACE,
-      [Tags.VTEX_APP_NODE_ENV]: NODE_ENV ?? 'undefined',
+      [AppTags.VTEX_APP_LINKED]: LINKED,
+      [AppTags.VTEX_APP_NODE_VTEX_API_VERSION]: NODE_VTEX_API_VERSION,
+      [AppTags.VTEX_APP_PRODUCTION]: PRODUCTION,
+      [AppTags.VTEX_APP_REGION]: REGION,
+      [AppTags.VTEX_APP_VERSION]: APP.VERSION,
+      [AppTags.VTEX_APP_WORKSPACE]: WORKSPACE,
+      [AppTags.VTEX_APP_NODE_ENV]: NODE_ENV ?? 'undefined',
     })
   }
 
