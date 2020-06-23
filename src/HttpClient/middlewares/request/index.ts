@@ -1,8 +1,11 @@
 import { AxiosRequestConfig } from 'axios'
+import buildFullPath from 'axios/lib/core/buildFullPath'
 import { Limit } from 'p-limit'
 import { stringify } from 'qs'
-import { path, toLower } from 'ramda'
+import { toLower } from 'ramda'
 
+
+import { CustomHttpTags, OpentracingTags } from '../../../tracing/Tags'
 import { renameBy } from '../../../utils/renameBy'
 import { MiddlewareContext } from '../../typings'
 import { getConfiguredAxios } from './setupAxios'
@@ -29,7 +32,7 @@ export interface DefaultMiddlewareArgs {
 export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient, httpsAgent }: DefaultMiddlewareArgs) => {
   const countByMetric: Record<string, number> = {}
   const headers = renameBy(toLower, rawHeaders)
-  return async (ctx: MiddlewareContext, next: () => Promise<void>) => {
+  return (ctx: MiddlewareContext, next: () => Promise<void>) => {
     ctx.config = {
       baseURL,
       exponentialBackoffCoefficient,
@@ -61,21 +64,36 @@ export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retri
       ctx.config.label = `${ctx.config.metric}#${ctx.config.count}`
     }
 
-    await next()
+
+    if(ctx.tracing!.isSampled) {
+      const { config } = ctx
+      const fullUrl = buildFullPath(config.baseURL, http.getUri(config))
+      ctx.tracing!.rootSpan.addTags({
+        [OpentracingTags.HTTP_METHOD]: config.method || 'get',
+        [OpentracingTags.HTTP_URL]: fullUrl,
+      })
+    }
+
+    return next()
   }
 }
 
 const ROUTER_CACHE_KEY = 'x-router-cache'
 const ROUTER_CACHE_HIT = 'HIT'
 const ROUTER_CACHE_REVALIDATED = 'REVALIDATED'
-const ROUTER_CACHE_KEY_PATH = ['response', 'headers', ROUTER_CACHE_KEY]
-const ROUTER_RESPONSE_STATUS_PATH = ['response', 'status']
 
 export const routerCacheMiddleware = async (ctx: MiddlewareContext, next: () => Promise<void>) => {
   await next()
 
-  const routerCacheHit = path(ROUTER_CACHE_KEY_PATH, ctx)
-  const status = path(ROUTER_RESPONSE_STATUS_PATH, ctx)
+  const routerCacheHit = ctx.response?.headers?.[ROUTER_CACHE_KEY]
+  const status = ctx.response?.status
+
+  if(routerCacheHit) {
+    ctx.tracing!.rootSpan.addTags({
+      [CustomHttpTags.HTTP_ROUTER_CACHE_RESULT]: routerCacheHit,
+    })
+  }
+
   if (routerCacheHit === ROUTER_CACHE_HIT || (routerCacheHit === ROUTER_CACHE_REVALIDATED && status !== 304)) {
     ctx.cacheHit = {
       memory: 0,
