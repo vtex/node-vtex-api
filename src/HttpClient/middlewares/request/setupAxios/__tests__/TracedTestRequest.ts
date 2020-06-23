@@ -3,8 +3,8 @@ import { AxiosInstance, AxiosResponse } from 'axios'
 import { Span } from 'opentracing'
 import { Logger } from '../../../../../service/logger'
 import { RequestTracingConfig } from '../../../../typings'
-import { TestTracer } from './TestTracer'
 import { TraceableRequestConfig } from '../../../tracing'
+import { TestTracer } from './TestTracer'
 
 interface TracedTestRequestConfig extends RequestTracingConfig {
   url: string
@@ -65,6 +65,7 @@ export class TracedTestRequest {
         ...reqConf,
         tracing: {
           ...reqConf.tracing,
+          isSampled: true,
           logger: new Logger({
             account: 'mock-account',
             operationId: 'mock-operation-id',
@@ -74,7 +75,6 @@ export class TracedTestRequest {
           }),
           rootSpan: (this.rootSpan as unknown) as Span,
           tracer: this.tracer,
-          isSampled: true
         },
       }
 
