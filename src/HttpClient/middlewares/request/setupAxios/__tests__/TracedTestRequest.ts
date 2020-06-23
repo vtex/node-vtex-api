@@ -2,8 +2,9 @@ import { MockReport, MockSpan } from '@tiagonapoli/opentracing-alternate-mock'
 import { AxiosInstance, AxiosResponse } from 'axios'
 import { Span } from 'opentracing'
 import { Logger } from '../../../../../service/logger'
-import { RequestTracingConfig, TraceableRequestConfig } from '../../../../typings'
+import { RequestTracingConfig } from '../../../../typings'
 import { TestTracer } from './TestTracer'
+import { TraceableRequestConfig } from '../../../tracing'
 
 interface TracedTestRequestConfig extends RequestTracingConfig {
   url: string
@@ -73,6 +74,7 @@ export class TracedTestRequest {
           }),
           rootSpan: (this.rootSpan as unknown) as Span,
           tracer: this.tracer,
+          isSampled: true
         },
       }
 

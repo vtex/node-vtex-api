@@ -3,8 +3,8 @@ import { AxiosError, AxiosInstance } from 'axios'
 import { REFERENCE_CHILD_OF, REFERENCE_FOLLOWS_FROM } from 'opentracing'
 import { ROUTER_CACHE_HEADER } from '../../../../../constants'
 import { SpanReferenceTypes } from '../../../../../tracing'
-import { LOG_FIELDS } from '../../../../../tracing/LogFields'
-import { Tags } from '../../../../../tracing/Tags'
+import { ErrorReportLogFields } from '../../../../../tracing/LogFields'
+import { CustomHttpTags, OpentracingTags } from '../../../../../tracing/Tags'
 import { requestSpanPrefix } from '../interceptors/tracing'
 import { TestServer } from './TestServer'
 import { TracedTestRequest } from './TracedTestRequest'
@@ -43,32 +43,6 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
   })
 
   describe('Tracing user options', () => {
-    it('Specifies the referenceType with rootSpan as CHILD_OF if not assigned by the user', async () => {
-      const { rootSpan, allRequestSpans } = await TracedTestRequest.doRequest(http, testSuiteConfig.requestsConfig)
-      allRequestSpans.forEach((requestSpan) => {
-        expect((requestSpan as any)._references.length).toEqual(1)
-        expect((requestSpan as any)._references[0].type()).toEqual(REFERENCE_CHILD_OF)
-        const fatherContext: MockSpanContext = (requestSpan as any)._references[0].referencedContext()
-        expect(fatherContext.toTraceId()).toEqual(rootSpan.context().toTraceId())
-        expect(fatherContext.toSpanId()).toEqual(rootSpan.context().toSpanId())
-      })
-    })
-
-    it('Specifies the referenceType with rootSpan if requested', async () => {
-      const { rootSpan, allRequestSpans } = await TracedTestRequest.doRequest(http, {
-        ...testSuiteConfig.requestsConfig,
-        tracing: { referenceType: SpanReferenceTypes.FOLLOWS_FROM },
-      })
-
-      allRequestSpans.forEach((requestSpan) => {
-        expect((requestSpan as any)._references.length).toEqual(1)
-        expect((requestSpan as any)._references[0].type()).toEqual(REFERENCE_FOLLOWS_FROM)
-        const fatherContext: MockSpanContext = (requestSpan as any)._references[0].referencedContext()
-        expect(fatherContext.toTraceId()).toEqual(rootSpan.context().toTraceId())
-        expect(fatherContext.toSpanId()).toEqual(rootSpan.context().toSpanId())
-      })
-    })
-
     it('Correctly adds suffixes onto request span names if requested', async () => {
       const { allRequestSpans } = await TracedTestRequest.doRequest(http, {
         ...testSuiteConfig.requestsConfig,
@@ -84,10 +58,10 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
   it('Tags all request spans correctly', async () => {
     const { allRequestSpans } = await TracedTestRequest.doRequest(http, testSuiteConfig.requestsConfig)
     allRequestSpans.forEach((requestSpan) => {
-      expect(requestSpan!.tags()[Tags.HTTP_METHOD]).toEqual('get')
-      expect(requestSpan!.tags()[Tags.HTTP_STATUS_CODE]).toEqual(testSuiteConfig.expects.statusCode)
-      expect(requestSpan!.tags()[Tags.HTTP_URL]).toEqual(testSuiteConfig.requestsConfig.url)
-      expect(requestSpan!.tags()[Tags.SPAN_KIND]).toEqual(Tags.SPAN_KIND_RPC_CLIENT)
+      expect(requestSpan!.tags()[OpentracingTags.HTTP_METHOD]).toEqual('get')
+      expect(requestSpan!.tags()[OpentracingTags.HTTP_STATUS_CODE]).toEqual(testSuiteConfig.expects.statusCode)
+      expect(requestSpan!.tags()[OpentracingTags.HTTP_URL]).toEqual(testSuiteConfig.requestsConfig.url)
+      expect(requestSpan!.tags()[OpentracingTags.SPAN_KIND]).toEqual(OpentracingTags.SPAN_KIND_RPC_CLIENT)
     })
   })
 
@@ -108,9 +82,9 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
 
     allRequestSpans.forEach((requestSpan) => {
       expect((requestSpan as any)._logs.length).toEqual(expectedLen)
-      expect((requestSpan as any)._logs[0].fields[LOG_FIELDS.EVENT]).toEqual('request-headers')
+      expect((requestSpan as any)._logs[0].fields['request-headers']).toBeDefined()
       if (!testSuiteConfig.expects.error?.isClientError) {
-        expect((requestSpan as any)._logs[1].fields[LOG_FIELDS.EVENT]).toEqual('response-headers')
+        expect((requestSpan as any)._logs[1].fields['response-headers']).toBeDefined()
       }
     })
   })
@@ -124,7 +98,7 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
 
       const expectedTag = `${testSuiteConfig.requestsConfig.url}?a=1&b=2`
       allRequestSpans.forEach((requestSpan) => {
-        expect(requestSpan!.tags()[Tags.HTTP_URL]).toEqual(expectedTag)
+        expect(requestSpan!.tags()[OpentracingTags.HTTP_URL]).toEqual(expectedTag)
       })
     })
 
@@ -137,7 +111,7 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
 
       const expectedTag = `${testSuiteConfig.requestsConfig.url}/api/asd`
       allRequestSpans.forEach((requestSpan) => {
-        expect(requestSpan!.tags()[Tags.HTTP_URL]).toEqual(expectedTag)
+        expect(requestSpan!.tags()[OpentracingTags.HTTP_URL]).toEqual(expectedTag)
       })
     })
 
@@ -151,7 +125,7 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
 
       const expectedTag = `${testSuiteConfig.requestsConfig.url}/api/asd?a=1&b=2`
       allRequestSpans.forEach((requestSpan) => {
-        expect(requestSpan!.tags()[Tags.HTTP_URL]).toEqual(expectedTag)
+        expect(requestSpan!.tags()[OpentracingTags.HTTP_URL]).toEqual(expectedTag)
       })
     })
   })
@@ -161,7 +135,7 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
       testSuiteConfig.testServer?.mockResponseHeaders({})
       const { allRequestSpans } = await TracedTestRequest.doRequest(http, testSuiteConfig.requestsConfig)
       allRequestSpans.forEach((requestSpan) => {
-        expect(requestSpan.tags()[Tags.HTTP_ROUTER_CACHE]).toBeUndefined()
+        expect(requestSpan.tags()[CustomHttpTags.HTTP_ROUTER_CACHE_RESULT]).toBeUndefined()
       })
     })
 
@@ -170,7 +144,7 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
         testSuiteConfig.testServer!.mockResponseHeaders({ [ROUTER_CACHE_HEADER]: 'MISS' })
         const { allRequestSpans } = await TracedTestRequest.doRequest(http, testSuiteConfig.requestsConfig)
         allRequestSpans.forEach((requestSpan) => {
-          expect(requestSpan.tags()[Tags.HTTP_ROUTER_CACHE]).toEqual('MISS')
+          expect(requestSpan.tags()[CustomHttpTags.HTTP_ROUTER_CACHE_RESULT]).toEqual('MISS')
         })
       })
     }
@@ -187,11 +161,11 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
       it('Assigns error tags and error logs to all request spans', async () => {
         const { allRequestSpans } = await TracedTestRequest.doRequest(http, testSuiteConfig.requestsConfig)
         allRequestSpans.forEach((requestSpan) => {
-          expect(requestSpan!.tags()[Tags.ERROR]).toEqual('true')
+          expect(requestSpan!.tags()[OpentracingTags.ERROR]).toEqual('true')
           const len = (requestSpan as any)._logs.length
-          expect((requestSpan as any)._logs[len - 1].fields[LOG_FIELDS.EVENT]).toEqual('error')
-          expect((requestSpan as any)._logs[len - 1].fields[LOG_FIELDS.ERROR_ID]).toBeDefined()
-          expect((requestSpan as any)._logs[len - 1].fields[LOG_FIELDS.ERROR_KIND]).toBeDefined()
+          expect((requestSpan as any)._logs[len - 1].fields['event']).toEqual('error')
+          expect((requestSpan as any)._logs[len - 1].fields[ErrorReportLogFields.ERROR_ID]).toBeDefined()
+          expect((requestSpan as any)._logs[len - 1].fields[ErrorReportLogFields.ERROR_KIND]).toBeDefined()
           expect(
             ((requestSpan as any)._logs[len - 1].fields.error.message as string).startsWith(
               testSuiteConfig.expects.error!.errorMessagePrefix
