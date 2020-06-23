@@ -1,9 +1,9 @@
+import { MiddlewaresTracingContext, RequestConfig } from '..'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { createSpanReference, ErrorReport, getTraceInfo, SpanReferenceTypes } from '../../tracing'
 import { CustomHttpTags, OpentracingTags } from '../../tracing/Tags'
 import { MiddlewareContext } from '../typings'
 import { CacheType, isLocallyCacheable } from './cache'
-import { MiddlewaresTracingContext, RequestConfig } from '..'
 
 interface HttpClientTracingMiddlewareConfig {
   clientName: string
