@@ -34,9 +34,9 @@ export class TracerSingleton {
       },
       sampler: {
         host: process.env.VTEX_OWN_NODE_IP,
-        param: 0.05,
+        param: 1,
         refreshIntervalMs: 60 * 1000,
-        type: 'remote',
+        type: 'const',
       },
       serviceName,
     }
