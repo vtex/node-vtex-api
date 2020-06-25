@@ -18,14 +18,11 @@ export const memoizationMiddleware = ({ memoizedCache }: MemoizationOptions) => 
     }
 
     const span = ctx.tracing!.rootSpan
-    const isTraceSampled = ctx.tracing!.isSampled
 
     const key = cacheKey(ctx.config)
     const isMemoized = !!memoizedCache.has(key)
 
-    if(isTraceSampled) {
-      span.log({ event: HttpLogEvents.CACHE_KEY_CREATE, [HttpCacheLogFields.CACHE_TYPE]: 'memoization', [HttpCacheLogFields.KEY]: key })
-    }
+    span.log({ event: HttpLogEvents.CACHE_KEY_CREATE, [HttpCacheLogFields.CACHE_TYPE]: 'memoization', [HttpCacheLogFields.KEY]: key })
 
     if (isMemoized) {
       span.setTag(CustomHttpTags.HTTP_MEMOIZATION_CACHE_RESULT, CacheResult.HIT)
@@ -43,15 +40,10 @@ export const memoizationMiddleware = ({ memoizedCache }: MemoizationOptions) => 
             response: ctx.response!,
           })
 
-          if(isTraceSampled) {
-            span.log({ event: HttpLogEvents.MEMOIZATION_CACHE_SAVED, [HttpCacheLogFields.KEY_SET]: key })
-          }
+          span.log({ event: HttpLogEvents.MEMOIZATION_CACHE_SAVED, [HttpCacheLogFields.KEY_SET]: key })
         } catch (err) {
           reject(err)
-
-          if(isTraceSampled) {
-            span.log({ event: HttpLogEvents.MEMOIZATION_CACHE_SAVED_ERROR, [HttpCacheLogFields.KEY_SET]: key })
-          }
+          span.log({ event: HttpLogEvents.MEMOIZATION_CACHE_SAVED_ERROR, [HttpCacheLogFields.KEY_SET]: key })
         }
       })
       memoizedCache.set(key, promise)
