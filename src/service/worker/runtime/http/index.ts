@@ -42,7 +42,7 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
     ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     timings,
     error,
-    traceUserLandRemainingPipelineMiddleware(`user-private-handler:${routeId}`),
+    traceUserLandRemainingPipelineMiddleware(),
     ...middlewares,
   ]
   return compose(pipeline)
@@ -68,7 +68,7 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
     removeSetCookie,
     timings,
     error,
-    traceUserLandRemainingPipelineMiddleware(`user-public-handler:${routeId}`),
+    traceUserLandRemainingPipelineMiddleware(),
     ...middlewares,
   ]
   return compose(pipeline)

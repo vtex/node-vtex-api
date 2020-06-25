@@ -1,10 +1,12 @@
 import { FORMAT_HTTP_HEADERS, SpanContext, Tracer } from 'opentracing'
 import { ACCOUNT_HEADER, REQUEST_ID_HEADER, TRACE_ID_HEADER, WORKSPACE_HEADER } from '../../constants'
-import { getTraceInfo } from '../../tracing'
+import { ErrorReport, getTraceInfo } from '../../tracing'
+import { LOG_EVENTS, LOG_FIELDS } from '../../tracing/LogFields'
 import { Tags } from '../../tracing/Tags'
 import { UserLandTracer } from '../../tracing/UserLandTracer'
+import { hrToMillis } from '../../utils'
+import { addPrefixOntoObjectKeys } from '../../utils/addPrefixOntoObjectKeys'
 import { ServiceContext } from '../worker/runtime/typings'
-import { injectErrorOnSpan } from './spanSetup'
 
 const PATHS_BLACKLISTED_FOR_TRACING = ['/metrics', '/_status', '/healthcheck']
 
@@ -15,38 +17,34 @@ export const addTracingMiddleware = (tracer: Tracer) => {
     }
 
     const rootSpan = tracer.extract(FORMAT_HTTP_HEADERS, ctx.request.headers) as undefined | SpanContext
-
-    const currentSpan = tracer.startSpan('unknown-operation', {
-      childOf: rootSpan,
-      tags: {
-        [Tags.SPAN_KIND]: Tags.SPAN_KIND_RPC_SERVER,
-        [Tags.HTTP_URL]: ctx.request.href,
-        [Tags.HTTP_METHOD]: ctx.request.method,
-        [Tags.HTTP_PATH]: ctx.request.path,
-        [Tags.VTEX_REQUEST_ID]: ctx.get(REQUEST_ID_HEADER),
-        [Tags.VTEX_WORKSPACE]: ctx.get(WORKSPACE_HEADER),
-        [Tags.VTEX_ACCOUNT]: ctx.get(ACCOUNT_HEADER),
-      },
-    })
-
+    const currentSpan = tracer.startSpan('unknown-operation', { childOf: rootSpan })
     ctx.tracing = { currentSpan, tracer }
-
-    currentSpan.log({ event: 'request-headers', headers: ctx.request.headers })
 
     try {
       await next()
     } catch (err) {
-      injectErrorOnSpan(currentSpan, err, ctx.vtex?.logger)
+      ErrorReport.create({ originalError: err }).injectOnSpan(currentSpan, ctx.vtex?.logger)
       throw err
     } finally {
-      currentSpan.setTag(Tags.HTTP_STATUS_CODE, ctx.response.status)
-      currentSpan.log({ event: 'response-headers', headers: ctx.response.headers })
-      currentSpan.finish()
-
       const traceInfo = getTraceInfo(currentSpan)
       if (traceInfo.isSampled) {
+        currentSpan.addTags({
+          [Tags.SPAN_KIND]: Tags.SPAN_KIND_RPC_SERVER,
+          [Tags.HTTP_URL]: ctx.request.href,
+          [Tags.HTTP_METHOD]: ctx.request.method,
+          [Tags.HTTP_PATH]: ctx.request.path,
+          [Tags.HTTP_STATUS_CODE]: ctx.response.status,
+          [Tags.VTEX_REQUEST_ID]: ctx.get(REQUEST_ID_HEADER),
+          [Tags.VTEX_WORKSPACE]: ctx.get(WORKSPACE_HEADER),
+          [Tags.VTEX_ACCOUNT]: ctx.get(ACCOUNT_HEADER),
+        })
+
+        currentSpan.log(addPrefixOntoObjectKeys('req.headers', ctx.request.headers))
+        currentSpan.log(addPrefixOntoObjectKeys('res.headers', ctx.response.headers))
         ctx.set(TRACE_ID_HEADER, traceInfo.traceId)
       }
+
+      currentSpan.finish()
     }
   }
 }
@@ -58,24 +56,26 @@ export const nameSpanOperationMiddleware = (operationType: string, operationName
   }
 }
 
-export const traceUserLandRemainingPipelineMiddleware = (spanName: string, tags: Record<string, string> = {}) => {
+export const traceUserLandRemainingPipelineMiddleware = () => {
   return async function traceUserLandRemainingPipeline(ctx: ServiceContext, next: () => Promise<void>) {
     const tracingCtx = ctx.tracing!
     ctx.tracing = undefined
 
-    const span = tracingCtx.tracer.startSpan(spanName, { childOf: tracingCtx.currentSpan, tags })
+    const span = tracingCtx.currentSpan
     const userLandTracer = ctx.vtex.tracer! as UserLandTracer
     userLandTracer.setFallbackSpan(span)
     userLandTracer.lockFallbackSpan()
+    const startTime = process.hrtime()
 
     try {
+      span.log({ event: LOG_EVENTS.USER_MIDDLEWARES_START })
       await next()
     } catch (err) {
-      injectErrorOnSpan(span, err, ctx.vtex.logger)
+      ErrorReport.create({ originalError: err }).injectOnSpan(span, ctx.vtex.logger)
       throw err
     } finally {
+      span.log({ event: LOG_EVENTS.USER_MIDDLEWARES_FINISH, [LOG_FIELDS.USER_MIDDLEWARES_DURATION]: hrToMillis(process.hrtime(startTime)) })
       ctx.tracing = tracingCtx
-      span.finish()
     }
   }
 }
