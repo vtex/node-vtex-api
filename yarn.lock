@@ -756,6 +756,52 @@
   dependencies:
     "@types/yargs-parser" "*"
 
+"@vtex/api@^6.33.0-beta":
+  version "6.33.0-beta"
+  resolved "https://registry.yarnpkg.com/@vtex/api/-/api-6.33.0-beta.tgz#1520eb02883429aba3e32e1533d991be52945516"
+  integrity sha512-KdUdRZD971BBNmmw+Ex0//cJhmMYyS0CnumGAbF0fazFmKRNyknVRqueBHBRO7fSw8nmIitnnVbrbqzgcS8utQ==
+  dependencies:
+    "@types/koa" "^2.11.0"
+    "@types/koa-compose" "^3.2.3"
+    "@vtex/node-error-report" "^0.0.2"
+    "@wry/equality" "^0.1.9"
+    agentkeepalive "^4.0.2"
+    apollo-server-errors "^2.2.1"
+    archiver "^3.0.0"
+    axios "^0.19.2"
+    axios-retry "^3.1.2"
+    bluebird "^3.5.4"
+    chalk "^2.4.2"
+    co-body "^6.0.0"
+    cookie "^0.3.1"
+    dataloader "^1.4.0"
+    fast-json-stable-stringify "^2.0.0"
+    fs-extra "^7.0.0"
+    graphql "^14.5.8"
+    graphql-tools "^4.0.6"
+    graphql-upload "^8.1.0"
+    jaeger-client "^3.18.0"
+    js-base64 "^2.5.1"
+    koa "^2.11.0"
+    koa-compose "^4.1.0"
+    koa-compress "^3.0.0"
+    koa-router "^7.4.0"
+    lru-cache "^5.1.1"
+    mime-types "^2.1.12"
+    opentracing "^0.14.4"
+    p-limit "^2.2.0"
+    prom-client "^11.5.3"
+    prometheus-gc-stats "^0.6.2"
+    qs "^6.5.1"
+    querystring "^0.2.0"
+    ramda "^0.26.0"
+    rwlock "^5.0.0"
+    semver "^5.5.1"
+    stats-lite vtex/node-stats-lite#dist
+    tar-fs "^2.0.0"
+    uuid "^3.3.3"
+    xss "^1.0.6"
+
 "@vtex/node-error-report@^0.0.2":
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/@vtex/node-error-report/-/node-error-report-0.0.2.tgz#edf15095d6bb543d28b46f86bc109e6214149dfe"
@@ -4550,7 +4596,7 @@ static-extend@^0.1.1:
     define-property "^0.2.5"
     object-copy "^0.1.0"
 
-stats-lite@vtex/node-stats-lite#dist:
+"stats-lite@github:vtex/node-stats-lite#dist", stats-lite@vtex/node-stats-lite#dist:
   version "2.2.0"
   resolved "https://codeload.github.com/vtex/node-stats-lite/tar.gz/1b0d39cc41ef7aaecfd541191f877887a2044797"
   dependencies:

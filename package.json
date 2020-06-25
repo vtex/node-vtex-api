@@ -49,6 +49,7 @@
   "dependencies": {
     "@types/koa": "^2.11.0",
     "@types/koa-compose": "^3.2.3",
+    "@vtex/api": "^6.33.0-beta",
     "@vtex/node-error-report": "^0.0.2",
     "@wry/equality": "^0.1.9",
     "agentkeepalive": "^4.0.2",
