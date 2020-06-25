@@ -1,6 +1,9 @@
 import { AxiosInstance } from 'axios'
+import { HttpLogEvents } from '../../../../../tracing/LogEvents'
+import { HttpRetryLogFields } from '../../../../../tracing/LogFields'
 import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../../../../utils/retry'
 import { RequestConfig } from '../../../../typings'
+import { TraceableRequestConfig } from '../../../tracing'
 
 function fixConfig(axiosInstance: AxiosInstance, config: RequestConfig) {
   if (axiosInstance.defaults.httpAgent === config.httpAgent) {
@@ -40,6 +43,7 @@ const onResponseError = (http: AxiosInstance) => (error: any) => {
     exponentialBackoffCoefficient = 2,
     exponentialTimeoutCoefficient,
   } = config
+
   const retryCount = config.retryCount || 0
   const shouldRetry =
     isAbortedOrNetworkErrorOrRouterTimeout(error) && retryCount < config.retries
@@ -51,6 +55,7 @@ const onResponseError = (http: AxiosInstance) => (error: any) => {
       config.retryCount
     )
 
+
     // Axios fails merging this configuration to the default configuration because it has an issue
     // with circular structures: https://github.com/mzabriskie/axios/issues/370
     fixConfig(http, config)
@@ -60,9 +65,9 @@ const onResponseError = (http: AxiosInstance) => (error: any) => {
       : config.timeout
     config.transformRequest = [data => data]
 
-    return new Promise(resolve =>
-      setTimeout(() => resolve(http(config)), delay)
-    )
+    config.tracing!.rootSpan!.log({ event: HttpLogEvents.SETUP_REQUEST_RETRY, [HttpRetryLogFields.RETRY_NUMBER]: config.retryCount, [HttpRetryLogFields.RETRY_IN]: delay })
+
+    return new Promise(resolve => setTimeout(() => resolve(http(config)), delay))
   }
   return Promise.reject(error)
 }

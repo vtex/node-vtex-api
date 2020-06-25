@@ -1,11 +1,11 @@
-import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import { FORMAT_HTTP_HEADERS, Span } from 'opentracing'
 import { createSpanReference, ErrorReport } from '../../../../../../tracing'
 import { SpanReferenceTypes } from '../../../../../../tracing/spanReference/SpanReferenceTypes'
-import { AxiosTracingConfig } from '../../../../../typings'
+import { MiddlewaresTracingContext } from '../../../../../typings'
 import { injectRequestInfoOnSpan, injectResponseInfoOnSpan } from './spanSetup'
 
-interface AxiosRequestTracingContext extends AxiosTracingConfig {
+interface AxiosRequestTracingContext extends MiddlewaresTracingContext {
   requestSpan?: Span
 }
 
@@ -17,27 +17,26 @@ interface TraceableAxiosResponse extends AxiosResponse {
   config: TraceableAxiosRequestConfig
 }
 
+interface ExtendedAxiosError extends AxiosError {
+  config: TraceableAxiosRequestConfig
+}
+
 export const requestSpanPrefix = 'http-request'
 
 const preRequestInterceptor = (http: AxiosInstance) => (
   config: TraceableAxiosRequestConfig
 ): TraceableAxiosRequestConfig => {
-  if (!config.tracing) {
+  if (!config.tracing || !config.tracing.isSampled) {
     return config
   }
 
-  const {
-    tracer,
-    rootSpan,
-    requestSpanNameSuffix,
-    referenceType = SpanReferenceTypes.CHILD_OF,
-  } = config.tracing
+  const { tracer, rootSpan, requestSpanNameSuffix } = config.tracing
 
   const spanName = requestSpanNameSuffix ? `${requestSpanPrefix}:${requestSpanNameSuffix}` : requestSpanPrefix
 
   const span = rootSpan
     ? tracer.startSpan(spanName, {
-        references: [createSpanReference(rootSpan, referenceType)],
+        references: [createSpanReference(rootSpan, SpanReferenceTypes.CHILD_OF)],
       })
     : tracer.startSpan(spanName)
 
@@ -49,7 +48,7 @@ const preRequestInterceptor = (http: AxiosInstance) => (
 }
 
 const onResponseSuccess = (response: TraceableAxiosResponse): TraceableAxiosResponse => {
-  if (!response.config.tracing) {
+  if (!response.config.tracing || !response.config.tracing.isSampled) {
     return response
   }
 
@@ -59,8 +58,8 @@ const onResponseSuccess = (response: TraceableAxiosResponse): TraceableAxiosResp
   return response
 }
 
-const onResponseError = (err: any) => {
-  if (!err?.config?.tracing?.requestSpan) {
+const onResponseError = (err: ExtendedAxiosError) => {
+  if (!err?.config?.tracing?.requestSpan || !err.config.tracing.isSampled) {
     return Promise.reject(err)
   }
 

@@ -8,7 +8,7 @@ import {
 import { Span } from 'opentracing'
 import { TracingTags } from '..'
 import { IOContext } from '../../service/worker/runtime/typings'
-import { LOG_FIELDS } from '../LogFields'
+import { ErrorReportLogFields } from '../LogFields'
 import { getTraceInfo } from '../utils'
 
 export class ErrorReport extends ErrorReportBase {
@@ -47,8 +47,8 @@ export class ErrorReport extends ErrorReportBase {
     span.setTag(TracingTags.ERROR, 'true')
 
     const indexedLogs: Record<string, string> = {
-      [LOG_FIELDS.ERROR_KIND]: this.kind,
-      [LOG_FIELDS.ERROR_ID]: this.metadata.errorId,
+      [ErrorReportLogFields.ERROR_KIND]: this.kind,
+      [ErrorReportLogFields.ERROR_ID]: this.metadata.errorId,
     }
 
     if (
@@ -56,12 +56,12 @@ export class ErrorReport extends ErrorReportBase {
       this.parsedInfo.response &&
       isInfraErrorData(this.parsedInfo.response?.data)
     ) {
-      indexedLogs[LOG_FIELDS.ERROR_SERVER_CODE] = this.parsedInfo.response.data.code
-      indexedLogs[LOG_FIELDS.ERROR_SERVER_REQUEST_ID] = this.parsedInfo.response.data.requestId
+      indexedLogs[ErrorReportLogFields.ERROR_SERVER_CODE] = this.parsedInfo.response.data.code
+      indexedLogs[ErrorReportLogFields.ERROR_SERVER_REQUEST_ID] = this.parsedInfo.response.data.requestId
     }
 
     const serializableError = this.toObject()
-    span.log({ [LOG_FIELDS.EVENT]: 'error', ...indexedLogs, error: serializableError })
+    span.log({ event: 'error', ...indexedLogs, error: serializableError })
 
     if (logger && this.shouldLogToSplunk(span)) {
       logger.error(serializableError)

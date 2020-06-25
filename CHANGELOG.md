@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.33.0] - 2020-06-25
+### Added
+- [clients:tracing] Create span wrapping HttpClient middlewares with information on caching and retries.
+
 ## [6.32.0] - 2020-06-25
 ### Changed
 - [tracing] Remove span wrapping user middlewares.
