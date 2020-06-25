@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Changed
 - [tracing] Remove span wrapping user middlewares.
+- [tracing] Add entrypoint span tags and logs after the execution of middlewares.
+- [ErrorReport] Do not allow creating recursive ErrorReports.
 
 ## [6.31.1] - 2020-06-05
 ### Fixed
