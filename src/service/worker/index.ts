@@ -234,7 +234,8 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
     runtimeHttpHandlers,
   ]
   .filter(x => x != null)
-  .reduce(mergeDeepRight)
+  // TODO: Fix ramda typings. Apparently there was an update that broke things
+  .reduce(mergeDeepRight as any)
 
   if (httpHandlers?.pub) {
     const publicHandlersRouter = routerFromPublicHttpHandlers(httpHandlers.pub)
