@@ -90,9 +90,9 @@ export const addTracingMiddleware = (tracer: Tracer) => {
           hrToMillisFloat(process.hrtime(start))
         )
         concurrentRequests.dec(1)
+        currentSpan.finish()
       })
 
-      currentSpan.finish()
     }
   }
 }
