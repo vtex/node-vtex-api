@@ -1,5 +1,4 @@
-import { collectDefaultMetrics, Gauge, Registry } from 'prom-client'
-import gcStats from 'prometheus-gc-stats'
+import { collectDefaultMetrics, register } from 'prom-client'
 
 import { MetricsLogger } from '../../../logger/metricsLogger'
 import { ServiceContext } from '../typings'
@@ -22,18 +21,10 @@ export const addMetricsLoggerMiddleware = () => {
 }
 
 export const prometheusLoggerMiddleware = () => {
-  const register = new Registry()
-  const gauge = new Gauge({ name: 'io_http_requests_current', help: 'The current number of requests in course.' })
-  register.registerMetric(gauge)
-  collectDefaultMetrics({ register })
-  const startGcStats = gcStats(register)
-  startGcStats()
+  collectDefaultMetrics()
   return async (ctx: ServiceContext, next: () => Promise<void>) => {
     if (ctx.request.path !== '/metrics') {
-      gauge.inc(1)
-      await next()
-      gauge.dec(1)
-      return
+      return next()
     }
 
     ctx.tracing?.currentSpan.setOperationName('builtin:prometheus-metrics')
