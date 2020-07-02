@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.34.0-beta.0] - 2020-07-02
+
 ## [6.34.0-beta] - 2020-07-02
 ### Added
 - [metrics] Create new Prometheus exported metrics:
