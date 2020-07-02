@@ -13,9 +13,9 @@ import {
   createConcurrentRequestsInstrument,
   createRequestsResponseSizesInstrument,
   createRequestsTimingsInstrument,
+  createTotalAbortedRequestsInstrument,
   createTotalRequestsInstrument,
   MetricLabels,
-  createTotalAbortedRequestsInstrument,
 } from './metrics'
 
 const PATHS_BLACKLISTED_FOR_TRACING = ['/metrics', '/_status', '/healthcheck']

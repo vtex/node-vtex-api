@@ -1,10 +1,10 @@
 import { Counter, Gauge, Histogram } from 'prom-client'
 import {
   CONCURRENT_REQUESTS,
-  REQUESTS_ABORTED,
-  REQUESTS_TOTAL,
   REQUEST_RESPONSE_SIZES,
   REQUEST_TIMINGS,
+  REQUESTS_ABORTED,
+  REQUESTS_TOTAL,
 } from './MetricNames'
 export { MetricLabels } from './MetricNames'
 
