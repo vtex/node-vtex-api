@@ -1,3 +1,4 @@
+/* tslint:disable:object-literal-sort-keys */
 export const enum MetricLabels {
   /** The status code for the HTTP request */
   STATUS_CODE = 'status_code',
