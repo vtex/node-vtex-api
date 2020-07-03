@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.34.0] - 2020-07-03
+### Fixed
+- Remove fallback to x-vtex-credential as adminUserAuthToken.
+### Added
+- Send workspace to session service.
+- Add channelPrivacy to SegmentData type.
+
 ## [6.33.0] - 2020-06-25
 ### Added
 - [clients:tracing] Create span wrapping HttpClient middlewares with information on caching and retries.
