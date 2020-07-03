@@ -8,6 +8,7 @@ import { JanusClient } from './JanusClient'
 export interface SegmentData {
   campaigns?: any
   channel: number
+  channelPrivacy?: 'public' | 'private'
   priceTables?: any
   utm_campaign: string
   regionId?: string
@@ -77,7 +78,7 @@ export class Segment extends JanusClient {
   }
 
   private rawSegment = (token?: string | null, query?: Record<string, string>, tracingConfig?: RequestTracingConfig) => {
-    const { product } = this.context
+    const { product, workspace } = this.context
     const filteredQuery = filterAndSortQuery(query)
 
     const metric = token ? 'segment-get-token' : 'segment-get-new'
@@ -92,6 +93,7 @@ export class Segment extends JanusClient {
       params: {
         ...filteredQuery,
         session_path: product || '',
+        workspace,
       },
       tracing: {
         requestSpanNameSuffix: metric,
