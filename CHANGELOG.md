@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   - runtime_http_response_size_bytes
 - [tracing] Finish entrypoint span when response finishes streaming.
 
+### Changed
+- Update `billingOptions` type.
+
 ## [6.34.0] - 2020-07-03
 ### Fixed
 - Remove fallback to x-vtex-credential as adminUserAuthToken.

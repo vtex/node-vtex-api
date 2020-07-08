@@ -1,3 +1,5 @@
+import { BillingOptions } from './utils/billingOptions'
+
 export interface Policy {
   name: string,
   attrs?: {
@@ -49,78 +51,6 @@ export interface BucketMetadata {
   state: string,
   lastModified: string,
   hash: string,
-}
-
-export interface RootBillingOptions {
-  termsURL: string
-  support: Support
-  setupRoute?: string
-}
-
-export interface FreeBillingOptions extends RootBillingOptions {
-  type: 'free'
-}
-
-export interface LegacyFreeBillingOptions extends RootBillingOptions {
-  free: true
-}
-
-export interface ChargeableBillingOptions extends RootBillingOptions {
-  type: 'chargeable'
-  policies: BillingPolicy[],
-}
-
-export interface LegacyChargeableBillingOptions extends RootBillingOptions {
-  free?: false
-  policies: BillingPolicy[]
-}
-
-export interface SponsoredBillingOptions extends RootBillingOptions {
-  type: 'sponsored'
-}
-
-export interface Support {
-  url: string
-  email: string
-}
-
-export type BillingOptions = FreeBillingOptions | ChargeableBillingOptions | SponsoredBillingOptions | LegacyFreeBillingOptions | LegacyChargeableBillingOptions
-
-export interface BillingPolicy {
-  currency: string,
-  billing: BillingChargeElements,
-}
-
-export interface BillingChargeElements {
-  taxClassification: string,
-  items: CalculationItem[],
-}
-
-export interface RootCalculationItem {
-  itemCurrency: string
-}
-
-export interface FixedCalculationItem extends RootCalculationItem {
-  fixed: number
-}
-
-export interface MetricBasedCalculationItem extends RootCalculationItem {
-  calculatedByMetricUnit: CalculatedByMetricUnit
-}
-
-export type CalculationItem = FixedCalculationItem | MetricBasedCalculationItem
-
-export interface CalculatedByMetricUnit {
-  metricId: string,
-  metricName: string,
-  ranges: Range[],
-  metricsRoute?: string,
-}
-
-export interface Range {
-  exclusiveFrom: number,
-  inclusiveTo?: number,
-  multiplier: number,
 }
 
 export interface AppBundleResponse {
