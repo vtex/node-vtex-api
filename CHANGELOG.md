@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.35.0] - 2020-07-08
+### Added
+- [metrics] Create new Prometheus exported metrics:
+  - runtime_http_requests_total
+  - runtime_http_aborted_requests_total
+  - runtime_http_requests_duration_milliseconds
+  - runtime_http_response_size_bytes
+- [tracing] Finish entrypoint span when response finishes streaming.
+
+### Changed
+- Update `billingOptions` type.
+
 ## [6.34.0] - 2020-07-03
 ### Fixed
 - Remove fallback to x-vtex-credential as adminUserAuthToken.
