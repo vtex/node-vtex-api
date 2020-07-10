@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- [metrics] Export jaeger metrics.
+
+### Fixed
+- [metrics] Typo on event listened by to increment `runtime_http_aborted_requests_total`.
+- [tracing:entrypoint] Fix listening for response stream to finish. 
 
 ## [6.35.0] - 2020-07-08
 ### Added
