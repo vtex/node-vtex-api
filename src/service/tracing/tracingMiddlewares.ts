@@ -38,9 +38,20 @@ export const addTracingMiddleware = (tracer: Tracer) => {
     }
 
     const rootSpan = tracer.extract(FORMAT_HTTP_HEADERS, ctx.request.headers) as undefined | SpanContext
-    const currentSpan = tracer.startSpan('unknown-operation', { childOf: rootSpan })
+    const currentSpan = tracer.startSpan('unknown-operation', {
+      childOf: rootSpan,
+      tags: { [OpentracingTags.SPAN_KIND]: OpentracingTags.SPAN_KIND_RPC_SERVER },
+    })
+
+    const initialSamplingDecision = getTraceInfo(currentSpan).isSampled
+
     ctx.tracing = { currentSpan, tracer }
-    ctx.req.once('abort', () => abortedRequests.inc({ [MetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string }, 1))
+    ctx.req.once('aborted', () =>
+      abortedRequests.inc({ [MetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string }, 1)
+    )
+
+    let responseClosed = false
+    ctx.res.once('close', () => (responseClosed = true))
 
     try {
       await next()
@@ -66,8 +77,11 @@ export const addTracingMiddleware = (tracer: Tracer) => {
 
       const traceInfo = getTraceInfo(currentSpan)
       if (traceInfo.isSampled) {
+        if (!initialSamplingDecision) {
+          currentSpan.setTag(OpentracingTags.SPAN_KIND, OpentracingTags.SPAN_KIND_RPC_SERVER)
+        }
+
         currentSpan.addTags({
-          [OpentracingTags.SPAN_KIND]: OpentracingTags.SPAN_KIND_RPC_SERVER,
           [OpentracingTags.HTTP_URL]: ctx.request.href,
           [OpentracingTags.HTTP_METHOD]: ctx.request.method,
           [OpentracingTags.HTTP_STATUS_CODE]: ctx.response.status,
@@ -82,17 +96,23 @@ export const addTracingMiddleware = (tracer: Tracer) => {
         ctx.set(TRACE_ID_HEADER, traceInfo.traceId)
       }
 
-      onStreamFinished(ctx.res, () => {
+      const onResFinished = () => {
         requestTimings.observe(
           {
             [MetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string,
           },
           hrToMillisFloat(process.hrtime(start))
         )
+
         concurrentRequests.dec(1)
         currentSpan.finish()
-      })
+      }
 
+      if (responseClosed) {
+        onResFinished()
+      } else {
+        onStreamFinished(ctx.res, onResFinished)
+      }
     }
   }
 }
