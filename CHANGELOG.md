@@ -10,8 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - [metrics] Export jaeger metrics.
 
 ### Fixed
-- [metrics] Typo on event listened by to increment `runtime_http_aborted_requests_total`.
-- [tracing:entrypoint] Fix listening for response stream to finish. 
+- [metrics] Typo on event listened to increment `runtime_http_aborted_requests_total`.
+- [tracing:entrypoint] Fix waiting for response stream to finish. 
 
 ## [6.35.0] - 2020-07-08
 ### Added
