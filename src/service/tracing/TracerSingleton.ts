@@ -1,5 +1,6 @@
-import { initTracer as initJaegerTracer, TracingConfig, TracingOptions } from 'jaeger-client'
+import { initTracer as initJaegerTracer, PrometheusMetricsFactory, TracingConfig, TracingOptions } from 'jaeger-client'
 import { Tracer } from 'opentracing'
+import promClient from 'prom-client'
 import { APP, LINKED, NODE_ENV, NODE_VTEX_API_VERSION, PRODUCTION, REGION, WORKSPACE } from '../../constants'
 import { AppTags } from '../../tracing/Tags'
 import { appIdToAppAtMajor } from '../../utils'
@@ -42,6 +43,13 @@ export class TracerSingleton {
     }
 
     const options: TracingOptions = {
+      /**
+       * Jaeger metric names are available in:
+       * https://github.com/jaegertracing/jaeger-client-node/blob/master/src/metrics/metrics.js
+       *
+       * Runtime will prefix these metrics with 'runtime:'
+       */
+      metrics: new PrometheusMetricsFactory(promClient as any, 'runtime'),
       tags: defaultTags,
     }
 

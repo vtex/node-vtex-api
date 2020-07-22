@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.35.1] - 2020-07-22
+### Added
+- [metrics] Export jaeger metrics.
+
+### Fixed
+- [metrics] Typo on event listened to increment `runtime_http_aborted_requests_total`.
+- [tracing:entrypoint] Fix waiting for response stream to finish. 
+
 ## [6.35.0] - 2020-07-08
 ### Added
 - [metrics] Create new Prometheus exported metrics:
