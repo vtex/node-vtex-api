@@ -47,6 +47,7 @@
   },
   "license": "MIT",
   "dependencies": {
+    "0x": "^4.9.1",
     "@types/koa": "^2.11.0",
     "@types/koa-compose": "^3.2.3",
     "@vtex/node-error-report": "^0.0.2",

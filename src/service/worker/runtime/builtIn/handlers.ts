@@ -1,4 +1,6 @@
 import { ServiceContext, ServiceJSON } from '../typings'
+import { readFileSync } from 'fs-extra'
+
 
 export const whoAmIHandler = ({
   events,
@@ -11,6 +13,16 @@ export const whoAmIHandler = ({
     routes,
   }
   ctx.set('Cache-Control', 'public, max-age=86400') // cache for 24 hours
+}
+
+export const killWorker = () => {
+  process.exit(0)
+}
+
+export const downloadProf = (ctx: ServiceContext) => {
+  const data = readFileSync('/cache/v8-perf/flamegraph.tar.gz')
+  ctx.status = 200
+  ctx.body = data
 }
 
 export const healthcheckHandler = ({

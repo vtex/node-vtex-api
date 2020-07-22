@@ -18,6 +18,8 @@ import {
   healthcheckHandler,
   metricsLoggerHandler,
   whoAmIHandler,
+  killWorker,
+  downloadProf,
 } from './runtime/builtIn/handlers'
 import {
   addMetricsLoggerMiddleware,
@@ -189,6 +191,14 @@ const createRuntimeHttpHandlers = (appEventHandlers: Record<string, RouteHandler
       handler: whoAmIHandler(serviceJSON),
       path: '/:account/:workspace/_whoami',
     },
+    __kill_worker: {
+      handler: killWorker,
+      path: '/:account/:workspace/_kill_worker',
+    },
+    __downloadProf: {
+      handler: downloadProf,
+      path: '/:account/:workspace/_prof',
+    }
   },
 })
 
