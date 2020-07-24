@@ -42,6 +42,7 @@ const logBillingInfo = (
   millis: number
 ) => JSON.stringify({
   '__VTEX_IO_BILLING': 'true',
+  'timestamp': new Date().getTime(),
   'account': account,
   'app': APP.ID,
   'handler': id,
