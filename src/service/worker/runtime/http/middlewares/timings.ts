@@ -42,13 +42,13 @@ const logBillingInfo = (
   millis: number
 ) => JSON.stringify({
   '__VTEX_IO_BILLING': 'true',
-  'timestamp': new Date().getTime(),
   'account': account,
   'app': APP.ID,
   'handler': id,
   'isLink': LINKED,
   'production': production,
   'routeType': type === 'public' ? 'public_route' : 'private_route',
+  'timestamp': new Date().getTime(),
   'type': 'process-time',
   'value': millis,
   'vendor': APP.VENDOR,
