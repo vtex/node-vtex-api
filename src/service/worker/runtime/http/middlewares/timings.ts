@@ -48,7 +48,7 @@ const logBillingInfo = (
   'isLink': LINKED,
   'production': production,
   'routeType': type === 'public' ? 'public_route' : 'private_route',
-  'timestamp': new Date().getTime(),
+  'timestamp': Date.now(),
   'type': 'process-time',
   'value': millis,
   'vendor': APP.VENDOR,
