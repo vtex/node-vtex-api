@@ -1,12 +1,3 @@
-/* tslint:disable:object-literal-sort-keys */
-export const enum MetricLabels {
-  /** The status code for the HTTP request */
-  STATUS_CODE = 'status_code',
-
-  /** The service.json handler name for the current request (e.g. 'public-handler:render') */
-  REQUEST_HANDLER = 'handler',
-}
-
 const enum METRIC_TYPES {
   /** Counter is monotonic */
   COUNTER = 'counter',
@@ -14,6 +5,20 @@ const enum METRIC_TYPES {
   GAUGE = 'gauge',
   /** Histogram creates a counter timeseries for each bucket specified */
   HISTOGRAM = 'histogram',
+}
+
+/* tslint:disable:object-literal-sort-keys */
+export const enum RequestsMetricLabels {
+  /** The status code for the HTTP request */
+  STATUS_CODE = 'status_code',
+
+  /** The service.json handler name for the current request (e.g. 'public-handler:render') */
+  REQUEST_HANDLER = 'handler',
+}
+
+/* tslint:disable:object-literal-sort-keys */
+export const enum EventLoopMetricLabels {
+  PERCENTILE = 'percentile',
 }
 
 export const CONCURRENT_REQUESTS = {
@@ -25,21 +30,21 @@ export const CONCURRENT_REQUESTS = {
 export const REQUESTS_TOTAL = {
   name: 'runtime_http_requests_total',
   help: 'The total number of HTTP requests.',
-  labelNames: [MetricLabels.STATUS_CODE, MetricLabels.REQUEST_HANDLER],
+  labelNames: [RequestsMetricLabels.STATUS_CODE, RequestsMetricLabels.REQUEST_HANDLER],
   type: METRIC_TYPES.COUNTER,
 }
 
 export const REQUESTS_ABORTED = {
   name: 'runtime_http_aborted_requests_total',
   help: 'The total number of HTTP requests aborted.',
-  labelNames: [MetricLabels.REQUEST_HANDLER],
+  labelNames: [RequestsMetricLabels.REQUEST_HANDLER],
   type: METRIC_TYPES.COUNTER,
 }
 
 export const REQUEST_TIMINGS = {
   name: 'runtime_http_requests_duration_milliseconds',
   help: 'The incoming http requests total duration.',
-  labelNames: [MetricLabels.REQUEST_HANDLER],
+  labelNames: [RequestsMetricLabels.REQUEST_HANDLER],
   buckets: [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120],
   type: METRIC_TYPES.HISTOGRAM,
 }
@@ -47,7 +52,20 @@ export const REQUEST_TIMINGS = {
 export const REQUEST_RESPONSE_SIZES = {
   name: 'runtime_http_response_size_bytes',
   help: `The outgoing response sizes (only applicable when the response isn't a stream).`,
-  labelNames: [MetricLabels.REQUEST_HANDLER],
+  labelNames: [RequestsMetricLabels.REQUEST_HANDLER],
   buckets: [500, 2000, 8000, 16000, 64000, 256000, 1024000, 4096000],
   type: METRIC_TYPES.HISTOGRAM,
+}
+
+export const BETWEEN_SCRAPES_EVENT_LOOP_LAG_MAX = {
+  name: 'runtime_event_loop_lag_max_between_scrapes_seconds',
+  help: 'The max event loop lag that occurred between this and the previous scrape',
+  type: METRIC_TYPES.GAUGE,
+}
+
+export const BETWEEN_SCRAPES_EVENT_LOOP_LAG_PERCENTILES = {
+  name: 'runtime_event_loop_lag_percentiles_between_scrapes_seconds',
+  help: 'The mean event loop lag that occurred between this and the previous scrape',
+  labelNames: [EventLoopMetricLabels.PERCENTILE],
+  type: METRIC_TYPES.GAUGE,
 }

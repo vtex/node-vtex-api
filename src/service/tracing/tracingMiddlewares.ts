@@ -15,8 +15,8 @@ import {
   createRequestsTimingsInstrument,
   createTotalAbortedRequestsInstrument,
   createTotalRequestsInstrument,
-  MetricLabels,
-} from './metrics'
+  RequestsMetricLabels,
+} from './metrics/instruments'
 
 const PATHS_BLACKLISTED_FOR_TRACING = ['/metrics', '/_status', '/healthcheck']
 
@@ -47,7 +47,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
 
     ctx.tracing = { currentSpan, tracer }
     ctx.req.once('aborted', () =>
-      abortedRequests.inc({ [MetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string }, 1)
+      abortedRequests.inc({ [RequestsMetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string }, 1)
     )
 
     let responseClosed = false
@@ -62,15 +62,15 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       const responseLength = ctx.response.length
       if (responseLength) {
         responseSizes.observe(
-          { [MetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string },
+          { [RequestsMetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string },
           responseLength
         )
       }
 
       totalRequests.inc(
         {
-          [MetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string,
-          [MetricLabels.STATUS_CODE]: ctx.response.status,
+          [RequestsMetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string,
+          [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
         },
         1
       )
@@ -99,7 +99,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       const onResFinished = () => {
         requestTimings.observe(
           {
-            [MetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string,
+            [RequestsMetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string,
           },
           hrToMillisFloat(process.hrtime(start))
         )
