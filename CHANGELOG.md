@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [6.36.0] - 2020-07-30
 ### Added
 - [metric] Created new Prometheus metrics related to Event Loop Lag between scrapes:
   - runtime_event_loop_lag_max_between_scrapes_seconds
