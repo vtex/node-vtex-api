@@ -1,11 +1,8 @@
 import { EventLoopDelayMonitor, monitorEventLoopDelay } from 'perf_hooks'
 import { Gauge } from 'prom-client'
-import { promisify } from 'util'
 import { nanosecondsToSeconds } from '../../../../utils'
 import { createEventLoopLagMaxInstrument, createEventLoopLagPercentilesInstrument } from '../instruments'
 import { EventLoopMetricLabels } from '../MetricNames'
-
-const sleep = promisify(setTimeout)
 
 export class EventLoopLagMeasurer {
   private eventLoopDelayMonitor: EventLoopDelayMonitor
@@ -24,7 +21,6 @@ export class EventLoopLagMeasurer {
   }
 
   public async updateInstrumentsAndReset() {
-    await sleep(0)
     this.maxInstrument.set(nanosecondsToSeconds(this.eventLoopDelayMonitor.max))
     this.setPercentileObservation(95)
     this.setPercentileObservation(99)
