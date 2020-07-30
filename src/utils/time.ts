@@ -19,6 +19,10 @@ export const hrToMillisFloat = ([seconds, nanoseconds]: [number, number]) => {
   return (seconds * 1e3) + (nanoseconds / 1e6)
 }
 
+export const nanosecondsToSeconds = (nanoseconds: number) => {
+  return nanoseconds / 1e9
+}
+
 export const hrToNano = ([seconds, nanoseconds]: [number, number]) =>
   seconds * 1e9 + nanoseconds
 

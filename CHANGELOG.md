@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.36.0] - 2020-07-30
+### Added
+- [metric] Created new Prometheus metrics related to Event Loop Lag between scrapes:
+  - runtime_event_loop_lag_max_between_scrapes_seconds
+  - runtime_event_loop_lag_percentiles_between_scrapes_seconds
+
 ## [6.35.2] - 2020-07-24
 ### Added
 - `timestamp` field to VTEX IO Billing log.
