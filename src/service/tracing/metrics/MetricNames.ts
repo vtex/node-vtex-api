@@ -65,7 +65,7 @@ export const BETWEEN_SCRAPES_EVENT_LOOP_LAG_MAX = {
 
 export const BETWEEN_SCRAPES_EVENT_LOOP_LAG_PERCENTILES = {
   name: 'runtime_event_loop_lag_percentiles_between_scrapes_seconds',
-  help: 'The mean event loop lag that occurred between this and the previous scrape',
+  help: 'Event loop lag percentiles from the observations that occurred between this and the previous scrape',
   labelNames: [EventLoopMetricLabels.PERCENTILE],
   type: METRIC_TYPES.GAUGE,
 }
