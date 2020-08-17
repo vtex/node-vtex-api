@@ -1,11 +1,10 @@
 import { omit, pick } from 'ramda'
 
-import { cleanError } from '../../../../../utils/error'
+import { cleanError, SENSITIVE_EXCEPTION_FIELDS } from '../../../../../utils/error'
 import { GraphQLServiceContext } from '../typings'
 
 const ERROR_FIELD_WHITELIST = ['message', 'path', 'stack', 'extensions', 'statusCode', 'name', 'headers', 'originalError', 'code']
 const QUERY_FIELDS = ['query', 'operationName', 'variables']
-const SENSITIVE_EXCEPTION_DATA = ['config', 'request', 'response', 'stack']
 
 const trimVariables = (variables: object) => {
   if (variables) {
@@ -68,8 +67,8 @@ const formatError = (error: any, details?: any) => {
       formattedError.extensions.exception = {
         message: formattedError.originalError.message,
         name: formattedError.originalError.name,
-        ...omit(SENSITIVE_EXCEPTION_DATA, formattedError.originalError),
-        sensitive: pick(SENSITIVE_EXCEPTION_DATA, formattedError.originalError),
+        ...omit(SENSITIVE_EXCEPTION_FIELDS, formattedError.originalError),
+        sensitive: pick(SENSITIVE_EXCEPTION_FIELDS, formattedError.originalError),
       }
     } else {
       const mergedException = {...formattedError.originalError,
@@ -78,8 +77,8 @@ const formatError = (error: any, details?: any) => {
       const extendedException = {
         message: formattedError.originalError.message,
         name: formattedError.originalError.name,
-        ...omit(SENSITIVE_EXCEPTION_DATA, mergedException),
-        sensitive: pick(SENSITIVE_EXCEPTION_DATA, mergedException),
+        ...omit(SENSITIVE_EXCEPTION_FIELDS, mergedException),
+        sensitive: pick(SENSITIVE_EXCEPTION_FIELDS, mergedException),
       }
       formattedError.extensions.exception = cleanError(extendedException)
     }
