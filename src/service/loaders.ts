@@ -19,9 +19,9 @@ export const serviceJsonPath = join(process.cwd(), './service/service.json')
 const getWorkers = (workers?: any) => {
   // We need to have only one worker while linking so the debugger
   // works properly
-  if (LINKED) {
-    return 1
-  }
+  // if (LINKED) {
+  //   return 1
+  // }
   // If user didn't set workers property, let's use the cpu count
   const workersFromUser = workers && Number.isInteger(workers) ? workers : cpus().length
   // never spawns more than MAX_WORKERS

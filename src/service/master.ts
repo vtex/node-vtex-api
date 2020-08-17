@@ -10,8 +10,12 @@ import {
   trackStatus,
 } from './worker/runtime/statusTrack'
 import { ServiceJSON } from './worker/runtime/typings'
+import { writeFileSync } from 'fs'
 
 let handledSignal: NodeJS.Signals | undefined
+
+const SIGINT_TIMEOUT_S = 1
+const MAX_SIGTERM_TIMEOUT_S = 30
 
 const onMessage = (worker: Worker, message: any) => {
   if (isLog(message)) {
@@ -43,6 +47,8 @@ const onExit = (worker: Worker, code: number, signal: string) => {
 
   const exitOn = ['SIGTERM', 'SIGINT']
   if (handledSignal && exitOn.includes(handledSignal) && Object.keys(cluster.workers).length === 0) {
+    console.log('GRACEFULL EXITING')
+    writeFileSync('./morri' + Date.now() + '.txt', Buffer.from('MORTO!'))
     process.exit((constants.signals as any)[handledSignal])
   }
 }
@@ -56,7 +62,7 @@ const onOnline = (worker: Worker) => {
   }
 }
 
-const handleSignal: NodeJS.SignalsListener = signal => {
+const handleSignal =  (timeout: number): NodeJS.SignalsListener => signal => {
   // Log the Master Process received a signal
   const message = `Master process ${process.pid} received signal ${signal}`
   console.warn(message)
@@ -68,23 +74,24 @@ const handleSignal: NodeJS.SignalsListener = signal => {
   // Let's raise the flag to kill the master process after all workers have died
   handledSignal = signal
 
+  const timeoutMs = 1e3*timeout
   // If the worker refuses to die after some milliseconds, let's force it to die
-  setTimeout(() => Object.values(cluster.workers).forEach(worker => worker?.process.kill('SIGKILL')), 1e3)
+  setTimeout(() => Object.values(cluster.workers).forEach(worker => worker?.process.kill('SIGKILL')), timeoutMs + 1e3)
   // If master refuses to die after some milliseconds, let's force it to die
-  setTimeout(() => process.exit((constants.signals as any)[signal]), 1.5e3)
+  setTimeout(() => process.exit((constants.signals as any)[signal]), timeoutMs + 2e3)
 }
 
 export const startMaster = (service: ServiceJSON) => {
-  const { workers: numWorkers } = service
+  const { workers: numWorkers, timeout = 30 } = service
 
   if (service.deterministicVary) {
     process.env.DETERMINISTIC_VARY = 'true'
   }
 
   // Setup dubugger
-  if (LINKED) {
-    cluster.setupMaster({inspectPort: INSPECT_DEBUGGER_PORT})
-  }
+  // if (LINKED) {
+  //   cluster.setupMaster({inspectPort: INSPECT_DEBUGGER_PORT})
+  // }
 
   console.log(`Spawning ${numWorkers} workers`)
   for(let i=0; i < numWorkers; i++) {
@@ -95,6 +102,7 @@ export const startMaster = (service: ServiceJSON) => {
   cluster.on('exit', onExit)
   cluster.on('message', onMessage)
 
-  process.on('SIGINT', handleSignal)
-  process.on('SIGTERM', handleSignal)
+  const sigtermTimeout = Math.max(MAX_SIGTERM_TIMEOUT_S, timeout)
+  process.on('SIGTERM', handleSignal(sigtermTimeout))
+  process.on('SIGINT', handleSignal(SIGINT_TIMEOUT_S))
 }
