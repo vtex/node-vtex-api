@@ -1,6 +1,7 @@
-import { formatApolloErrors, ApolloError } from 'apollo-server-errors'
+import { formatApolloErrors } from 'apollo-server-errors'
 import { uniqBy } from 'ramda'
 
+import { LINKED } from '../../../../../constants'
 import {
   cancelledErrorCode,
   cancelledRequestStatus,
@@ -10,7 +11,6 @@ import { IOContext } from '../../typings'
 import { GraphQLServiceContext } from '../typings'
 import { createFormatError } from '../utils/error'
 import { generatePathName } from '../utils/pathname'
-import { LINKED } from '../../../../../constants'
 
 const TWO_SECONDS_S = 2
 

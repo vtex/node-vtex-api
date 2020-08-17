@@ -1,4 +1,4 @@
-import { pick, omit } from 'ramda'
+import { omit, pick } from 'ramda'
 
 import { cleanError } from '../../../../../utils/error'
 import { GraphQLServiceContext } from '../typings'
@@ -69,7 +69,7 @@ const formatError = (error: any, details?: any) => {
         message: formattedError.originalError.message,
         name: formattedError.originalError.name,
         ...omit(SENSITIVE_EXCEPTION_DATA, formattedError.originalError),
-        sensitive: pick(SENSITIVE_EXCEPTION_DATA, formattedError.originalError)
+        sensitive: pick(SENSITIVE_EXCEPTION_DATA, formattedError.originalError),
       }
     } else {
       const mergedEx = {...formattedError.originalError,
@@ -79,7 +79,7 @@ const formatError = (error: any, details?: any) => {
         message: formattedError.originalError.message,
         name: formattedError.originalError.name,
         ...omit(SENSITIVE_EXCEPTION_DATA, mergedEx),
-        sensitive: pick(SENSITIVE_EXCEPTION_DATA, mergedEx)
+        sensitive: pick(SENSITIVE_EXCEPTION_DATA, mergedEx),
       }
       formattedError.extensions.exception = cleanError(extendedException)
     }
