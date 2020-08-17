@@ -1,6 +1,7 @@
 import { formatApolloErrors } from 'apollo-server-errors'
 import { uniqBy } from 'ramda'
 
+import { LINKED } from '../../../../../constants'
 import {
   cancelledErrorCode,
   cancelledRequestStatus,
@@ -26,27 +27,33 @@ const createLogErrorToSplunk = (vtex: IOContext) => (err: any) => {
     logger,
   } = vtex
 
-  // Prevent logging cancellation error (it's not an error)
-  if (err?.extensions?.exception?.code === cancelledErrorCode) {
-    return
-  }
+  try {
+    // Prevent logging cancellation error (it's not an error)
+    if (err?.extensions?.exception?.code === cancelledErrorCode) {
+      return
+    }
 
-  // Add pathName to each error
-  if (err.path) {
-    err.pathName = generatePathName(err.path)
-  }
+    // Add pathName to each error
+    if (err.path) {
+      err.pathName = generatePathName(err.path)
+    }
 
-  const log = {
-    ...err,
-    routeId: id,
-  }
+    const log = {
+      ...err,
+      routeId: id,
+    }
 
-  // Grab level from originalError, default to "error" level.
-  let level = err?.extensions?.exception?.level as LogLevel
-  if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
-    level = LogLevel.Error
+    // Grab level from originalError, default to "error" level.
+    let level = err?.extensions?.exception?.level as LogLevel
+    if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
+      level = LogLevel.Error
+    }
+    logger.log(log, level)
+  } finally {
+    if (!LINKED && err?.extensions?.exception?.sensitive) {
+      delete err.extensions.exception.sensitive
+    }
   }
-  logger.log(log, level)
 }
 
 export async function graphqlError (ctx: GraphQLServiceContext, next: () => Promise<void>) {

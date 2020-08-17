@@ -1,4 +1,5 @@
 import { IOClients } from '../../../../../clients/IOClients'
+import { LINKED } from '../../../../../constants'
 import {
   cancelledRequestStatus,
   RequestCancelledError,
@@ -7,7 +8,7 @@ import {
   TooManyRequestsError,
   tooManyRequestsStatus,
 } from '../../../../../errors/TooManyRequestsError'
-import { cleanError } from '../../../../../utils/error'
+import { cleanError, SENSITIVE_EXCEPTION_FIELDS } from '../../../../../utils/error'
 import { LogLevel } from '../../../../logger'
 import {
   ParamsContext,
@@ -20,6 +21,70 @@ const META_HEADER = 'x-vtex-meta'
 const ETAG_HEADER = 'etag'
 const TWO_SECONDS_S = 2
 const production = process.env.VTEX_PRODUCTION === 'true'
+
+// todo: unify GraphQL and REST exception treatment
+const logAndRemoveSensitiveData = <
+  T extends IOClients,
+  U extends RecorderState,
+  V extends ParamsContext
+> (ctx: ServiceContext<T, U, V>,err: any) => {
+  const {
+    method,
+    status,
+    query,
+    vtex: {
+      operationId,
+      requestId,
+      route: {
+        id,
+        params,
+      },
+      serverTiming,
+    },
+    headers: {
+      'x-forwarded-path': forwardedPath,
+      'x-forwarded-host': forwardedHost,
+      'x-forwarded-proto': forwardedProto,
+      'x-vtex-caller': caller,
+      'x-vtex-platform': platform,
+      'x-vtex-product': product,
+      'x-vtex-locale': locale,
+    },
+  } = ctx
+
+  // Grab level from originalError, default to "error" level.
+  let level = err && err.level as LogLevel
+  if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
+    level = LogLevel.Error
+  }
+
+  const log = {
+    ...err,
+    caller,
+    forwardedHost,
+    forwardedPath,
+    forwardedProto,
+    locale,
+    method,
+    operationId,
+    params,
+    platform,
+    product,
+    query,
+    requestId,
+    routeId: id,
+    serverTiming,
+    status,
+  }
+
+  // Use sendLog directly to avoid cleaning error twice.
+  ctx.vtex.logger.log(log, level)
+  if (!LINKED) {
+    SENSITIVE_EXCEPTION_FIELDS.forEach(field => {
+      delete err[field]
+    })
+  }
+}
 
 export async function error<
   T extends IOClients,
@@ -46,7 +111,6 @@ export async function error<
       : ctx.status >= 500 && ctx.status <= 599
         ? ctx.status
         : 500
-    ctx.body = ctx.body || err
 
     // Do not generate etag for errors
     ctx.remove(META_HEADER)
@@ -60,57 +124,7 @@ export async function error<
       ctx.set(CACHE_CONTROL_HEADER, `no-cache, no-store`)
     }
 
-    // Log error
-    const {
-      method,
-      status,
-      query,
-      vtex: {
-        operationId,
-        requestId,
-        route: {
-          id,
-          params,
-        },
-        serverTiming,
-      },
-      headers: {
-        'x-forwarded-path': forwardedPath,
-        'x-forwarded-host': forwardedHost,
-        'x-forwarded-proto': forwardedProto,
-        'x-vtex-caller': caller,
-        'x-vtex-platform': platform,
-        'x-vtex-product': product,
-        'x-vtex-locale': locale,
-      },
-    } = ctx
-
-    // Grab level from originalError, default to "error" level.
-    let level = err && err.level as LogLevel
-    if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
-      level = LogLevel.Error
-    }
-
-    const log = {
-      ...err,
-      caller,
-      forwardedHost,
-      forwardedPath,
-      forwardedProto,
-      locale,
-      method,
-      operationId,
-      params,
-      platform,
-      product,
-      query,
-      requestId,
-      routeId: id,
-      serverTiming,
-      status,
-    }
-
-    // Use sendLog directly to avoid cleaning error twice.
-    ctx.vtex.logger.log(log, level)
+    logAndRemoveSensitiveData(ctx, err)
+    ctx.body = ctx.body || err
   }
 }
