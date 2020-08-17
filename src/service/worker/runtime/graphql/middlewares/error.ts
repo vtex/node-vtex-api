@@ -1,4 +1,4 @@
-import { formatApolloErrors } from 'apollo-server-errors'
+import { formatApolloErrors, ApolloError } from 'apollo-server-errors'
 import { uniqBy } from 'ramda'
 
 import {
@@ -10,6 +10,7 @@ import { IOContext } from '../../typings'
 import { GraphQLServiceContext } from '../typings'
 import { createFormatError } from '../utils/error'
 import { generatePathName } from '../utils/pathname'
+import { LINKED } from '../../../../../constants'
 
 const TWO_SECONDS_S = 2
 
@@ -47,6 +48,10 @@ const createLogErrorToSplunk = (vtex: IOContext) => (err: any) => {
     level = LogLevel.Error
   }
   logger.log(log, level)
+
+  if (!LINKED && err?.extensions?.exception?.sensitive) {
+    delete err.extensions.exception.sensitive
+  }
 }
 
 export async function graphqlError (ctx: GraphQLServiceContext, next: () => Promise<void>) {
