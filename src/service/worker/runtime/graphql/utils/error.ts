@@ -72,14 +72,14 @@ const formatError = (error: any, details?: any) => {
         sensitive: pick(SENSITIVE_EXCEPTION_DATA, formattedError.originalError),
       }
     } else {
-      const mergedEx = {...formattedError.originalError,
+      const mergedException = {...formattedError.originalError,
         ...formattedError.extensions.exception,
       }
       const extendedException = {
         message: formattedError.originalError.message,
         name: formattedError.originalError.name,
-        ...omit(SENSITIVE_EXCEPTION_DATA, mergedEx),
-        sensitive: pick(SENSITIVE_EXCEPTION_DATA, mergedEx),
+        ...omit(SENSITIVE_EXCEPTION_DATA, mergedException),
+        sensitive: pick(SENSITIVE_EXCEPTION_DATA, mergedException),
       }
       formattedError.extensions.exception = cleanError(extendedException)
     }
