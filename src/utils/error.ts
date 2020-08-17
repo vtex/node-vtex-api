@@ -3,6 +3,8 @@ import { find, keys, pick } from 'ramda'
 
 export const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url', 'metric', 'inflightKey', 'forceMaxAge', 'params', 'responseType']
 
+const FORBIDDEN_LOG_HEADERS = ['authorization', 'proxy-authorization', 'vtexidclientautcookie', 'x-vtex-api-appkey', 'x-vtex-api-apptoken']
+
 const MAX_ERROR_STRING_LENGTH = process.env.MAX_ERROR_STRING_LENGTH ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10) : 8 * 1024
 
 const findCaseInsensitive = (target: string, set: string[]) => find(
@@ -69,18 +71,12 @@ const destroyCircular = (from: any, seen: any[]) => {
       const headers = to[property] && to[property].headers
       if (headers) {
         const headerNames = keys(headers)
-        const authorization = findCaseInsensitive('authorization', headerNames as string[])
-        if (!!authorization) {
-          delete headers[authorization]
-        }
-        const proxyAuth = findCaseInsensitive('proxy-authorization', headerNames as string[])
-        if (!!proxyAuth) {
-          delete headers[proxyAuth]
-        }
-        const vtexIdClientAutCookie = findCaseInsensitive('vtexidclientautcookie', headerNames as string[])
-        if (!!vtexIdClientAutCookie) {
-          delete headers[vtexIdClientAutCookie]
-        }
+        FORBIDDEN_LOG_HEADERS.forEach(header => {
+          const foundHeader = findCaseInsensitive(header, headerNames as string[])
+          if (foundHeader) {
+            delete headers[foundHeader]
+          }
+        })
       }
     }
   }
