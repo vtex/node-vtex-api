@@ -1,6 +1,7 @@
 import { any, chain, compose, filter, forEach, has, map, prop, uniqBy } from 'ramda'
 
 import { LogLevel } from '../../../clients/Logger'
+import { LINKED } from '../../../constants'
 import { cancelledErrorCode, cancelledRequestStatus } from '../../../errors/RequestCancelledError'
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
@@ -120,6 +121,10 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
           level = LogLevel.Error
         }
         ctx.vtex.logger.log(log, level)
+
+        if (!LINKED && err?.extensions?.exception?.sensitive) {
+          delete err.extensions.exception.sensitive
+        }
       }, uniqueErrors)
 
       // Expose graphQLErrors with pathNames to timings middleware
