@@ -101,7 +101,7 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
       // Log each error to splunk individually
       forEach((err: any) => {
         // Prevent logging cancellation error (it's not an error)
-        if (err.extensions.exception?.code !== cancelledErrorCode) {
+        if (!err.extensions.exception || err.extensions.exception.code !== cancelledErrorCode) {
           // Add pathName to each error
           if (err.path) {
             err.pathName = generatePathName(err.path)
@@ -120,7 +120,7 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
           ctx.vtex.logger.log(log, level)
         }
 
-        if (!LINKED && err?.extensions?.exception?.sensitive) {
+        if (!LINKED && err.extensions.exception && err.extensions.exception.sensitive) {
           delete err.extensions.exception.sensitive
         }
       }, uniqueErrors)
