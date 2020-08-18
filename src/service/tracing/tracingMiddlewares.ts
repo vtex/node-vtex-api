@@ -6,8 +6,8 @@ import { RuntimeLogEvents } from '../../tracing/LogEvents'
 import { RuntimeLogFields } from '../../tracing/LogFields'
 import { CustomHttpTags, OpentracingTags, VTEXIncomingRequestTags } from '../../tracing/Tags'
 import { UserLandTracer } from '../../tracing/UserLandTracer'
+import { cloneAndSanitizeHeaders } from '../../tracing/utils'
 import { hrToMillis, hrToMillisFloat } from '../../utils'
-import { addPrefixOntoObjectKeys } from '../../utils/addPrefixOntoObjectKeys'
 import { ServiceContext } from '../worker/runtime/typings'
 import {
   createConcurrentRequestsInstrument,
@@ -91,8 +91,8 @@ export const addTracingMiddleware = (tracer: Tracer) => {
           [VTEXIncomingRequestTags.VTEX_ACCOUNT]: ctx.get(ACCOUNT_HEADER),
         })
 
-        currentSpan.log(addPrefixOntoObjectKeys('req.headers', ctx.request.headers))
-        currentSpan.log(addPrefixOntoObjectKeys('res.headers', ctx.response.headers))
+        currentSpan.log(cloneAndSanitizeHeaders(ctx.request.headers, 'req.headers.'))
+        currentSpan.log(cloneAndSanitizeHeaders(ctx.response.headers, 'res.headers.'))
         ctx.set(TRACE_ID_HEADER, traceInfo.traceId)
       }
 
