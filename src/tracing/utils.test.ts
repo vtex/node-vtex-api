@@ -1,31 +1,31 @@
-import { cloneAndSanitizeHeaders } from './utils'
 import { SENSITIVE_STR } from '@vtex/node-error-report'
+import { cloneAndSanitizeHeaders } from './utils'
 
 describe('cloneAndSanitizeHeaders', () => {
   const headers = {
-    authorization: '1337',
     a: 'b',
+    authorization: '1337',
   }
 
   test('Original object is not modified', () => {
     cloneAndSanitizeHeaders(headers)
     expect(headers).toEqual({
-      authorization: '1337',
       a: 'b',
+      authorization: '1337',
     })
   })
 
   test('Sensitive information is redacted', () => {
     expect(cloneAndSanitizeHeaders(headers)).toEqual({
-      authorization: SENSITIVE_STR,
       a: 'b',
+      authorization: SENSITIVE_STR,
     })
   })
 
   test('Prefix is added if specified', () => {
     expect(cloneAndSanitizeHeaders(headers, 'test.')).toEqual({
-      'test.authorization': SENSITIVE_STR,
       'test.a': 'b',
+      'test.authorization': SENSITIVE_STR,
     })
   })
 
@@ -44,6 +44,8 @@ describe('cloneAndSanitizeHeaders', () => {
     }
 
     expect(cloneAndSanitizeHeaders(axiosHeader)).toEqual({
+      a: 'b',
+      authorization: SENSITIVE_STR,
       common: {
         Accept: 'application/json, text/plain, */*',
       },
@@ -53,8 +55,6 @@ describe('cloneAndSanitizeHeaders', () => {
       post: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      authorization: SENSITIVE_STR,
-      a: 'b',
     })
   })
 })
