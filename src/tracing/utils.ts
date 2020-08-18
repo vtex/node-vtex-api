@@ -1,5 +1,5 @@
-import { Span } from 'opentracing'
 import { authFields, sanitizeAuth } from '@vtex/node-error-report'
+import { Span } from 'opentracing'
 
 export interface TraceInfo {
   traceId: string
