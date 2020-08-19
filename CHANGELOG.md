@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 ### Fixed
 - Set wait time to force shutdown workers based on service timeout
+- Stop removing response from error.
 
 ## [6.36.1] - 2020-08-17
 ### Fixed
