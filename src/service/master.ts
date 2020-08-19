@@ -4,11 +4,7 @@ import { constants } from 'os'
 import { INSPECT_DEBUGGER_PORT, LINKED, UP_SIGNAL } from '../constants'
 import { isLog, logOnceToDevConsole } from './logger'
 import { logger } from './worker/listeners'
-import {
-  broadcastStatusTrack,
-  isStatusTrackBroadcast,
-  trackStatus,
-} from './worker/runtime/statusTrack'
+import { broadcastStatusTrack, isStatusTrackBroadcast, trackStatus } from './worker/runtime/statusTrack'
 import { ServiceJSON } from './worker/runtime/typings'
 
 let handledSignal: NodeJS.Signals | undefined
@@ -16,12 +12,10 @@ let handledSignal: NodeJS.Signals | undefined
 const onMessage = (worker: Worker, message: any) => {
   if (isLog(message)) {
     logOnceToDevConsole(message.message, message.level)
-  }
-  else if (isStatusTrackBroadcast(message)) {
+  } else if (isStatusTrackBroadcast(message)) {
     trackStatus()
     broadcastStatusTrack()
-  }
-  else {
+  } else {
     logger.warn({
       content: message,
       message: 'Worker sent message',
@@ -56,26 +50,33 @@ const onOnline = (worker: Worker) => {
   }
 }
 
-const handleSignal: NodeJS.SignalsListener = signal => {
+const GRACEFULLY_SHUTDOWN_TIMEOUT_S = 30
+const SIGINT_TIMEOUT_S = 1
+
+const handleSignal = (timeout: number): NodeJS.SignalsListener => (signal) => {
   // Log the Master Process received a signal
   const message = `Master process ${process.pid} received signal ${signal}`
   console.warn(message)
-  logger.warn({message, signal})
+  logger.warn({ message, signal })
 
   // For each worker, let's try to kill it gracefully
-  Object.values(cluster.workers).forEach(worker => worker?.kill(signal))
+  Object.values(cluster.workers).forEach((worker) => worker?.kill(signal))
 
   // Let's raise the flag to kill the master process after all workers have died
   handledSignal = signal
 
-  // If the worker refuses to die after some milliseconds, let's force it to die
-  setTimeout(() => Object.values(cluster.workers).forEach(worker => worker?.process.kill('SIGKILL')), 1e3)
-  // If master refuses to die after some milliseconds, let's force it to die
-  setTimeout(() => process.exit((constants.signals as any)[signal]), 1.5e3)
+  // Let's wait for all in-flight requests finish before send any kill signal
+  const waitTimeToForceKill = timeout * 1e3
+
+  // Force workers and master to die after a graceful timeout
+  setTimeout(() => {
+    Object.values(cluster.workers).forEach((worker) => worker?.process.kill('SIGKILL'))
+    process.exit((constants.signals as any)[signal])
+  }, waitTimeToForceKill)
 }
 
 export const startMaster = (service: ServiceJSON) => {
-  const { workers: numWorkers } = service
+  const { workers: numWorkers, timeout = GRACEFULLY_SHUTDOWN_TIMEOUT_S } = service
 
   if (service.deterministicVary) {
     process.env.DETERMINISTIC_VARY = 'true'
@@ -83,11 +84,14 @@ export const startMaster = (service: ServiceJSON) => {
 
   // Setup dubugger
   if (LINKED) {
-    cluster.setupMaster({inspectPort: INSPECT_DEBUGGER_PORT})
+    cluster.setupMaster({ inspectPort: INSPECT_DEBUGGER_PORT })
   }
 
+  const shutdownTimeout = Math.max(GRACEFULLY_SHUTDOWN_TIMEOUT_S, timeout)
+
   console.log(`Spawning ${numWorkers} workers`)
-  for(let i=0; i < numWorkers; i++) {
+  console.log(`Using ${shutdownTimeout} seconds as worker graceful shutdown timeout`)
+  for (let i = 0; i < numWorkers; i++) {
     cluster.fork()
   }
 
@@ -95,6 +99,7 @@ export const startMaster = (service: ServiceJSON) => {
   cluster.on('exit', onExit)
   cluster.on('message', onMessage)
 
-  process.on('SIGINT', handleSignal)
-  process.on('SIGTERM', handleSignal)
+  process.on('SIGINT', handleSignal(SIGINT_TIMEOUT_S))
+
+  process.on('SIGTERM', handleSignal(shutdownTimeout))
 }
