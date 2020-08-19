@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.36.2] - 2020-08-19
+### Fixed
+- Set wait time to force shutdown workers based on service timeout
+- Stop removing response from error.
+- Update @vtex/node-error-report to remove sensitive information from errors logged to splunk and to distributed tracing.
+- Remove sensitive information from headers before logging onto tracing spans.
+
 ## [6.36.1] - 2020-08-17
 ### Fixed
 - Remove sensitive exception data before responding to browser.
