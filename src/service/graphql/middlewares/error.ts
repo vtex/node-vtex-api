@@ -1,6 +1,7 @@
 import { any, chain, compose, filter, forEach, has, map, prop, uniqBy } from 'ramda'
 
 import { LogLevel } from '../../../clients/Logger'
+import { LINKED } from '../../../constants'
 import { cancelledErrorCode, cancelledRequestStatus } from '../../../errors/RequestCancelledError'
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
@@ -100,26 +101,28 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
       // Log each error to splunk individually
       forEach((err: any) => {
         // Prevent logging cancellation error (it's not an error)
-        if (err.extensions.exception && err.extensions.exception.code === cancelledErrorCode) {
-          return
+        if (!err.extensions.exception || err.extensions.exception.code !== cancelledErrorCode) {
+          // Add pathName to each error
+          if (err.path) {
+            err.pathName = generatePathName(err.path)
+          }
+
+          const log = {
+            ...err,
+            routeId: id,
+          }
+
+          // Grab level from originalError, default to "error" level.
+          let level = err.extensions.exception && err.extensions.exception.level as LogLevel
+          if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
+            level = LogLevel.Error
+          }
+          ctx.vtex.logger.log(log, level)
         }
 
-        // Add pathName to each error
-        if (err.path) {
-          err.pathName = generatePathName(err.path)
+        if (!LINKED && err.extensions.exception && err.extensions.exception.sensitive) {
+          delete err.extensions.exception.sensitive
         }
-
-        const log = {
-          ...err,
-          routeId: id,
-        }
-
-        // Grab level from originalError, default to "error" level.
-        let level = err.extensions.exception && err.extensions.exception.level as LogLevel
-        if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
-          level = LogLevel.Error
-        }
-        ctx.vtex.logger.log(log, level)
       }, uniqueErrors)
 
       // Expose graphQLErrors with pathNames to timings middleware

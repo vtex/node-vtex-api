@@ -1,7 +1,7 @@
 import { formatApolloErrors } from 'apollo-server-errors'
-import { pick } from 'ramda'
+import { pick, omit } from 'ramda'
 
-import { cleanError } from '../../../utils/error'
+import { cleanError, SENSITIVE_EXCEPTION_FIELDS } from '../../../utils/error'
 import { GraphQLServiceContext } from '../typings'
 
 const ERROR_FIELD_WHITELIST = ['message', 'path', 'stack', 'extensions', 'statusCode', 'name', 'headers', 'originalError', 'code']
@@ -29,16 +29,19 @@ const createFormatError = (details: any) => (error: any) => {
       formattedError.extensions.exception = {
         message: formattedError.originalError.message,
         name: formattedError.originalError.name,
-        stack: formattedError.originalError.stack,
-        ...formattedError.originalError,
+        ...omit(SENSITIVE_EXCEPTION_FIELDS, formattedError.originalError),
+        sensitive: pick(SENSITIVE_EXCEPTION_FIELDS, formattedError.originalError),
       }
     } else {
+      const mergedExceptions = {
+        ...formattedError.originalError,
+        ...formattedError.extensions.exception,
+      }
       const extendedException = {
         message: formattedError.originalError.message,
         name: formattedError.originalError.name,
-        stack: formattedError.originalError.stack,
-        ...formattedError.originalError,
-        ...formattedError.extensions.exception,
+        ...omit(SENSITIVE_EXCEPTION_FIELDS, mergedExceptions),
+        sensitive: pick(SENSITIVE_EXCEPTION_FIELDS, mergedExceptions),
       }
       formattedError.extensions.exception = cleanError(extendedException)
     }

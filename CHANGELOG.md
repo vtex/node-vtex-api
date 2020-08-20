@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.75.1] - 2020-08-20
+### Fixed
+- Remove sensitive data when an exception occurs.
+
 ## [3.75.0] - 2020-05-28
 ### Added
 - Add support for router binding header format.
