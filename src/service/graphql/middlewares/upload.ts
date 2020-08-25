@@ -2,7 +2,7 @@ import { graphqlUploadKoa } from 'graphql-upload'
 import { GraphQLServiceContext } from '../typings'
 
 declare module 'graphql-upload' {
-  export function graphqlUploadKoa(options: ApolloUploadOptions): (ctx: GraphQLServiceContext, next: () => Promise<any>) => Promise<void>
+  export function graphqlUploadKoa(options: any): (ctx: GraphQLServiceContext, next: () => Promise<any>) => Promise<void>
 }
 
 const graphqlUpload = graphqlUploadKoa({
