@@ -202,3 +202,6 @@ export class MetricsAccumulator {
     return [...systemMetrics, ...aggregateMetrics, ...envFlushMetric, ...cacheMetrics]
   }
 }
+
+global.metrics = new MetricsAccumulator()
+
