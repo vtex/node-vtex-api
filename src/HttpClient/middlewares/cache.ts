@@ -95,7 +95,7 @@ export const cacheMiddleware = ({type, storage}: CacheOptions) => {
         return
       }
 
-      const validateStatus = addNotModified(ctx.config.validateStatus!)
+      const validateStatus = addNotModified(ctx.config.validateStatus as (status: number) => boolean)
       if (cachedEtag && validateStatus(response.status as number)) {
         ctx.config.headers['if-none-match'] = cachedEtag
         ctx.config.validateStatus = validateStatus

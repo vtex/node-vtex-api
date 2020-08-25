@@ -11,7 +11,7 @@ function nullIfNotFound (config: any): boolean {
 export const acceptNotFoundMiddleware = async (ctx: MiddlewareContext, next: () => Promise<void>) => {
   const {config} = ctx
   if (nullIfNotFound(config)) {
-    ctx.config.validateStatus = addNotFound(config.validateStatus!)
+    ctx.config.validateStatus = addNotFound(config.validateStatus as (status: number) => boolean)
   }
 
   await next()

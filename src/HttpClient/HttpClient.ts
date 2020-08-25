@@ -1,4 +1,4 @@
-import { AxiosResponse } from 'axios'
+import { AxiosResponse, ResponseType } from 'axios'
 import { createHash } from 'crypto'
 import { IncomingMessage } from 'http'
 import compose from 'koa-compose'
@@ -130,12 +130,12 @@ export class HttpClient {
   }
 
   public getBuffer = (url: string, config: RequestConfig = {}): Promise<{data: Buffer, headers: any}> => {
-    const bufferConfig = {cacheable: CacheType.Disk, ...config, url, responseType: 'arraybuffer', transformResponse: noTransforms}
+    const bufferConfig = {cacheable: CacheType.Disk, ...config, url, responseType: 'arraybuffer' as ResponseType, transformResponse: noTransforms}
     return this.request(bufferConfig)
   }
 
   public getStream = (url: string, config: RequestConfig = {}): Promise<IncomingMessage> => {
-    const streamConfig = {...config, url, responseType: 'stream', transformResponse: noTransforms}
+    const streamConfig = {...config, url, responseType: 'stream' as ResponseType, transformResponse: noTransforms}
     return this.request(streamConfig).then(response => response.data as IncomingMessage)
   }
 
