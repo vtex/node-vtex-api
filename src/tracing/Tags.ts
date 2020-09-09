@@ -6,7 +6,7 @@ export { OpentracingTags }
 /**
  * The following tags are process tags - defined when the tracer is instantiated.
  * Those will annotate all spans created
- **/
+ */
 export const enum AppTags {
   /** Boolean indicating if the app is linked or not */
   VTEX_APP_LINKED = 'app.linked',
