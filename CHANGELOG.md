@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.36.3] - 2020-09-09
+### Changed
+- Allow sending events to any resource
+
 ## [6.36.2] - 2020-08-19
 ### Fixed
 - Set wait time to force shutdown workers based on service timeout
