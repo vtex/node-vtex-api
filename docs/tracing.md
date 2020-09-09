@@ -10,6 +10,16 @@ cases.**
 
 This documentation will approach details on the native instrumentation provided.
 
+**Table of Contents**
+
+- [Span Tags](#span-tags)
+- [Native instrumentation](#native-instrumentation)
+  - [Entrypoint Span](#entrypoint-span)
+  - [Process Tags](#process-tags)
+  - [Client HTTP(S) calls](#client-https-calls)
+  - [Splunk logs integration](#splunk-logs-integration)
+- [Manual Instrumentation](#manual-instrumentation)
+
 ## Span Tags
 
 All Tags exported for your manual instrumentation or used by the native instrumentation are
@@ -128,6 +138,17 @@ These spans (`http-request` or `request`) may have an error associated with them
 additional error tags and logs.
 
 For more information on each tag check [Tags.ts](../src/tracing/Tags.ts).
+
+### Splunk logs integration
+
+Logs to splunk done via a `Logger` instance are annotated with a `traceId` field if the ongoing trace
+was chosen to be sampled. That way we can query for logs on splunk with a trace associated with it:
+
+```
+index=io_vtex_logs your-query-goes-here traceId!=NULL
+```
+
+The results will have the `traceId` field, which we can use to find the trace associated with it.
 
 ## Manual Instrumentation
 
