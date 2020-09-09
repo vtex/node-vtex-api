@@ -17,8 +17,8 @@ available and documented in [this file](../src/tracing/Tags.ts).
 
 Note that the tags specified in the
 [OpenTracing Semantic Convention](https://github.com/opentracing/specification/blob/master/semantic_conventions.md)
-are reexported in this file - the documentation for these tags is available on
-[this link](https://github.com/opentracing/specification/blob/master/semantic_conventions.md).
+are reexported in this file - the documentation for these tags is available
+[here](https://github.com/opentracing/specification/blob/master/semantic_conventions.md).
 
 ## Native instrumentation
 
