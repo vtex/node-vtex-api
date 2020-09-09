@@ -134,9 +134,10 @@ For more information on each tag check [Tags.ts](../src/tracing/Tags.ts).
 If you want to have a more granular view on the traces involving your app, you can do a manual
 instrumentation for distributed tracing.
 
-All service handlers will have a `tracer` field on the `IOContext` provided, with which you can
-create spans for your manual instrumentation. The `tracer` object is a wrapper for the `OpenTracing`
-tracer, and it's implemented [here](../src/tracing/UserLandTracer.ts).
+All route and event handlers for your app will have a `tracer` field on the `IOContext` provided,
+with which you can create spans for your manual instrumentation. The `tracer` object is a wrapper for
+the `OpenTracing` tracer, and it's implemented [here](../src/tracing/UserLandTracer.ts), by the
+`UserLandTracer` class.
 
 For a detailed tutorial on how to instrument your app read the docs on
 [VTEX IO Distributed Tracing Guide](https://github.com/vtex/vtex-io-tracing-guide).
