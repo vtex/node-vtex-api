@@ -27,15 +27,15 @@ available and documented in [this file](../src/tracing/Tags.ts).
 
 Note that the tags specified in the
 [OpenTracing Semantic Convention](https://github.com/opentracing/specification/blob/master/semantic_conventions.md)
-are reexported in this file - the documentation for these tags is available
+are reexported in this file – the documentation for these tags is available
 [here](https://github.com/opentracing/specification/blob/master/semantic_conventions.md).
 
 ## Native instrumentation
 
 ### Entrypoint Span
 
-The native instrumentation creates an entrypoint span for each incoming request on the app - the
-span will start first thing when the request is processed by Koa and will finish when the response
+The native instrumentation creates an entrypoint span for each incoming request on the app – the
+span will start when the request is processed by Koa and will finish when the response
 has finished streaming.
 
 The entrypoint span has tags assigned related to the incoming request (more details on the meaning
@@ -89,7 +89,7 @@ instrumentation provides an option to add a suffix to these span names, resultin
 <img src="./images/tracing-http-request3.png"/>
 
 Each `http-request` represents the entire duration of the request, except when the request is
-streaming, in this case this span is finished when the underlying http client implementation -
+streaming. In this case, this span is finished when the underlying http client implementation -
 `axios` - finishes preparing the incoming data stream.
 
 A `request` span (wrapping the client's middlewares) has the following tags:
@@ -117,7 +117,7 @@ will be set to true:
 
 - http.no_response
 
-Now about a `http-request` span, it has the following tags:
+The `http-request` span has the following tags:
 
 - span.kind
 - http.method
