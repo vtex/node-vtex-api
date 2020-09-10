@@ -3,20 +3,43 @@ export { OpentracingTags }
 
 /* tslint:disable:object-literal-sort-keys */
 
-export const enum VTEXIncomingRequestTags {
-  VTEX_ACCOUNT = 'vtex.incoming.account',
-  VTEX_REQUEST_ID = 'vtex.request_id',
-  VTEX_WORKSPACE = 'vtex.incoming.workspace',
+/**
+ * The following tags are process tags - defined when the tracer is instantiated.
+ * Those will annotate all spans created
+ */
+export const enum AppTags {
+  /** Boolean indicating if the app is linked or not */
+  VTEX_APP_LINKED = 'app.linked',
+
+  /** The value of the NODE_ENV environment variable */
+  VTEX_APP_NODE_ENV = 'app.node_env',
+
+  /** The @vtex/api version used (e.g. '6.1.2') */
+  VTEX_APP_NODE_VTEX_API_VERSION = 'app.node_vtex_api_version',
+
+  /** The value of the VTEX_PRODUCTION environment variable - whether the app is in a production workspace */
+  VTEX_APP_PRODUCTION = 'app.production',
+
+  /** The value of the VTEX_REGION environment variable (e.g. 'aws-us-east-1') */
+  VTEX_APP_REGION = 'app.region',
+
+  /** The app version (e.g. '1.2.0') */
+  VTEX_APP_VERSION = 'app.version',
+
+  /** The workspace in which the app is installed or linked */
+  VTEX_APP_WORKSPACE = 'app.workspace',
 }
 
-export const enum AppTags {
-  VTEX_APP_LINKED = 'app.linked',
-  VTEX_APP_NODE_ENV = 'app.node_env',
-  VTEX_APP_NODE_VTEX_API_VERSION = 'app.node_vtex_api_version',
-  VTEX_APP_PRODUCTION = 'app.production',
-  VTEX_APP_REGION = 'app.region',
-  VTEX_APP_VERSION = 'app.version',
-  VTEX_APP_WORKSPACE = 'app.workspace',
+/** The following tags annotate the entrypoint span on incoming requests */
+export const enum VTEXIncomingRequestTags {
+  /** The account being served by the request */
+  VTEX_ACCOUNT = 'vtex.incoming.account',
+
+  /** The request id header value */
+  VTEX_REQUEST_ID = 'vtex.request_id',
+
+  /** The workspace being served by the request */
+  VTEX_WORKSPACE = 'vtex.incoming.workspace',
 }
 
 export const enum CustomHttpTags {
