@@ -34,6 +34,7 @@ export const COLOSSUS_ROUTE_DECLARER_HEADER = 'x-colossus-route-declarer'
 export const COLOSSUS_ROUTE_ID_HEADER = 'x-colossus-route-id'
 export const COLOSSUS_PARAMS_HEADER = 'x-colossus-params'
 export const TRACE_ID_HEADER = 'x-trace-id'
+export const PROVIDER_HEADER = 'x-vtex-provider'
 
 export type VaryHeaders = typeof SEGMENT_HEADER | typeof SESSION_HEADER | typeof PRODUCT_HEADER | typeof LOCALE_HEADER
 
@@ -42,9 +43,9 @@ export const BODY_HASH = '__graphqlBodyHash'
 export const UP_SIGNAL = 'UP'
 
 export const MAX_AGE = {
-  LONG  : 86400,
+  LONG: 86400,
   MEDIUM: 3600,
-  SHORT : 120,
+  SHORT: 120,
 }
 
 export const HTTP_SERVER_PORT = 5050
