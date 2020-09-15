@@ -1,4 +1,4 @@
-import { DocumentNode, execute } from 'graphql'
+import { DocumentNode, execute, GraphQLSchema } from 'graphql'
 
 import { IOClients } from '../../../../clients/IOClients'
 import { ParamsContext, RecorderState, ServiceContext } from '../typings'
@@ -30,3 +30,9 @@ export interface GraphQLContext extends ParamsContext {
 }
 
 export type GraphQLServiceContext = ServiceContext<IOClients, RecorderState, GraphQLContext>
+
+export interface ExecutableSchema {
+  schema: GraphQLSchema
+  hasProvider: boolean
+  provider?: string
+}
