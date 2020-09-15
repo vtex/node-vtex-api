@@ -1,7 +1,7 @@
-import { ExecutableSchema } from './../typings'
 import { json } from 'co-body'
 import { DocumentNode, GraphQLSchema, parse as gqlParse, validate } from 'graphql'
 import { parse } from 'url'
+import { ExecutableSchema } from './../typings'
 
 import { BODY_HASH } from '../../../../../constants'
 import { GraphQLServiceContext, Query } from '../typings'

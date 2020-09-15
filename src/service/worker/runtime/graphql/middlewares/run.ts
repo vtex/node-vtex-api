@@ -1,6 +1,6 @@
 import { execute } from 'graphql'
 
-import { GraphQLServiceContext, ExecutableSchema } from '../typings'
+import { ExecutableSchema, GraphQLServiceContext } from '../typings'
 
 export const run = (executableSchema: ExecutableSchema) =>
   async function runHttpQuery(ctx: GraphQLServiceContext, next: () => Promise<void>) {

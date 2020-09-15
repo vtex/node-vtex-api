@@ -1,9 +1,9 @@
-import { ExecutableSchema } from '../typings'
-import { makeSchema } from '../schema/index'
-import { GraphQLServiceContext } from '../typings'
-import { GraphQLOptions, ParamsContext, RecorderState } from '../../typings'
 import { IOClients } from '../../../../../clients'
 import { PROVIDER_HEADER } from '../../../../../constants'
+import { GraphQLOptions, ParamsContext, RecorderState } from '../../typings'
+import { makeSchema } from '../schema/index'
+import { ExecutableSchema } from '../typings'
+import { GraphQLServiceContext } from '../typings'
 
 export const updateSchema = <T extends IOClients, U extends RecorderState, V extends ParamsContext>(
   graphql: GraphQLOptions<T, U, V>,
