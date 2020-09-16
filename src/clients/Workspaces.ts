@@ -39,8 +39,8 @@ export class Workspaces extends InfraClient {
     return this.http.put(routes.Workspace(account, workspace), metadata, {params, metric})
   }
 
-  public promote = (account: string, workspace: string) => {
-    return this.http.put(routes.Promote(account), {workspace}, {metric: 'workspaces-promote'})
+  public promote = (account: string, workspace: string, conflictResolutionStrategy?: string) => {
+    return this.http.put(routes.Promote(account), {workspace, conflictResolutionStrategy}, {metric: 'workspaces-promote'})
   }
 }
 
