@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.76.0] - 2020-09-25
+### Added
+- Added conflict resolution strategy parameter to workspace promotion function
+
 ## [3.75.1] - 2020-08-20
 ### Fixed
 - Remove sensitive data when an exception occurs.
