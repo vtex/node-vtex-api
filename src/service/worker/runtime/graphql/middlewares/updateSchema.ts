@@ -15,13 +15,11 @@ export const updateSchema = <T extends IOClients, U extends RecorderState, V ext
       vtex: { logger },
       app,
     } = ctx
-    // updates the provider app, fetches the new schema and generate a new runnable schema
+    // fetches the new schema and generate a new runnable schema, updates the provider app,
     if (
       executableSchema.hasProvider &&
       (!executableSchema.provider || executableSchema.provider !== ctx.headers[PROVIDER_HEADER])
     ) {
-      executableSchema.provider = ctx.headers[PROVIDER_HEADER]
-
       try {
         const newSchema = (await apps.getAppFile(ctx.headers[PROVIDER_HEADER], 'public/schema.graphql')).data.toString(
           'utf-8'
@@ -29,6 +27,7 @@ export const updateSchema = <T extends IOClients, U extends RecorderState, V ext
         graphql.schema = newSchema
         const newRunnableSchema = makeSchema(graphql)
         executableSchema.schema = newRunnableSchema.schema
+        executableSchema.provider = ctx.headers[PROVIDER_HEADER]
       } catch (error) {
         logger.error({ error, message: 'Update schema failed', app })
       }
