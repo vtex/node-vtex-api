@@ -182,6 +182,32 @@ export class MasterData extends ExternalClient {
     })
   }
 
+  public async searchDocumentsWithPaginationInfo<T>(
+    { dataEntity, fields, where, pagination, schema, sort }: SearchInput,
+    tracingConfig?: RequestTracingConfig
+  ) {
+    const metric = 'masterdata-searchDocumentsWithPagination'
+    const result = await this.http.getRaw<T[]>(routes.search(dataEntity), {
+      headers: paginationArgsToHeaders(pagination),
+      metric,
+      params: {
+        _fields: generateFieldsArg(fields),
+        _schema: schema,
+        _sort: sort,
+        _where: where,
+      },
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
+    const headers = result.headers
+    const restContentRange = headers['rest-content-range']
+    const total = Number(restContentRange.split('/')[1])
+    const paginationInfo = { ...pagination, total }
+    return { data: result.data, pagination: paginationInfo }
+  }
+
   public scrollDocuments<T>(
     { dataEntity, fields, mdToken, schema, size, sort, }: ScrollInput,
     tracingConfig?: RequestTracingConfig
