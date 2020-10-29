@@ -13,7 +13,8 @@ export const extractVersionFromAppId = (appId: string): string => appId.split('@
 
 export const transformToLinkedLocator = (appId: string) => appId.replace(/\+build.*$/, '+linked')
 
-export const formatLocator = (name: string, versionAndBuild: string): string => `${name}@${removeBuild(versionAndBuild)}`
+export const formatLocator = (name: string, versionAndBuild: string): string =>
+  `${name}@${removeBuild(versionAndBuild)}`
 
 export const isLinkedApp = (app: AppMetaInfo) => app.id.includes('+build')
 
@@ -29,10 +30,10 @@ export const parseAppId = (appId: string): ParsedLocator => {
   }
 }
 
-export const formatAppId = ({locator, build}: ParsedLocator) => build ? `${locator}+${build}` : locator
+export const formatAppId = ({ locator, build }: ParsedLocator) => (build ? `${locator}+${build}` : locator)
 
 export const satisfies = (appId: string, version: string): boolean => {
-  const {version: appVer} = parseAppId(appId)
+  const { version: appVer } = parseAppId(appId)
   return semver.satisfies(appVer, version)
 }
 
@@ -46,7 +47,7 @@ export const formatMajorLocator = (name: string, version: string): string => {
 }
 
 export const appIdToAppAtMajor = (appId: string): string => {
-  const {name, version} = parseAppId(appId)
+  const { name, version } = parseAppId(appId)
   const majorRange = versionToMajorRange(version)
   return `${name}@${majorRange}`
 }
@@ -57,6 +58,10 @@ const APP_ID_REGEX = /^[\w\-]+\.[\w\-]+@(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-
 export const isValidAppIdOrLocator = (appId: string): boolean => {
   return APP_ID_REGEX.test(appId)
 }
+
+export const sameMajor = (v1: string, v2: string) => versionToMajor(v1) === versionToMajor(v2)
+
+export const majorEqualAndGreaterThan = (v1: string, v2: string) => sameMajor(v1, v2) && semver.gt(v1, v2)
 
 export interface ParsedLocator {
   name: string
