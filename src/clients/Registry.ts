@@ -14,7 +14,7 @@ const EMPTY_OBJECT = {}
 
 export interface QueryStringInfo {
   name: string,
-  value: string
+  value: boolean
 }
 
 const routes = {
