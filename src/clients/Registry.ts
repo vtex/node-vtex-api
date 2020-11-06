@@ -12,6 +12,11 @@ import { IOContext } from '../service/typings'
 
 const EMPTY_OBJECT = {}
 
+export interface QueryStringInfo {
+  name: string,
+  value: string
+}
+
 const routes = {
   App: (app: string) => `${routes.Registry}/${app}`,
   AppBundle: (app: string, version: string, path?: string) => {
@@ -20,6 +25,7 @@ const routes = {
   AppFile: (app: string, version: string, path: string) => `${routes.AppFiles(app, version)}/${path}`,
   AppFiles: (app: string, version: string) => `${routes.AppVersion(app, version)}/files`,
   AppVersion: (app: string, version: string) => `${routes.App(app)}/${version}`,
+  AppQueryString: (appVersion: string, appQueryString?: QueryStringInfo) => appQueryString ? `${appVersion}?${appQueryString.name}=${appQueryString.value}`: appVersion,
   Publish: '/v2/registry',
   PublishRc: '/v2/registry/rc',
   Registry: '/registry',
@@ -94,9 +100,9 @@ export class Registry extends InfraClient {
     return this.http.patch(routes.AppVersion(app, version), {patchState: "undeprecate"}, {metric})
   }
 
-  public validateApp = (app: string, version: string) => {
+  public validateApp = (app: string, version: string, appQueryString?: QueryStringInfo) => {
     const metric = 'registry-validate'
-    return this.http.patch(routes.AppVersion(app, version), {patchState: "validate"}, {metric})
+    return this.http.patch(routes.AppQueryString(routes.AppVersion(app, version), appQueryString), {patchState: "validate"}, {metric})
   }
 
   public getAppManifest = (app: string, version: string, opts?: AppsManifestOptions) => {
