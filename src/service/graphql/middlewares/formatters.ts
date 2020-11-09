@@ -1,5 +1,5 @@
 import { formatApolloErrors } from 'apollo-server-errors'
-import { pick, omit } from 'ramda'
+import { omit, pick } from 'ramda'
 
 import { cleanError, SENSITIVE_EXCEPTION_FIELDS } from '../../../utils/error'
 import { GraphQLServiceContext } from '../typings'
