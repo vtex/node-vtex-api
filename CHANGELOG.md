@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.77.0] - 2020-11-10
+### Added
+- [Registry - validateApp] Add query string parameter
+
 ## [3.76.0] - 2020-09-25
 ### Added
 - Added conflict resolution strategy parameter to workspace promotion function

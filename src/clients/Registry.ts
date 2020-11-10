@@ -12,6 +12,11 @@ import { IOContext } from '../service/typings'
 
 const EMPTY_OBJECT = {}
 
+export interface QueryStringInfo {
+  name: string,
+  value: boolean
+}
+
 const routes = {
   App: (app: string) => `${routes.Registry}/${app}`,
   AppBundle: (app: string, version: string, path?: string) => {
@@ -19,6 +24,7 @@ const routes = {
   },
   AppFile: (app: string, version: string, path: string) => `${routes.AppFiles(app, version)}/${path}`,
   AppFiles: (app: string, version: string) => `${routes.AppVersion(app, version)}/files`,
+  AppQueryString: (basePath: string, appQueryString?: QueryStringInfo) => appQueryString ? `${basePath}?${appQueryString.name}=${appQueryString.value}`: basePath,
   AppVersion: (app: string, version: string) => `${routes.App(app)}/${version}`,
   Publish: '/v2/registry',
   PublishRc: '/v2/registry/rc',
@@ -39,39 +45,6 @@ export class Registry extends InfraClient {
     return this.publish(routes.PublishRc, files, tag, {zlib})
   }
 
-  private publish = async (route: string, files: File[], tag?: string, {zlib}: ZipOptions = {}) => {
-    if (!(files[0] && files[0].path && files[0].content)) {
-      throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
-    }
-    const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
-    if (indexOfManifest === -1) {
-      throw new Error('No manifest.json file found in files.')
-    }
-    const zip = archiver('zip', {zlib})
-    // Throw stream errors so they reject the promise chain.
-    zip.on('error', (e) => {
-      throw e
-    })
-    const metric = 'registry-publish'
-    const request = this.http.post<AppBundlePublished>(route, zip, {
-      headers: {'Content-Type': 'application/zip'},
-      metric,
-      params: tag ? {tag} : EMPTY_OBJECT,
-    })
-
-    files.forEach(({content, path}) => zip.append(content, {name: path}))
-    const finalize = zip.finalize()
-
-    try {
-      const [response] = await Promise.all([request, finalize])
-      response.bundleSize = zip.pointer()
-      return response
-    } catch (e) {
-      e.bundleSize = zip.pointer()
-      throw e
-    }
-  }
-
   public listApps = () => {
     const inflightKey = inflightURL
     const metric = 'registry-list'
@@ -86,17 +59,17 @@ export class Registry extends InfraClient {
 
   public deprecateApp = (app: string, version: string) => {
     const metric = 'registry-deprecate'
-    return this.http.patch(routes.AppVersion(app, version), {patchState: "deprecate"}, {metric})
+    return this.http.patch(routes.AppVersion(app, version), {patchState: 'deprecate'}, {metric})
   }
 
   public undeprecateApp = (app: string, version: string) => {
     const metric = 'registry-undeprecate'
-    return this.http.patch(routes.AppVersion(app, version), {patchState: "undeprecate"}, {metric})
+    return this.http.patch(routes.AppVersion(app, version), {patchState: 'undeprecate'}, {metric})
   }
 
-  public validateApp = (app: string, version: string) => {
+  public validateApp = (app: string, version: string, appQueryString?: QueryStringInfo) => {
     const metric = 'registry-validate'
-    return this.http.patch(routes.AppVersion(app, version), {patchState: "validate"}, {metric})
+    return this.http.patch(routes.AppQueryString(routes.AppVersion(app, version), appQueryString), {patchState: 'validate'}, {metric})
   }
 
   public getAppManifest = (app: string, version: string, opts?: AppsManifestOptions) => {
@@ -163,6 +136,39 @@ export class Registry extends InfraClient {
     const params = {filter}
     const metric = 'registry-resolve-deps'
     return this.http.post<Record<string, string[]>>(routes.ResolveDependenciesWithManifest, manifest, {params, metric})
+  }
+
+  private publish = async (route: string, files: File[], tag?: string, {zlib}: ZipOptions = {}) => {
+    if (!(files[0] && files[0].path && files[0].content)) {
+      throw new Error('Argument files must be an array of {path, content}, where content can be a String, a Buffer or a ReadableStream.')
+    }
+    const indexOfManifest = files.findIndex(({path}) => path === 'manifest.json')
+    if (indexOfManifest === -1) {
+      throw new Error('No manifest.json file found in files.')
+    }
+    const zip = archiver('zip', {zlib})
+    // Throw stream errors so they reject the promise chain.
+    zip.on('error', (e) => {
+      throw e
+    })
+    const metric = 'registry-publish'
+    const request = this.http.post<AppBundlePublished>(route, zip, {
+      headers: {'Content-Type': 'application/zip'},
+      metric,
+      params: tag ? {tag} : EMPTY_OBJECT,
+    })
+
+    files.forEach(({content, path}) => zip.append(content, {name: path}))
+    const finalize = zip.finalize()
+
+    try {
+      const [response] = await Promise.all([request, finalize])
+      response.bundleSize = zip.pointer()
+      return response
+    } catch (e) {
+      e.bundleSize = zip.pointer()
+      throw e
+    }
   }
 }
 

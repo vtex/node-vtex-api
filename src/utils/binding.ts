@@ -7,7 +7,7 @@ export interface Binding {
 
 enum BindingHeaderFormat {
   webframework0='v0+webframework',
-  kuberouter0='v0+kuberouter'
+  kuberouter0='v0+kuberouter',
 }
 
 export const formatBindingHeaderValue = (
@@ -25,7 +25,7 @@ export const formatBindingHeaderValue = (
       binding.id || '',
       binding.rootPath || '',
       binding.locale || '',
-      binding.currency || ''
+      binding.currency || '',
     ].join(',')
   }
 
@@ -39,7 +39,7 @@ export const parseBindingHeaderValue = (value: string): Binding => {
     return {
       currency: currency || undefined,
       id: id || undefined,
-      locale: locale,
+      locale,
       rootPath: rootPath || undefined,
     }
   }
