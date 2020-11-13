@@ -75,14 +75,14 @@ const handleSignal = (timeout: number): NodeJS.SignalsListener => (signal) => {
   }, waitTimeToForceKill)
 }
 
-const transformArg = (args: string[], name: string, func: (value: string) => string) => {
+const transformArg = (args: string[], name: string, func: (value: string) => any) => {
   const argPrefix = `--${name}=`
   return args.map(arg => {
     if (!arg.startsWith(argPrefix)) {
       return arg
     }
     const value = arg.slice(argPrefix.length)
-    return argPrefix+func(value)
+    return `${argPrefix}${func(value)}`
   })
 }
 
@@ -94,7 +94,7 @@ export const startMaster = (service: ServiceJSON) => {
   }
 
   const settings: ClusterSettings = {
-    execArgv: transformArg(process.execArgv, 'max_old_space_size', size => String(parseInt(size)/numWorkers))
+    execArgv: transformArg(process.execArgv, 'max_old_space_size', size => parseInt(size)/numWorkers)
   }
   if (LINKED) {
     // Setup debugger
