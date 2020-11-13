@@ -101,7 +101,7 @@ export const startMaster = (service: ServiceJSON) => {
   }
 
   const settings: ClusterSettings = {
-    execArgv: transformArg(process.execArgv, 'max-old-space-size', size => Math.round(parseInt(size)/numWorkers))
+    execArgv: transformArg(process.execArgv, 'max-old-space-size', size => Math.round(parseInt(size, 10)/numWorkers)),
   }
   if (LINKED) {
     // Setup debugger
