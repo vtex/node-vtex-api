@@ -75,7 +75,7 @@ const handleSignal = (timeout: number): NodeJS.SignalsListener => (signal) => {
   }, waitTimeToForceKill)
 }
 
-const transformArg = (args: string[], name: string, func: (value: string) => any) => {
+const transformArgSingle = (args: string[], name: string, func: (value: string) => any) => {
   const argPrefix = `--${name}=`
   return args.map(arg => {
     if (!arg.startsWith(argPrefix)) {
@@ -86,6 +86,13 @@ const transformArg = (args: string[], name: string, func: (value: string) => any
   })
 }
 
+const transformArg = (args: string[], name: string, func: (value: string) => any) => {
+  const alternate = name.includes('-') ? name.replace(/-/g, '_') : name.replace(/_/g, '-')
+  args = transformArgSingle(args, name, func)
+  args = transformArgSingle(args, alternate, func)
+  return args
+}
+
 export const startMaster = (service: ServiceJSON) => {
   const { workers: numWorkers, timeout = GRACEFULLY_SHUTDOWN_TIMEOUT_S } = service
 
@@ -94,7 +101,7 @@ export const startMaster = (service: ServiceJSON) => {
   }
 
   const settings: ClusterSettings = {
-    execArgv: transformArg(process.execArgv, 'max_old_space_size', size => Math.round(parseInt(size)/numWorkers))
+    execArgv: transformArg(process.execArgv, 'max-old-space-size', size => Math.round(parseInt(size)/numWorkers))
   }
   if (LINKED) {
     // Setup debugger
