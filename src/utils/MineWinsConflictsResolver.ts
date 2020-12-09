@@ -1,3 +1,4 @@
+import { Logger } from './../service/logger/logger';
 import { AxiosResponse } from 'axios'
 import { Base64 } from 'js-base64'
 import { eqProps, equals } from 'ramda'
@@ -31,7 +32,7 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
     this.comparableKeys = comparableKeys
   }
 
-  public async resolve() {
+  public async resolve(logger?: Logger) {
     return await this.client.getConflicts<AxiosResponse<VBaseConflictData[]>>(this.bucket).then(data => {
       const { data: conflicts }: { data: VBaseConflictData[] } = data
       const selectedConflict = conflicts.find(conflict => conflict.path === this.filePath)
@@ -43,6 +44,19 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
       selectedConflict.master.parsedContent = this.parseConflict(selectedConflict.master)
       selectedConflict.mine.parsedContent = this.parseConflict(selectedConflict.mine)
       const resolved = this.resolveConflictMineWins(selectedConflict)
+
+      if(logger){
+        logger.info({
+          conflictsResolution: MineWinsConflictsResolver.constructor.name,
+          bucket: this.bucket,
+          filePath: this.filePath,
+          base: selectedConflict.base.parsedContent,
+          master: selectedConflict.master.parsedContent,
+          mine: selectedConflict.mine.parsedContent,
+          resolved
+        })
+      }
+
       return resolved as T
     })
   }
