@@ -1,8 +1,8 @@
-import { Logger } from './../service/logger/logger';
 import { AxiosResponse } from 'axios'
 import { Base64 } from 'js-base64'
 import { eqProps, equals } from 'ramda'
 import { isArray, isObject } from 'util'
+import { Logger } from './../service/logger/logger'
 
 import {
   ConflictsResolver,
@@ -47,13 +47,13 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
 
       if(logger){
         logger.info({
-          conflictsResolution: MineWinsConflictsResolver.constructor.name,
-          bucket: this.bucket,
-          filePath: this.filePath,
           base: selectedConflict.base.parsedContent,
+          bucket: this.bucket,
+          conflictsResolution: MineWinsConflictsResolver.constructor.name,
+          filePath: this.filePath,
           master: selectedConflict.master.parsedContent,
           mine: selectedConflict.mine.parsedContent,
-          resolved
+          resolved,
         })
       }
 

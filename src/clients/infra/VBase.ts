@@ -1,10 +1,10 @@
-import { Logger } from './../../service/logger/logger';
 import { AxiosError } from 'axios'
 import { IncomingMessage } from 'http'
 import mime from 'mime-types'
 import { basename } from 'path'
 import { Readable } from 'stream'
 import { createGzip } from 'zlib'
+import { Logger } from './../../service/logger/logger'
 
 import {
   inflightURL,
