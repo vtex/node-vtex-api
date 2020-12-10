@@ -4,6 +4,7 @@ import mime from 'mime-types'
 import { basename } from 'path'
 import { Readable } from 'stream'
 import { createGzip } from 'zlib'
+import { Logger } from './../../service/logger/logger'
 
 import {
   inflightURL,
@@ -98,7 +99,8 @@ export class VBase extends InfraClient {
       .catch(async (error: AxiosError<T>) => {
         const { response } = error
         if (response && response.status === 409 && conflictsResolver) {
-          return { ...response, data: await conflictsResolver.resolve() } as IOResponse<T>
+          const conflictsMergedData = await conflictsResolver.resolve(this.context.logger)
+          return { ...response, data: conflictsMergedData } as IOResponse<T>
         }
         throw error
       })
@@ -234,5 +236,5 @@ export interface VBaseConflict{
 }
 
 export interface ConflictsResolver<T>{
-  resolve: () => T | Promise<T>
+  resolve: (logger?: Logger) => T | Promise<T>
 }
