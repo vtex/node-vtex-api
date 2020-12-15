@@ -1,4 +1,5 @@
-import { AxiosResponse } from 'axios'
+import Axios, { AxiosResponse } from 'axios'
+import { createHash } from 'crypto'
 import { Base64 } from 'js-base64'
 import { eqProps, equals } from 'ramda'
 import { isArray, isObject } from 'util'
@@ -46,15 +47,16 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
       const resolved = this.resolveConflictMineWins(selectedConflict)
 
       if(logger){
-        logger.info({
+        const evidence = log({
           base: selectedConflict.base.parsedContent,
           bucket: this.bucket,
-          conflictsResolution: MineWinsConflictsResolver.constructor.name,
+          conflictsResolution: this.constructor.name,
           filePath: this.filePath,
           master: selectedConflict.master.parsedContent,
           mine: selectedConflict.mine.parsedContent,
           resolved,
         })
+        logger.info('MineWins merge evidence: ' + evidence)
       }
 
       return resolved
@@ -169,4 +171,19 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
 
     return !mine.some(mineItem => equals(mineItem, item)) && !base.some(baseItem => equals(baseItem, item))
   }
+}
+
+function log(data: any){
+  const serializedData = JSON.stringify(data)
+  const hash = createHash('md5').update(serializedData).digest('hex')
+  Axios.put(
+    `https://portal.vtexcommercestable.com.br/api/Evidence?application=service-runtime-node&hash=${hash}`,
+    serializedData,
+    {
+      headers: {
+        'Content-Type': 'text/plain',
+      },
+    }
+  )
+  return hash
 }
