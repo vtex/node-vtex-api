@@ -7,6 +7,7 @@ import { createGzip } from 'zlib'
 import { Logger } from './../../service/logger/logger'
 
 import {
+  InflightKeyGenerator,
   inflightURL,
   inflightUrlWithQuery,
   InstanceOptions,
@@ -92,14 +93,13 @@ export class VBase extends InfraClient {
     const headers = conflictsResolver? {'X-Vtex-Detect-Conflicts': true}: {}
     const inflightKey = inflightURL
     const metric = 'vbase-get-json'
-    return this.http.getRaw<T>(routes.File(bucket, path), { headers, inflightKey, metric, nullIfNotFound, tracing: {
-      requestSpanNameSuffix: metric,
-      ...tracingConfig?.tracing,
-    }} as IgnoreNotFoundRequestConfig)
+    return this.getRaw<T>(bucket, path, headers, inflightKey, metric, nullIfNotFound, tracingConfig)
       .catch(async (error: AxiosError<T>) => {
         const { response } = error
         if (response && response.status === 409 && conflictsResolver) {
-          const conflictsMergedData = await conflictsResolver.resolve(this.context.logger)
+          const conflictsMergedData = await conflictsResolver.resolve(this.context.logger).catch(err => {
+            return this.getRaw<T>(bucket, path, {}, inflightKey, metric, nullIfNotFound, tracingConfig)
+          })
           return { ...response, data: conflictsMergedData } as IOResponse<T>
         }
         throw error
@@ -198,6 +198,15 @@ export class VBase extends InfraClient {
       ...tracingConfig?.tracing,
     }})
   }
+
+  private getRaw<T>(bucket: string, path: string, headers: any,inflightKey: InflightKeyGenerator, metric: string, nullIfNotFound?: boolean, tracingConfig?: RequestTracingConfig) {
+    return this.http.getRaw<T>(routes.File(bucket, path), {
+      headers, inflightKey, metric, nullIfNotFound, tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    } as IgnoreNotFoundRequestConfig)
+  }
 }
 
 interface Headers { [key: string]: string | number }
@@ -236,5 +245,5 @@ export interface VBaseConflict{
 }
 
 export interface ConflictsResolver<T>{
-  resolve: (logger?: Logger) => T | Promise<T>
+  resolve: (logger?: Logger) => Promise<T>
 }

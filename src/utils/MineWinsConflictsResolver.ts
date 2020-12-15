@@ -37,7 +37,7 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
       const { data: conflicts }: { data: VBaseConflictData[] } = data
       const selectedConflict = conflicts.find(conflict => conflict.path === this.filePath)
       if (!selectedConflict) {
-        return {} as T
+        throw Error(`Couldn't find conflicts for ${this.bucket}/${this.filePath}`)
       }
 
       selectedConflict.base.parsedContent = this.parseConflict(selectedConflict.base)
@@ -57,7 +57,7 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
         })
       }
 
-      return resolved as T
+      return resolved
     })
   }
 
