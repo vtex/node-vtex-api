@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- `TranslateTo` schema directive.
+- `translations` util.
+- README's `Development with IO clients` directions.
+
+### Changed
+
+- Moved the `TranslatableMessageV2` interface, `parseTranslatableStringV2`, `formatTranslatableStringV2` and `handleSingleString` methods and `CONTEXT_REGEX`, `FROM_REGEX` and `CONTENT_REGEX` constants from the `TranslatableV2` schema directive to the `translations` util.
+- README's `Development` section format.
+
 ## [6.37.1] - 2020-12-10
 ### Changed
 - Add logs to MineWinsConflictResolver
