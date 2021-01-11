@@ -7,6 +7,7 @@ import {
 } from '../../../../../clients/apps/MessagesGraphQL'
 import { AppMetaInfo } from '../../../../../clients/infra/Apps'
 import { IOClients } from './../../../../../clients/IOClients'
+import { KEYWORDS_WILDCARD } from '../../../../../constants'
 
 type Indexed<X> = [number, X]
 
@@ -74,6 +75,17 @@ const filterFromEqualsTo = (indexedMessages: Array<Indexed<Message>>, to: string
 
 const messageToKey = ({content, context, from}: Message) => `:content:${content}:context:${context}:from:${from}`
 
+const removeKeywordWildcards = (indexedMessages:Array<[number, string]>) => {
+  const keywordWildcardIndex = indexedMessages.findIndex(message => message[1] === KEYWORDS_WILDCARD)
+  
+  if(keywordWildcardIndex < 0) {
+    return indexedMessages
+  }
+
+  const sanitizedIndexedMessages = indexedMessages.slice(0, keywordWildcardIndex).concat([[keywordWildcardIndex, ""]], indexedMessages.slice(keywordWildcardIndex + 1))
+  return sanitizedIndexedMessages
+}
+
 export const createMessagesLoader = (
   { messagesGraphQL, assets }: IOClients,
   to: string,
@@ -102,7 +114,8 @@ export const createMessagesLoader = (
         : await messagesGraphQL.translate(args)
 
       const indexedTranslations = zip(originalIndexes, translations)
-      const allIndexedTranslations = [...indexedTranslations, ...original]
+      const allIndexedTranslations = [...removeKeywordWildcards(indexedTranslations), ...original]
+
       return sortByIndex(allIndexedTranslations)
     },
     {

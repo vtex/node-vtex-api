@@ -4,6 +4,7 @@ import { SchemaDirectiveVisitor } from 'graphql-tools'
 import { Behavior } from '../../../../../../clients'
 import { IOContext, ServiceContext } from '../../../typings'
 import { createMessagesLoader, MessagesLoaderV2 } from '../messagesLoaderV2'
+import { KEYWORDS_WILDCARD } from '../../../../../../constants'
 
 const CONTEXT_REGEX = /\(\(\((?<context>(.)*)\)\)\)/
 const FROM_REGEX = /\<\<\<(?<from>(.)*)\>\>\>/
@@ -11,13 +12,15 @@ const CONTENT_REGEX = /\(\(\((?<context>(.)*)\)\)\)|\<\<\<(?<from>(.)*)\>\>\>/g
 
 interface Args {
   behavior: 'FULL' | 'USER_AND_APP' | 'USER_ONLY'
-  withAppsMetaInfo: boolean
+  withAppsMetaInfo: boolean,
+  isKeywordArray: boolean
 }
 
 export class TranslatableV2 extends SchemaDirectiveVisitor {
   public visitFieldDefinition (field: GraphQLField<any, ServiceContext>) {
     const { resolve = defaultFieldResolver } = field
-    const { behavior = 'FULL', withAppsMetaInfo = false } = this.args as Args
+    const { behavior = 'FULL', withAppsMetaInfo = false, isKeywordArray = false } = this.args as Args
+    
     field.resolve = async (root, args, ctx, info) => {
       if (!ctx.loaders?.messagesV2) {
         const { vtex: { locale: to } } = ctx
@@ -35,9 +38,10 @@ export class TranslatableV2 extends SchemaDirectiveVisitor {
       const response = await resolve(root, args, ctx, info) as string | string[] | null
       const { vtex, loaders: { messagesV2 } } = ctx
       const handler = handleSingleString(vtex, messagesV2!, behavior)
-      return Array.isArray(response)
-        ? Promise.all(response.map(handler))
-        : handler(response)
+
+      return !Array.isArray(response) ? handler(response) :
+        shouldGetKeywordsRef(isKeywordArray, response, ctx.vtex.locale) ? handler(getKeywordsReference(response)).then(parseToKeywordArray) :
+        Promise.all(response.map(handler))
     }
   }
 }
@@ -75,7 +79,6 @@ const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2 , behav
   if (content == null) {
     throw new Error(`@translatableV2 directive needs a content to translate, but received ${JSON.stringify(rawMessage)}`)
   }
-
   const from = maybeFrom || binding?.locale || tenant?.locale
 
   if (from == null) {
@@ -90,9 +93,30 @@ const handleSingleString = (ctx: IOContext, messagesV2: MessagesLoaderV2 , behav
   })
 }
 
+const getKeywordsReference = (keywords: string[]) => {
+  const { context, from }= parseTranslatableStringV2(keywords[0])
+  const keywordsReferenceContent = KEYWORDS_WILDCARD
+  const keywordsReferenceMessage = {
+    content: keywordsReferenceContent,
+    context: context,
+    from: from
+  }
+
+  return formatTranslatableStringV2(keywordsReferenceMessage)
+}
+
+const parseToKeywordArray = (keywords: string | null) => {
+  return keywords!.split(',').map(keyword => keyword.trim())
+}
+
+const shouldGetKeywordsRef = (isKeywordArray: Boolean, response: string[] , locale: string | undefined) => {
+  return isKeywordArray && response && parseTranslatableStringV2(response[0]).from?.split('-')[0] !== locale?.split('-')[0]
+}
+
 export const translatableV2DirectiveTypeDefs = `
 directive @translatableV2(
   behavior: String
   withAppsMetaInfo: Boolean
+  isKeywordArray: Boolean
 ) on FIELD_DEFINITION
 `
