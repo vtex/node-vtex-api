@@ -16,19 +16,19 @@ export class TranslateTo extends SchemaDirectiveVisitor {
     const { resolve = defaultFieldResolver } = field
     const { language, behavior = 'FULL' } = this.args as Args
     field.resolve = async (root, args, ctx, info) => {
-      if (!ctx.loaders?.messagesV2Manual) {
+      if (!ctx.loaders?.immutableMessagesV2) {
         const dependencies = await ctx.clients.apps.getAppsMetaInfos()
         ctx.loaders = {
           ...ctx.loaders,
-          messagesV2Manual: createMessagesLoader(ctx.clients, language, dependencies),
+          immutableMessagesV2: createMessagesLoader(ctx.clients, language, dependencies),
         }
       }
       const response = (await resolve(root, args, ctx, info)) as string | string[] | null
       const {
         vtex,
-        loaders: { messagesV2Manual },
+        loaders: { immutableMessagesV2 },
       } = ctx
-      const handler = handleSingleString(vtex, messagesV2Manual!, behavior, 'translatableV2')
+      const handler = handleSingleString(vtex, immutableMessagesV2!, behavior, 'translatableV2')
       return Array.isArray(response) ? Promise.all(response.map(handler)) : handler(response)
     }
   }
