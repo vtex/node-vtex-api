@@ -72,4 +72,4 @@ export const INSPECT_DEBUGGER_PORT = 5858
 
 export const cancellableMethods = new Set(['GET', 'OPTIONS', 'HEAD'])
 
-export const KEYWORDS_WILDCARD = "KeywordAssignedWildcard"
+export const KEYWORDS_WILDCARD = 'KeywordAssignedWildcard'

@@ -7,7 +7,9 @@ import {
 } from '../../../../../clients/apps/MessagesGraphQL'
 import { AppMetaInfo } from '../../../../../clients/infra/Apps'
 import { IOClients } from './../../../../../clients/IOClients'
-import { KEYWORDS_WILDCARD } from '../../../../../constants'
+import { KEYWORDS_WILDCARD } from './../../../../../constants'
+
+
 
 type Indexed<X> = [number, X]
 
@@ -82,7 +84,7 @@ const removeKeywordWildcards = (indexedMessages:Array<[number, string]>) => {
     return indexedMessages
   }
 
-  const sanitizedIndexedMessages = indexedMessages.slice(0, keywordWildcardIndex).concat([[keywordWildcardIndex, ""]], indexedMessages.slice(keywordWildcardIndex + 1))
+  const sanitizedIndexedMessages = indexedMessages.slice(0, keywordWildcardIndex).concat([[keywordWildcardIndex, '']], indexedMessages.slice(keywordWildcardIndex + 1))
   return sanitizedIndexedMessages
 }
 

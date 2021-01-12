@@ -2,9 +2,10 @@ import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 
 import { Behavior } from '../../../../../../clients'
+import { KEYWORDS_WILDCARD } from '../../../../../../constants'
 import { IOContext, ServiceContext } from '../../../typings'
 import { createMessagesLoader, MessagesLoaderV2 } from '../messagesLoaderV2'
-import { KEYWORDS_WILDCARD } from '../../../../../../constants'
+
 
 const CONTEXT_REGEX = /\(\(\((?<context>(.)*)\)\)\)/
 const FROM_REGEX = /\<\<\<(?<from>(.)*)\>\>\>/
@@ -98,8 +99,8 @@ const getKeywordsReference = (keywords: string[]) => {
   const keywordsReferenceContent = KEYWORDS_WILDCARD
   const keywordsReferenceMessage = {
     content: keywordsReferenceContent,
-    context: context,
-    from: from
+    context,
+    from,
   }
 
   return formatTranslatableStringV2(keywordsReferenceMessage)
@@ -109,7 +110,7 @@ const parseToKeywordArray = (keywords: string | null) => {
   return keywords!.split(',').map(keyword => keyword.trim())
 }
 
-const shouldGetKeywordsRef = (isKeywordArray: Boolean, response: string[] , locale: string | undefined) => {
+const shouldGetKeywordsRef = (isKeywordArray: boolean, response: string[] , locale: string | undefined) => {
   return isKeywordArray && response && parseTranslatableStringV2(response[0]).from?.split('-')[0] !== locale?.split('-')[0]
 }
 
