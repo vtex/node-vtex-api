@@ -28,7 +28,7 @@ export class TranslateTo extends SchemaDirectiveVisitor {
         vtex,
         loaders: { immutableMessagesV2 },
       } = ctx
-      const handler = handleSingleString(vtex, immutableMessagesV2!, behavior, 'translatableV2')
+      const handler = handleSingleString(vtex, immutableMessagesV2!, behavior, 'translateTo')
       return Array.isArray(response) ? Promise.all(response.map(handler)) : handler(response)
     }
   }
