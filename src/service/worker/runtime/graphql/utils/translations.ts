@@ -35,7 +35,7 @@ export const handleSingleString = (
   behavior: Behavior,
   directiveName: TranslationDirectiveType
 ) => async (rawMessage: string | null) => {
-  // Messages only knows how to process non empty strings.
+  // Messages only know how to process non empty strings.
   if (rawMessage == null) {
     return rawMessage
   }
