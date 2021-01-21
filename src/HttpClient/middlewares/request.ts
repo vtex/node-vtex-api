@@ -12,7 +12,7 @@ import { MiddlewareContext } from '../typings'
 const httpAgent = new Agent({
   freeSocketTimeout: 15 * 1000,
   keepAlive: true,
-  maxFreeSockets: 50,
+  maxFreeSockets: 256,
 })
 
 const http = axios.create({
