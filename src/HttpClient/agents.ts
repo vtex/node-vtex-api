@@ -4,7 +4,7 @@ type HttpOptions = Omit<AgentHttpOptions, 'freeSocketTimeout' | 'keepAlive' | 'm
 
 export const createHttpAgent = (opts?: HttpOptions) => new HttpAgent({
   ...opts,
-  freeSocketTimeout: 15 * 1000,
+  freeSocketTimeout: 60 * 1000,
   keepAlive: true,
   maxFreeSockets: 256,
 })
@@ -13,7 +13,7 @@ type HttpsOptions = Omit<AgentHttpsOptions, 'freeSocketTimeout' | 'keepAlive' | 
 
 export const createHttpsAgent = (opts?: HttpsOptions) => new HttpsAgent({
   ...opts,
-  freeSocketTimeout: 15 * 1000,
+  freeSocketTimeout: 60 * 1000,
   keepAlive: true,
   maxFreeSockets: 256,
 })
