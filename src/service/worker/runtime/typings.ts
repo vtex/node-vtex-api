@@ -60,6 +60,7 @@ type KnownKeys<T> = {
 interface Loaders {
   messages?: DataLoader<IOMessage, string>
   messagesV2?: MessagesLoaderV2
+  immutableMessagesV2?: MessagesLoaderV2
 }
 
 export type ServiceContext<ClientsT extends IOClients = IOClients, StateT extends RecorderState = RecorderState, CustomT extends ParamsContext = ParamsContext> = Pick<ParameterizedContext<StateT, Context<ClientsT>>, KnownKeys<ParameterizedContext<StateT, Context<ClientsT>>>> & CustomT & { loaders?: Loaders }

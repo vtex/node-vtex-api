@@ -49,4 +49,17 @@ export const example = async (ctx: Context, next: () => Promise<void>) => {
 
 ## Development
 
-Install the dependencies (`yarn`) and run `yarn watch`.
+- Install the dependencies: `yarn`
+- Watch for changes: `yarn watch`
+
+### Development with IO clients
+
+- Install the dependencies: `yarn`
+- [Link](https://classic.yarnpkg.com/en/docs/cli/link/) this package: `yarn link`
+- Watch for changes: `yarn watch`
+- Move to the app that depends on the changes made on this package: `cd ../<your-app>/node`
+- Link this package to your app's node_modules: `yarn link @vtex/api`
+
+Now, when you get a workspace up and running for your app with `vtex link`, you'll have this package linked as well.
+
+> When done developing, don't forget to unlink it from `<your-app>/node`: `yarn unlink @vtex/api`
