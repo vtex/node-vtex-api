@@ -10,7 +10,8 @@ import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../utils/retry'
 import { MiddlewareContext } from '../typings'
 
 const httpAgent = new Agent({
-  freeSocketTimeout: 60 * 1000,
+  socketActiveTTL: 120 * 1000,
+  freeSocketTimeout: 30 * 1000,
   keepAlive: true,
   maxFreeSockets: 256,
 })
