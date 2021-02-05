@@ -18,7 +18,7 @@ jobs:
             registry-url: https://registry.npmjs.org/
       - run: yarn install --ignore-scripts
       - run: yarn build
-      - run: npm publish
+      - run: npm publish --tag v3-latest
         env:
             NODE_AUTH_TOKEN: ${{secrets.NPM_TOKEN}}
             IS_CI: true
