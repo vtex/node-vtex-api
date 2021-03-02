@@ -66,6 +66,8 @@ export type AppBundleLinked = AppBundleResponse & {
   bundleSize?: number,
 }
 
+export type AppState = 'stable' | 'releaseCandidate'
+
 export interface HouseKeeperState {
   infra: string[]
   edition: string[]

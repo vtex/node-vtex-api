@@ -15,7 +15,7 @@ import {
 import {
   IgnoreNotFoundRequestConfig,
 } from '../../HttpClient/middlewares/notFound'
-import { AppBundlePublished, AppFilesList, AppManifest } from '../../responses'
+import { AppBundlePublished, AppFilesList, AppManifest, AppState } from '../../responses'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { InfraClient } from './InfraClient'
 
@@ -28,6 +28,7 @@ const routes = {
   },
   AppFile: (app: string, version: string, path: string) => `${routes.AppFiles(app, version)}/${path}`,
   AppFiles: (app: string, version: string) => `${routes.AppVersion(app, version)}/files`,
+  AppState: (app: string, version: string) => `${routes.AppVersion(app, version)}/state`,
   AppVersion: (app: string, version: string) => `${routes.App(app)}/${version}`,
   Publish: '/v2/registry',
   PublishRc: '/v2/registry/rc',
@@ -38,6 +39,21 @@ const routes = {
 export class Registry extends InfraClient {
   constructor(context: IOContext, options?: InstanceOptions) {
     super('apps@0.x', {...context, workspace: DEFAULT_WORKSPACE}, options)
+  }
+
+  public getAppState = (app: string, version: string, tracingConfig?: RequestTracingConfig) => {
+
+    const metric = 'registry-app-state'
+
+    const inflightKey = inflightUrlWithQuery
+    return this.http.get<AppState>(routes.AppState(app, version), {
+      inflightKey,
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
   }
 
   public publishApp = (files: File[], tag?: string, {zlib}: ZipOptions = {}, tracingConfig?: RequestTracingConfig) => {
@@ -142,7 +158,7 @@ export class Registry extends InfraClient {
   public getAppFileStream = (app: string, version: string, path: string, tracingConfig?: RequestTracingConfig): Promise<IncomingMessage> => {
     const metric = 'registry-get-file-s'
     return this.http.getStream(routes.AppFile(app, version, path), {
-      metric, 
+      metric,
       tracing: {
         requestSpanNameSuffix: metric,
         ...tracingConfig?.tracing,
