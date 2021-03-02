@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.40.0] - 2021-03-02
+
+### Added
+
+- `getAppState` method to `registry` client
+
 ## [6.39.1] - 2021-02-05
+
 - Increase HTTP agents connection pools freeSockets and lifetime
 
 ## [6.39.0] - 2021-01-27
