@@ -54,11 +54,29 @@ interface TranslatedV2 {
   translate: string[]
 }
 
+type MessageInputV2 = {
+  content: string
+  context?: string
+  behavior?: Behavior
+}
+
+type MessageListV2 = {
+  srcLang: string
+  groupContext?: string
+  context?: string
+  translations: Translation[]
+};
+
+type Translation = {
+  lang: string
+  translation: string
+}
+
 const MAX_BATCH_SIZE = 500
 
 export class MessagesGraphQL extends AppGraphQLClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
-    super('vtex.messages@1.x', vtex, options)
+    super('vtex.messages@1.63.0-beta.0', vtex, options)
   }
 
   public translateV2 (args: TranslateInput, tracingConfig?: RequestTracingConfig) {
@@ -161,6 +179,34 @@ export class MessagesGraphQL extends AppGraphQLClient {
       }
     )
     return response.data!.saveV2
+  }
+
+  public async userTranslations (args: MessageInputV2[], tracingConfig?: RequestTracingConfig) {
+    const metric = 'messages-user-translations'
+    const response = await this.graphql.query<{ userTranslations: MessageListV2[] }, { args: MessageInputV2[] }>(
+      {
+        query: `query UserTranslations($args:[MessageInputV2!]!){
+          userTranslations(args: $args) {
+            srcLang
+            groupContext
+            context
+            translations {
+              lang
+              translation
+            }
+          }
+        }`,
+        variables: { args },
+      },
+      {
+        metric,
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
+      }
+    )
+    return response.data!.userTranslations
   }
 }
 
