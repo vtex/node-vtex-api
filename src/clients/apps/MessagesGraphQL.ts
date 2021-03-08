@@ -54,20 +54,20 @@ interface TranslatedV2 {
   translate: string[]
 }
 
-interface MessageInputV2 {
+export interface MessageInputV2 {
   content: string
   context?: string
   behavior?: Behavior
 }
 
-interface MessageListV2 {
+export interface MessageListV2 {
   srcLang: string
   groupContext?: string
   context?: string
   translations: Translation[]
 }
 
-interface Translation {
+export interface Translation {
   lang: string
   translation: string
 }
@@ -76,7 +76,7 @@ const MAX_BATCH_SIZE = 500
 
 export class MessagesGraphQL extends AppGraphQLClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
-    super('vtex.messages@1.63.0-beta.0', vtex, options)
+    super('vtex.messages@1.63.0-beta.1', vtex, options)
   }
 
   public translateV2 (args: TranslateInput, tracingConfig?: RequestTracingConfig) {
@@ -181,11 +181,11 @@ export class MessagesGraphQL extends AppGraphQLClient {
     return response.data!.saveV2
   }
 
-  public async userTranslations (args: MessageInputV2[], tracingConfig?: RequestTracingConfig) {
+  public async userTranslations (args: IndexedByFrom, tracingConfig?: RequestTracingConfig) {
     const metric = 'messages-user-translations'
-    const response = await this.graphql.query<{ userTranslations: MessageListV2[] }, { args: MessageInputV2[] }>(
+    const response = await this.graphql.query<{ userTranslations: MessageListV2[] }, { args: IndexedByFrom }>(
       {
-        query: `query UserTranslations($args:[MessageInputV2!]!){
+        query: `query UserTranslations($args: IndexedMessages!){
           userTranslations(args: $args) {
             srcLang
             groupContext
