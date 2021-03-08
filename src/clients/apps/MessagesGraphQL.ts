@@ -54,20 +54,20 @@ interface TranslatedV2 {
   translate: string[]
 }
 
-type MessageInputV2 = {
+interface MessageInputV2 {
   content: string
   context?: string
   behavior?: Behavior
 }
 
-type MessageListV2 = {
+interface MessageListV2 {
   srcLang: string
   groupContext?: string
   context?: string
   translations: Translation[]
-};
+}
 
-type Translation = {
+interface Translation {
   lang: string
   translation: string
 }
