@@ -76,7 +76,7 @@ const MAX_BATCH_SIZE = 500
 
 export class MessagesGraphQL extends AppGraphQLClient {
   constructor(vtex: IOContext, options?: InstanceOptions) {
-    super('vtex.messages@1.63.0-beta.1', vtex, options)
+    super('vtex.messages@1.x', vtex, options)
   }
 
   public translateV2 (args: TranslateInput, tracingConfig?: RequestTracingConfig) {
