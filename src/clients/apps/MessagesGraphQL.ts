@@ -54,6 +54,24 @@ interface TranslatedV2 {
   translate: string[]
 }
 
+export interface MessageInputV2 {
+  content: string
+  context?: string
+  behavior?: Behavior
+}
+
+export interface MessageListV2 {
+  srcLang: string
+  groupContext?: string
+  context?: string
+  translations: Translation[]
+}
+
+export interface Translation {
+  lang: string
+  translation: string
+}
+
 const MAX_BATCH_SIZE = 500
 
 export class MessagesGraphQL extends AppGraphQLClient {
@@ -161,6 +179,34 @@ export class MessagesGraphQL extends AppGraphQLClient {
       }
     )
     return response.data!.saveV2
+  }
+
+  public async userTranslations (args: IndexedByFrom, tracingConfig?: RequestTracingConfig) {
+    const metric = 'messages-user-translations'
+    const response = await this.graphql.query<{ userTranslations: MessageListV2[] }, { args: IndexedByFrom }>(
+      {
+        query: `query UserTranslations($args: IndexedMessages!){
+          userTranslations(args: $args) {
+            srcLang
+            groupContext
+            context
+            translations {
+              lang
+              translation
+            }
+          }
+        }`,
+        variables: { args },
+      },
+      {
+        metric,
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
+      }
+    )
+    return response.data!.userTranslations
   }
 }
 

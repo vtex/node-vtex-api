@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Added an interface to the `userTranslations` query of the MessagesGraphQL client.
+
 ## [6.40.0] - 2021-03-02
 
 ### Added
