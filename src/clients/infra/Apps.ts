@@ -82,11 +82,11 @@ const workspaceFields = [
   'credentialType',
   'link',
   'name',
+  'policies',
   'registry',
   'settingsSchema',
   'vendor',
   'version',
-  'policies',
 ].join(',')
 
 interface AppLocator {
