@@ -16,6 +16,8 @@ import { compose, composeForEvents } from '../utils/compose'
 import { toArray } from '../utils/toArray'
 import { parseBodyMiddleware } from './middlewares/body'
 import { eventContextMiddleware } from './middlewares/context'
+import { concurrentRateLimiter, perMinuteRateLimiter } from './middlewares/rateLimit'
+
 
 export const createEventHandler = <T extends IOClients, U extends RecorderState, V extends ParamsContext>(
   clientsConfig: ClientsConfig<T>,
@@ -33,6 +35,8 @@ export const createEventHandler = <T extends IOClients, U extends RecorderState,
     ...(serviceEvent?.settingsType === 'workspace' || serviceEvent?.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     timings,
     error,
+    perMinuteRateLimiter(serviceEvent?.rateLimit),
+    concurrentRateLimiter(serviceEvent?.rateLimit),
     traceUserLandRemainingPipelineMiddleware(),
     contextAdapter<T, U, V>(middlewares),
   ]

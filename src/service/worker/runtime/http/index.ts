@@ -1,5 +1,6 @@
 import { IOClients } from '../../../../clients/IOClients'
 import { nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
+import { concurrentRateLimiter, perMinuteRateLimiter } from '../events/middlewares/rateLimit'
 import {
   ClientsConfig,
   ParamsContext,
@@ -68,6 +69,8 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
     removeSetCookie,
     timings,
     error,
+    perMinuteRateLimiter(serviceRoute?.rateLimit),
+    concurrentRateLimiter(serviceRoute?.rateLimit),
     traceUserLandRemainingPipelineMiddleware(),
     ...middlewares,
   ]
