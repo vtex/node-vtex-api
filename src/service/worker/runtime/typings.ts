@@ -167,7 +167,8 @@ export interface ServiceRoute {
   public?: boolean,
   smartcache?: boolean,
   extensible?: boolean,
-  settingsType?: RouteSettingsType
+  settingsType?: RouteSettingsType,
+  rateLimit?: RateLimiter
 }
 
 export interface ServiceEvent {
@@ -175,6 +176,12 @@ export interface ServiceEvent {
   sender?: string,
   subject?: string,
   settingsType?: RouteSettingsType,
+  rateLimit?: RateLimiter
+}
+
+export interface RateLimiter {
+  perMinute?: number,
+  concurrent?: number
 }
 
 export interface RawServiceJSON {
@@ -184,6 +191,7 @@ export interface RawServiceJSON {
   timeout?: number,
   runtimeArgs?: string[],
   routes?: Record<string, ServiceRoute>,
+  globalRateLimit?: Record<string, RateLimiter>
   events?: Record<string, ServiceEvent>,
   minReplicas?: number,
   maxReplicas?: number,
