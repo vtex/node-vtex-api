@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- [Rate Limit] Enable user to config the amount of requests to be processed per minute and concurrently by setting it in `service.json`.
 ## [6.41.0] - 2021-03-09
 
 ### Added
