@@ -1,4 +1,4 @@
-import TokenBucket from "tokenbucket";
+import TokenBucket from 'tokenbucket'
 
 export function createTokenBucket(rateLimit?: number, globalRateTokenBucket?: TokenBucket){
   return rateLimit ? new TokenBucket({

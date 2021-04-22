@@ -1,24 +1,24 @@
 declare module 'tokenbucket' {
-  import Promise = require('bluebird');
-  import redis = require('redis');
+  import Promise = require('bluebird')
+  import redis = require('redis')
   declare class TokenBucket {
-      lastFill: any;
+      public lastFill: any
   
-      tokensToAddPerInterval: any;
+      public tokensToAddPerInterval: any
   
-      tokensLeft: any;
+      public tokensLeft: any
   
       constructor(config?: any);
   
-      removeTokens(tokensToRemove?: any): any;
+      public removeTokens(tokensToRemove?: any): any
   
-      removeTokensSync(tokensToRemove?: any): any;
+      public removeTokensSync(tokensToRemove?: any): any
   
-      save(): any;
+      public save(): any
   
-      loadSaved(): any;
+      public loadSaved(): any
   
   }
   
-  export = TokenBucket;
+  export = TokenBucket
 }

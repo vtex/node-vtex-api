@@ -4,6 +4,7 @@ import compress from 'koa-compress'
 import Router from 'koa-router'
 import { mergeDeepRight } from 'ramda'
 
+import TokenBucket from 'tokenbucket'
 import { IOClients } from '../../clients/IOClients'
 import { UP_SIGNAL } from '../../constants'
 import { InstanceOptions } from '../../HttpClient/typings'
@@ -44,7 +45,6 @@ import {
   ServiceJSON,
 } from './runtime/typings'
 import { createTokenBucket } from './runtime/utils/tokenBucket'
-import TokenBucket from 'tokenbucket';
 
 const upSignal = () => {
   const data = JSON.stringify({ statusTrack: true })
