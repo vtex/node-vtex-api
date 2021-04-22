@@ -191,7 +191,7 @@ export interface RawServiceJSON {
   timeout?: number,
   runtimeArgs?: string[],
   routes?: Record<string, ServiceRoute>,
-  globalRateLimit?: Record<string, RateLimiter>
+  globalRateLimit?: Pick<Record<string, RateLimiter>, 'events' | 'routes'>
   events?: Record<string, ServiceEvent>,
   minReplicas?: number,
   maxReplicas?: number,

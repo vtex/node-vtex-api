@@ -2,6 +2,7 @@ import { IOClients } from '../../../../clients/IOClients'
 import { nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
 import { clients } from '../http/middlewares/clients'
 import { error } from '../http/middlewares/error'
+import { concurrentRateLimiter, perMinuteRateLimiter } from '../http/middlewares/rateLimit'
 import { getServiceSettings } from '../http/middlewares/settings'
 import { timings } from '../http/middlewares/timings'
 import {
@@ -16,7 +17,6 @@ import { compose, composeForEvents } from '../utils/compose'
 import { toArray } from '../utils/toArray'
 import { parseBodyMiddleware } from './middlewares/body'
 import { eventContextMiddleware } from './middlewares/context'
-import { concurrentRateLimiter, perMinuteRateLimiter } from './middlewares/rateLimit'
 
 
 export const createEventHandler = <T extends IOClients, U extends RecorderState, V extends ParamsContext>(
@@ -35,8 +35,8 @@ export const createEventHandler = <T extends IOClients, U extends RecorderState,
     ...(serviceEvent?.settingsType === 'workspace' || serviceEvent?.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     timings,
     error,
-    perMinuteRateLimiter(serviceEvent?.rateLimit),
-    concurrentRateLimiter(serviceEvent?.rateLimit),
+    concurrentRateLimiter(serviceEvent?.rateLimit?.concurrent),
+    perMinuteRateLimiter(serviceEvent?.rateLimit?.perMinute),
     traceUserLandRemainingPipelineMiddleware(),
     contextAdapter<T, U, V>(middlewares),
   ]
