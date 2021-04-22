@@ -17,13 +17,15 @@ import { compose, composeForEvents } from '../utils/compose'
 import { toArray } from '../utils/toArray'
 import { parseBodyMiddleware } from './middlewares/body'
 import { eventContextMiddleware } from './middlewares/context'
+import TokenBucket from 'tokenbucket';
 
 
 export const createEventHandler = <T extends IOClients, U extends RecorderState, V extends ParamsContext>(
   clientsConfig: ClientsConfig<T>,
   eventId: string,
   handler: EventHandler<T, U> | Array<EventHandler<T, U>>,
-  serviceEvent: ServiceEvent | undefined
+  serviceEvent?: ServiceEvent,
+  globalRateLimitBucket?: TokenBucket,
 ) => {
   const { implementation, options } = clientsConfig
   const middlewares = toArray(handler)
@@ -35,8 +37,8 @@ export const createEventHandler = <T extends IOClients, U extends RecorderState,
     ...(serviceEvent?.settingsType === 'workspace' || serviceEvent?.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     timings,
     error,
-    concurrentRateLimiter(serviceEvent?.rateLimit?.concurrent),
-    perMinuteRateLimiter(serviceEvent?.rateLimit?.perMinute),
+    concurrentRateLimiter(serviceEvent?.rateLimitPerReplica?.concurrent),
+    perMinuteRateLimiter(serviceEvent?.rateLimitPerReplica?.perMinute, globalRateLimitBucket),
     traceUserLandRemainingPipelineMiddleware(),
     contextAdapter<T, U, V>(middlewares),
   ]

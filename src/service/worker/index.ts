@@ -43,6 +43,8 @@ import {
   RouteHandler,
   ServiceJSON,
 } from './runtime/typings'
+import { createTokenBucket } from './runtime/utils/tokenBucket'
+import TokenBucket from 'tokenbucket';
 
 const upSignal = () => {
   const data = JSON.stringify({ statusTrack: true })
@@ -155,10 +157,11 @@ const createAppEventHandlers = (
   serviceJSON: ServiceJSON
 ) => {
   if (events && clients) {
+    const globalRateLimitBucketPerMinute: TokenBucket | undefined = createTokenBucket(serviceJSON?.globalRateLimit?.perMinute)
     return Object.keys(events).reduce(
       (acc, eventId) => {
         const serviceEvent = serviceJSON.events?.[eventId]
-        acc[eventId] = createEventHandler(clients, eventId, events[eventId], serviceEvent)
+        acc[eventId] = createEventHandler(clients, eventId, events[eventId], serviceEvent, globalRateLimitBucketPerMinute)
         return acc
       },
       {} as Record<string, RouteHandler>
