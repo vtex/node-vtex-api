@@ -5,7 +5,7 @@ import {
   isInfraErrorData,
   isRequestInfo,
 } from '@vtex/node-error-report'
-import { Span } from 'opentracing'
+import { Span, diag } from '@opentelemetry/api'
 import { TracingTags } from '..'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { ErrorReportLogFields } from '../LogFields'
@@ -44,7 +44,7 @@ export class ErrorReport extends ErrorReportBase {
    * span is part of a **sampled** trace, then the error will be logged.
    */
   public injectOnSpan(span: Span, logger?: IOContext['logger']) {
-    span.setTag(TracingTags.ERROR, 'true')
+    span.setAttribute(TracingTags.ERROR, 'true')
 
     const indexedLogs: Record<string, string> = {
       [ErrorReportLogFields.ERROR_KIND]: this.kind,
@@ -61,7 +61,8 @@ export class ErrorReport extends ErrorReportBase {
     }
 
     const serializableError = this.toObject()
-    span.log({ event: 'error', ...indexedLogs, error: serializableError })
+
+    span.recordException(serializableError)
 
     if (logger && this.shouldLogToSplunk(span)) {
       logger.error(serializableError)

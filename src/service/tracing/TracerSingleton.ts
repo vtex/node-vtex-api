@@ -1,14 +1,26 @@
-import { initTracer as initJaegerTracer, PrometheusMetricsFactory, TracingConfig, TracingOptions } from 'jaeger-client'
-import { Tracer } from 'opentracing'
-import promClient from 'prom-client'
-import { APP, LINKED, NODE_ENV, NODE_VTEX_API_VERSION, PRODUCTION, REGION, WORKSPACE } from '../../constants'
-import { AppTags } from '../../tracing/Tags'
-import { appIdToAppAtMajor } from '../../utils'
+import { APP } from '../../constants'
+
+import api, { Tracer } from '@opentelemetry/api'
+import { NodeTracerProvider } from '@opentelemetry/node'
+import { registerInstrumentations } from '@opentelemetry/instrumentation'
+import { HttpInstrumentation } from '@opentelemetry/instrumentation-http'
+import { GraphQLInstrumentation } from '@opentelemetry/instrumentation-graphql'
+import { ConsoleSpanExporter, SimpleSpanProcessor } from '@opentelemetry/tracing'
+import { KoaInstrumentation } from '@opentelemetry/koa-instrumentation'
+
+const provider = new NodeTracerProvider()
+
+provider.register()
+
+registerInstrumentations({
+  instrumentations: [new HttpInstrumentation(), new GraphQLInstrumentation()],
+  tracerProvider: provider,
+})
 
 export class TracerSingleton {
   public static getTracer() {
     if (!TracerSingleton.singleton) {
-      TracerSingleton.singleton = TracerSingleton.initServiceTracer()
+      TracerSingleton.singleton = TracerSingleton.createTracer()
     }
 
     return TracerSingleton.singleton
@@ -16,43 +28,24 @@ export class TracerSingleton {
 
   private static singleton: Tracer
 
-  private static initServiceTracer() {
-    return TracerSingleton.createJaegerTracer(appIdToAppAtMajor(APP.ID), {
-      [AppTags.VTEX_APP_LINKED]: LINKED,
-      [AppTags.VTEX_APP_NODE_VTEX_API_VERSION]: NODE_VTEX_API_VERSION,
-      [AppTags.VTEX_APP_PRODUCTION]: PRODUCTION,
-      [AppTags.VTEX_APP_REGION]: REGION,
-      [AppTags.VTEX_APP_VERSION]: APP.VERSION,
-      [AppTags.VTEX_APP_WORKSPACE]: WORKSPACE,
-      [AppTags.VTEX_APP_NODE_ENV]: NODE_ENV ?? 'undefined',
+  private static createTracer() {
+    const exporter = new ConsoleSpanExporter()
+    const provider = new NodeTracerProvider()
+
+    //@ts-ignore
+    provider.addSpanProcessor(new SimpleSpanProcessor(exporter))
+
+    registerInstrumentations({
+      instrumentations: [
+        //@ts-ignore
+        new KoaInstrumentation(),
+        new HttpInstrumentation(),
+      ],
+      tracerProvider: provider,
     })
-  }
 
-  private static createJaegerTracer(serviceName: string, defaultTags: Record<string, string | boolean>) {
-    const config: TracingConfig = {
-      reporter: {
-        agentHost: process.env.VTEX_OWN_NODE_IP,
-      },
-      sampler: {
-        host: process.env.VTEX_OWN_NODE_IP,
-        param: 0.05,
-        refreshIntervalMs: 60 * 1000,
-        type: 'remote',
-      },
-      serviceName,
-    }
+    provider.register()
 
-    const options: TracingOptions = {
-      /**
-       * Jaeger metric names are available in:
-       * https://github.com/jaegertracing/jaeger-client-node/blob/master/src/metrics/metrics.js
-       *
-       * Runtime will prefix these metrics with 'runtime:'
-       */
-      metrics: new PrometheusMetricsFactory(promClient as any, 'runtime'),
-      tags: defaultTags,
-    }
-
-    return initJaegerTracer(config, options)
+    return api.trace.getTracer(APP.NAME, APP.VERSION)
   }
 }

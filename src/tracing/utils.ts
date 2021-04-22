@@ -1,5 +1,5 @@
 import { authFields, sanitizeAuth } from '@vtex/node-error-report'
-import { Span } from 'opentracing'
+import { Span } from '@opentelemetry/api'
 
 export interface TraceInfo {
   traceId: string
@@ -10,7 +10,7 @@ export function getTraceInfo(span: Span): TraceInfo {
   const spanContext = span.context()
   return {
     isSampled: (spanContext as any).isSampled?.() ?? false,
-    traceId: spanContext.toTraceId(),
+    traceId: spanContext.traceId,
   }
 }
 

@@ -8,7 +8,7 @@ import {
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 import { ParameterizedContext } from 'koa'
 import { Middleware } from 'koa-compose'
-import { Span, Tracer } from 'opentracing'
+import { Span, Tracer } from '@opentelemetry/api'
 import { ParsedUrlQuery } from 'querystring'
 
 import { ClientsImplementation, IOClients } from '../../../clients/IOClients'

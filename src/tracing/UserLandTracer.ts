@@ -1,4 +1,5 @@
-import { FORMAT_HTTP_HEADERS, Span, SpanContext, SpanOptions, Tracer } from 'opentracing'
+import { FORMAT_HTTP_HEADERS, SpanContext, SpanOptions, Tracer } from 'opentracing'
+import { Span } from '@opentelemetry/api'
 import { TracerSingleton } from '../service/tracing/TracerSingleton'
 import { getTraceInfo } from './utils'
 

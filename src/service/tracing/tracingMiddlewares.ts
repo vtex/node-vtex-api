@@ -1,7 +1,7 @@
-import { FORMAT_HTTP_HEADERS, SpanContext, Tracer } from 'opentracing'
+import { Tracer, getSpan, context as tracingCtxBuilder } from '@opentelemetry/api'
 import { finished as onStreamFinished } from 'stream'
 import { ACCOUNT_HEADER, REQUEST_ID_HEADER, TRACE_ID_HEADER, WORKSPACE_HEADER } from '../../constants'
-import { ErrorReport, getTraceInfo } from '../../tracing'
+import { ErrorReport, FORMAT_HTTP_HEADERS, getTraceInfo } from '../../tracing'
 import { RuntimeLogEvents } from '../../tracing/LogEvents'
 import { RuntimeLogFields } from '../../tracing/LogFields'
 import { CustomHttpTags, OpentracingTags, VTEXIncomingRequestTags } from '../../tracing/Tags'
@@ -36,13 +36,9 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       concurrentRequests.dec(1)
       return
     }
-
-    const rootSpan = tracer.extract(FORMAT_HTTP_HEADERS, ctx.request.headers) as undefined | SpanContext
-    const currentSpan = tracer.startSpan('unknown-operation', {
-      childOf: rootSpan,
-      tags: { [OpentracingTags.SPAN_KIND]: OpentracingTags.SPAN_KIND_RPC_SERVER },
-    })
-
+    
+    const currentSpan = tracer.startSpan('unknown-operation')
+    
     const initialSamplingDecision = getTraceInfo(currentSpan).isSampled
 
     ctx.tracing = { currentSpan, tracer }
@@ -78,10 +74,10 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       const traceInfo = getTraceInfo(currentSpan)
       if (traceInfo.isSampled) {
         if (!initialSamplingDecision) {
-          currentSpan.setTag(OpentracingTags.SPAN_KIND, OpentracingTags.SPAN_KIND_RPC_SERVER)
+          currentSpan.setAttribute(OpentracingTags.SPAN_KIND, OpentracingTags.SPAN_KIND_RPC_SERVER)
         }
 
-        currentSpan.addTags({
+        currentSpan.setAttributes({
           [OpentracingTags.HTTP_URL]: ctx.request.href,
           [OpentracingTags.HTTP_METHOD]: ctx.request.method,
           [OpentracingTags.HTTP_STATUS_CODE]: ctx.response.status,
@@ -91,8 +87,9 @@ export const addTracingMiddleware = (tracer: Tracer) => {
           [VTEXIncomingRequestTags.VTEX_ACCOUNT]: ctx.get(ACCOUNT_HEADER),
         })
 
-        currentSpan.log(cloneAndSanitizeHeaders(ctx.request.headers, 'req.headers.'))
-        currentSpan.log(cloneAndSanitizeHeaders(ctx.response.headers, 'res.headers.'))
+        currentSpan.addEvent('reqHeaders', cloneAndSanitizeHeaders(ctx.request.headers, 'req.headers.'))
+        currentSpan.addEvent('resHeaders', cloneAndSanitizeHeaders(ctx.request.headers, 'res.headers.'))
+
         ctx.set(TRACE_ID_HEADER, traceInfo.traceId)
       }
 
@@ -105,7 +102,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
         )
 
         concurrentRequests.dec(1)
-        currentSpan.finish()
+        currentSpan.end()
       }
 
       if (responseClosed) {
@@ -119,7 +116,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
 
 export const nameSpanOperationMiddleware = (operationType: string, operationName: string) => {
   return function nameSpanOperation(ctx: ServiceContext, next: () => Promise<void>) {
-    ctx.tracing?.currentSpan.setOperationName(`${operationType}:${operationName}`)
+    ctx.tracing?.currentSpan.updateName(`${operationType}:${operationName}`)
     return next()
   }
 }
@@ -136,14 +133,13 @@ export const traceUserLandRemainingPipelineMiddleware = () => {
     const startTime = process.hrtime()
 
     try {
-      span.log({ event: RuntimeLogEvents.USER_MIDDLEWARES_START })
+      span.addEvent(RuntimeLogEvents.USER_MIDDLEWARES_START)
       await next()
     } catch (err) {
       ErrorReport.create({ originalError: err }).injectOnSpan(span, ctx.vtex.logger)
       throw err
     } finally {
-      span.log({
-        event: RuntimeLogEvents.USER_MIDDLEWARES_FINISH,
+      span.addEvent(RuntimeLogEvents.USER_MIDDLEWARES_FINISH, {
         [RuntimeLogFields.USER_MIDDLEWARES_DURATION]: hrToMillis(process.hrtime(startTime)),
       })
       ctx.tracing = tracingCtx
