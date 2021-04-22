@@ -1,3 +1,4 @@
+import TokenBucket from 'tokenbucket'
 import { IOClients } from '../../../../clients/IOClients'
 import { nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
 import { clients } from '../http/middlewares/clients'
@@ -17,7 +18,6 @@ import { compose, composeForEvents } from '../utils/compose'
 import { toArray } from '../utils/toArray'
 import { parseBodyMiddleware } from './middlewares/body'
 import { eventContextMiddleware } from './middlewares/context'
-import TokenBucket from 'tokenbucket';
 
 
 export const createEventHandler = <T extends IOClients, U extends RecorderState, V extends ParamsContext>(
@@ -25,7 +25,7 @@ export const createEventHandler = <T extends IOClients, U extends RecorderState,
   eventId: string,
   handler: EventHandler<T, U> | Array<EventHandler<T, U>>,
   serviceEvent?: ServiceEvent,
-  globalRateLimitBucket?: TokenBucket,
+  globalRateLimitBucket?: TokenBucket
 ) => {
   const { implementation, options } = clientsConfig
   const middlewares = toArray(handler)
