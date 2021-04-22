@@ -1,6 +1,5 @@
 import { IOClients } from '../../../../clients/IOClients'
 import { nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
-import { concurrentRateLimiter, perMinuteRateLimiter } from '../events/middlewares/rateLimit'
 import {
   ClientsConfig,
   ParamsContext,
@@ -18,6 +17,7 @@ import {
   createPvtContextMiddleware,
 } from './middlewares/context'
 import { error } from './middlewares/error'
+import { concurrentRateLimiter, perMinuteRateLimiter } from './middlewares/rateLimit'
 import { trackIncomingRequestStats } from './middlewares/requestStats'
 import { removeSetCookie } from './middlewares/setCookie'
 import { getServiceSettings } from './middlewares/settings'
@@ -69,8 +69,8 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
     removeSetCookie,
     timings,
     error,
-    perMinuteRateLimiter(serviceRoute?.rateLimit),
-    concurrentRateLimiter(serviceRoute?.rateLimit),
+    concurrentRateLimiter(serviceRoute?.rateLimit?.concurrent),
+    perMinuteRateLimiter(serviceRoute?.rateLimit?.perMinute),
     traceUserLandRemainingPipelineMiddleware(),
     ...middlewares,
   ]
