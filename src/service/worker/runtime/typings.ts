@@ -168,7 +168,7 @@ export interface ServiceRoute {
   smartcache?: boolean,
   extensible?: boolean,
   settingsType?: RouteSettingsType,
-  rateLimit?: RateLimiter
+  rateLimitPerReplica?: RateLimiter
 }
 
 export interface ServiceEvent {
@@ -176,7 +176,7 @@ export interface ServiceEvent {
   sender?: string,
   subject?: string,
   settingsType?: RouteSettingsType,
-  rateLimit?: RateLimiter
+  rateLimitPerReplica?: RateLimiter
 }
 
 export interface RateLimiter {
@@ -191,7 +191,7 @@ export interface RawServiceJSON {
   timeout?: number,
   runtimeArgs?: string[],
   routes?: Record<string, ServiceRoute>,
-  globalRateLimit?: Pick<Record<string, RateLimiter>, 'events' | 'routes'>
+  globalRateLimit?: RateLimiter
   events?: Record<string, ServiceEvent>,
   minReplicas?: number,
   maxReplicas?: number,
