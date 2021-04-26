@@ -32,7 +32,7 @@ export function concurrentRateLimiter(rateLimit?: number) {
   let reqsInExecution = 0
   const maxRequests = rateLimit
   return async function concurrentRateMiddleware(ctx: ServiceContext, next: () => Promise<void>) {
-    if (reqsInExecution > maxRequests) {
+    if (reqsInExecution >= maxRequests) {
       throw new TooManyRequestsError(responseMessageConcurrent)
     }
     reqsInExecution++
