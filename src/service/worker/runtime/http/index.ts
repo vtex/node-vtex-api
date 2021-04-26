@@ -43,6 +43,8 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
     ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     timings,
     error,
+    concurrentRateLimiter(serviceRoute?.rateLimitPerReplica?.concurrent),
+    perMinuteRateLimiter(serviceRoute?.rateLimitPerReplica?.perMinute),
     traceUserLandRemainingPipelineMiddleware(),
     ...middlewares,
   ]
@@ -69,8 +71,8 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
     removeSetCookie,
     timings,
     error,
-    concurrentRateLimiter(serviceRoute?.rateLimit?.concurrent),
-    perMinuteRateLimiter(serviceRoute?.rateLimit?.perMinute),
+    concurrentRateLimiter(serviceRoute?.rateLimitPerReplica?.concurrent),
+    perMinuteRateLimiter(serviceRoute?.rateLimitPerReplica?.perMinute),
     traceUserLandRemainingPipelineMiddleware(),
     ...middlewares,
   ]
