@@ -25,7 +25,7 @@ export const createEventHandler = <T extends IOClients, U extends RecorderState,
   eventId: string,
   handler: EventHandler<T, U> | Array<EventHandler<T, U>>,
   serviceEvent?: ServiceEvent,
-  globalRateLimitBucket?: TokenBucket
+  globalRateLimitBucketPerMinute?: TokenBucket
 ) => {
   const { implementation, options } = clientsConfig
   const middlewares = toArray(handler)
@@ -38,7 +38,7 @@ export const createEventHandler = <T extends IOClients, U extends RecorderState,
     timings,
     error,
     concurrentRateLimiter(serviceEvent?.rateLimitPerReplica?.concurrent),
-    perMinuteRateLimiter(serviceEvent?.rateLimitPerReplica?.perMinute, globalRateLimitBucket),
+    perMinuteRateLimiter(serviceEvent?.rateLimitPerReplica?.perMinute, globalRateLimitBucketPerMinute),
     traceUserLandRemainingPipelineMiddleware(),
     contextAdapter<T, U, V>(middlewares),
   ]

@@ -89,7 +89,8 @@ interface HttpHandlerByScope {
 
 const createAppHttpHandlers = (
   { config: { routes, clients } }: Service<IOClients, RecorderState, ParamsContext>,
-  serviceJSON: ServiceJSON
+  serviceJSON: ServiceJSON,
+  globalRateLimitBucketPerMinute?: TokenBucket
 ) => {
   if (routes && clients) {
     return Object.keys(routes).reduce(
@@ -108,12 +109,12 @@ const createAppHttpHandlers = (
 
         if (publicRoute || extensible) {
           acc.pub[routeId] = {
-            handler: createPublicHttpRoute(clients, routes[routeId], serviceRoute, routeId),
+            handler: createPublicHttpRoute(clients, routes[routeId], serviceRoute, routeId, globalRateLimitBucketPerMinute),
             path: servicePath,
           }
         } else {
           acc.pvt[routeId] = {
-            handler: createPrivateHttpRoute(clients, routes[routeId], serviceRoute, routeId),
+            handler: createPrivateHttpRoute(clients, routes[routeId], serviceRoute, routeId, globalRateLimitBucketPerMinute),
             path: `/:account/:workspace${servicePath.replace(/\*([^/]*)/g, ':$1*')}`,
           }
         }
@@ -154,10 +155,10 @@ const createAppGraphQLHandler = (
 
 const createAppEventHandlers = (
   { config: { events, clients } }: Service<IOClients, RecorderState, ParamsContext>,
-  serviceJSON: ServiceJSON
+  serviceJSON: ServiceJSON,
+  globalRateLimitBucketPerMinute?: TokenBucket
 ) => {
   if (events && clients) {
-    const globalRateLimitBucketPerMinute: TokenBucket | undefined = createTokenBucket(serviceJSON?.globalRateLimit?.perMinute)
     return Object.keys(events).reduce(
       (acc, eventId) => {
         const serviceEvent = serviceJSON.events?.[eventId]
@@ -227,9 +228,10 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
     scaleClientCaches(serviceJSON.workers, clients.options)
   }
 
-  const appHttpHandlers = createAppHttpHandlers(service, serviceJSON)
+  const globalRateLimitBucketPerMinute: TokenBucket | undefined = createTokenBucket(serviceJSON?.globalRateLimit?.perMinute)
+  const appHttpHandlers = createAppHttpHandlers(service, serviceJSON, globalRateLimitBucketPerMinute)
+  const appEventHandlers = createAppEventHandlers(service, serviceJSON, globalRateLimitBucketPerMinute)
   const appGraphQLHandlers = createAppGraphQLHandler(service, serviceJSON)
-  const appEventHandlers = createAppEventHandlers(service, serviceJSON)
   const runtimeHttpHandlers = createRuntimeHttpHandlers(appEventHandlers, serviceJSON)
   const httpHandlers = [
     appHttpHandlers,

@@ -1,3 +1,4 @@
+import TokenBucket from 'tokenbucket'
 import { IOClients } from '../../../../clients/IOClients'
 import { nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
 import {
@@ -28,7 +29,8 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
   clientsConfig: ClientsConfig<T>,
   serviceHandler: RouteHandler<T, U, V> | Array<RouteHandler<T, U, V>>,
   serviceRoute: ServiceRoute,
-  routeId: string
+  routeId: string,
+  globalRateLimitBucketPerMinute?: TokenBucket
 ) => {
   const { implementation, options } = clientsConfig
   const middlewares = toArray(serviceHandler)
@@ -44,7 +46,7 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
     timings,
     error,
     concurrentRateLimiter(serviceRoute?.rateLimitPerReplica?.concurrent),
-    perMinuteRateLimiter(serviceRoute?.rateLimitPerReplica?.perMinute),
+    perMinuteRateLimiter(serviceRoute?.rateLimitPerReplica?.perMinute, globalRateLimitBucketPerMinute),
     traceUserLandRemainingPipelineMiddleware(),
     ...middlewares,
   ]
@@ -55,7 +57,8 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
   clientsConfig: ClientsConfig<T>,
   serviceHandler: RouteHandler<T, U, V> | Array<RouteHandler<T, U, V>>,
   serviceRoute: ServiceRoute,
-  routeId: string
+  routeId: string,
+  globalRateLimitBucketPerMinute?: TokenBucket
 ) => {
   const { implementation, options } = clientsConfig
   const middlewares = toArray(serviceHandler)
@@ -72,7 +75,7 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
     timings,
     error,
     concurrentRateLimiter(serviceRoute?.rateLimitPerReplica?.concurrent),
-    perMinuteRateLimiter(serviceRoute?.rateLimitPerReplica?.perMinute),
+    perMinuteRateLimiter(serviceRoute?.rateLimitPerReplica?.perMinute, globalRateLimitBucketPerMinute),
     traceUserLandRemainingPipelineMiddleware(),
     ...middlewares,
   ]
