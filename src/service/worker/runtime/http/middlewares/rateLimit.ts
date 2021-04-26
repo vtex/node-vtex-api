@@ -10,12 +10,12 @@ function noopMiddleware(_: ServiceContext, next: () => Promise<void>) {
   return next()
 }
 
-export function perMinuteRateLimiter(rateLimit?: number, globalRateTokenBucket?: TokenBucket) {
-  if (!rateLimit && !globalRateTokenBucket) {
+export function perMinuteRateLimiter(rateLimit?: number, globalRateLimitBucketPerMinute?: TokenBucket) {
+  if (!rateLimit && !globalRateLimitBucketPerMinute) {
     return noopMiddleware
   }
 
-  const tokenBucket: TokenBucket = createTokenBucket(rateLimit, globalRateTokenBucket)
+  const tokenBucket: TokenBucket = createTokenBucket(rateLimit, globalRateLimitBucketPerMinute)
 
   return function perMinuteRateMiddleware(ctx: ServiceContext, next: () => Promise<void>) {
     if (!tokenBucket.removeTokensSync(1)) {
