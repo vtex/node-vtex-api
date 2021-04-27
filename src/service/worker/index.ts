@@ -137,14 +137,15 @@ const routerFromPrivateHttpHandlers = (routes: Record<string, HttpRoute>) => Obj
 
 const createAppGraphQLHandler = (
   { config: { graphql, clients } }: Service<IOClients, RecorderState, ParamsContext>,
-  { routes }: ServiceJSON
+  { routes }: ServiceJSON,
+  globalRateLimitBucketPerMinute?: TokenBucket
 ): HttpHandlerByScope | null => {
   const route = routes?.[GRAPHQL_ROUTE]
   if (graphql && route && clients) {
     return {
       pvt: {
         [GRAPHQL_ROUTE]: {
-          handler: createGraphQLRoute<any, any, any>(graphql, clients, route, GRAPHQL_ROUTE),
+          handler: createGraphQLRoute<any, any, any>(graphql, clients, route, GRAPHQL_ROUTE, globalRateLimitBucketPerMinute),
           path: `/:account/:workspace${route.path}`,
         },
       },
