@@ -29,6 +29,8 @@ import { createEventHandler } from './runtime/events'
 import { routerFromEventHandlers } from './runtime/events/router'
 import { createGraphQLRoute, GRAPHQL_ROUTE } from './runtime/graphql'
 import { createPrivateHttpRoute, createPublicHttpRoute } from './runtime/http'
+import { error } from './runtime/http/middlewares/error'
+import { concurrentRateLimiter } from './runtime/http/middlewares/rateLimit'
 import { routerFromPublicHttpHandlers } from './runtime/http/router'
 import { logAvailableRoutes } from './runtime/http/routes'
 import { Service } from './runtime/Service'
@@ -216,6 +218,8 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
   const app = new Koa()
   app.proxy = true
   app
+    .use(error)
+    .use(concurrentRateLimiter(serviceJSON?.globalRateLimit?.concurrent))
     .use(addTracingMiddleware(tracer))
     .use(prometheusLoggerMiddleware())
     .use(addMetricsLoggerMiddleware())

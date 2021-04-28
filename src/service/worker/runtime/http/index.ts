@@ -17,7 +17,6 @@ import {
   createPubContextMiddleware,
   createPvtContextMiddleware,
 } from './middlewares/context'
-import { error } from './middlewares/error'
 import { concurrentRateLimiter, perMinuteRateLimiter } from './middlewares/rateLimit'
 import { trackIncomingRequestStats } from './middlewares/requestStats'
 import { removeSetCookie } from './middlewares/setCookie'
@@ -44,7 +43,6 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
     clients(implementation!, options),
     ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     timings,
-    error,
     concurrentRateLimiter(serviceRoute?.rateLimitPerReplica?.concurrent),
     perMinuteRateLimiter(serviceRoute?.rateLimitPerReplica?.perMinute, globalRateLimitBucketPerMinute),
     traceUserLandRemainingPipelineMiddleware(),
@@ -73,7 +71,6 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
     ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     removeSetCookie,
     timings,
-    error,
     concurrentRateLimiter(serviceRoute?.rateLimitPerReplica?.concurrent),
     perMinuteRateLimiter(serviceRoute?.rateLimitPerReplica?.perMinute, globalRateLimitBucketPerMinute),
     traceUserLandRemainingPipelineMiddleware(),
