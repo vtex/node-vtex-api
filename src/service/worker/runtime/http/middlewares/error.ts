@@ -86,11 +86,7 @@ const logAndRemoveSensitiveData = <
   }
 }
 
-export async function error<
-  T extends IOClients,
-  U extends RecorderState,
-  V extends ParamsContext
-> (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
+export async function error (ctx: ServiceContext, next: () => Promise<void>) {
   try {
     await next()
   } catch (e) {
