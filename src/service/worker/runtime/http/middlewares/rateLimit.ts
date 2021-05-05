@@ -4,18 +4,18 @@ import { ServiceContext } from '../../typings'
 import { createTokenBucket } from '../../utils/tokenBucket'
 
 const responseMessageConcurrent = 'Rate Exceeded: Too many requests in execution'
-const responseMessagePerMinute = 'Rate Exceeded: Too many requests'
+const responseMessagePerMinute = 'Rate Exceeded: Too many requests per minute'
 
 function noopMiddleware(_: ServiceContext, next: () => Promise<void>) {
   return next()
 }
 
-export function perMinuteRateLimiter(rateLimit?: number, globalRateLimitBucketPerMinute?: TokenBucket) {
-  if (!rateLimit && !globalRateLimitBucketPerMinute) {
+export function perMinuteRateLimiter(rateLimit?: number, globalLimiter?: TokenBucket) {
+  if (!rateLimit && !globalLimiter) {
     return noopMiddleware
   }
 
-  const tokenBucket: TokenBucket = createTokenBucket(rateLimit, globalRateLimitBucketPerMinute)
+  const tokenBucket: TokenBucket = createTokenBucket(rateLimit, globalLimiter)
 
   return function perMinuteRateMiddleware(ctx: ServiceContext, next: () => Promise<void>) {
     if (!tokenBucket.removeTokensSync(1)) {

@@ -1,22 +1,43 @@
 declare module 'tokenbucket' {
   import Promise = require('bluebird')
   import redis = require('redis')
+
+  declare interface TokenBucketOptions {
+    size? : number = 1
+    tokensToAddPerInterval? : number = 1
+    interval? : number | string = 1000
+    lastFill? : number
+    tokensLeft? : number
+    spread? : boolean = false
+    maxWait? : number | string
+    parentBucket? : TokenBucket
+    redis? : {
+      bucketName? : string
+      redisClient? : redisClient
+      redisClientConfig: {
+        port? : number = 6379
+        host? : string = '127.0.0.1'
+        unixSocket? : string
+        options? : string
+      } 
+    }
+  }
   declare class TokenBucket {
-      public lastFill: any
+      public lastFill: number
   
-      public tokensToAddPerInterval: any
+      public tokensToAddPerInterval: number
   
-      public tokensLeft: any
+      public tokensLeft: number
   
-      constructor(config?: any);
+      constructor(config?: TokenBucketOptions);
   
-      public removeTokens(tokensToRemove?: any): any
+      public removeTokens(tokensToRemove?: number): Promise<number>
   
-      public removeTokensSync(tokensToRemove?: any): any
+      public removeTokensSync(tokensToRemove?: number): boolean
   
-      public save(): any
+      public save(): Promise<void>
   
-      public loadSaved(): any
+      public loadSaved(): Promise<any>
   
   }
   
