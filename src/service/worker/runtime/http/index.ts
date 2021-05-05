@@ -29,7 +29,7 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
   serviceHandler: RouteHandler<T, U, V> | Array<RouteHandler<T, U, V>>,
   serviceRoute: ServiceRoute,
   routeId: string,
-  globalRateLimitBucketPerMinute?: TokenBucket
+  globalLimiter: TokenBucket | undefined
 ) => {
   const { implementation, options } = clientsConfig
   const middlewares = toArray(serviceHandler)
@@ -44,7 +44,7 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
     ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     timings,
     concurrentRateLimiter(serviceRoute?.rateLimitPerReplica?.concurrent),
-    perMinuteRateLimiter(serviceRoute?.rateLimitPerReplica?.perMinute, globalRateLimitBucketPerMinute),
+    perMinuteRateLimiter(serviceRoute?.rateLimitPerReplica?.perMinute, globalLimiter),
     traceUserLandRemainingPipelineMiddleware(),
     ...middlewares,
   ]
@@ -56,7 +56,7 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
   serviceHandler: RouteHandler<T, U, V> | Array<RouteHandler<T, U, V>>,
   serviceRoute: ServiceRoute,
   routeId: string,
-  globalRateLimitBucketPerMinute?: TokenBucket
+  globalLimiter: TokenBucket | undefined
 ) => {
   const { implementation, options } = clientsConfig
   const middlewares = toArray(serviceHandler)
@@ -72,7 +72,7 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
     removeSetCookie,
     timings,
     concurrentRateLimiter(serviceRoute?.rateLimitPerReplica?.concurrent),
-    perMinuteRateLimiter(serviceRoute?.rateLimitPerReplica?.perMinute, globalRateLimitBucketPerMinute),
+    perMinuteRateLimiter(serviceRoute?.rateLimitPerReplica?.perMinute, globalLimiter),
     traceUserLandRemainingPipelineMiddleware(),
     ...middlewares,
   ]

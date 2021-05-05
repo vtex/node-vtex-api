@@ -25,7 +25,7 @@ export const createGraphQLRoute = <T extends IOClients, U extends RecorderState,
   clientsConfig: ClientsConfig<T>,
   serviceRoute: ServiceRoute,
   routeId: string,
-  globalRateLimitBucketPerMinute?: TokenBucket
+  globalLimiter: TokenBucket | undefined
 ) => {
   const schema = makeSchema(graphql)
   const pipeline = [
@@ -37,5 +37,5 @@ export const createGraphQLRoute = <T extends IOClients, U extends RecorderState,
     extractQuery(schema),
     run(schema),
   ]
-  return createPrivateHttpRoute<T, U, V & GraphQLContext>(clientsConfig, pipeline, serviceRoute, routeId, globalRateLimitBucketPerMinute)
+  return createPrivateHttpRoute<T, U, V & GraphQLContext>(clientsConfig, pipeline, serviceRoute, routeId, globalLimiter)
 }
