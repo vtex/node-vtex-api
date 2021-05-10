@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- Added aggregations on masterdata client
+
 ## [6.41.0] - 2021-03-09
 
 ### Added

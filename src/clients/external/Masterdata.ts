@@ -6,6 +6,7 @@ const routes = {
   documents: (dataEntity: string) => `${dataEntity}/documents`,
   publicSchema: (dataEntity: string, schema: string) => `${dataEntity}/schemas/${schema}/public`,
   schema: (dataEntity: string, schema: string) => `${dataEntity}/schemas/${schema}`,
+  aggregations: (dataEntity: string) => `${dataEntity}/aggregations`,
   scroll: (dataEntity: string) => `${dataEntity}/scroll`,
   search: (dataEntity: string) => `${dataEntity}/search`,
 }
@@ -31,6 +32,38 @@ export class MasterData extends ExternalClient {
     const metric = 'masterdata-getSchema'
     return this.http.get<T>(routes.schema(dataEntity, schema), {
       metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
+  }
+
+  public aggregate(
+    {
+      dataEntity,
+      field: _field,
+      type: _type,
+      cumulative: _cumulative,
+      derivative: _derivative,
+      where: _where,
+      interval: _interval,
+      schema: _schema,
+    }: AggregationInput,
+    tracingConfig?: RequestTracingConfig
+  ) {
+    const metric = 'masterdata-getSchema'
+    return this.http.get<AggregationResult>(routes.aggregations(dataEntity), {
+      metric,
+      params: {
+        _schema,
+        _where,
+        _interval,
+        _derivative,
+        _cumulative,
+        _type,
+        _field,
+      },
       tracing: {
         requestSpanNameSuffix: metric,
         ...tracingConfig?.tracing,
@@ -209,24 +242,26 @@ export class MasterData extends ExternalClient {
   }
 
   public scrollDocuments<T>(
-    { dataEntity, fields, mdToken, schema, size, sort, }: ScrollInput,
+    { dataEntity, fields, mdToken, schema, size, sort }: ScrollInput,
     tracingConfig?: RequestTracingConfig
   ) {
     const metric = 'masterdata-scrollDocuments'
-    return this.http.getRaw<ScrollResponse<T>>(routes.scroll(dataEntity), {
-      metric,
-      params: {
-        _fields: generateFieldsArg(fields),
-        _schema: schema,
-        _size: size,
-        _sort: sort,
-        _token: mdToken,
-      },
-      tracing: {
-        requestSpanNameSuffix: metric,
-        ...tracingConfig?.tracing,
-      },
-    }).then(({headers: {'x-vtex-md-token': resToken}, data}) => ({mdToken: resToken, data}))
+    return this.http
+      .getRaw<ScrollResponse<T>>(routes.scroll(dataEntity), {
+        metric,
+        params: {
+          _fields: generateFieldsArg(fields),
+          _schema: schema,
+          _size: size,
+          _sort: sort,
+          _token: mdToken,
+        },
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
+      })
+      .then(({ headers: { 'x-vtex-md-token': resToken }, data }) => ({ mdToken: resToken, data }))
   }
 
   public deleteDocument({ dataEntity, id }: DeleteInput, tracingConfig?: RequestTracingConfig) {
@@ -273,6 +308,77 @@ interface GetSchemaInput {
   dataEntity: string
   schema: string
 }
+
+interface AggregationInput {
+  schema?: string
+  dataEntity: string
+  field: string
+  type: 'count' | 'sum' | 'max' | 'min' | 'avg' | 'date-time-interval' | 'stats'
+  where?: string
+  cumulative?: string
+  derivative?: string
+  interval?: string | 'day' | 'year' | 'month'
+}
+
+interface BaseAggregationResult {
+  all_docs: number
+  all_docs_aggregated: number
+}
+
+interface NumberAggregationResult extends BaseAggregationResult {
+  result: number
+}
+
+interface StatsAggregationResult extends BaseAggregationResult {
+  result: {
+    min: number
+    max: number
+    avg: number
+    sum: number
+  }
+}
+
+interface CountAggregationResult extends BaseAggregationResult {
+  result: Array<{
+    key: string
+    value: number
+  }>
+}
+
+interface CumulativeAggregationResult extends BaseAggregationResult {
+  result: Array<{
+    key: string
+    doc_count: number
+    cumulative_sum: number
+    sum: number
+  }>
+}
+
+interface DerivativeAggregationResult extends BaseAggregationResult {
+  result: Array<{
+    key: string
+    doc_count: number
+    derivative_sum: number
+    sum: number
+  }>
+}
+
+interface CumulativeDerivativeAggregationResult extends BaseAggregationResult {
+  result: Array<{
+    key: string
+    doc_count: number
+    cumulative_sum: number
+    derivative_sum: number
+    sum: number
+  }>
+}
+type AggregationResult =
+  | CumulativeDerivativeAggregationResult
+  | DerivativeAggregationResult
+  | CumulativeAggregationResult
+  | CountAggregationResult
+  | StatsAggregationResult
+  | NumberAggregationResult
 
 interface CreateSchemaInput {
   dataEntity: string
