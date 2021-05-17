@@ -1,7 +1,8 @@
+import TokenBucket from 'tokenbucket'
 import { IOClients } from '../../../../clients/IOClients'
 import { nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
 import { clients } from '../http/middlewares/clients'
-import { error } from '../http/middlewares/error'
+import { concurrentRateLimiter, perMinuteRateLimiter } from '../http/middlewares/rateLimit'
 import { getServiceSettings } from '../http/middlewares/settings'
 import { timings } from '../http/middlewares/timings'
 import {
@@ -17,11 +18,13 @@ import { toArray } from '../utils/toArray'
 import { parseBodyMiddleware } from './middlewares/body'
 import { eventContextMiddleware } from './middlewares/context'
 
+
 export const createEventHandler = <T extends IOClients, U extends RecorderState, V extends ParamsContext>(
   clientsConfig: ClientsConfig<T>,
   eventId: string,
   handler: EventHandler<T, U> | Array<EventHandler<T, U>>,
-  serviceEvent: ServiceEvent | undefined
+  serviceEvent: ServiceEvent  | undefined,
+  globalLimiter: TokenBucket | undefined
 ) => {
   const { implementation, options } = clientsConfig
   const middlewares = toArray(handler)
@@ -32,7 +35,8 @@ export const createEventHandler = <T extends IOClients, U extends RecorderState,
     clients<T, U, V>(implementation!, options),
     ...(serviceEvent?.settingsType === 'workspace' || serviceEvent?.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     timings,
-    error,
+    concurrentRateLimiter(serviceEvent?.rateLimitPerReplica?.concurrent),
+    perMinuteRateLimiter(serviceEvent?.rateLimitPerReplica?.perMinute, globalLimiter),
     traceUserLandRemainingPipelineMiddleware(),
     contextAdapter<T, U, V>(middlewares),
   ]

@@ -4,6 +4,7 @@ import compress from 'koa-compress'
 import Router from 'koa-router'
 import { mergeDeepRight } from 'ramda'
 
+import TokenBucket from 'tokenbucket'
 import { IOClients } from '../../clients/IOClients'
 import { UP_SIGNAL } from '../../constants'
 import { InstanceOptions } from '../../HttpClient/typings'
@@ -28,6 +29,8 @@ import { createEventHandler } from './runtime/events'
 import { routerFromEventHandlers } from './runtime/events/router'
 import { createGraphQLRoute, GRAPHQL_ROUTE } from './runtime/graphql'
 import { createPrivateHttpRoute, createPublicHttpRoute } from './runtime/http'
+import { error } from './runtime/http/middlewares/error'
+import { concurrentRateLimiter } from './runtime/http/middlewares/rateLimit'
 import { routerFromPublicHttpHandlers } from './runtime/http/router'
 import { logAvailableRoutes } from './runtime/http/routes'
 import { Service } from './runtime/Service'
@@ -43,6 +46,7 @@ import {
   RouteHandler,
   ServiceJSON,
 } from './runtime/typings'
+import { createTokenBucket } from './runtime/utils/tokenBucket'
 
 const upSignal = () => {
   const data = JSON.stringify({ statusTrack: true })
@@ -87,7 +91,8 @@ interface HttpHandlerByScope {
 
 const createAppHttpHandlers = (
   { config: { routes, clients } }: Service<IOClients, RecorderState, ParamsContext>,
-  serviceJSON: ServiceJSON
+  serviceJSON: ServiceJSON,
+  globalLimiter: TokenBucket | undefined
 ) => {
   if (routes && clients) {
     return Object.keys(routes).reduce(
@@ -106,12 +111,12 @@ const createAppHttpHandlers = (
 
         if (publicRoute || extensible) {
           acc.pub[routeId] = {
-            handler: createPublicHttpRoute(clients, routes[routeId], serviceRoute, routeId),
+            handler: createPublicHttpRoute(clients, routes[routeId], serviceRoute, routeId, globalLimiter),
             path: servicePath,
           }
         } else {
           acc.pvt[routeId] = {
-            handler: createPrivateHttpRoute(clients, routes[routeId], serviceRoute, routeId),
+            handler: createPrivateHttpRoute(clients, routes[routeId], serviceRoute, routeId, globalLimiter),
             path: `/:account/:workspace${servicePath.replace(/\*([^/]*)/g, ':$1*')}`,
           }
         }
@@ -134,14 +139,15 @@ const routerFromPrivateHttpHandlers = (routes: Record<string, HttpRoute>) => Obj
 
 const createAppGraphQLHandler = (
   { config: { graphql, clients } }: Service<IOClients, RecorderState, ParamsContext>,
-  { routes }: ServiceJSON
+  { routes }: ServiceJSON,
+  globalLimiter: TokenBucket | undefined
 ): HttpHandlerByScope | null => {
   const route = routes?.[GRAPHQL_ROUTE]
   if (graphql && route && clients) {
     return {
       pvt: {
         [GRAPHQL_ROUTE]: {
-          handler: createGraphQLRoute<any, any, any>(graphql, clients, route, GRAPHQL_ROUTE),
+          handler: createGraphQLRoute<any, any, any>(graphql, clients, route, GRAPHQL_ROUTE, globalLimiter),
           path: `/:account/:workspace${route.path}`,
         },
       },
@@ -152,13 +158,14 @@ const createAppGraphQLHandler = (
 
 const createAppEventHandlers = (
   { config: { events, clients } }: Service<IOClients, RecorderState, ParamsContext>,
-  serviceJSON: ServiceJSON
+  serviceJSON: ServiceJSON,
+  globalLimiter: TokenBucket | undefined
 ) => {
   if (events && clients) {
     return Object.keys(events).reduce(
       (acc, eventId) => {
         const serviceEvent = serviceJSON.events?.[eventId]
-        acc[eventId] = createEventHandler(clients, eventId, events[eventId], serviceEvent)
+        acc[eventId] = createEventHandler(clients, eventId, events[eventId], serviceEvent, globalLimiter)
         return acc
       },
       {} as Record<string, RouteHandler>
@@ -211,9 +218,12 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
   const app = new Koa()
   app.proxy = true
   app
+    .use(error)
+    .use(addTracingMiddleware(tracer))
     .use(prometheusLoggerMiddleware())
     .use(addTracingMiddleware(tracer))
     .use(addMetricsLoggerMiddleware())
+    .use(concurrentRateLimiter(serviceJSON?.rateLimitPerReplica?.concurrent))
     .use(compress())
     .use(recorderMiddleware)
 
@@ -224,9 +234,10 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
     scaleClientCaches(serviceJSON.workers, clients.options)
   }
 
-  const appHttpHandlers = createAppHttpHandlers(service, serviceJSON)
-  const appGraphQLHandlers = createAppGraphQLHandler(service, serviceJSON)
-  const appEventHandlers = createAppEventHandlers(service, serviceJSON)
+  const globalLimiter: TokenBucket | undefined = createTokenBucket(serviceJSON?.rateLimitPerReplica?.perMinute)
+  const appHttpHandlers = createAppHttpHandlers(service, serviceJSON, globalLimiter)
+  const appEventHandlers = createAppEventHandlers(service, serviceJSON, globalLimiter)
+  const appGraphQLHandlers = createAppGraphQLHandler(service, serviceJSON, globalLimiter)
   const runtimeHttpHandlers = createRuntimeHttpHandlers(appEventHandlers, serviceJSON)
   const httpHandlers = [
     appHttpHandlers,

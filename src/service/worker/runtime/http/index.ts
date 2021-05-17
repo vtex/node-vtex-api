@@ -1,3 +1,4 @@
+import TokenBucket from 'tokenbucket'
 import { IOClients } from '../../../../clients/IOClients'
 import { nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
 import {
@@ -16,7 +17,7 @@ import {
   createPubContextMiddleware,
   createPvtContextMiddleware,
 } from './middlewares/context'
-import { error } from './middlewares/error'
+import { concurrentRateLimiter, perMinuteRateLimiter } from './middlewares/rateLimit'
 import { trackIncomingRequestStats } from './middlewares/requestStats'
 import { removeSetCookie } from './middlewares/setCookie'
 import { getServiceSettings } from './middlewares/settings'
@@ -27,7 +28,8 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
   clientsConfig: ClientsConfig<T>,
   serviceHandler: RouteHandler<T, U, V> | Array<RouteHandler<T, U, V>>,
   serviceRoute: ServiceRoute,
-  routeId: string
+  routeId: string,
+  globalLimiter: TokenBucket | undefined
 ) => {
   const { implementation, options } = clientsConfig
   const middlewares = toArray(serviceHandler)
@@ -41,7 +43,8 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
     clients(implementation!, options),
     ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     timings,
-    error,
+    concurrentRateLimiter(serviceRoute?.rateLimitPerReplica?.concurrent),
+    perMinuteRateLimiter(serviceRoute?.rateLimitPerReplica?.perMinute, globalLimiter),
     traceUserLandRemainingPipelineMiddleware(),
     ...middlewares,
   ]
@@ -52,7 +55,8 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
   clientsConfig: ClientsConfig<T>,
   serviceHandler: RouteHandler<T, U, V> | Array<RouteHandler<T, U, V>>,
   serviceRoute: ServiceRoute,
-  routeId: string
+  routeId: string,
+  globalLimiter: TokenBucket | undefined
 ) => {
   const { implementation, options } = clientsConfig
   const middlewares = toArray(serviceHandler)
@@ -67,7 +71,8 @@ export const createPublicHttpRoute = <T extends IOClients, U extends RecorderSta
     ...(serviceRoute.settingsType === 'workspace' || serviceRoute.settingsType === 'userAndWorkspace' ? [getServiceSettings()] : []),
     removeSetCookie,
     timings,
-    error,
+    concurrentRateLimiter(serviceRoute?.rateLimitPerReplica?.concurrent),
+    perMinuteRateLimiter(serviceRoute?.rateLimitPerReplica?.perMinute, globalLimiter),
     traceUserLandRemainingPipelineMiddleware(),
     ...middlewares,
   ]

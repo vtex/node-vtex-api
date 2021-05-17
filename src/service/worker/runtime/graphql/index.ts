@@ -1,3 +1,4 @@
+import TokenBucket from 'tokenbucket'
 import { IOClients } from '../../../../clients/IOClients'
 import { nameSpanOperationMiddleware } from '../../../tracing/tracingMiddlewares'
 import { createPrivateHttpRoute } from '../http'
@@ -23,7 +24,8 @@ export const createGraphQLRoute = <T extends IOClients, U extends RecorderState,
   graphql: GraphQLOptions<T, U, V>,
   clientsConfig: ClientsConfig<T>,
   serviceRoute: ServiceRoute,
-  routeId: string
+  routeId: string,
+  globalLimiter: TokenBucket | undefined
 ) => {
   const schema = makeSchema(graphql)
   const pipeline = [
@@ -35,5 +37,5 @@ export const createGraphQLRoute = <T extends IOClients, U extends RecorderState,
     extractQuery(schema),
     run(schema),
   ]
-  return createPrivateHttpRoute<T, U, V & GraphQLContext>(clientsConfig, pipeline, serviceRoute, routeId)
+  return createPrivateHttpRoute<T, U, V & GraphQLContext>(clientsConfig, pipeline, serviceRoute, routeId, globalLimiter)
 }
