@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.41.1] - 2021-05-17
+
 ### Fixed
 - Fix prometheus metrics being publicly exposed on /metrics.
 
