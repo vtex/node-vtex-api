@@ -18,7 +18,7 @@ import {
   RequestsMetricLabels,
 } from './metrics/instruments'
 
-const PATHS_BLACKLISTED_FOR_TRACING = ['/metrics', '/_status', '/healthcheck']
+const PATHS_BLACKLISTED_FOR_TRACING = ['/_status', '/healthcheck']
 
 export const addTracingMiddleware = (tracer: Tracer) => {
   const concurrentRequests = createConcurrentRequestsInstrument()

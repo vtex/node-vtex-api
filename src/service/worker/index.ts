@@ -211,8 +211,8 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
   const app = new Koa()
   app.proxy = true
   app
-    .use(addTracingMiddleware(tracer))
     .use(prometheusLoggerMiddleware())
+    .use(addTracingMiddleware(tracer))
     .use(addMetricsLoggerMiddleware())
     .use(compress())
     .use(recorderMiddleware)
