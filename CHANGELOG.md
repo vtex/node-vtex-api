@@ -6,8 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
 
+- [startWorker] Remove duplicated middleware
 ## [6.42.0] - 2021-05-17
+
+### Added
 
 - [Rate Limit] Enable user to config the amount of requests to be processed per minute and concurrently by setting it in `service.json`.
 ## [6.41.1] - 2021-05-17
