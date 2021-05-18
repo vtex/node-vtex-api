@@ -219,7 +219,6 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
   app.proxy = true
   app
     .use(error)
-    .use(addTracingMiddleware(tracer))
     .use(prometheusLoggerMiddleware())
     .use(addTracingMiddleware(tracer))
     .use(addMetricsLoggerMiddleware())
