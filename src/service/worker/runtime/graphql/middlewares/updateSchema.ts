@@ -16,6 +16,13 @@ export const updateSchema = <T extends IOClients, U extends RecorderState, V ext
       vtex: { logger },
       app,
     } = ctx
+
+    if (!ctx.headers[PROVIDER_HEADER]) {
+      logger.warn({ message: 'Missing x-vtex-provider header' })
+      await next()
+      return
+    }
+
     // fetches the new schema and generate a new runnable schema, updates the provider app,
     if (
       executableSchema.hasProvider &&
