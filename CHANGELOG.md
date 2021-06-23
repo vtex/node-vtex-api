@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.43.0] - 2021-06-23
+
+### Added
+
+- Update schema in runtime when provider app changes version
+
 ## [6.42.1] - 2021-05-18
 ### Fixed
 

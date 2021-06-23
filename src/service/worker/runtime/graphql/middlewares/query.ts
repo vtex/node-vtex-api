@@ -1,11 +1,7 @@
 import { json } from 'co-body'
-import {
-  DocumentNode,
-  GraphQLSchema,
-  parse as gqlParse,
-  validate,
-} from 'graphql'
+import { DocumentNode, GraphQLSchema, parse as gqlParse, validate } from 'graphql'
 import { parse } from 'url'
+import { ExecutableSchema } from './../typings'
 
 import { BODY_HASH } from '../../../../../constants'
 import { GraphQLServiceContext, Query } from '../typings'
@@ -42,29 +38,26 @@ const parseAndValidateQueryToSchema = (query: string, schema: GraphQLSchema) => 
   return document
 }
 
-export const extractQuery = (schema: GraphQLSchema) =>
-async function parseAndValidateQuery (ctx: GraphQLServiceContext, next: () => Promise<void>) {
-  const { request, req } = ctx
+export const extractQuery = (executableSchema: ExecutableSchema) =>
+  async function parseAndValidateQuery(ctx: GraphQLServiceContext, next: () => Promise<void>) {
+    const { request, req } = ctx
 
-  let query: Query & { query: string }
-  if (request.is('multipart/form-data')) {
-    query = (request as any).body
-  } else if (request.method.toUpperCase() === 'POST') {
-    query = await json(req, {limit: '3mb'})
-  } else {
-    query = queryFromUrl(request.url) || await json(req, {limit: '3mb'})
+    let query: Query & { query: string }
+    if (request.is('multipart/form-data')) {
+      query = (request as any).body
+    } else if (request.method.toUpperCase() === 'POST') {
+      query = await json(req, { limit: '3mb' })
+    } else {
+      query = queryFromUrl(request.url) || (await json(req, { limit: '3mb' }))
+    }
+
+    // Assign the query before setting the query.document because if the
+    // validation fails we don't loose the query in our error log
+    ctx.graphql.query = query
+
+    query.document = (await documentStorage.getOrSet(query.query, async () => ({
+      value: parseAndValidateQueryToSchema(query.query, executableSchema.schema),
+    }))) as DocumentNode
+
+    await next()
   }
-
-  // Assign the query before setting the query.document because if the
-  // validation fails we don't loose the query in our error log
-  ctx.graphql.query = query
-
-  query.document = await documentStorage.getOrSet(
-    query.query,
-    async () => ({
-      value: parseAndValidateQueryToSchema(query.query, schema),
-    })
-  ) as DocumentNode
-
-  await next()
-}
