@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.43.1] - 2021-07-12
+### Fixed
+- Update axios to `0.21.1`
+
 ## [6.43.0] - 2021-06-23
 
 ### Added
