@@ -29,6 +29,10 @@ export class Telemetry extends SchemaDirectiveVisitor {
 
       metrics.batch(`graphql-telemetry-${APP.NAME}-${name}`, failedToResolve ? undefined : ellapsed, payload)
 
+      if (failedToResolve) {
+        throw result
+      }
+
       return result
     }
   }
