@@ -1,8 +1,6 @@
 import { defaultFieldResolver, GraphQLField, print } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
-import { cleanError } from '../../../../../../utils'
-import { Logger, LogLevel } from '../../../../../logger/logger'
-import { logger as globalLogger } from '../../../../listeners'
+import { APP } from '../../../../../..'
 import { GraphQLServiceContext } from '../../typings'
 
 export class Telemetry extends SchemaDirectiveVisitor {
@@ -12,12 +10,12 @@ export class Telemetry extends SchemaDirectiveVisitor {
     field.resolve = async (root, args, ctx, info) => {
       let failedToResolve = false
       let result: any = null
-      let timeToResolve = 0
+      let ellapsed: [number, number] = [0, 0]
 
       try {
-        const start = process.hrtime.bigint()
+        const start = process.hrtime()
         result = await resolve(root, args, ctx, info)
-        timeToResolve = Number(process.hrtime.bigint() - start) / 1000000 // Milliseconds
+        ellapsed = process.hrtime(start)
       } catch (error) {
         result = error
         failedToResolve = true
@@ -25,31 +23,14 @@ export class Telemetry extends SchemaDirectiveVisitor {
 
       ctx.graphql.status = failedToResolve ? 'error' : 'success'
 
-      this.log(
-        failedToResolve ? LogLevel.Error : LogLevel.Info,
-        {
-          graphql: {
-            failedToResolve,
-            failureReason: failedToResolve ? cleanError(result) : null,
-            name,
-            operationName: ctx.graphql.query?.operationName || '',
-            query: ctx.graphql.query?.document && print(ctx.graphql.query?.document),
-            status: ctx.graphql.status,
-            timeToResolve,
-            variables: args,
-          },
-          headers: ctx.request.headers,
-          key: 'graphql-telemetry',
-        },
-        ctx.vtex.logger
-      )
+      const payload = {
+        [ctx.graphql.status]: 1,
+      } as Record<string, string | number>
+
+      metrics.batch(`graphql-telemetry-${APP.NAME}-${name}`, failedToResolve ? undefined : ellapsed, payload)
 
       return result
     }
-  }
-
-  protected log<T>(level: LogLevel, payload: T, logger: Logger = globalLogger) {
-    logger[level](payload)
   }
 }
 
