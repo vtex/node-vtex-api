@@ -1,4 +1,4 @@
-import { defaultFieldResolver, GraphQLField, print } from 'graphql'
+import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 import { APP } from '../../../../../..'
 import { GraphQLServiceContext } from '../../typings'
