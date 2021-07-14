@@ -25,7 +25,7 @@ export class Telemetry extends SchemaDirectiveVisitor {
 
       const payload = {
         [ctx.graphql.status]: 1,
-      } as Record<string, string | number>
+      }
 
       metrics.batch(`graphql-telemetry-${APP.NAME}-${name}`, failedToResolve ? undefined : ellapsed, payload)
 
