@@ -1,6 +1,7 @@
 import { Auth, authDirectiveTypeDefs } from './Auth'
 import { CacheControl, cacheControlDirectiveTypeDefs } from './CacheControl'
 import { Deprecated, deprecatedDirectiveTypeDefs } from './Deprecated'
+import { Metric, metricDirectiveTypeDefs } from './Metric'
 import { SanitizeDirective, sanitizeDirectiveTypeDefs } from './Sanitize'
 import { SettingsDirective, settingsDirectiveTypeDefs } from './Settings'
 import { SmartCacheDirective, smartCacheDirectiveTypeDefs } from './SmartCacheDirective'
@@ -13,6 +14,7 @@ export const nativeSchemaDirectives = {
   auth: Auth,
   cacheControl: CacheControl,
   deprecated: Deprecated,
+  metric: Metric,
   sanitize: SanitizeDirective,
   settings: SettingsDirective,
   smartcache: SmartCacheDirective,
@@ -24,6 +26,7 @@ export const nativeSchemaDirectivesTypeDefs = [
   authDirectiveTypeDefs,
   cacheControlDirectiveTypeDefs,
   deprecatedDirectiveTypeDefs,
+  metricDirectiveTypeDefs,
   sanitizeDirectiveTypeDefs,
   settingsDirectiveTypeDefs,
   smartCacheDirectiveTypeDefs,

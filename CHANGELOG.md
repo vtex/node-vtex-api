@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- `@metric` GraphQL directive
+
 ## [6.43.1] - 2021-07-12
+
 ### Fixed
+
 - Update axios to `0.21.1`
 
 ## [6.43.0] - 2021-06-23
@@ -18,17 +24,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Update schema in runtime when provider app changes version
 
 ## [6.42.1] - 2021-05-18
+
 ### Fixed
 
 - [startWorker] Remove duplicated middleware
+
 ## [6.42.0] - 2021-05-17
 
 ### Added
 
 - [Rate Limit] Enable user to config the amount of requests to be processed per minute and concurrently by setting it in `service.json`.
+
 ## [6.41.1] - 2021-05-17
 
 ### Fixed
+
 - Fix prometheus metrics being publicly exposed on /metrics.
 
 ## [6.41.0] - 2021-03-09
