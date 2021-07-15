@@ -3,9 +3,14 @@ import { SchemaDirectiveVisitor } from 'graphql-tools'
 import { APP } from '../../../../../..'
 import { GraphQLServiceContext } from '../../typings'
 
-export class Telemetry extends SchemaDirectiveVisitor {
+interface Args {
+  name?: string
+}
+
+export class Metric extends SchemaDirectiveVisitor {
   public visitFieldDefinition(field: GraphQLField<any, GraphQLServiceContext>) {
-    const { resolve = defaultFieldResolver, name } = field
+    const { resolve = defaultFieldResolver, name: fieldName } = field
+    const { name = `${APP.NAME}-${fieldName}` } = this.args as Args
 
     field.resolve = async (root, args, ctx, info) => {
       let failedToResolve = false
@@ -27,7 +32,7 @@ export class Telemetry extends SchemaDirectiveVisitor {
         [ctx.graphql.status]: 1,
       }
 
-      metrics.batch(`graphql-telemetry-${APP.NAME}-${name}`, failedToResolve ? undefined : ellapsed, payload)
+      metrics.batch(`graphql-metric-${name}`, failedToResolve ? undefined : ellapsed, payload)
 
       if (failedToResolve) {
         throw result
@@ -38,6 +43,8 @@ export class Telemetry extends SchemaDirectiveVisitor {
   }
 }
 
-export const telemetryDirectiveTypeDefs = `
-directive @telemetry on FIELD_DEFINITION
+export const metricDirectiveTypeDefs = `
+directive @metric (
+  name: String
+) on FIELD_DEFINITION
 `
