@@ -46,6 +46,12 @@ const createRoutes = (workspace: string) => ({
   Files: (scope: string, locator: ParsedLocator, path: string) => `/${scope}/${appOrRegistry(workspace, locator)}/files/${path}`,
 })
 
+const removeEmptyConfigs = (configs: Array<Record<string, any>>) =>
+  configs.filter(config => {
+    const [appVendorName] = config.declarer.split('@')
+    return config[appVendorName]
+  })
+
 export class Assets extends InfraClient {
   private routes: ReturnType<typeof createRoutes>
 
@@ -54,19 +60,21 @@ export class Assets extends InfraClient {
     this.routes = createRoutes(this.context.workspace)
   }
 
-  public getSettings (dependencies: AppMetaInfo[], appAtMajor: string, params: AssetsParams = {}, tracingConfig?: RequestTracingConfig) {
+  public async getSettings (dependencies: AppMetaInfo[], appAtMajor: string, params: AssetsParams = {}, tracingConfig?: RequestTracingConfig) {
     const {pick, files} = params
     const filtered = this.getFilteredDependencies(appAtMajor, dependencies)
 
-    return Promise.all(filtered.map(dependency => {
+    const configsPromises = filtered.map(dependency => {
       const [appVendorName] = appAtMajor.split('@')
       const buildJson = useBuildJson(dependency, appVendorName)
 
       return buildJson
         ? this.getBuildJSONForApp(dependency, appVendorName, pick, tracingConfig)
         : this.getSettingsFromFilesForApp(dependency, files, tracingConfig)
-    }
-    ))
+    })
+
+    const configs = await Promise.all(configsPromises)
+    return removeEmptyConfigs(configs)
   }
 
   public async getBuildJSONForApp(app: AppMetaInfo, appVendorName: string, pick: string | string[] = [], tracingConfig?: RequestTracingConfig): Promise<Record<string, any>> {
