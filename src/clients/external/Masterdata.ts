@@ -168,8 +168,8 @@ export class MasterData extends ExternalClient {
   ) {
     const metric = 'masterdata-searchDocuments'
     return this.http.get<T[]>(routes.search(dataEntity), {
-      headers: paginationArgsToHeaders(pagination),
       cacheable: CacheType.None,
+      headers: paginationArgsToHeaders(pagination),
       metric,
       params: {
         _fields: generateFieldsArg(fields),
@@ -190,8 +190,8 @@ export class MasterData extends ExternalClient {
   ) {
     const metric = 'masterdata-searchDocumentsWithPagination'
     const result = await this.http.getRaw<T[]>(routes.search(dataEntity), {
-      headers: paginationArgsToHeaders(pagination),
       cacheable: CacheType.None,
+      headers: paginationArgsToHeaders(pagination),
       metric,
       params: {
         _fields: generateFieldsArg(fields),
@@ -218,8 +218,8 @@ export class MasterData extends ExternalClient {
     const metric = 'masterdata-scrollDocuments'
     return this.http
       .getRaw<ScrollResponse<T>>(routes.scroll(dataEntity), {
-        metric,
         cacheable: CacheType.None,
+        metric,
         params: {
           _fields: generateFieldsArg(fields),
           _schema: schema,
