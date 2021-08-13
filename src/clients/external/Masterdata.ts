@@ -1,4 +1,5 @@
 import { InstanceOptions, IOContext, RequestTracingConfig, UserInputError } from '../..'
+import { CacheType } from '../../HttpClient'
 import { ExternalClient } from './ExternalClient'
 
 const routes = {
@@ -168,6 +169,7 @@ export class MasterData extends ExternalClient {
     const metric = 'masterdata-searchDocuments'
     return this.http.get<T[]>(routes.search(dataEntity), {
       headers: paginationArgsToHeaders(pagination),
+      cacheable: CacheType.None,
       metric,
       params: {
         _fields: generateFieldsArg(fields),
@@ -189,6 +191,7 @@ export class MasterData extends ExternalClient {
     const metric = 'masterdata-searchDocumentsWithPagination'
     const result = await this.http.getRaw<T[]>(routes.search(dataEntity), {
       headers: paginationArgsToHeaders(pagination),
+      cacheable: CacheType.None,
       metric,
       params: {
         _fields: generateFieldsArg(fields),
@@ -209,24 +212,27 @@ export class MasterData extends ExternalClient {
   }
 
   public scrollDocuments<T>(
-    { dataEntity, fields, mdToken, schema, size, sort, }: ScrollInput,
+    { dataEntity, fields, mdToken, schema, size, sort }: ScrollInput,
     tracingConfig?: RequestTracingConfig
   ) {
     const metric = 'masterdata-scrollDocuments'
-    return this.http.getRaw<ScrollResponse<T>>(routes.scroll(dataEntity), {
-      metric,
-      params: {
-        _fields: generateFieldsArg(fields),
-        _schema: schema,
-        _size: size,
-        _sort: sort,
-        _token: mdToken,
-      },
-      tracing: {
-        requestSpanNameSuffix: metric,
-        ...tracingConfig?.tracing,
-      },
-    }).then(({headers: {'x-vtex-md-token': resToken}, data}) => ({mdToken: resToken, data}))
+    return this.http
+      .getRaw<ScrollResponse<T>>(routes.scroll(dataEntity), {
+        metric,
+        cacheable: CacheType.None,
+        params: {
+          _fields: generateFieldsArg(fields),
+          _schema: schema,
+          _size: size,
+          _sort: sort,
+          _token: mdToken,
+        },
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
+      })
+      .then(({ headers: { 'x-vtex-md-token': resToken }, data }) => ({ mdToken: resToken, data }))
   }
 
   public deleteDocument({ dataEntity, id }: DeleteInput, tracingConfig?: RequestTracingConfig) {
