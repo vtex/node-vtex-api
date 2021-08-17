@@ -148,7 +148,6 @@ describe('MineWinsConflictsResolver', () => {
     const expected = { lala: [{ c: 3 }, { a: 1, c: 4 }] }
 
     const result = resolver.mergeMineWins(base, master, mine)
-    console.log(result)
     expect(result).toEqual(expected)
   })
 
