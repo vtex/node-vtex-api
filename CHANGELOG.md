@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 
-- Cover a new test case where mine is left equal to base and master deletes an item and updates another one.
+- Cover new test cases where mine is left equal to base and master updates an item.
 
 ## [6.45.0] - 2021-08-24
 
