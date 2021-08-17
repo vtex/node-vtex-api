@@ -171,4 +171,5 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
 
     return !mine.some((mineItem) => equals(mineItem, item)) && !base.some((baseItem) => equals(baseItem, item))
   }
+
 }
