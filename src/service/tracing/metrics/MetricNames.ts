@@ -1,4 +1,4 @@
-const enum METRIC_TYPES {
+export const enum METRIC_TYPES {
   /** Counter is monotonic */
   COUNTER = 'counter',
   /** Gauge is a counter that can be increased and decreased */
@@ -68,4 +68,39 @@ export const BETWEEN_SCRAPES_EVENT_LOOP_LAG_PERCENTILES = {
   help: 'Event loop lag percentiles from the observations that occurred between this and the previous scrape',
   labelNames: [EventLoopMetricLabels.PERCENTILE],
   type: METRIC_TYPES.GAUGE,
+}
+
+export const FRONTEND_CLS = {
+  help: 'CLS',
+  name: 'frontend_cls',
+  type: METRIC_TYPES.GAUGE,
+  labelNames: ['sender'],
+}
+
+export const FRONTEND_FCP = {
+  help: 'FCP',
+  name: 'frontend_fcp',
+  type: METRIC_TYPES.GAUGE,
+  labelNames: ['sender'],
+}
+
+export const FRONTEND_LCP = {
+  help: 'LCP',
+  name: 'frontend_lcp',
+  type: METRIC_TYPES.GAUGE,
+  labelNames: ['sender'],
+}
+
+export const FRONTEND_TTFB = {
+  help: 'TTFB',
+  name: 'frontend_ttfb',
+  type: METRIC_TYPES.GAUGE,
+  labelNames: ['sender'],
+}
+
+export const FRONTEND_FID = {
+  help: 'TTFB',
+  name: 'frontend_fid',
+  type: METRIC_TYPES.GAUGE,
+  labelNames: ['sender'],
 }
