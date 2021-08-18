@@ -1,56 +1,48 @@
 import promclient from 'prom-client'
 import {
   createFrontendCLSBySenderInstrument,
-  createFrontendFCPBySenderInstrument,
   createFrontendFIDBySenderInstrument,
   createFrontendLCPBySenderInstrument,
-  createFrontendTTFBBySenderInstrument,
 } from '../../service/tracing/metrics/instruments'
 import { IOClient } from '../IOClient'
 
 export class FrontendMetricsClient extends IOClient {
-  public static getWebVitalsMetrics() {
-    if (!FrontendMetricsClient.webVitalsMetrics) {
-      FrontendMetricsClient.webVitalsMetrics = FrontendMetricsClient.initWebVitalsMetrics()
+  public static getCoreWebVitalsMetrics() {
+    if (!FrontendMetricsClient.coreWebVitalsMetrics) {
+      FrontendMetricsClient.coreWebVitalsMetrics = FrontendMetricsClient.initCoreWebVitalsMetrics()
     }
 
-    return FrontendMetricsClient.webVitalsMetrics
+    return FrontendMetricsClient.coreWebVitalsMetrics
   }
 
-  private static webVitalsMetrics: WebVitalsMetrics
+  private static coreWebVitalsMetrics: CoreWebVitalsMetrics
 
-  private static initWebVitalsMetrics() {
+  private static initCoreWebVitalsMetrics() {
     const CLSHistogram = createFrontendCLSBySenderInstrument()
-    const FCPHistogram = createFrontendFCPBySenderInstrument()
     const LCPHistogram = createFrontendLCPBySenderInstrument()
     const FIDHistogram = createFrontendFIDBySenderInstrument()
-    const TTFBHistogram = createFrontendTTFBBySenderInstrument()
 
     return {
       CLS: CLSHistogram,
-      FCP: FCPHistogram,
       FID: FIDHistogram,
       LCP: LCPHistogram,
-      TTFB: TTFBHistogram,
     }
   }
 
-  public sendWebVitals(sender: string, metric: WebVitalMetric) {
-    FrontendMetricsClient.getWebVitalsMetrics()[metric.name].labels(sender).observe(metric.value)
+  public sendCoreWebVitals(sender: string, metric: CoreWebVital) {
+    FrontendMetricsClient.getCoreWebVitalsMetrics()[metric.name].labels(sender).observe(metric.value)
   }
 }
 
-export type WebVitalKey = 'FCP' | 'CLS' | 'FID' | 'LCP' | 'TTFB'
+export type CoreWebVitalKey = 'LCP' | 'CLS' | 'FID'
 
-export interface WebVitalMetric {
-  name: WebVitalKey
+export interface CoreWebVital {
+  name: CoreWebVitalKey
   value: number
 }
 
-export interface WebVitalsMetrics {
+export interface CoreWebVitalsMetrics {
   CLS: promclient.Histogram<string>
-  FCP: promclient.Histogram<string>
   LCP: promclient.Histogram<string>
   FID: promclient.Histogram<string>
-  TTFB: promclient.Histogram<string>
 }

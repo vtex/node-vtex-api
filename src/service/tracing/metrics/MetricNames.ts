@@ -72,40 +72,24 @@ export const BETWEEN_SCRAPES_EVENT_LOOP_LAG_PERCENTILES = {
 
 export const FRONTEND_CLS_BY_SENDER = {
   help: 'CLS',
-  name: 'frontend_cls_by_sender',
+  name: 'frontend_cls_by_sender_score',
   type: METRIC_TYPES.HISTOGRAM,
-  buckets: [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120],
-  labelNames: ['sender'],
-}
-
-export const FRONTEND_FCP_BY_SENDER = {
-  help: 'FCP',
-  name: 'frontend_fcp_by_sender',
-  type: METRIC_TYPES.HISTOGRAM,
-  buckets: [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120],
+  buckets: [0.1, 0.25],
   labelNames: ['sender'],
 }
 
 export const FRONTEND_LCP_BY_SENDER = {
   help: 'LCP',
-  name: 'frontend_lcp_by_sender',
-  buckets: [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120],
-  labelNames: ['sender'],
-  type: METRIC_TYPES.HISTOGRAM,
-}
-
-export const FRONTEND_TTFB_BY_SENDER = {
-  help: 'TTFB',
-  name: 'frontend_ttfb_by_sender',
-  buckets: [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120],
+  name: 'frontend_lcp_by_sender_milliseconds',
+  buckets: [2500, 4000],
   labelNames: ['sender'],
   type: METRIC_TYPES.HISTOGRAM,
 }
 
 export const FRONTEND_FID_BY_SENDER = {
   help: 'TTFB',
-  name: 'frontend_fid_by_sender',
-  buckets: [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120],
+  name: 'frontend_fid_by_sender_milliseconds',
+  buckets: [100, 300],
   labelNames: ['sender'],
   type: METRIC_TYPES.HISTOGRAM,
 }

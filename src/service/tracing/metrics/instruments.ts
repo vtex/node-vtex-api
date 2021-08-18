@@ -4,10 +4,8 @@ import {
   BETWEEN_SCRAPES_EVENT_LOOP_LAG_PERCENTILES,
   CONCURRENT_REQUESTS,
   FRONTEND_CLS_BY_SENDER,
-  FRONTEND_FCP_BY_SENDER,
   FRONTEND_FID_BY_SENDER,
   FRONTEND_LCP_BY_SENDER,
-  FRONTEND_TTFB_BY_SENDER,
   REQUEST_RESPONSE_SIZES,
   REQUEST_TIMINGS,
   REQUESTS_ABORTED,
@@ -23,8 +21,6 @@ export const createConcurrentRequestsInstrument = () => new Gauge(CONCURRENT_REQ
 export const createEventLoopLagMaxInstrument = () => new Gauge(BETWEEN_SCRAPES_EVENT_LOOP_LAG_MAX)
 export const createEventLoopLagPercentilesInstrument = () => new Gauge(BETWEEN_SCRAPES_EVENT_LOOP_LAG_PERCENTILES)
 
-export const createFrontendFCPBySenderInstrument = () => new Histogram(FRONTEND_FCP_BY_SENDER)
 export const createFrontendCLSBySenderInstrument = () => new Histogram(FRONTEND_CLS_BY_SENDER)
 export const createFrontendFIDBySenderInstrument = () => new Histogram(FRONTEND_FID_BY_SENDER)
-export const createFrontendTTFBBySenderInstrument = () => new Histogram(FRONTEND_TTFB_BY_SENDER)
 export const createFrontendLCPBySenderInstrument = () => new Histogram(FRONTEND_LCP_BY_SENDER)
