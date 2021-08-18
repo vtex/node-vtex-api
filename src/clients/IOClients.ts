@@ -3,19 +3,10 @@ import { IOContext } from '../service/worker/runtime/typings'
 import { Billing, Builder, MessagesGraphQL, Settings } from './apps'
 import { CatalogGraphQL } from './apps/catalogGraphQL/index'
 import { ID, MasterData, PaymentProvider } from './external'
-import {
-  Apps,
-  Assets,
-  BillingMetrics,
-  Events,
-  Metadata,
-  Registry,
-  Router,
-  VBase,
-  Workspaces,
-} from './infra'
+import { Apps, Assets, BillingMetrics, Events, Metadata, Registry, Router, VBase, Workspaces } from './infra'
 import { IOClient, IOClientConstructor } from './IOClient'
 import { LicenseManager, Segment, Session, TenantClient } from './janus'
+import { PrometheusClient } from './metrics'
 
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: Record<string, InstanceOptions>,
@@ -25,10 +16,7 @@ export type ClientsImplementation<T extends IOClients> = new (
 export class IOClients {
   private clients: Record<string, IOClient> = {}
 
-  constructor(
-    private clientOptions: Record<string, InstanceOptions>,
-    private ctx: IOContext
-  ) {}
+  constructor(private clientOptions: Record<string, InstanceOptions>, private ctx: IOContext) {}
 
   public get apps() {
     return this.getOrSet('apps', Apps)
@@ -114,10 +102,11 @@ export class IOClients {
     return this.getOrSet('paymentProvider', PaymentProvider)
   }
 
-  protected getOrSet<TClient extends IOClientConstructor>(
-    key: string,
-    Implementation: TClient
-  ): InstanceType<TClient> {
+  public get prometheus() {
+    return this.getOrSet('prometheus', PrometheusClient)
+  }
+
+  protected getOrSet<TClient extends IOClientConstructor>(key: string, Implementation: TClient): InstanceType<TClient> {
     const options = {
       ...this.clientOptions.default,
       ...this.clientOptions[key],

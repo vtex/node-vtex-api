@@ -74,33 +74,33 @@ export const FRONTEND_CLS = {
   help: 'CLS',
   name: 'frontend_cls',
   type: METRIC_TYPES.GAUGE,
-  labelNames: ['sender'],
+  labelNames: ['sender', 'account', 'workspace'],
 }
 
 export const FRONTEND_FCP = {
   help: 'FCP',
   name: 'frontend_fcp',
   type: METRIC_TYPES.GAUGE,
-  labelNames: ['sender'],
+  labelNames: ['sender', 'account', 'workspace'],
 }
 
 export const FRONTEND_LCP = {
   help: 'LCP',
   name: 'frontend_lcp',
   type: METRIC_TYPES.GAUGE,
-  labelNames: ['sender'],
+  labelNames: ['sender', 'account', 'workspace'],
 }
 
 export const FRONTEND_TTFB = {
   help: 'TTFB',
   name: 'frontend_ttfb',
   type: METRIC_TYPES.GAUGE,
-  labelNames: ['sender'],
+  labelNames: ['sender', 'account', 'workspace'],
 }
 
 export const FRONTEND_FID = {
   help: 'TTFB',
   name: 'frontend_fid',
   type: METRIC_TYPES.GAUGE,
-  labelNames: ['sender'],
+  labelNames: ['sender', 'account', 'workspace'],
 }

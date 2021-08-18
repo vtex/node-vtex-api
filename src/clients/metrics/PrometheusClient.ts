@@ -1,4 +1,4 @@
-import promclient, { Metric } from 'prom-client'
+import promclient from 'prom-client'
 import {
   createFrontendCLSInstrument,
   createFrontendFCPInstrument,
@@ -6,26 +6,12 @@ import {
   createFrontendLCPInstrument,
   createFrontendTTFBInstrument,
 } from '../../service/tracing/metrics/instruments'
+import { IOClient } from '../IOClient'
 
-export type WebVitalKey = 'FCP' | 'CLS' | 'FID' | 'LCP' | 'TTFB'
-
-export interface WebVitalMetric {
-  name: WebVitalKey
-  value: number
-}
-
-export interface WebVitalsGauges {
-  CLS: promclient.Gauge<string>
-  FCP: promclient.Gauge<string>
-  LCP: promclient.Gauge<string>
-  FID: promclient.Gauge<string>
-  TTFB: promclient.Gauge<string>
-}
-
-class PrometheusClient {
-  public static getMetrics() {
+export class PrometheusClient extends IOClient {
+  public static getFrontendMetrics() {
     if (!PrometheusClient.metrics) {
-      PrometheusClient.metrics = PrometheusClient.initMetrics()
+      PrometheusClient.metrics = PrometheusClient.initFrontendMetrics()
     }
 
     return PrometheusClient.metrics
@@ -33,7 +19,7 @@ class PrometheusClient {
 
   private static metrics: WebVitalsGauges
 
-  private static initMetrics() {
+  private static initFrontendMetrics() {
     const CLSGauge = createFrontendCLSInstrument()
     const FCPGauge = createFrontendFCPInstrument()
     const LCPGauge = createFrontendLCPInstrument()
@@ -50,8 +36,23 @@ class PrometheusClient {
   }
 
   public sendWebVitals(sender: string, metric: WebVitalMetric) {
-    PrometheusClient.getMetrics()[metric.name].labels(sender).set(metric.value)
+    PrometheusClient.getFrontendMetrics()
+      [metric.name].labels(sender, this.context.account, this.context.workspace)
+      .set(metric.value)
   }
 }
 
-export const prometheusClient = new PrometheusClient()
+export type WebVitalKey = 'FCP' | 'CLS' | 'FID' | 'LCP' | 'TTFB'
+
+export interface WebVitalMetric {
+  name: WebVitalKey
+  value: number
+}
+
+export interface WebVitalsGauges {
+  CLS: promclient.Gauge<string>
+  FCP: promclient.Gauge<string>
+  LCP: promclient.Gauge<string>
+  FID: promclient.Gauge<string>
+  TTFB: promclient.Gauge<string>
+}
