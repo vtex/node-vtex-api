@@ -70,37 +70,42 @@ export const BETWEEN_SCRAPES_EVENT_LOOP_LAG_PERCENTILES = {
   type: METRIC_TYPES.GAUGE,
 }
 
-export const FRONTEND_CLS = {
+export const FRONTEND_CLS_BY_SENDER = {
   help: 'CLS',
-  name: 'frontend_cls',
-  type: METRIC_TYPES.GAUGE,
-  labelNames: ['sender', 'account', 'workspace'],
+  name: 'frontend_cls_by_sender',
+  type: METRIC_TYPES.HISTOGRAM,
+  buckets: [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120],
+  labelNames: ['sender'],
 }
 
-export const FRONTEND_FCP = {
+export const FRONTEND_FCP_BY_SENDER = {
   help: 'FCP',
-  name: 'frontend_fcp',
-  type: METRIC_TYPES.GAUGE,
-  labelNames: ['sender', 'account', 'workspace'],
+  name: 'frontend_fcp_by_sender',
+  type: METRIC_TYPES.HISTOGRAM,
+  buckets: [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120],
+  labelNames: ['sender'],
 }
 
-export const FRONTEND_LCP = {
+export const FRONTEND_LCP_BY_SENDER = {
   help: 'LCP',
-  name: 'frontend_lcp',
-  type: METRIC_TYPES.GAUGE,
-  labelNames: ['sender', 'account', 'workspace'],
+  name: 'frontend_lcp_by_sender',
+  buckets: [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120],
+  labelNames: ['sender'],
+  type: METRIC_TYPES.HISTOGRAM,
 }
 
-export const FRONTEND_TTFB = {
+export const FRONTEND_TTFB_BY_SENDER = {
   help: 'TTFB',
-  name: 'frontend_ttfb',
-  type: METRIC_TYPES.GAUGE,
-  labelNames: ['sender', 'account', 'workspace'],
+  name: 'frontend_ttfb_by_sender',
+  buckets: [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120],
+  labelNames: ['sender'],
+  type: METRIC_TYPES.HISTOGRAM,
 }
 
-export const FRONTEND_FID = {
+export const FRONTEND_FID_BY_SENDER = {
   help: 'TTFB',
-  name: 'frontend_fid',
-  type: METRIC_TYPES.GAUGE,
-  labelNames: ['sender', 'account', 'workspace'],
+  name: 'frontend_fid_by_sender',
+  buckets: [10, 20, 40, 80, 160, 320, 640, 1280, 2560, 5120],
+  labelNames: ['sender'],
+  type: METRIC_TYPES.HISTOGRAM,
 }

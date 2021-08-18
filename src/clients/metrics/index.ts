@@ -1,1 +1,1 @@
-export * from './PrometheusClient'
+export * from './FrontendMetricsClient'
