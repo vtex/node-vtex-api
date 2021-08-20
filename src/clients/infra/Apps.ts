@@ -341,8 +341,8 @@ export class Apps extends InfraClient {
 
     try {
       return this.http.getBuffer(this.routes.File(locator, path), {
-        cacheable: linked ? CacheType.Memory : CacheType.Disk,
         cacheKey: linked ? undefined : registryCacheKey,
+        cacheable: linked ? CacheType.Memory : CacheType.Disk,
         inflightKey,
         metric,
         tracing: {
@@ -365,8 +365,8 @@ export class Apps extends InfraClient {
     const inflightKey = inflightURL
     const metric = linked ? 'apps-get-json' : 'registry-get-json'
     return this.http.get<T>(this.routes.File(locator, path), {
-      cacheable: linked ? CacheType.Memory : CacheType.Any,
       cacheKey: linked ? null : registryCacheKey,
+      cacheable: linked ? CacheType.Memory : CacheType.Any,
       inflightKey,
       metric,
       nullIfNotFound,
