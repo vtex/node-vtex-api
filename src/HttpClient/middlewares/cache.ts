@@ -92,7 +92,8 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
 
     const span = ctx.tracing!.rootSpan
 
-    const key = cacheKey(ctx.config)
+    const cacheKeyGenerator = ctx.config.cacheKey ?? cacheKey
+    const key = cacheKeyGenerator(ctx.config)
     const segmentToken = ctx.config.headers[SEGMENT_HEADER]
     const keyWithSegment = key + segmentToken
 
