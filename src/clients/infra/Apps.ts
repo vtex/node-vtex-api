@@ -6,10 +6,12 @@ import { createGunzip, ZlibOptions } from 'zlib'
 
 import { CacheLayer } from '../..'
 import {
+  cacheKey,
   CacheType,
   inflightURL,
   inflightUrlWithQuery,
   InstanceOptions,
+  RequestKeyGenerator,
   RequestTracingConfig,
 } from '../../HttpClient'
 import {
@@ -50,6 +52,18 @@ const createRoutes = ({account, workspace}: IOContext) => {
     Workspace: `/${account}/${workspace}`,
   }
   return routes
+}
+
+const removeAccountAndWorkspace = (path: string) => {
+  const accountIndex = 0
+  const workspaceIndex = path.indexOf('/', accountIndex + 1)
+  const registryIndex = path.indexOf('/', workspaceIndex + 1)
+  return path.slice(registryIndex)
+}
+
+const registryCacheKey: RequestKeyGenerator = (config) => {
+  const { baseURL = '', url = '', params, headers } = config
+  return cacheKey({ baseURL, url: removeAccountAndWorkspace(url), params, headers })
 }
 
 const getVendorAndName = ({id}: {id: string}) => removeVersionFromAppId(id)
@@ -328,6 +342,7 @@ export class Apps extends InfraClient {
     try {
       return this.http.getBuffer(this.routes.File(locator, path), {
         cacheable: linked ? CacheType.Memory : CacheType.Disk,
+        cacheKey: linked ? undefined : registryCacheKey,
         inflightKey,
         metric,
         tracing: {
@@ -351,6 +366,7 @@ export class Apps extends InfraClient {
     const metric = linked ? 'apps-get-json' : 'registry-get-json'
     return this.http.get<T>(this.routes.File(locator, path), {
       cacheable: linked ? CacheType.Memory : CacheType.Any,
+      cacheKey: linked ? null : registryCacheKey,
       inflightKey,
       metric,
       nullIfNotFound,
