@@ -1,5 +1,5 @@
 import { stringify } from 'qs'
-import { InflightKeyGenerator, MiddlewareContext, RequestConfig } from '../typings'
+import { RequestKeyGenerator, MiddlewareContext, RequestConfig } from '../typings'
 
 export type Inflight = Required<Pick<MiddlewareContext, 'cacheHit' | 'response'>>
 
@@ -54,6 +54,6 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
   }
 }
 
-export const inflightURL: InflightKeyGenerator = ({baseURL, url}: RequestConfig) => baseURL! + url!
+export const inflightURL: RequestKeyGenerator = ({baseURL, url}: RequestConfig) => baseURL! + url!
 
-export const inflightUrlWithQuery: InflightKeyGenerator = ({baseURL, url, params}: RequestConfig) => baseURL! + url! + stringify(params, {arrayFormat: 'repeat', addQueryPrefix: true})
+export const inflightUrlWithQuery: RequestKeyGenerator = ({baseURL, url, params}: RequestConfig) => baseURL! + url! + stringify(params, {arrayFormat: 'repeat', addQueryPrefix: true})

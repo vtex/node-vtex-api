@@ -9,7 +9,10 @@ import { SpanReferenceTypes } from '../tracing'
 import { IUserLandTracer } from '../tracing/UserLandTracer'
 import { Cached, CacheType } from './middlewares/cache'
 
-export type InflightKeyGenerator = (x: RequestConfig) => string
+export type RequestKeyGenerator = (x: RequestConfig) => string
+
+// Deprecated in favor of RequestKeyGenerator, keeping it for compatibility reasons
+export type InflightKeyGenerator = RequestKeyGenerator
 
 interface RequestTracingUserConfig {
   rootSpan?: Span
@@ -46,7 +49,8 @@ export interface RequestConfig extends AxiosRequestConfig, RequestTracingConfig 
   production?: boolean
   cacheable?: CacheType
   memoizeable?: boolean
-  inflightKey?: InflightKeyGenerator
+  inflightKey?: RequestKeyGenerator
+  cacheKey?: RequestKeyGenerator
   forceMaxAge?: number
   responseEncoding?: BufferEncoding
   nullIfNotFound?: boolean
