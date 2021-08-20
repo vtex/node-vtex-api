@@ -331,7 +331,7 @@ export class Apps extends InfraClient {
     const { logger } = this.context
     const locator = parseAppId(app)
     const linked = !!locator.build
-    const inflightKey = inflightURL
+    const inflightKey = linked ? inflightURL : registryCacheKey
 
     if (staleIfError && this.memoryCache) {
       saveVersion(app, this.memoryCache)
@@ -362,7 +362,7 @@ export class Apps extends InfraClient {
   public getAppJSON = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean, tracingConfig?: RequestTracingConfig) => {
     const locator = parseAppId(app)
     const linked = !!locator.build
-    const inflightKey = inflightURL
+    const inflightKey = linked ? inflightURL : registryCacheKey
     const metric = linked ? 'apps-get-json' : 'registry-get-json'
     return this.http.get<T>(this.routes.File(locator, path), {
       cacheKey: linked ? null : registryCacheKey,
