@@ -5,4 +5,6 @@ export * from './janus'
 export * from './IOClient'
 export * from './IOClients'
 export * from './IOGraphQLClient'
-export * from './metrics'
+
+import promclient from 'prom-client'
+export { promclient }

@@ -6,7 +6,6 @@ import { ID, MasterData, PaymentProvider } from './external'
 import { Apps, Assets, BillingMetrics, Events, Metadata, Registry, Router, VBase, Workspaces } from './infra'
 import { IOClient, IOClientConstructor } from './IOClient'
 import { LicenseManager, Segment, Session, TenantClient } from './janus'
-import { FrontendMetricsClient } from './metrics'
 
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: Record<string, InstanceOptions>,
@@ -100,10 +99,6 @@ export class IOClients {
 
   public get paymentProvider() {
     return this.getOrSet('paymentProvider', PaymentProvider)
-  }
-
-  public get frontendMetrics() {
-    return this.getOrSet('frontendMetrics', FrontendMetricsClient)
   }
 
   protected getOrSet<TClient extends IOClientConstructor>(key: string, Implementation: TClient): InstanceType<TClient> {
