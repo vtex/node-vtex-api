@@ -3,9 +3,6 @@ import {
   BETWEEN_SCRAPES_EVENT_LOOP_LAG_MAX,
   BETWEEN_SCRAPES_EVENT_LOOP_LAG_PERCENTILES,
   CONCURRENT_REQUESTS,
-  FRONTEND_CLS_BY_SENDER,
-  FRONTEND_FID_BY_SENDER,
-  FRONTEND_LCP_BY_SENDER,
   REQUEST_RESPONSE_SIZES,
   REQUEST_TIMINGS,
   REQUESTS_ABORTED,
@@ -20,7 +17,3 @@ export const createRequestsResponseSizesInstrument = () => new Histogram(REQUEST
 export const createConcurrentRequestsInstrument = () => new Gauge(CONCURRENT_REQUESTS)
 export const createEventLoopLagMaxInstrument = () => new Gauge(BETWEEN_SCRAPES_EVENT_LOOP_LAG_MAX)
 export const createEventLoopLagPercentilesInstrument = () => new Gauge(BETWEEN_SCRAPES_EVENT_LOOP_LAG_PERCENTILES)
-
-export const createFrontendCLSBySenderInstrument = () => new Histogram(FRONTEND_CLS_BY_SENDER)
-export const createFrontendFIDBySenderInstrument = () => new Histogram(FRONTEND_FID_BY_SENDER)
-export const createFrontendLCPBySenderInstrument = () => new Histogram(FRONTEND_LCP_BY_SENDER)
