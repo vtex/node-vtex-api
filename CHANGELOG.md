@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- Export Prometheus client
+
 ## [6.44.0] - 2021-07-15
 
 ### Added
