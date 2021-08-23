@@ -1,4 +1,4 @@
-export const enum METRIC_TYPES {
+const enum METRIC_TYPES {
   /** Counter is monotonic */
   COUNTER = 'counter',
   /** Gauge is a counter that can be increased and decreased */
