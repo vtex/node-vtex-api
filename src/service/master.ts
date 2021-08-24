@@ -107,6 +107,7 @@ export const startMaster = (service: ServiceJSON) => {
     // Setup debugger
     settings.inspectPort = INSPECT_DEBUGGER_PORT
   }
+  console.log("Worker settings", settings)
   cluster.setupMaster(settings)
 
   const shutdownTimeout = Math.max(GRACEFULLY_SHUTDOWN_TIMEOUT_S, timeout)
