@@ -32,7 +32,7 @@ export class Session extends JanusClient {
 
     return {
       sessionData,
-      sessionToken: extractSessionCookie(headers),
+      sessionToken: extractSessionCookie(headers) ?? token,
     }
   }
 
