@@ -1,5 +1,4 @@
 import parseCookie from 'cookie'
-import { prop } from 'ramda'
 
 import { RequestTracingConfig } from '../../HttpClient'
 import { JanusClient } from './JanusClient'
@@ -16,12 +15,7 @@ export class Session extends JanusClient {
    */
   public getSession = async (token: string, items: string[], tracingConfig?: RequestTracingConfig) => {
     const metric = 'session-get'
-    const {
-      data: sessionData,
-      headers: {
-        'set-cookie': [setCookies],
-      },
-    } = await this.http.getRaw<any>(routes.base, ({
+    const { data: sessionData, headers } = await this.http.getRaw<any>(routes.base, {
       headers: {
         'Content-Type': 'application/json',
         'Cookie': `vtex_session=${token};`,
@@ -34,14 +28,11 @@ export class Session extends JanusClient {
         requestSpanNameSuffix: metric,
         ...tracingConfig?.tracing,
       },
-    }))
-
-    const parsedCookie = parseCookie.parse(setCookies)
-    const sessionToken = prop(SESSION_COOKIE, parsedCookie)
+    })
 
     return {
       sessionData,
-      sessionToken,
+      sessionToken: extractSessionCookie(headers) ?? token,
     }
   }
 
@@ -68,4 +59,16 @@ export class Session extends JanusClient {
 
     return this.http.post(routes.base, data, config)
   }
+}
+
+function extractSessionCookie(headers: Record<string, string>) {
+  for (const setCookie of headers['set-cookie'] ?? []) {
+    const parsedCookie = parseCookie.parse(setCookie)
+    const sessionCookie = parsedCookie[SESSION_COOKIE]
+    if (sessionCookie != null) {
+        return sessionCookie
+    }
+  }
+
+  return null
 }
