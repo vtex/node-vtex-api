@@ -16,15 +16,10 @@ export class Session extends JanusClient {
    */
   public getSession = async (token: string, items: string[], tracingConfig?: RequestTracingConfig) => {
     const metric = 'session-get'
-    const {
-      data: sessionData,
-      headers: {
-        'set-cookie': [setCookies],
-      },
-    } = await this.http.getRaw<any>(routes.base, ({
+    const { data: sessionData, headers } = await this.http.getRaw<any>(routes.base, {
       headers: {
         'Content-Type': 'application/json',
-        'Cookie': `vtex_session=${token};`,
+        Cookie: `vtex_session=${token};`,
       },
       metric,
       params: {
@@ -34,7 +29,9 @@ export class Session extends JanusClient {
         requestSpanNameSuffix: metric,
         ...tracingConfig?.tracing,
       },
-    }))
+    })
+
+    const setCookies = headers['set-cookie']?.[0] ?? ''
 
     const parsedCookie = parseCookie.parse(setCookies)
     const sessionToken = prop(SESSION_COOKIE, parsedCookie)
