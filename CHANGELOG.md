@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.45.3] - 2021-08-30
+
 ### Fixed
 
 - Cover new test cases where mine is left equal to base and master updates an item.
