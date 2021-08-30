@@ -160,13 +160,13 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
   }
 
   private shouldAddToMine(item: ConfigurationData, base: ConfigurationData[], mine: ConfigurationData[]) {
-    if (this.comparableKeys && Object.keys(item).some(key => this.comparableKeys!.includes(key))) {
+    if (this.comparableKeys && Object.keys(item).some((key) => this.comparableKeys!.includes(key))) {
       return (
-        !mine.some(mineItem => this.comparableKeys!.some(key => eqProps(key, item, mineItem))) &&
-        !base.some(baseItem => this.comparableKeys!.some(key => eqProps(key, item, baseItem)))
+        !mine.some((mineItem) => this.comparableKeys!.some((key) => eqProps(key, item, mineItem))) &&
+        !base.some((baseItem) => equals(baseItem, item))
       )
     }
 
-    return !mine.some(mineItem => equals(mineItem, item)) && !base.some(baseItem => equals(baseItem, item))
+    return !mine.some((mineItem) => equals(mineItem, item)) && !base.some((baseItem) => equals(baseItem, item))
   }
 }

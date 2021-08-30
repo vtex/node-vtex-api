@@ -121,11 +121,31 @@ describe('MineWinsConflictsResolver', () => {
     expect(result).toEqual(expected)
   })
 
+  it('Should delete from mine array values deleted from master and update values that were updated on master but left untouch on mine', async () => {
+    const master = { lala: [{ a: 1, c: 4 }] }
+    const base = { lala: [{ a: 1, c: 3 }, { b: 2 }] } as any
+    const mine = { lala: [{ a: 1, c: 3 }, { b: 2 }] }
+    const expected = { lala: [{ a: 1, c: 4 }] }
+
+    const result = resolver.mergeMineWins(base, master, mine)
+    expect(result).toEqual(expected)
+  })
+
   it('Should only append array value to mine if it wasnt deleted from it', async () => {
     const master = [{ b: 1 }]
     const base = [{ b: 1 }]
     const mine = [] as any
     const expected = [] as any
+
+    const result = resolver.mergeMineWins(base, master, mine)
+    expect(result).toEqual(expected)
+  })
+
+  it('Should delete from mine array values deleted from master and update values that were updated on master but left untouch on mine', async () => {
+    const master = { lala: [{ a: 1, c: 4 }] }
+    const base = { lala: [{ a: 1, c: 3 }, { b: 2 }] } as any
+    const mine = { lala: [{ a: 1, c: 3 }, { b: 2 }, { c: 3 }] }
+    const expected = { lala: [{ c: 3 }, { a: 1, c: 4 }] }
 
     const result = resolver.mergeMineWins(base, master, mine)
     expect(result).toEqual(expected)
