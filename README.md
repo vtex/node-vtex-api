@@ -12,18 +12,18 @@
   - [Development with IO clients](#development-with-io-clients)
 - [Getting started](#getting-started)
 - [GraphQL directives](#graphql-directives)
-- [Auth](#auth)
-- [Cache Control](#cache-control)
-  - [maxAge](#maxage)
-  - [scope](#scope)
-- [Deprecated](#deprecated)
-- [Sanitize](#sanitize)
-- [TranslatableV2](#translatablev2)
-- [SmartCache](#smartcache)
-- [TranslateTo](#translateto)
-  - [language](#language)
-- [Metric](#metric)
-  - [name](#name)
+  - [Auth](#auth)
+  - [Cache Control](#cache-control)
+    - [maxAge](#maxage)
+    - [scope](#scope)
+  - [Deprecated](#deprecated)
+  - [Sanitize](#sanitize)
+  - [TranslatableV2](#translatablev2)
+  - [SmartCache](#smartcache)
+  - [TranslateTo](#translateto)
+    - [language](#language)
+  - [Metric](#metric)
+    - [name](#name)
 - [Internal (VTEXers only)](#internal-vtexers-only)
 
 ---
@@ -97,7 +97,7 @@ GraphQL has a nice feature called [Schema Directives](https://www.graphql-tools.
 
 Here are some **[default platform directives**](https://github.com/vtex/node-vtex-api/tree/master/src/service/worker/runtime/graphql/schema/schemaDirectives) that you can use when developing VTEX IO GraphQL services. They can specify scope and policy, authorize actions, and more:
 
-## Auth
+### Auth
 
 `@auth(productCode: String resourceCode: String)`
 
@@ -110,7 +110,7 @@ appSettings(app: String, version: String): GenericResponse
     @auth(productCode: "66", resourceCode: "read-write-apps-settings")
 ```
 
-## Cache Control
+### Cache Control
 
 `@cacheControl(maxAge: Int scope: SEGMENT | PRIVATE | PUBLIC)`
 
@@ -120,11 +120,11 @@ This directive informs the platform **how that resource should be cached**, impa
 - Which route is going to be used (`/_v/{scope}/graphql/`), matching with our CDN cache configuration.
 - The `Cache-Control` response header.
 
-### maxAge
+#### maxAge
 
 Specifies the maximum amount of time (in seconds) that the resource can be considered fresh. The enums `LONG`, `MEDIUM`, and `SHORT` can be used as well. Reference [here](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)
 
-### scope
+#### scope
 
 The cache scope helps the platform identify how to cache a resource. There are three supported values and it's very important that they are being used accordingly:
 
@@ -139,7 +139,7 @@ installedAppPublic(slug: String!): InstalledApp
     @cacheControl(scope: PUBLIC, maxAge: SHORT)
 ```
 
-## Deprecated
+### Deprecated
 
 `@deprecated(reason: String = "No longer supported")`
 
@@ -151,7 +151,7 @@ Add this directive on some query/mutation that is deprecated. The users will sti
 myOldQuery(data: string): String @deprecated
 ```
 
-## Sanitize
+### Sanitize
 
 `@sanitize(allowHTMLTags: Boolean stripIgnoreTag: Boolean)`
 
@@ -166,7 +166,7 @@ input ProfileCustomFieldInput {
 }
 ```
 
-## TranslatableV2
+### TranslatableV2
 
 `@translatableV2(behavior: 'FULL' | 'USER_AND_APP' | 'USER_ONLY', withAppsMetaInfo: Boolean)`
 
@@ -180,7 +180,7 @@ type Product {
 }
 ```
 
-## SmartCache
+### SmartCache
 
 `@smartcache(maxAge: String)`
 
@@ -188,13 +188,13 @@ Just as you are able to use VTEX's SmartCache on plain-HTTP services declaring `
 
 Adding this directive on a field definition will properly set up the HTTP response (adding `x-vtex-etag-control` header) to make use of SmartCache.
 
-## TranslateTo
+### TranslateTo
 
 `@translateTo(language: String!)`
 
 Translates a string to a specific language. **This is useful if you need any kind of consistent data on your application (i.g. for analytics)**.
 
-### language
+#### language
 
 The language you want the string to be translated to. [It must follow the IETFL language tag format.](https://en.wikipedia.org/wiki/IETF_language_tag)
 
@@ -206,13 +206,13 @@ type Product {
 }
 ```
 
-## Metric
+### Metric
 
 `@metric(name: String)`
 
 Similar to the existing `metric` property from the RequestConfig available on the IO HTTP Client. It registers latency and status of GraphQL operations in batches to Splunk, with the `graphql-metric-` status name prefix.
 
-### name
+#### name
 
 Sets the status name of the operation. If `another-operation` is given, the status name will be `graphql-metric-another-operation`. If no _name_ is given, it defaults to the default prefix + the application name + the field name.
 
