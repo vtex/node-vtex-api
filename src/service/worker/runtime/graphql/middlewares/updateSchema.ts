@@ -18,7 +18,6 @@ export const updateSchema = <T extends IOClients, U extends RecorderState, V ext
     } = ctx
 
     if (!ctx.headers[PROVIDER_HEADER]) {
-      logger.warn({ message: 'Missing x-vtex-provider header' })
       await next()
       return
     }
