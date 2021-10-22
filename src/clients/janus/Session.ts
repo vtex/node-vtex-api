@@ -61,7 +61,7 @@ export class Session extends JanusClient {
   }
 }
 
-function extractSessionCookie(headers: Record<string, string>) {
+export function extractSessionCookie(headers: Record<string, string>) {
   for (const setCookie of headers['set-cookie'] ?? []) {
     const parsedCookie = parseCookie.parse(setCookie)
     const sessionCookie = parsedCookie[SESSION_COOKIE]

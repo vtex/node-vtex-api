@@ -1,9 +1,9 @@
-import parseCookie from 'cookie'
 import { prop } from 'ramda'
 
 import { PRODUCT_HEADER } from '../../constants'
 import { inflightUrlWithQuery, RequestTracingConfig } from '../../HttpClient'
 import { JanusClient } from './JanusClient'
+import { extractSessionCookie } from './Session'
 
 export interface SegmentData {
   campaigns?: any
@@ -21,7 +21,6 @@ export interface SegmentData {
   [key: string]: any
 }
 
-const SEGMENT_COOKIE = 'vtex_segment'
 const SEGMENT_MAX_AGE_S = 60 * 60 // 60 minutes - segment is actually immutable
 const ALLOWED_QUERY_PREFIXES = ['utm', 'cultureInfo', 'supportedLocales', '__bindingId']
 
@@ -65,15 +64,11 @@ export class Segment extends JanusClient {
   public getOrCreateSegment = async (query?: Record<string, string>, token?: string, tracingConfig?: RequestTracingConfig) => {
     const {
       data: segmentData,
-      headers: {
-        'set-cookie': [setCookies],
-      },
+      headers,
     } = await this.rawSegment(token, query, tracingConfig)
-    const parsedCookie = parseCookie.parse(setCookies)
-    const segmentToken = prop(SEGMENT_COOKIE, parsedCookie)
     return {
       segmentData,
-      segmentToken,
+      segmentToken: extractSessionCookie(headers) || token,
     }
   }
 
