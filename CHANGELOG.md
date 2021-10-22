@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.54.5] - 2021-10-22
+
+### Fixed
+
+- Extract session cookie in a safe manner
+
 ## [6.45.4] - 2021-09-16
 
 ### Removed
