@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.77.3] - 2021-10-22
+### Fixed
+- Extract session cookie in a safe manner
+
+## [3.77.2] - 2021-08-26
+### Fixed
+- Extract session cookie in a safe manner
+
 ## [3.77.1] - 2021-02-05
 - Increase HTTP agents connection pools freeSockets and lifetime
 
