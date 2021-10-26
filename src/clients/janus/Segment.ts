@@ -1,5 +1,5 @@
-import { prop } from 'ramda'
 import parseCookie from 'cookie'
+import { prop } from 'ramda'
 
 import { PRODUCT_HEADER } from '../../constants'
 import { inflightUrlWithQuery, RequestTracingConfig } from '../../HttpClient'
