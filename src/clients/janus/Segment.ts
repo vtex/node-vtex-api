@@ -70,7 +70,7 @@ export class Segment extends JanusClient {
     const { data: segmentData, headers } = await this.rawSegment(token, query, tracingConfig)
     return {
       segmentData,
-      segmentToken: extractSessionCookie(headers),
+      segmentToken: extractSegmentCookie(headers),
     }
   }
 
@@ -104,7 +104,7 @@ export class Segment extends JanusClient {
   }
 }
 
-function extractSessionCookie(headers: Record<string, string>) {
+function extractSegmentCookie(headers: Record<string, string>) {
   for (const setCookie of headers['set-cookie'] ?? []) {
     const parsedCookie = parseCookie.parse(setCookie)
     const segmentCookie = parsedCookie[SEGMENT_COOKIE]
