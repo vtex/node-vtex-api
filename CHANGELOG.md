@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- `vtex_segment` cookie extraction
+
 ## [6.54.5] - 2021-10-22
 
 ### Fixed
