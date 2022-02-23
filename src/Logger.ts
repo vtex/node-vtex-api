@@ -4,6 +4,7 @@ import {pick} from 'ramda'
 
 import {HttpClient, withoutRecorder} from './HttpClient'
 import {HttpClientFactory, IODataSource} from './IODataSource'
+import { removeSensitiveData } from './utils/log'
 
 const DEFAULT_SUBJECT = '-'
 const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url']
@@ -48,18 +49,19 @@ export class Logger extends IODataSource {
       console.error(error)
     }
 
-    const {code: errorCode, message, stack, config, request, response, ...rest} = error
+    const {code: errorCode, message, response, ...rest} = error
+
+    removeSensitiveData(rest)
+
     const code = errorCode || response && `http-${response.status}`
     const pickedDetails = {
-      ... config ? {config: pick(PICKED_AXIOS_PROPS, config)} : undefined,
-      ... request ? {request: pick(PICKED_AXIOS_PROPS, request)} : undefined,
       ... response ? {response: pick(PICKED_AXIOS_PROPS, response)} : undefined,
       ...JSON.parse(stringify(rest, errorReplacer)),
       ...details,
     }
     const hasDetails = Object.keys(pickedDetails).length > 0
 
-    return this.sendLog(subject, {code, message, stack, details: hasDetails ? pickedDetails : undefined}, 'error')
+    return this.sendLog(subject, {code, message, details: hasDetails ? pickedDetails : undefined}, 'error')
   }
 
   public sendLog = (subject: string, message: any, level: string) : Promise<void> => {
