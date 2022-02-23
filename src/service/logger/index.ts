@@ -1,5 +1,6 @@
 import { IOContext } from '../../service/typings'
 import { cleanError } from '../../utils/error'
+import { cleanLog } from '../../utils/log'
 
 const linked = !!process.env.VTEX_APP_LINK
 const app = process.env.VTEX_APP_ID
@@ -44,7 +45,9 @@ export class Logger {
 
   public log = (message: any, level: LogLevel): void => {
     const data = message ? cleanError(message) : EMPTY_MESSAGE
-    
+
+    cleanLog(data)
+
     /* tslint:disable:object-literal-sort-keys */
     const inflatedLog = {
       __VTEX_IO_LOG: true,
