@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- Remove sensitive data from logs.
+
 ## [6.45.6] - 2021-10-26
 
 ### Fixed
