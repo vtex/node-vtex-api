@@ -1,6 +1,7 @@
 import { APP } from '../../constants'
 import { IUserLandTracer } from '../../tracing'
 import { cleanError } from '../../utils/error'
+import { cleanLog } from '../../utils/log'
 import { IOContext } from '../worker/runtime/typings'
 import { logOnceToDevConsole } from './console'
 
@@ -65,6 +66,8 @@ export class Logger {
 
   public log = (message: any, level: LogLevel): void => {
     const data = message ? cleanError(message) : EMPTY_MESSAGE
+
+    cleanLog(data)
 
     /* tslint:disable:object-literal-sort-keys */
     const inflatedLog = {
