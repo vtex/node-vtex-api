@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "types": ["node"],
+    "typeRoots": ["node_modules/@types"],
+    "target": "es2015",
+    "lib": [
+      "es2015",
+      "esnext.asynciterable"
+    ],
+    "module": "commonjs",
+    "strict": true,
+    "declaration": true,
+    "outDir": "lib"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
