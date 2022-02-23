@@ -8,7 +8,8 @@ import {
   TooManyRequestsError,
   tooManyRequestsStatus,
 } from '../../../../../errors/TooManyRequestsError'
-import { cleanError, SENSITIVE_EXCEPTION_FIELDS } from '../../../../../utils/error'
+import { cleanError } from '../../../../../utils/error'
+import { FIRST_LEVEL_SENSITIVE_FIELDS as SENSITIVE_EXCEPTION_FIELDS } from '../../../../../utils/log'
 import { LogLevel } from '../../../../logger'
 import {
   ParamsContext,
