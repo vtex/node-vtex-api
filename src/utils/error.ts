@@ -2,7 +2,6 @@
 import { find, keys, pick } from 'ramda'
 
 export const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url', 'metric', 'inflightKey', 'forceMaxAge', 'params', 'responseType']
-export const SENSITIVE_EXCEPTION_FIELDS = ['config', 'request', 'stack']
 
 const MAX_ERROR_STRING_LENGTH = process.env.MAX_ERROR_STRING_LENGTH ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10) : 8 * 1024
 
