@@ -212,7 +212,7 @@ export class MasterData extends ExternalClient {
   }
 
   public scrollDocuments<T>(
-    { dataEntity, fields, mdToken, schema, size, sort }: ScrollInput,
+    { dataEntity, fields, where, mdToken, schema, size, sort }: ScrollInput,
     tracingConfig?: RequestTracingConfig
   ) {
     const metric = 'masterdata-scrollDocuments'
@@ -226,6 +226,7 @@ export class MasterData extends ExternalClient {
           _size: size,
           _sort: sort,
           _token: mdToken,
+          _where: where,
         },
         tracing: {
           requestSpanNameSuffix: metric,
@@ -324,6 +325,7 @@ interface SearchInput {
 interface ScrollInput {
   dataEntity: string
   fields: string[]
+  where?: string
   schema?: string
   sort?: string
   size?: number
