@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.45.8] - 2022-02-25
+
 ### Fixed
 
 - Remove only cookie fields when cleaning logs.
