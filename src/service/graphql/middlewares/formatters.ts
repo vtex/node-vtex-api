@@ -1,8 +1,7 @@
 import { formatApolloErrors } from 'apollo-server-errors'
 import { omit, pick } from 'ramda'
 
-import { cleanError } from '../../../utils/error'
-import { FIRST_LEVEL_SENSITIVE_FIELDS as SENSITIVE_EXCEPTION_FIELDS } from '../../../utils/log'
+import { cleanError, SENSITIVE_EXCEPTION_FIELDS } from '../../../utils/error'
 import { GraphQLServiceContext } from '../typings'
 
 const ERROR_FIELD_WHITELIST = ['message', 'path', 'stack', 'extensions', 'statusCode', 'name', 'headers', 'originalError', 'code']
