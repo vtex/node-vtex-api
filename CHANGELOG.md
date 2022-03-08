@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.77.6] - 2022-03-08
+### Fixed
+- Only remove cookie fields when removing sensitive data from logs.
+
 ## [3.77.5] - 2022-02-24
 ### Fixed
 - Remove sensitive data from logs.
