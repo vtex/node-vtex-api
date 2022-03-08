@@ -1,5 +1,5 @@
 export function cleanJson(json: {[k: string]: any}, targetFields: string[]) {
-    for (const key of json.keys()) {
+    for (const key of Object.keys(json)) {
         let deleted = false
         for (const field of targetFields) {
             if (key === field) {
@@ -8,7 +8,7 @@ export function cleanJson(json: {[k: string]: any}, targetFields: string[]) {
             }
         }
 
-        if (!deleted && typeof json[key] === 'object') {
+        if (!deleted && json[key] && typeof json[key] === 'object') {
             json[key] = cleanJson(json[key], targetFields)
         }
     }
