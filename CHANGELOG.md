@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.45.10] - 2022-03-15
+
+### Fixed
+
+- Update sensitive fields.
+  - Add 'authorization', rawheaders', 'x-vtex-credential' and 'x-vtex-session'.
+- Lowercase fields before comparison in cleanJson.
+
 ## [6.45.9] - 2022-03-08
 
 ### Fixed
