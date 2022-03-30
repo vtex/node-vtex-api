@@ -6,9 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
 ## [6.45.12] - 2022-04-14
-
 ### Fixed
 - Update sensitive fields list.
   - Remove "error" field.
@@ -1734,3 +1732,7 @@ instead
 ### Changed
 
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
+
+
+[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.11-beta...HEAD
+[6.45.11-beta]: https://github.com/vtex/node-vtex-api/compare/v6.45.10...v6.45.11-beta
