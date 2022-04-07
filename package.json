@@ -65,7 +65,7 @@
     "fs-extra": "^7.0.0",
     "graphql": "^14.5.8",
     "graphql-tools": "^4.0.6",
-    "graphql-upload": "^8.1.0",
+    "graphql-upload": "^13.0.0",
     "jaeger-client": "^3.19.0",
     "js-base64": "^2.5.1",
     "koa": "^2.11.0",
