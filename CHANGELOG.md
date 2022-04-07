@@ -1734,5 +1734,6 @@ instead
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
 
 
-[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.11-beta...HEAD
+[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.11-beta.0...HEAD
+[6.45.11-beta.0]: https://github.com/vtex/node-vtex-api/compare/v6.45.11-beta...v6.45.11-beta.0
 [6.45.11-beta]: https://github.com/vtex/node-vtex-api/compare/v6.45.10...v6.45.11-beta
