@@ -1,14 +1,7 @@
-export const FIRST_LEVEL_SENSITIVE_FIELDS = ['config', 'request', 'stack', 'error']
-export const SECOND_LEVEL_SENSITIVE_FIELDS = [ ['parsedInfo', 'requestConfig'], ['headers', 'cookie'] ]
+import { cleanJson } from './json'
+
+const SENSITIVE_FIELDS = ['authorization', 'cookie', 'vtexidclientautcookie', 'rawheaders', 'x-vtex-credential', 'x-vtex-session', 'error']
 
 export const cleanLog = (log: any) => {
-    FIRST_LEVEL_SENSITIVE_FIELDS.forEach(field => {
-        delete log[field]
-    })
-
-    SECOND_LEVEL_SENSITIVE_FIELDS.forEach(field => {
-        if (field[0] in log) {
-            delete log[field[0]][field[1]]
-        }
-    })
+    return cleanJson(log, SENSITIVE_FIELDS)
 }
