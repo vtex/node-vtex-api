@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.45.11] - 2022-04-08
+
 ### Fixed
 
 - Add where parameter to the MasterData scroll method
