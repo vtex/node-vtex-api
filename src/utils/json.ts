@@ -2,7 +2,7 @@ export function cleanJson(json: {[k: string]: any}, targetFields: string[]) {
     for (const key of Object.keys(json)) {
         let deleted = false
         for (const field of targetFields) {
-            if (key === field) {
+            if (key.toLowerCase() === field) {
                 delete json[key]
                 deleted = true
             }
