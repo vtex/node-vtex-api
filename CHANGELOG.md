@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.77.7] - 2022-04-14
+
 ### Fixed
 - Update sensitive fields.
   - Remove "error".
