@@ -5,7 +5,6 @@ const SENSITIVE_FIELDS = [
     'authorization',
     'authtoken',
     'cookie',
-    'Cookie',
     'proxy-authorization',
     'rawheaders',
     'token',
