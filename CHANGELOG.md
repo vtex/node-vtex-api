@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+- Update sensitive fields list.
+  - Remove "error" field.
+  - Add missing fields.
+
 ## [6.45.11] - 2022-04-08
 
 ### Fixed
