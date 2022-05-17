@@ -53,15 +53,15 @@ export const appIdToAppAtMajor = (appId: string): string => {
 }
 
 // SemVer regex from https://github.com/sindresorhus/semver-regex
-const APP_ID_REGEX = /^[\w\-]+\.[\w\-]+@(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[\da-z\-]+(?:\.[\da-z\-]+)*)?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?$/
+const APP_ID_REGEX =
+  /^[\w\-]+\.[\w\-]+@(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-[\da-z\-]+(?:\.[\da-z\-]+)*)?(?:\+[\da-z\-]+(?:\.[\da-z\-]+)*)?$/
 
 export const isValidAppIdOrLocator = (appId: string): boolean => {
   return APP_ID_REGEX.test(appId)
 }
 
-export const sameMajor = (v1: string, v2: string) => versionToMajor(v1) === versionToMajor(v2)
-
-export const majorEqualAndGreaterThan = (v1: string, v2: string) => sameMajor(v1, v2) && semver.gt(v1, v2)
+export const isDifferentVersion = (v1: ParsedLocator, v2: ParsedLocator) =>
+  v1.version !== v2.version || v1.build !== v2.build
 
 export interface ParsedLocator {
   name: string
