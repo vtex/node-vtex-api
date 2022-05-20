@@ -110,6 +110,9 @@
                 "email": {
                     "type": "string"
                 },
+                "phone": {
+                    "type": "string"
+                },
                 "url": {
                     "type": "string"
                 }

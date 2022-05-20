@@ -1,5 +1,5 @@
 import { GraphQLScalarType } from 'graphql'
-import { GraphQLUpload } from 'graphql-upload-minimal'
+import { GraphQLUpload } from 'graphql-upload'
 import { keys, reduce } from 'ramda'
 
 import { SchemaMetaData } from '../../schema'

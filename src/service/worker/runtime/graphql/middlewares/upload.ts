@@ -1,4 +1,4 @@
-import { graphqlUploadKoa } from 'graphql-upload-minimal'
+import { graphqlUploadKoa } from 'graphql-upload'
 
 import { GraphQLServiceContext } from '../typings'
 

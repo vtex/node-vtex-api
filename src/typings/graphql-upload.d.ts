@@ -1,4 +1,4 @@
-declare module 'graphql-upload-minimal-minimal' {
+declare module 'graphql-upload' {
     export const graphqlUploadKoa: any
     export const GraphQLUpload: any
   }
