@@ -24,7 +24,7 @@ export const addMetricsLoggerMiddleware = () => {
 
 export const prometheusLoggerMiddleware = () => {
   register.setDefaultLabels({
-    app: `${process.env.VTEX_APP_VENDOR}.${process.env.VTEX_APP_NAME}`
+    app: `${process.env.VTEX_APP_VENDOR}.${process.env.VTEX_APP_NAME}`,
   })
   collectDefaultMetrics()
   const eventLoopLagMeasurer = new EventLoopLagMeasurer()
