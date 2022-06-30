@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Add app (VTEX_APP_VENDOR.VTEX_APP_NAME) to prom-client default metric labels
+
+### Changed
+- Upgrade prom-client to ^14.0.1
 
 ## [6.45.12] - 2022-04-14
 
