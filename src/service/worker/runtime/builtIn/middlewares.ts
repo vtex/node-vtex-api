@@ -42,7 +42,7 @@ export const prometheusLoggerMiddleware = () => {
 
     await eventLoopLagMeasurer.updateInstrumentsAndReset()
     ctx.set('Content-Type', register.contentType)
-    ctx.body = register.metrics()
+    ctx.body = await register.metrics()
     ctx.status = 200
   }
 }
