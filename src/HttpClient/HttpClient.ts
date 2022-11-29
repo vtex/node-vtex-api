@@ -126,7 +126,7 @@ export class HttpClient {
     const deterministicReplacer = (_ : any, v : any) =>
       typeof v !== 'object' || v === null || Array.isArray(v) ? v :
         Object.fromEntries(Object.entries(v).sort(([ka], [kb]) =>
-          ka < kb ? -1 : ka > kb ? 1 : 0));
+          ka < kb ? -1 : ka > kb ? 1 : 0))
 
     const bodyHash = createHash('md5').update(JSON.stringify(data, deterministicReplacer)).digest('hex')
     const cacheableConfig = this.getConfig(url, {
