@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- New tests for `MineWinsConflictsResolver`.
+
+### Fixed
+
+- Merged/Rebased content not being returned causing inconsistencies.
+- Do not return empty content if no conflict is found.
+
 ## [6.45.13] - 2022-12-12
 ### Changed
 - Deterministic cache for getWithBody
@@ -15,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [6.45.12] - 2022-04-14
 
 ### Fixed
+
 - Update sensitive fields list.
   - Remove "error" field.
   - Add missing fields.
