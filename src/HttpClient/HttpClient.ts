@@ -27,6 +27,7 @@ import { recorderMiddleware } from './middlewares/recorder'
 import { defaultsMiddleware, requestMiddleware, routerCacheMiddleware } from './middlewares/request'
 import { createHttpClientTracingMiddleware } from './middlewares/tracing'
 import { InstanceOptions, IOResponse, MiddlewareContext, RequestConfig } from './typings'
+import { Logger } from '../service/logger'
 
 const DEFAULT_TIMEOUT_MS = 1000
 const noTransforms = [(data: any) => data]
@@ -36,6 +37,7 @@ type ClientOptions = IOContext & Partial<InstanceOptions>
 export class HttpClient {
   public name: string
 
+  private logger: Logger
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor(opts: ClientOptions) {
@@ -72,6 +74,7 @@ export class HttpClient {
       logger,
     } = opts
     this.name = name || baseURL || 'unknown'
+    this.logger = logger
 
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
@@ -123,11 +126,21 @@ export class HttpClient {
   }
 
   public getWithBody = <T = any>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
-    const deterministicReplacer = (_ : any, v : any) =>
-      typeof v !== 'object' || v === null || Array.isArray(v) ? v :
-        Object.fromEntries(Object.entries(v).sort(([ka], [kb]) =>
-          ka < kb ? -1 : ka > kb ? 1 : 0))
-
+    const deterministicReplacer = (_ : any, v : any) => {
+      try {
+        return typeof v !== 'object' || v === null || Array.isArray(v) ? v :
+                  Object.fromEntries(Object.entries(v).sort(([ka], [kb]) =>
+                    ka < kb ? -1 : ka > kb ? 1 : 0))
+      } 
+      catch(error) { 
+        // I don't believe this will ever happen, but just in case
+        // Also, I didn't include error as I am unsure if it would have sensitive information
+        this.logger.warn({message: 'Error while sorting object for cache key'})
+        return v
+      }
+    }
+      
+    
     const bodyHash = createHash('md5').update(JSON.stringify(data, deterministicReplacer)).digest('hex')
     const cacheableConfig = this.getConfig(url, {
       ...config,
