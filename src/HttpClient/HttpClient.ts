@@ -14,6 +14,7 @@ import {
   SESSION_HEADER,
   TENANT_HEADER,
 } from '../constants'
+import { Logger } from '../service/logger'
 import { IOContext } from '../service/worker/runtime/typings'
 import { formatBindingHeaderValue } from '../utils/binding'
 import { formatTenantHeaderValue } from '../utils/tenant'
@@ -27,7 +28,6 @@ import { recorderMiddleware } from './middlewares/recorder'
 import { defaultsMiddleware, requestMiddleware, routerCacheMiddleware } from './middlewares/request'
 import { createHttpClientTracingMiddleware } from './middlewares/tracing'
 import { InstanceOptions, IOResponse, MiddlewareContext, RequestConfig } from './typings'
-import { Logger } from '../service/logger'
 
 const DEFAULT_TIMEOUT_MS = 1000
 const noTransforms = [(data: any) => data]
