@@ -1,12 +1,8 @@
-import * as TypeMoq from 'typemoq'
-
-import { VBase } from '../clients/infra/VBase'
-import { MineWinsConflictsResolver } from './MineWinsConflictsResolver'
+/* tslint:disable */
 import { getMockConflicts } from './conflicts.test'
+import { MineWinsConflictsResolver } from './MineWinsConflictsResolver'
 
 describe('MineWinsConflictsResolver', () => {
-  const VBaseMock = TypeMoq.Mock.ofType<VBase>()
-
   const ctx = {
     clients: {
       vbase: {
@@ -201,13 +197,13 @@ describe('MineWinsConflictsResolver', () => {
       const base = {
         j3UfCfDieDqqVpXwZSD5Aw: [
           {
-            status: 'ACTIVE',
             blockContentMapId: 'j3UfCfDieDqqVpXwZSD5Aw',
             content: {
               infinite: true,
               showNavigationArrows: 'desktopOnly',
             },
             contentId: 'j3UfCfDieDqqVpXwZSD5Aw~xvQEdYpCzccFgGHe1kF2uo',
+            status: 'ACTIVE',
           },
         ],
       }
@@ -218,8 +214,8 @@ describe('MineWinsConflictsResolver', () => {
           {
             blockContentMapId: '3uDqMA5LCwgnmTjxkH7ird',
             content: {
-              url: 'https://storecomponents.vteximg.com.br/arquivos/store-theme-logo.png',
               title: 'Logo',
+              url: 'https://storecomponents.vteximg.com.br/arquivos/store-theme-logo.png',
             },
             contentId: '3uDqMA5LCwgnmTjxkH7ird~8tVpGKkeKSJgYks5xqvJb1',
           },
@@ -229,22 +225,22 @@ describe('MineWinsConflictsResolver', () => {
       const mine = {
         j3UfCfDieDqqVpXwZSD5Aw: [
           {
-            status: 'INACTIVE',
             blockContentMapId: 'j3UfCfDieDqqVpXwZSD5Aw',
             content: {
               infinite: true,
               showNavigationArrows: 'desktopOnly',
             },
             contentId: 'j3UfCfDieDqqVpXwZSD5Aw~xvQEdYpCzccFgGHe1kF2uo',
+            status: 'INACTIVE',
           },
           {
-            status: 'ACTIVE',
             blockContentMapId: 'j3UfCfDieDqqVpXwZSD5Aw',
             content: {
               infinite: false,
               showNavigationArrows: 'desktopOnly',
             },
             contentId: 'j3UfCfDieDqqVpXwZSD5Aw~fvQEdfpCZceFgGbe4kF2yt',
+            status: 'ACTIVE',
           },
         ],
       }
@@ -267,21 +263,21 @@ describe('MineWinsConflictsResolver', () => {
           {
             blockContentMapId: '3uDqMA5LCwgnmTjxkH7ird',
             content: {
-              url: 'https://storecomponents.vteximg.com.br/arquivos/store-theme-logo.png',
               title: 'Logo',
+              url: 'https://storecomponents.vteximg.com.br/arquivos/store-theme-logo.png',
             },
             contentId: '3uDqMA5LCwgnmTjxkH7ird~8tVpGKkeKSJgYks5xqvJb1',
           },
         ],
         j3UfCfDieDqqVpXwZSD5Aw: [
           {
-            status: 'ACTIVE',
             blockContentMapId: 'j3UfCfDieDqqVpXwZSD5Aw',
             content: {
               infinite: true,
               showNavigationArrows: 'desktopOnly',
             },
             contentId: 'j3UfCfDieDqqVpXwZSD5Aw~xvQEdYpCzccFgGHe1kF2uo',
+            status: 'ACTIVE',
           },
         ],
       }
@@ -291,21 +287,21 @@ describe('MineWinsConflictsResolver', () => {
           {
             blockContentMapId: '3uDqMA5LCwgnmTjxkH7ird',
             content: {
-              url: 'https://storecomponents.vteximg.com.br/arquivos/store-theme-logo.png',
               title: 'Logo',
+              url: 'https://storecomponents.vteximg.com.br/arquivos/store-theme-logo.png',
             },
             contentId: '3uDqMA5LCwgnmTjxkH7ird~8tVpGKkeKSJgYks5xqvJb1',
           },
         ],
         j3UfCfDieDqqVpXwZSD5Aw: [
           {
-            status: 'ACTIVE',
             blockContentMapId: 'j3UfCfDieDqqVpXwZSD5Aw',
             content: {
               infinite: false,
               showNavigationArrows: 'desktopOnly',
             },
             contentId: 'ABCfCfDieDqqVpXwZSD5Aw~xvQEdYpCzccFgGHe1kF2uo',
+            status: 'ACTIVE',
           },
         ],
       }
@@ -315,21 +311,21 @@ describe('MineWinsConflictsResolver', () => {
           {
             blockContentMapId: '3uDqMA5LCwgnmTjxkH7ird',
             content: {
-              url: '/logo.png',
               title: 'Logo',
+              url: '/logo.png',
             },
             contentId: 'WSDAdqMA5LCwgnmTjxkH7ird~8tVpGKkeKSJgYks5xqvJb1',
           },
         ],
         j3UfCfDieDqqVpXwZSD5Aw: [
           {
-            status: 'ACTIVE',
             blockContentMapId: 'j3UfCfDieDqqVpXwZSD5Aw',
             content: {
               infinite: true,
               showNavigationArrows: 'desktopOnly',
             },
             contentId: 'j3UfCfDieDqqVpXwZSD5Aw~xvQEdYpCzccFgGHe1kF2uo',
+            status: 'ACTIVE',
           },
         ],
       }
@@ -349,67 +345,67 @@ describe('MineWinsConflictsResolver', () => {
     test('Should delete object from mine when it is deleted from master', async () => {
       const base = {
         jFaq7QAw4U1QjrrdWDT2XZ: {
-          uuid: 'jFaq7QAw4U1QjrrdWDT2XZ',
           blockId: 'vtex.store-theme@5.x:store.home',
+          dataSource: 'vtex.rewriter',
           declarer: 'vtex.store@2.x',
           domain: 'store',
           interfaceId: 'vtex.store@2.x:store.home',
           path: '/',
           routeId: 'store.home',
           title: 'Home',
-          dataSource: 'vtex.rewriter',
+          uuid: 'jFaq7QAw4U1QjrrdWDT2XZ',
         },
         '9DdgY23LkRh68cvpncUfL4': {
-          uuid: '9DdgY23LkRh68cvpncUfL4',
           blockId: 'vtex.store-theme@5.x:store.custom#about-us',
+          dataSource: 'vtex.rewriter',
           domain: 'store',
           interfaceId: 'vtex.store@2.x:store.custom',
+          label: 'collection-collection_id',
           path: '/test/custom/:collection_id',
+          pathId: '/test/custom/:p3',
           routeId: 'vtex.store@2.x:store.custom#collection-collection_id',
           title: 'Custom Pages',
-          dataSource: 'vtex.rewriter',
-          label: 'collection-collection_id',
-          pathId: '/test/custom/:p3',
+          uuid: '9DdgY23LkRh68cvpncUfL4',
         },
       }
 
       const master = {
         jFaq7QAw4U1QjrrdWDT2XZ: {
-          uuid: 'jFaq7QAw4U1QjrrdWDT2XZ',
           blockId: 'vtex.store-theme@6.x:store.home',
+          dataSource: 'vtex.rewriter',
           declarer: 'vtex.store@2.x',
           domain: 'store',
           interfaceId: 'vtex.store@2.x:store.home',
           path: '/',
           routeId: 'store.home',
           title: 'Home',
-          dataSource: 'vtex.rewriter',
+          uuid: 'jFaq7QAw4U1QjrrdWDT2XZ',
         },
       }
 
       const mine = {
         jFaq7QAw4U1QjrrdWDT2XZ: {
-          uuid: 'jFaq7QAw4U1QjrrdWDT2XZ',
           blockId: 'vtex.store-theme@6.x:store.home',
+          dataSource: 'vtex.rewriter',
           declarer: 'vtex.store@2.x',
           domain: 'store',
           interfaceId: 'vtex.store@2.x:store.home',
           path: '/',
           routeId: 'store.home',
           title: 'New home',
-          dataSource: 'vtex.rewriter',
+          uuid: 'jFaq7QAw4U1QjrrdWDT2XZ',
         },
         '9DdgY23LkRh68cvpncUfL4': {
-          uuid: '9DdgY23LkRh68cvpncUfL4',
           blockId: 'vtex.store-theme@5.x:store.custom#about-us',
+          dataSource: 'vtex.rewriter',
           domain: 'store',
           interfaceId: 'vtex.store@2.x:store.custom',
+          label: 'collection-collection_id',
           path: '/test/custom/:collection_id',
+          pathId: '/test/custom/:p3',
           routeId: 'vtex.store@2.x:store.custom#collection-collection_id',
           title: 'Custom Pages',
-          dataSource: 'vtex.rewriter',
-          label: 'collection-collection_id',
-          pathId: '/test/custom/:p3',
+          uuid: '9DdgY23LkRh68cvpncUfL4',
         },
       }
 
@@ -418,15 +414,15 @@ describe('MineWinsConflictsResolver', () => {
 
       const expected = {
         jFaq7QAw4U1QjrrdWDT2XZ: {
-          uuid: 'jFaq7QAw4U1QjrrdWDT2XZ',
           blockId: 'vtex.store-theme@6.x:store.home',
+          dataSource: 'vtex.rewriter',
           declarer: 'vtex.store@2.x',
           domain: 'store',
           interfaceId: 'vtex.store@2.x:store.home',
           path: '/',
           routeId: 'store.home',
           title: 'New home',
-          dataSource: 'vtex.rewriter',
+          uuid: 'jFaq7QAw4U1QjrrdWDT2XZ',
         },
       }
 

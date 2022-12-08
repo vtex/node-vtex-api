@@ -43,11 +43,11 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
 
       if (logger) {
         logger.info({
-          conflictsResolution: MineWinsConflictsResolver.constructor.name,
+          base: selectedConflict.base.parsedContent && Object.keys(selectedConflict.base.parsedContent)?.length,
           bucket: this.bucket,
+          conflictsResolution: MineWinsConflictsResolver.constructor.name,
           filePath: this.filePath,
           master: selectedConflict.master.parsedContent && Object.keys(selectedConflict.master.parsedContent)?.length,
-          base: selectedConflict.base.parsedContent && Object.keys(selectedConflict.base.parsedContent)?.length,
           mine: selectedConflict.mine.parsedContent && Object.keys(selectedConflict.mine.parsedContent)?.length,
           resolved,
         })

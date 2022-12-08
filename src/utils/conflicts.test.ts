@@ -1,24 +1,24 @@
-function jsonToBase64(json: Object) {
+function jsonToBase64(json: object) {
   return Buffer.from(JSON.stringify(json)).toString('base64')
 }
 
-export function getMockConflicts(path: String, base: Object, mine: Object, master: Object) {
+export function getMockConflicts(path: string, base: object, mine: object, master: object) {
   return {
     data: [
       {
-        path,
-        mine: {
-          content: jsonToBase64(mine),
+        base: {
+          content: jsonToBase64(base),
           mimeType: 'application/json',
         },
         master: {
           content: jsonToBase64(master),
           mimeType: 'application/json',
         },
-        base: {
-          content: jsonToBase64(base),
+        mine: {
+          content: jsonToBase64(mine),
           mimeType: 'application/json',
         },
+        path,
       },
     ],
   }
