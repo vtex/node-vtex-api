@@ -1,5 +1,5 @@
 /* tslint:disable */
-import { getMockConflicts } from './conflicts.test'
+import { getMockConflicts } from './conflicts.mock'
 import { MineWinsConflictsResolver } from './MineWinsConflictsResolver'
 
 describe('MineWinsConflictsResolver', () => {

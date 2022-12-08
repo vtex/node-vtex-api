@@ -52,7 +52,7 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
           resolved,
         })
       }
-      return resolved as T
+      return resolved as any
     })
   }
 
