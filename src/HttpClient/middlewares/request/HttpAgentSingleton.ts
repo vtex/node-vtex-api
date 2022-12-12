@@ -1,5 +1,4 @@
 import HttpAgent from 'agentkeepalive'
-import { mapObjIndexed, sum, values } from 'ramda'
 import { createHttpAgent } from '../../agents'
 
 export class HttpAgentSingleton {
@@ -12,29 +11,23 @@ export class HttpAgentSingleton {
   }
 
   public static httpAgentStats() {
-    const socketsPerOrigin = HttpAgentSingleton.countPerOrigin(HttpAgentSingleton.httpAgent.sockets)
-    const sockets = sum(values(socketsPerOrigin))
-    const freeSocketsPerOrigin = HttpAgentSingleton.countPerOrigin((HttpAgentSingleton.httpAgent as any).freeSockets)
-    const freeSockets = sum(values(freeSocketsPerOrigin))
-    const pendingRequestsPerOrigin = HttpAgentSingleton.countPerOrigin(HttpAgentSingleton.httpAgent.requests)
-    const pendingRequests = sum(values(pendingRequestsPerOrigin))
+    const sockets = HttpAgentSingleton.count(HttpAgentSingleton.httpAgent.sockets)
+    const freeSockets = HttpAgentSingleton.count((HttpAgentSingleton.httpAgent as any).freeSockets)
+    const pendingRequests = HttpAgentSingleton.count(HttpAgentSingleton.httpAgent.requests)
 
     return {
       freeSockets,
-      freeSocketsPerOrigin,
       pendingRequests,
-      pendingRequestsPerOrigin,
       sockets,
-      socketsPerOrigin,
     }
   }
   private static httpAgent: HttpAgent
 
-  private static countPerOrigin(obj: { [key: string]: any[] }) {
+  private static count(obj: { [key: string]: any[] }) {
     try {
-      return mapObjIndexed(val => val.length, obj)
+      return Object.values(obj).reduce((acc, val) => acc += val.length, 0)
     } catch (_) {
-      return {}
+      return 0
     }
   }
 }

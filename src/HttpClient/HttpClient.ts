@@ -14,6 +14,7 @@ import {
   SESSION_HEADER,
   TENANT_HEADER,
 } from '../constants'
+import { Logger } from '../service/logger'
 import { IOContext } from '../service/worker/runtime/typings'
 import { formatBindingHeaderValue } from '../utils/binding'
 import { formatTenantHeaderValue } from '../utils/tenant'
@@ -36,6 +37,7 @@ type ClientOptions = IOContext & Partial<InstanceOptions>
 export class HttpClient {
   public name: string
 
+  private logger: Logger
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor(opts: ClientOptions) {
@@ -72,6 +74,7 @@ export class HttpClient {
       logger,
     } = opts
     this.name = name || baseURL || 'unknown'
+    this.logger = logger
 
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
@@ -123,7 +126,22 @@ export class HttpClient {
   }
 
   public getWithBody = <T = any>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
-    const bodyHash = createHash('md5').update(JSON.stringify(data)).digest('hex')
+    const deterministicReplacer = (_ : any, v : any) => {
+      try {
+        return typeof v !== 'object' || v === null || Array.isArray(v) ? v :
+                  Object.fromEntries(Object.entries(v).sort(([ka], [kb]) =>
+                    ka < kb ? -1 : ka > kb ? 1 : 0))
+      } 
+      catch(error) { 
+        // I don't believe this will ever happen, but just in case
+        // Also, I didn't include error as I am unsure if it would have sensitive information
+        this.logger.warn({message: 'Error while sorting object for cache key'})
+        return v
+      }
+    }
+      
+    
+    const bodyHash = createHash('md5').update(JSON.stringify(data, deterministicReplacer)).digest('hex')
     const cacheableConfig = this.getConfig(url, {
       ...config,
       data,
