@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [6.45.13] - 2022-12-12
 ### Changed
 - Deterministic cache for getWithBody
 - Remove socket metrics per origin
@@ -1737,3 +1739,7 @@ instead
 ### Changed
 
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
+
+
+[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...HEAD
+[6.45.13]: https://github.com/vtex/node-vtex-api/compare/v6.45.12...v6.45.13
