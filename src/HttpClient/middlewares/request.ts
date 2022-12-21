@@ -92,28 +92,22 @@ export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContex
   ctx.response = await (limit ? limit(makeRequest) : makeRequest())
 }
 
-function countPerOrigin (obj: { [key: string]: any[] }) {
+function count (obj: { [key: string]: any[] }) {
   try {
-    return mapObjIndexed(val => val.length, obj)
+    return Object.values(obj).reduce((acc, val) => acc += val.length, 0)
   } catch (_) {
-    return {}
+    return 0
   }
 }
 
 export function httpAgentStats () {
-  const socketsPerOrigin = countPerOrigin(httpAgent.sockets)
-  const sockets = sum(values(socketsPerOrigin))
-  const freeSocketsPerOrigin = countPerOrigin((httpAgent as any).freeSockets)
-  const freeSockets = sum(values(freeSocketsPerOrigin))
-  const pendingRequestsPerOrigin = countPerOrigin(httpAgent.requests)
-  const pendingRequests = sum(values(pendingRequestsPerOrigin))
+    const sockets = count(httpAgent.sockets)
+    const freeSockets = count((httpAgent as any).freeSockets)
+    const pendingRequests = count(httpAgent.requests)
 
   return {
     freeSockets,
-    freeSocketsPerOrigin,
     pendingRequests,
-    pendingRequestsPerOrigin,
     sockets,
-    socketsPerOrigin,
   }
 }

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.77.8] - 2022-12-15
+### Changed
+- Remove socket metrics per origin
+
 ## [3.77.7] - 2022-04-14
 
 ### Fixed
@@ -1013,3 +1017,7 @@ instead
 ## [0.48.0] - 2018-09-21
 ### Changed
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
+
+
+[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v3.77.8...HEAD
+[3.77.8]: https://github.com/vtex/node-vtex-api/compare/v3.77.7...v3.77.8
