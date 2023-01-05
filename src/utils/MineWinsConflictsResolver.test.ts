@@ -192,55 +192,55 @@ describe('MineWinsConflictsResolver', () => {
     })
   })
 
-  describe('Test conflict resolver method using Site Editor nested data', () => {
+  describe('Test conflict resolver method using nested data', () => {
     test('Should merge object master and mine additions', async () => {
       const base = {
-        j3UfCfDieDqqVpXwZSD5Aw: [
+        a: [
           {
-            blockContentMapId: 'j3UfCfDieDqqVpXwZSD5Aw',
-            content: {
-              infinite: true,
-              showNavigationArrows: 'desktopOnly',
+            a: 0,
+            b: {
+              c: 1,
+              d: 2,
             },
-            contentId: 'j3UfCfDieDqqVpXwZSD5Aw~xvQEdYpCzccFgGHe1kF2uo',
-            status: 'ACTIVE',
+            e: 3,
+            f: 4,
           },
         ],
       }
 
       const master = {
-        j3UfCfDieDqqVpXwZSD5Aw: base.j3UfCfDieDqqVpXwZSD5Aw,
-        vuDqMA5LCwgnmTjxkH7ird: [
+        a: base.a,
+        b: [
           {
-            blockContentMapId: '3uDqMA5LCwgnmTjxkH7ird',
-            content: {
-              title: 'Logo',
-              url: 'https://storecomponents.vteximg.com.br/arquivos/store-theme-logo.png',
+            a: 0,
+            b: {
+              c: 1,
+              d: 2,
             },
-            contentId: '3uDqMA5LCwgnmTjxkH7ird~8tVpGKkeKSJgYks5xqvJb1',
+            e: 3,
           },
         ],
       }
 
       const mine = {
-        j3UfCfDieDqqVpXwZSD5Aw: [
+        a: [
           {
-            blockContentMapId: 'j3UfCfDieDqqVpXwZSD5Aw',
-            content: {
-              infinite: true,
-              showNavigationArrows: 'desktopOnly',
+            a: 0,
+            b: {
+              c: 1,
+              d: 2,
             },
-            contentId: 'j3UfCfDieDqqVpXwZSD5Aw~xvQEdYpCzccFgGHe1kF2uo',
-            status: 'INACTIVE',
+            e: 3,
+            f: 4,
           },
           {
-            blockContentMapId: 'j3UfCfDieDqqVpXwZSD5Aw',
-            content: {
-              infinite: false,
-              showNavigationArrows: 'desktopOnly',
+            a: 1,
+            b: {
+              c: 2,
+              d: 3,
             },
-            contentId: 'j3UfCfDieDqqVpXwZSD5Aw~fvQEdfpCZceFgGbe4kF2yt',
-            status: 'ACTIVE',
+            e: 4,
+            f: 5,
           },
         ],
       }
@@ -250,8 +250,8 @@ describe('MineWinsConflictsResolver', () => {
 
       const contentResolved = await contentResolver.resolve()
       const expected = {
-        vuDqMA5LCwgnmTjxkH7ird: master.vuDqMA5LCwgnmTjxkH7ird,
-        j3UfCfDieDqqVpXwZSD5Aw: mine.j3UfCfDieDqqVpXwZSD5Aw,
+        a: mine.a,
+        b: master.b,
       }
 
       expect(contentResolved).toEqual(expected)
@@ -259,73 +259,73 @@ describe('MineWinsConflictsResolver', () => {
 
     test('Should merge only object master additions', async () => {
       const base = {
-        vuDqMA5LCwgnmTjxkH7ird: [
+        a: [
           {
-            blockContentMapId: '3uDqMA5LCwgnmTjxkH7ird',
-            content: {
-              title: 'Logo',
-              url: 'https://storecomponents.vteximg.com.br/arquivos/store-theme-logo.png',
+            a: 0,
+            b: {
+              c: 1,
+              d: 2,
             },
-            contentId: '3uDqMA5LCwgnmTjxkH7ird~8tVpGKkeKSJgYks5xqvJb1',
+            e: 3,
           },
         ],
-        j3UfCfDieDqqVpXwZSD5Aw: [
+        b: [
           {
-            blockContentMapId: 'j3UfCfDieDqqVpXwZSD5Aw',
-            content: {
-              infinite: true,
-              showNavigationArrows: 'desktopOnly',
+            a: 4,
+            b: {
+              c: 5,
+              d: 6,
             },
-            contentId: 'j3UfCfDieDqqVpXwZSD5Aw~xvQEdYpCzccFgGHe1kF2uo',
-            status: 'ACTIVE',
+            e: 7,
+            f: 8,
           },
         ],
       }
 
       const master = {
-        vuDqMA5LCwgnmTjxkH7ird: [
+        a: [
           {
-            blockContentMapId: '3uDqMA5LCwgnmTjxkH7ird',
-            content: {
-              title: 'Logo',
-              url: 'https://storecomponents.vteximg.com.br/arquivos/store-theme-logo.png',
+            a: 0,
+            b: {
+              c: 1,
+              d: 2,
             },
-            contentId: '3uDqMA5LCwgnmTjxkH7ird~8tVpGKkeKSJgYks5xqvJb1',
+            e: 3,
           },
         ],
-        j3UfCfDieDqqVpXwZSD5Aw: [
+        b: [
           {
-            blockContentMapId: 'j3UfCfDieDqqVpXwZSD5Aw',
-            content: {
-              infinite: false,
-              showNavigationArrows: 'desktopOnly',
+            a: 4,
+            b: {
+              c: 'MASTER EDIT',
+              d: 6,
             },
-            contentId: 'ABCfCfDieDqqVpXwZSD5Aw~xvQEdYpCzccFgGHe1kF2uo',
-            status: 'ACTIVE',
+            e: 'MASTER EDIT',
+            f: 8,
           },
         ],
       }
 
       const mine = {
-        vuDqMA5LCwgnmTjxkH7ird: [
+        a: [
           {
-            blockContentMapId: '3uDqMA5LCwgnmTjxkH7ird',
-            content: {
-              title: 'Logo',
-              url: '/logo.png',
+            a: 0,
+            b: {
+              c: 1,
+              d: 2,
             },
-            contentId: 'WSDAdqMA5LCwgnmTjxkH7ird~8tVpGKkeKSJgYks5xqvJb1',
+            e: 3,
           },
         ],
-        j3UfCfDieDqqVpXwZSD5Aw: [
+        b: [
           {
-            blockContentMapId: 'j3UfCfDieDqqVpXwZSD5Aw',
-            content: {
-              infinite: true,
-              showNavigationArrows: 'desktopOnly',
+            a: 4,
+            b: {
+              c: 5,
+              d: 6,
             },
-            contentId: 'j3UfCfDieDqqVpXwZSD5Aw~xvQEdYpCzccFgGHe1kF2uo',
-            status: 'ACTIVE',
+            e: 7,
+            f: 8,
           },
         ],
       }
@@ -335,8 +335,8 @@ describe('MineWinsConflictsResolver', () => {
 
       const contentResolved = await contentResolver.resolve()
       const expected = {
-        vuDqMA5LCwgnmTjxkH7ird: mine.vuDqMA5LCwgnmTjxkH7ird,
-        j3UfCfDieDqqVpXwZSD5Aw: master.j3UfCfDieDqqVpXwZSD5Aw,
+        a: master.a,
+        b: master.b,
       }
 
       expect(contentResolved).toEqual(expected)
@@ -344,68 +344,36 @@ describe('MineWinsConflictsResolver', () => {
 
     test('Should delete object from mine when it is deleted from master', async () => {
       const base = {
-        jFaq7QAw4U1QjrrdWDT2XZ: {
-          blockId: 'vtex.store-theme@5.x:store.home',
-          dataSource: 'vtex.rewriter',
-          declarer: 'vtex.store@2.x',
-          domain: 'store',
-          interfaceId: 'vtex.store@2.x:store.home',
-          path: '/',
-          routeId: 'store.home',
-          title: 'Home',
-          uuid: 'jFaq7QAw4U1QjrrdWDT2XZ',
+        a: {
+          b: 0,
+          c: 1,
+          d: 2,
         },
-        '9DdgY23LkRh68cvpncUfL4': {
-          blockId: 'vtex.store-theme@5.x:store.custom#about-us',
-          dataSource: 'vtex.rewriter',
-          domain: 'store',
-          interfaceId: 'vtex.store@2.x:store.custom',
-          label: 'collection-collection_id',
-          path: '/test/custom/:collection_id',
-          pathId: '/test/custom/:p3',
-          routeId: 'vtex.store@2.x:store.custom#collection-collection_id',
-          title: 'Custom Pages',
-          uuid: '9DdgY23LkRh68cvpncUfL4',
+        b: {
+          b: 3,
+          c: 1,
+          d: 2,
         },
       }
 
       const master = {
-        jFaq7QAw4U1QjrrdWDT2XZ: {
-          blockId: 'vtex.store-theme@6.x:store.home',
-          dataSource: 'vtex.rewriter',
-          declarer: 'vtex.store@2.x',
-          domain: 'store',
-          interfaceId: 'vtex.store@2.x:store.home',
-          path: '/',
-          routeId: 'store.home',
-          title: 'Home',
-          uuid: 'jFaq7QAw4U1QjrrdWDT2XZ',
+        a: {
+          b: 0,
+          c: 1,
+          d: 2,
         },
       }
 
       const mine = {
-        jFaq7QAw4U1QjrrdWDT2XZ: {
-          blockId: 'vtex.store-theme@6.x:store.home',
-          dataSource: 'vtex.rewriter',
-          declarer: 'vtex.store@2.x',
-          domain: 'store',
-          interfaceId: 'vtex.store@2.x:store.home',
-          path: '/',
-          routeId: 'store.home',
-          title: 'New home',
-          uuid: 'jFaq7QAw4U1QjrrdWDT2XZ',
+        a: {
+          b: 'MINE EDIT',
+          c: 1,
+          d: 2,
         },
-        '9DdgY23LkRh68cvpncUfL4': {
-          blockId: 'vtex.store-theme@5.x:store.custom#about-us',
-          dataSource: 'vtex.rewriter',
-          domain: 'store',
-          interfaceId: 'vtex.store@2.x:store.custom',
-          label: 'collection-collection_id',
-          path: '/test/custom/:collection_id',
-          pathId: '/test/custom/:p3',
-          routeId: 'vtex.store@2.x:store.custom#collection-collection_id',
-          title: 'Custom Pages',
-          uuid: '9DdgY23LkRh68cvpncUfL4',
+        b: {
+          b: 3,
+          c: 1,
+          d: 2,
         },
       }
 
@@ -413,17 +381,7 @@ describe('MineWinsConflictsResolver', () => {
       getConflicts.mockResolvedValue(getMockConflicts('store/routes.json', base, mine, master))
 
       const expected = {
-        jFaq7QAw4U1QjrrdWDT2XZ: {
-          blockId: 'vtex.store-theme@6.x:store.home',
-          dataSource: 'vtex.rewriter',
-          declarer: 'vtex.store@2.x',
-          domain: 'store',
-          interfaceId: 'vtex.store@2.x:store.home',
-          path: '/',
-          routeId: 'store.home',
-          title: 'New home',
-          uuid: 'jFaq7QAw4U1QjrrdWDT2XZ',
-        },
+        a: mine.a,
       }
 
       const routesResolved = await routesResolver.resolve()
