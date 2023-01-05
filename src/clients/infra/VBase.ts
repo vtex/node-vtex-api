@@ -88,19 +88,50 @@ export class VBase extends InfraClient {
       .then(response => response.data)
   }
 
-  public getRawJSON = <T>(bucket: string, path: string, nullIfNotFound?: boolean, conflictsResolver?: ConflictsResolver<T>, tracingConfig?: RequestTracingConfig) => {
-    const headers = conflictsResolver? {'X-Vtex-Detect-Conflicts': true}: {}
+  public getRawJSON = <T>(
+    bucket: string,
+    path: string,
+    nullIfNotFound?: boolean,
+    conflictsResolver?: ConflictsResolver<T>,
+    tracingConfig?: RequestTracingConfig
+  ) => {
+    const headers = conflictsResolver ? { 'X-Vtex-Detect-Conflicts': true } : {}
     const inflightKey = inflightURL
     const metric = 'vbase-get-json'
-    return this.http.getRaw<T>(routes.File(bucket, path), { headers, inflightKey, metric, nullIfNotFound, tracing: {
-      requestSpanNameSuffix: metric,
-      ...tracingConfig?.tracing,
-    }} as IgnoreNotFoundRequestConfig)
+    return this.http
+      .getRaw<T>(routes.File(bucket, path), {
+        headers,
+        inflightKey,
+        metric,
+        nullIfNotFound,
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
+      } as IgnoreNotFoundRequestConfig)
       .catch(async (error: AxiosError<T>) => {
         const { response } = error
         if (response && response.status === 409 && conflictsResolver) {
-          const conflictsMergedData = await conflictsResolver.resolve(this.context.logger)
-          return { ...response, data: conflictsMergedData } as IOResponse<T>
+          try {
+            const conflictsMergedData = await conflictsResolver.resolve(this.context.logger)
+
+            return { ...response, data: conflictsMergedData } as IOResponse<T>
+          } catch (resolverError: any) {
+            if (resolverError.status === 404) {
+              return this.http.getRaw<T>(routes.File(bucket, path), {
+                'X-Vtex-Detect-Conflicts': false,
+                inflightKey,
+                metric,
+                nullIfNotFound,
+                tracing: {
+                  requestSpanNameSuffix: metric,
+                  ...tracingConfig?.tracing,
+                },
+              } as IgnoreNotFoundRequestConfig)
+            }
+
+            throw resolverError
+          }
         }
         throw error
       })

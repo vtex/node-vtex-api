@@ -33,7 +33,10 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
       const selectedConflict = conflicts.find((conflict) => conflict.path === this.filePath)
 
       if (!selectedConflict) {
-        throw new Error('No conflict could be found.')
+        throw {
+          message: 'No conflict could be found.',
+          status: 404,
+        }
       }
 
       selectedConflict.base.parsedContent = this.parseConflict(selectedConflict.base)
@@ -88,7 +91,10 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
 
   private resolveConflictMineWins(conflict: VBaseConflictData) {
     if (!conflict) {
-      throw new Error('No conflict could be found.')
+      throw {
+        message: 'No conflict could be found.',
+        status: 404,
+      }
     }
 
     const { base, master, mine, path } = conflict
