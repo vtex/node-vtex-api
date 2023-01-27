@@ -44,17 +44,6 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
       selectedConflict.mine.parsedContent = this.parseConflict(selectedConflict.mine)
       const resolved = this.resolveConflictMineWins(selectedConflict)
 
-      if (logger) {
-        logger.info({
-          base: selectedConflict.base.parsedContent && Object.keys(selectedConflict.base.parsedContent)?.length,
-          bucket: this.bucket,
-          conflictsResolution: MineWinsConflictsResolver.constructor.name,
-          filePath: this.filePath,
-          master: selectedConflict.master.parsedContent && Object.keys(selectedConflict.master.parsedContent)?.length,
-          mine: selectedConflict.mine.parsedContent && Object.keys(selectedConflict.mine.parsedContent)?.length,
-          resolved,
-        })
-      }
       return resolved as any
     })
   }
