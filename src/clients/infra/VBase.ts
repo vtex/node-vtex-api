@@ -116,8 +116,10 @@ export class VBase extends InfraClient {
             const conflictsMergedData = await conflictsResolver.resolve(this.context.logger)
 
             return { ...response, data: conflictsMergedData } as IOResponse<T>
-          } catch (resolverError: any) {
-            if (resolverError.status === 404) {
+          } catch (resolverError) {
+            const typedResolverError = resolverError as { status?: number; message: string }
+            
+            if (typedResolverError?.status === 404) {
               return this.http.getRaw<T>(routes.File(bucket, path), {
                 'X-Vtex-Detect-Conflicts': false,
                 inflightKey,
