@@ -6,11 +6,7 @@ import { Logger } from '../logger'
 export const logger = new Logger({account: 'unhandled', workspace: 'unhandled', requestId: 'unhandled', operationId: 'unhandled', production: process.env.VTEX_PRODUCTION === 'true'})
 let watched: NodeJS.Process
 
-// Remove the any typings once we move to nodejs 10.x
 const handleSignal: NodeJS.SignalsListener = signal => {
-  const message = `Worker ${process.pid} received signal ${signal}`
-  console.warn(message)
-  logger.warn({message, signal})
   process.exit((constants.signals as any)[signal])
 }
 
