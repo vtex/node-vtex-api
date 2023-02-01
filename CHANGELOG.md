@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.45.14] - 2023-02-01
+
+### Added
+
+- New tests for `MineWinsConflictsResolver`.
+
+### Fixed
+
+- Merged/Rebased content not being returned causing inconsistencies.
+- Do not return empty content if no conflict is found.
+
 ## [6.45.13] - 2022-12-12
 ### Changed
 - Deterministic cache for getWithBody
@@ -15,6 +26,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [6.45.12] - 2022-04-14
 
 ### Fixed
+
 - Update sensitive fields list.
   - Remove "error" field.
   - Add missing fields.
@@ -1741,5 +1753,6 @@ instead
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
 
 
-[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...HEAD
+[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.14...HEAD
+[6.45.14]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...v6.45.14
 [6.45.13]: https://github.com/vtex/node-vtex-api/compare/v6.45.12...v6.45.13
