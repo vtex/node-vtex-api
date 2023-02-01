@@ -54,11 +54,6 @@ const GRACEFULLY_SHUTDOWN_TIMEOUT_S = 30
 const SIGINT_TIMEOUT_S = 1
 
 const handleSignal = (timeout: number): NodeJS.SignalsListener => (signal) => {
-  // Log the Master Process received a signal
-  const message = `Master process ${process.pid} received signal ${signal}`
-  console.warn(message)
-  logger.warn({ message, signal })
-
   // For each worker, let's try to kill it gracefully
   Object.values(cluster.workers).forEach((worker) => worker?.kill(signal))
 
