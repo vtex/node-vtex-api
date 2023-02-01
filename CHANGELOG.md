@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.45.14] - 2023-02-01
+
 ### Added
 
 - New tests for `MineWinsConflictsResolver`.
@@ -1751,5 +1753,6 @@ instead
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
 
 
-[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...HEAD
+[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.14...HEAD
+[6.45.14]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...v6.45.14
 [6.45.13]: https://github.com/vtex/node-vtex-api/compare/v6.45.12...v6.45.13
