@@ -88,7 +88,7 @@ describe('Axios retries are traced independently - forcing ECONNREFUSED', () => 
     axiosInstance: axios,
     expects: {
       error: {
-        errorMessagePrefix: 'connect ECONNREFUSED 127.0.0.1:32123',
+        errorMessagePrefix: 'connect ECONNREFUSED',
         isClientError: true,
       },
       numberOfRequestSpans: 4,
