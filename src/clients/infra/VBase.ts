@@ -176,7 +176,7 @@ export class VBase extends InfraClient {
   }
 
   public deleteFile = (bucket: string, path: string, tracingConfig?: RequestTracingConfig, ifMatch?: string) => {
-    const headers = ifMatch ? { 'If-Match': ifMatch } : null
+    const headers = ifMatch ? { 'If-Match': ifMatch } : {} as Record<string, string>
     const metric = 'vbase-delete-file'
     return this.http.delete(routes.File(bucket, path), {headers, metric, tracing: {
       requestSpanNameSuffix: metric,

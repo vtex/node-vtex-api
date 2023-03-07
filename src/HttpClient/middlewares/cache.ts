@@ -12,7 +12,7 @@ const cacheableStatusCodes = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 
 
 export const cacheKey = (config: AxiosRequestConfig) => {
   const {baseURL = '', url = '', params, headers} = config
-  const locale = headers[LOCALE_HEADER]
+  const locale = headers?.[LOCALE_HEADER]
 
   const encodedBaseURL = baseURL.replace(/\//g, '\\')
   const encodedURL = url.replace(/\//g, '\\')
@@ -93,7 +93,7 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
     const span = ctx.tracing!.rootSpan
 
     const key = cacheKey(ctx.config)
-    const segmentToken = ctx.config.headers[SEGMENT_HEADER]
+    const segmentToken = ctx.config.headers?.[SEGMENT_HEADER]
     const keyWithSegment = key + segmentToken
 
     span.log({
@@ -139,6 +139,9 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
       span.setTag(CACHE_RESULT_TAG, CacheResult.STALE)
       const validateStatus = addNotModified(ctx.config.validateStatus!)
       if (cachedEtag && validateStatus(response.status as number)) {
+        if (!ctx.config.headers) {
+          ctx.config.headers = {}
+        }
         ctx.config.headers['if-none-match'] = cachedEtag
         ctx.config.validateStatus = validateStatus
       }
@@ -193,7 +196,7 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
       const currentAge = revalidated ? 0 : age
       const varySegment = ctx.response.headers.vary && ctx.response.headers.vary.includes(SEGMENT_HEADER)
       const setKey = varySegment ? keyWithSegment : key
-      const responseEncoding = configResponseEncoding || (responseType === 'arraybuffer' ? 'base64' : undefined)
+      const responseEncoding = (configResponseEncoding || (responseType === 'arraybuffer' ? 'base64' : undefined)) as BufferEncoding
       const cacheableData = type === CacheType.Disk && responseType === 'arraybuffer'
         ? (data as Buffer).toString(responseEncoding)
         : data

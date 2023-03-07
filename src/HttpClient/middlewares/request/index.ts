@@ -47,7 +47,7 @@ export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retri
       ...ctx.config,
       headers: {
         ...headers,
-        ...renameBy(toLower, ctx.config.headers),
+        ...renameBy(toLower, ctx.config.headers!),
       },
       params: {
         ...params,
