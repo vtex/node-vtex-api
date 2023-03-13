@@ -23,6 +23,9 @@ export const addMetricsLoggerMiddleware = () => {
 }
 
 export const prometheusLoggerMiddleware = () => {
+  register.setDefaultLabels({
+    app: `${process.env.VTEX_APP_VENDOR}.${process.env.VTEX_APP_NAME}`,
+  })
   collectDefaultMetrics()
   const eventLoopLagMeasurer = new EventLoopLagMeasurer()
   eventLoopLagMeasurer.start()
@@ -39,7 +42,7 @@ export const prometheusLoggerMiddleware = () => {
 
     await eventLoopLagMeasurer.updateInstrumentsAndReset()
     ctx.set('Content-Type', register.contentType)
-    ctx.body = register.metrics()
+    ctx.body = await register.metrics()
     ctx.status = 200
   }
 }
