@@ -15,7 +15,7 @@ export type GraphQLResponse = TypeFromPromise<ReturnType<typeof execute>>
 
 export interface GraphQLCacheControl {
   maxAge: number
-  scope: 'private' | 'public' | 'segment'
+  scope: 'private' | 'public' | 'segment' | 'search_segment'
   noCache: boolean
   noStore: boolean
 }

@@ -9,6 +9,7 @@ export const PID = process.pid
 
 export const CACHE_CONTROL_HEADER = 'cache-control'
 export const SEGMENT_HEADER = 'x-vtex-segment'
+export const SEARCH_SEGMENT_HEADER = 'x-vtex-search-segment'
 export const SESSION_HEADER = 'x-vtex-session'
 export const PRODUCT_HEADER = 'x-vtex-product'
 export const LOCALE_HEADER = 'x-vtex-locale'
@@ -36,7 +37,7 @@ export const COLOSSUS_PARAMS_HEADER = 'x-colossus-params'
 export const TRACE_ID_HEADER = 'x-trace-id'
 export const PROVIDER_HEADER = 'x-vtex-provider'
 
-export type VaryHeaders = typeof SEGMENT_HEADER | typeof SESSION_HEADER | typeof PRODUCT_HEADER | typeof LOCALE_HEADER
+export type VaryHeaders = typeof SEGMENT_HEADER | typeof SESSION_HEADER | typeof PRODUCT_HEADER | typeof LOCALE_HEADER | typeof SEARCH_SEGMENT_HEADER
 
 export const BODY_HASH = '__graphqlBodyHash'
 

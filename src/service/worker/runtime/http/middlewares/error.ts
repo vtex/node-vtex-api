@@ -1,5 +1,5 @@
 import { IOClients } from '../../../../../clients/IOClients'
-import { LINKED } from '../../../../../constants'
+import { LINKED, SEARCH_SEGMENT_HEADER, SEGMENT_HEADER } from '../../../../../constants'
 import {
   cancelledRequestStatus,
   RequestCancelledError,

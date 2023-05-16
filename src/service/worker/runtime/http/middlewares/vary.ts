@@ -1,6 +1,7 @@
 import { IOClients } from '../../../../../clients/IOClients'
 import {
   LOCALE_HEADER,
+  SEARCH_SEGMENT_HEADER,
   SEGMENT_HEADER,
   SESSION_HEADER,
   VaryHeaders,
@@ -17,17 +18,22 @@ const cachingStrategies: CachingStrategy[] = [
   {
     forbidden: [],
     path: '/_v/private/',
-    vary: [SEGMENT_HEADER, SESSION_HEADER],
+    vary: [SEGMENT_HEADER, SEARCH_SEGMENT_HEADER, SESSION_HEADER],
   },
   {
-    forbidden: [SEGMENT_HEADER, SESSION_HEADER],
+    forbidden: [SEGMENT_HEADER, SEARCH_SEGMENT_HEADER, SESSION_HEADER],
     path: '/_v/public/',
     vary: [],
   },
   {
-    forbidden: [SESSION_HEADER],
+    forbidden: [SESSION_HEADER, SEARCH_SEGMENT_HEADER],
     path: '/_v/segment/',
     vary: [SEGMENT_HEADER],
+  },
+  {
+    forbidden: [SESSION_HEADER],
+    path: '/_v/search-segment/',
+    vary: [SEGMENT_HEADER, SEARCH_SEGMENT_HEADER],
   },
 ]
 
@@ -47,12 +53,10 @@ const shouldVaryByHeader = <T extends IOClients, U extends RecorderState, V exte
   return !!ctx.get(header)
 }
 
-
-export async function vary <
-  T extends IOClients,
-  U extends RecorderState,
-  V extends ParamsContext
-> (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
+export async function vary<T extends IOClients, U extends RecorderState, V extends ParamsContext>(
+  ctx: ServiceContext<T, U, V>,
+  next: () => Promise<void>
+) {
   const { method, path } = ctx
   const strategy = cachingStrategies.find((cachingStrategy) => path.indexOf(cachingStrategy.path) === 0)
 
@@ -61,7 +65,6 @@ export async function vary <
       delete ctx.headers[headerName]
     })
   }
-
 
   // We don't need to vary non GET requests, since they are never cached
   if (method.toUpperCase() !== 'GET') {
@@ -75,6 +78,9 @@ export async function vary <
   }
   if (shouldVaryByHeader(ctx, SESSION_HEADER, strategy)) {
     ctx.vary(SESSION_HEADER)
+  }
+  if (shouldVaryByHeader(ctx, SEARCH_SEGMENT_HEADER, strategy)) {
+    ctx.vary(SEARCH_SEGMENT_HEADER)
   }
 
   await next()
