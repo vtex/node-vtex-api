@@ -75,7 +75,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     })
 
     // if it is an outdated file when stale=true
-    if (timeOfDeath < Date.now()) {
+    if (timeOfDeath && timeOfDeath < Date.now()) {
       this.lruStorage.del(key)
     }
 
