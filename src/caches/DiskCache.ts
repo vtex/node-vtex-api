@@ -22,8 +22,8 @@ export class DiskCache<V> implements CacheLayer<string, V>{
 
   public getStats = (name='disk-cache'): DiskStats => {
     const stats = {
-      hits: this.hits,
       hitRate: this.total > 0 ? this.hits / this.total : undefined,
+      hits: this.hits,
       name,
       total: this.total,
     }
