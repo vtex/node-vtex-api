@@ -7,8 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [6.45.15] - 2023-02-01
 ### Changed
+
+- Simplifies logic of LRUDiskCache.
+
+## [6.45.15] - 2023-02-01
+
+### Changed
+
 - Removed unnecessary worker signal logs
 
 ## [6.45.14] - 2023-02-01
@@ -23,7 +29,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Do not return empty content if no conflict is found.
 
 ## [6.45.13] - 2022-12-12
+
 ### Changed
+
 - Deterministic cache for getWithBody
 - Remove socket metrics per origin
 
@@ -1755,7 +1763,6 @@ instead
 ### Changed
 
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
-
 
 [Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.15...HEAD
 [6.45.15]: https://github.com/vtex/node-vtex-api/compare/v6.45.14...v6.45.15

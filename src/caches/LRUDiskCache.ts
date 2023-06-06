@@ -13,18 +13,16 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   private hits = 0
   private total = 0
   private lruStorage: LRU<string, number>
-  private keyToBeDeleted: string
 
   constructor(private cachePath: string, options: LRUDiskCacheOptions, private readFile=readJSON, private writeFile=outputJSON) {
     this.hits = 0
     this.total = 0
     this.disposed = 0
-    this.keyToBeDeleted = ''
     this.lock = new ReadWriteLock()
 
     const dispose = (key: string): void => {
-      this.keyToBeDeleted = key
       this.disposed += 1
+      this.deleteFile(key)
     }
 
     const lruOptions = {
@@ -59,18 +57,10 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   public get = async (key: string): Promise<V | void>  => {
     const timeOfDeath = this.lruStorage.get(key)
     this.total += 1
-    if (timeOfDeath === undefined) {
-
-      // if it is an outdated file when stale=false
-      if (this.keyToBeDeleted) {
-        await this.deleteFile(key)
-      }
-      return undefined
-    }
 
     const pathKey = this.getPathKey(key)
 
-    const data = await new Promise<V>(resolve => {
+    const data = await new Promise<V | undefined>(resolve => {
       this.lock.readLock(key, async (release: () => void) => {
         try {
           const fileData = await this.readFile(pathKey)
@@ -87,7 +77,6 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     // if it is an outdated file when stale=true
     if (timeOfDeath < Date.now()) {
       this.lruStorage.del(key)
-      await this.deleteFile(key)
     }
 
     return data
@@ -101,10 +90,6 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     }
     else {
       this.lruStorage.set(key, NaN)
-    }
-
-    if (this.keyToBeDeleted && this.keyToBeDeleted !== key) {
-      await this.deleteFile(this.keyToBeDeleted)
     }
 
     const pathKey = this.getPathKey(key)
@@ -130,7 +115,6 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
 
   private deleteFile = async (key: string): Promise<boolean> => {
     const pathKey = this.getPathKey(key)
-    this.keyToBeDeleted = ''
     const failure = new Promise<void | boolean>(resolve => {
       this.lock.writeLock(key, async (release: () => void) => {
         try {
