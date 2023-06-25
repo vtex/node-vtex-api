@@ -81,7 +81,7 @@
     "querystring": "^0.2.0",
     "ramda": "^0.26.0",
     "rwlock": "^5.0.0",
-    "semver": "^5.5.1",
+    "semver": "^7.5.2",
     "stats-lite": "vtex/node-stats-lite#dist",
     "tar-fs": "^2.0.0",
     "tokenbucket": "^0.3.2",
