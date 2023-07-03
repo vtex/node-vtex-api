@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "6.45.15",
+  "version": "6.45.16",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -76,7 +76,7 @@
     "mime-types": "^2.1.12",
     "opentracing": "^0.14.4",
     "p-limit": "^2.2.0",
-    "prom-client": "^12.0.0",
+    "prom-client": "^14.2.0",
     "qs": "^6.5.1",
     "querystring": "^0.2.0",
     "ramda": "^0.26.0",

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.45.16] - 2023-07-03
+### Changed
+- Bump `prom-client` version
+
 ## [6.45.15] - 2023-02-01
 ### Changed
 - Removed unnecessary worker signal logs
