@@ -71,7 +71,7 @@
     "koa": "^2.11.0",
     "koa-compose": "^4.1.0",
     "koa-compress": "^3.0.0",
-    "koa-router": "^7.4.0",
+    "koa-router": "^8.0.8",
     "lru-cache": "^5.1.1",
     "mime-types": "^2.1.12",
     "opentracing": "^0.14.4",
