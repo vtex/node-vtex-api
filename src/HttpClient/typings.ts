@@ -115,6 +115,7 @@ export interface InstanceOptions {
   name?: string
   serverTimings?: Record<string, string>
   httpsAgent?: AxiosRequestConfig['httpsAgent']
+  cacheableType?: CacheType
 }
 
 export interface IOResponse<T> {
