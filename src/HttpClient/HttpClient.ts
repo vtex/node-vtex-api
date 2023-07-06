@@ -74,7 +74,7 @@ export class HttpClient {
       httpsAgent,
       tracer,
       logger,
-      cacheableType = CacheType.Memory
+      cacheableType = CacheType.Memory,
     } = opts
     this.name = name || baseURL || 'unknown'
     this.logger = logger
