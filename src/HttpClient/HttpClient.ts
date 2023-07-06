@@ -38,6 +38,8 @@ export class HttpClient {
   public name: string
 
   private logger: Logger
+  private cacheableType: CacheType
+
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
   public constructor(opts: ClientOptions) {
@@ -72,9 +74,11 @@ export class HttpClient {
       httpsAgent,
       tracer,
       logger,
+      cacheableType = CacheType.Memory,
     } = opts
     this.name = name || baseURL || 'unknown'
     this.logger = logger
+    this.cacheableType = cacheableType
 
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
@@ -205,7 +209,7 @@ export class HttpClient {
   }
 
   private getConfig = (url: string, config: RequestConfig = {}): CacheableRequestConfig => ({
-    cacheable: CacheType.Memory,
+    cacheable: this.cacheableType,
     memoizable: true,
     ...config,
     url,
