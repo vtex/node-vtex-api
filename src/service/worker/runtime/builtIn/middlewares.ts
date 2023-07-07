@@ -22,7 +22,7 @@ export const addMetricsLoggerMiddleware = () => {
   }
 }
 
-export const prometheusLoggerMiddleware = async () => {
+export const prometheusLoggerMiddleware = () => {
   collectDefaultMetrics()
   const eventLoopLagMeasurer = new EventLoopLagMeasurer()
   eventLoopLagMeasurer.start()
