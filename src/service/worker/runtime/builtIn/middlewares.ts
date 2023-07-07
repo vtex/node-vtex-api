@@ -22,7 +22,7 @@ export const addMetricsLoggerMiddleware = () => {
   }
 }
 
-export const prometheusLoggerMiddleware = () => {
+export const prometheusLoggerMiddleware = async () => {
   collectDefaultMetrics()
   const eventLoopLagMeasurer = new EventLoopLagMeasurer()
   eventLoopLagMeasurer.start()
@@ -39,7 +39,7 @@ export const prometheusLoggerMiddleware = () => {
 
     await eventLoopLagMeasurer.updateInstrumentsAndReset()
     ctx.set('Content-Type', register.contentType)
-    ctx.body = register.metrics()
+    ctx.body = await register.metrics()
     ctx.status = 200
   }
 }
