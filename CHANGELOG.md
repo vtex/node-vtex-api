@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [6.45.19] - 2023-07-12
+### Changed
+- Bump `graphql-upload` version
+
+## [6.45.18] - 2023-07-07
 ### Fixed
 - Metrics to prometheus
 
