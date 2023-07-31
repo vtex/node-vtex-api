@@ -2,11 +2,8 @@ import { AxiosRequestConfig } from 'axios'
 import buildFullPath from 'axios/lib/core/buildFullPath'
 import { Limit } from 'p-limit'
 import { stringify } from 'qs'
-import { toLower } from 'ramda'
-
-
 import { CustomHttpTags, OpentracingTags } from '../../../tracing/Tags'
-import { renameBy } from '../../../utils/renameBy'
+import { toLowerObjectKeys } from '../../../utils/toLowerObjectKeys'
 import { MiddlewareContext } from '../../typings'
 import { getConfiguredAxios } from './setupAxios'
 
@@ -29,9 +26,20 @@ export interface DefaultMiddlewareArgs {
   httpsAgent?: AxiosRequestConfig['httpsAgent']
 }
 
-export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retries, verbose, exponentialTimeoutCoefficient, initialBackoffDelay, exponentialBackoffCoefficient, httpsAgent }: DefaultMiddlewareArgs) => {
+export const defaultsMiddleware = ({
+  baseURL,
+  rawHeaders,
+  params,
+  timeout,
+  retries,
+  verbose,
+  exponentialTimeoutCoefficient,
+  initialBackoffDelay,
+  exponentialBackoffCoefficient,
+  httpsAgent,
+}: DefaultMiddlewareArgs) => {
   const countByMetric: Record<string, number> = {}
-  const headers = renameBy(toLower, rawHeaders)
+  const headers = toLowerObjectKeys(rawHeaders)
   return (ctx: MiddlewareContext, next: () => Promise<void>) => {
     ctx.config = {
       baseURL,
@@ -42,12 +50,12 @@ export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retri
       maxRedirects: 0,
       retries,
       timeout,
-      validateStatus: status => (status >= 200 && status < 300),
+      validateStatus: (status) => status >= 200 && status < 300,
       verbose,
       ...ctx.config,
       headers: {
         ...headers,
-        ...renameBy(toLower, ctx.config.headers),
+        ...toLowerObjectKeys(ctx.config.headers),
       },
       params: {
         ...params,
@@ -64,8 +72,7 @@ export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retri
       ctx.config.label = `${ctx.config.metric}#${ctx.config.count}`
     }
 
-
-    if(ctx.tracing!.isSampled) {
+    if (ctx.tracing!.isSampled) {
       const { config } = ctx
       const fullUrl = buildFullPath(config.baseURL, http.getUri(config))
       ctx.tracing!.rootSpan.addTags({
@@ -88,7 +95,7 @@ export const routerCacheMiddleware = async (ctx: MiddlewareContext, next: () => 
   const routerCacheHit = ctx.response?.headers?.[ROUTER_CACHE_KEY]
   const status = ctx.response?.status
 
-  if(routerCacheHit) {
+  if (routerCacheHit) {
     ctx.tracing!.rootSpan.setTag(CustomHttpTags.HTTP_ROUTER_CACHE_RESULT, routerCacheHit)
   }
 
