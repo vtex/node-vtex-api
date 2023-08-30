@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.45.20-beta] - 2023-08-30
+
 ## [6.45.19] - 2023-07-12
 ### Changed
 - Bump `graphql-upload` version
@@ -1769,7 +1771,9 @@ instead
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
 
 
-[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.15...HEAD
+[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.20-beta...HEAD
 [6.45.15]: https://github.com/vtex/node-vtex-api/compare/v6.45.14...v6.45.15
 [6.45.14]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...v6.45.14
 [6.45.13]: https://github.com/vtex/node-vtex-api/compare/v6.45.12...v6.45.13
+
+[6.45.20-beta]: https://github.com/vtex/node-vtex-api/compare/v6.45.19...v6.45.20-beta
