@@ -30,14 +30,14 @@ export const addTracingMiddleware = (tracer: Tracer) => {
   return async function addTracing(ctx: ServiceContext, next: () => Promise<void>) {
     const start = process.hrtime()
     concurrentRequests.inc(1)
+    const rootSpan = tracer.extract(FORMAT_HTTP_HEADERS, ctx.request.headers) as undefined | SpanContext
 
-    if (PATHS_BLACKLISTED_FOR_TRACING.includes(ctx.request.path)) {
+    if (!shouldTrace(ctx, rootSpan)) {
       await next()
       concurrentRequests.dec(1)
       return
     }
 
-    const rootSpan = tracer.extract(FORMAT_HTTP_HEADERS, ctx.request.headers) as undefined | SpanContext
     const currentSpan = tracer.startSpan('unknown-operation', {
       childOf: rootSpan,
       tags: { [OpentracingTags.SPAN_KIND]: OpentracingTags.SPAN_KIND_RPC_SERVER },
@@ -150,3 +150,8 @@ export const traceUserLandRemainingPipelineMiddleware = () => {
     }
   }
 }
+function shouldTrace(ctx: ServiceContext, rootSpan: SpanContext | undefined) {
+  // Should trace if path isnt blacklisted and tracing decision came from the edge
+  return !PATHS_BLACKLISTED_FOR_TRACING.includes(ctx.request.path) && rootSpan
+}
+
