@@ -152,6 +152,6 @@ export const traceUserLandRemainingPipelineMiddleware = () => {
 }
 function shouldTrace(ctx: ServiceContext, rootSpan: SpanContext | undefined) {
   // Should trace if path isnt blacklisted and tracing decision came from the edge
-  return !PATHS_BLACKLISTED_FOR_TRACING.includes(ctx.request.path) && rootSpan
+  return !PATHS_BLACKLISTED_FOR_TRACING.includes(ctx.request.path) && rootSpan != null
 }
 
