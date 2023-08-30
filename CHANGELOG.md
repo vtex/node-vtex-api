@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Remove sampling decision from runtime
+- Only create tracing spans when they come from router
 
 ## [6.45.20-beta] - 2023-08-30
 
