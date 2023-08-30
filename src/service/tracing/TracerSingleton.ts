@@ -33,12 +33,6 @@ export class TracerSingleton {
       reporter: {
         agentHost: process.env.VTEX_OWN_NODE_IP,
       },
-      sampler: {
-        host: process.env.VTEX_OWN_NODE_IP,
-        param: 0.05,
-        refreshIntervalMs: 60 * 1000,
-        type: 'remote',
-      },
       serviceName,
     }
 
