@@ -151,7 +151,10 @@ export const traceUserLandRemainingPipelineMiddleware = () => {
   }
 }
 function shouldTrace(ctx: ServiceContext, rootSpan: SpanContext | undefined) {
-  // Should trace if path isnt blacklisted and tracing decision came from the edge
+  /** Should trace if path isnt blacklisted and sampling decision came from the edge
+  * ((rootSpan as any).isSampled. returns whether or not this span context was sampled
+  * There is a cast to bypass opentracing typescript
+  */
   return !PATHS_BLACKLISTED_FOR_TRACING.includes(ctx.request.path) && ((rootSpan as any).isSampled?.() ?? false)
 }
 
