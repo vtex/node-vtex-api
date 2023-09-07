@@ -31,6 +31,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
     const start = process.hrtime()
     concurrentRequests.inc(1)
     const rootSpan = tracer.extract(FORMAT_HTTP_HEADERS, ctx.request.headers) as undefined | SpanContext
+    ctx.tracing = { tracer, currentSpan: undefined}
 
     if (!shouldTrace(ctx, rootSpan)) {
       await next()
@@ -93,7 +94,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
 
         currentSpan.log(cloneAndSanitizeHeaders(ctx.request.headers, 'req.headers.'))
         currentSpan.log(cloneAndSanitizeHeaders(ctx.response.headers, 'res.headers.'))
-        ctx.set(TRACE_ID_HEADER, traceInfo.traceId)
+        ctx.set(TRACE_ID_HEADER, traceInfo.traceId!)
       }
 
       const onResFinished = () => {
@@ -119,7 +120,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
 
 export const nameSpanOperationMiddleware = (operationType: string, operationName: string) => {
   return function nameSpanOperation(ctx: ServiceContext, next: () => Promise<void>) {
-    ctx.tracing?.currentSpan.setOperationName(`${operationType}:${operationName}`)
+    ctx.tracing?.currentSpan?.setOperationName(`${operationType}:${operationName}`)
     return next()
   }
 }
@@ -136,13 +137,13 @@ export const traceUserLandRemainingPipelineMiddleware = () => {
     const startTime = process.hrtime()
 
     try {
-      span.log({ event: RuntimeLogEvents.USER_MIDDLEWARES_START })
+      span?.log({ event: RuntimeLogEvents.USER_MIDDLEWARES_START })
       await next()
     } catch (err) {
       ErrorReport.create({ originalError: err }).injectOnSpan(span, ctx.vtex.logger)
       throw err
     } finally {
-      span.log({
+      span?.log({
         event: RuntimeLogEvents.USER_MIDDLEWARES_FINISH,
         [RuntimeLogFields.USER_MIDDLEWARES_DURATION]: hrToMillis(process.hrtime(startTime)),
       })

@@ -46,7 +46,7 @@ export const prepareHandlerCtx = (header: Context['request']['header'], tracingC
     segmentToken: header[SEGMENT_HEADER],
     sessionToken: header[SESSION_HEADER],
     tenant: header[TENANT_HEADER] ? parseTenantHeaderValue(header[TENANT_HEADER]) : undefined,
-    tracer: new UserLandTracer(tracingContext.tracer, tracingContext.currentSpan),
+    tracer: new UserLandTracer(tracingContext?.tracer, tracingContext?.currentSpan),
     userAgent: process.env.VTEX_APP_ID || '',
     workspace: header[WORKSPACE_HEADER],
   }

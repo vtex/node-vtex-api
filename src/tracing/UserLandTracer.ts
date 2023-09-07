@@ -3,11 +3,11 @@ import { TracerSingleton } from '../service/tracing/TracerSingleton'
 import { getTraceInfo } from './utils'
 
 export interface IUserLandTracer {
-  traceId: string
+  traceId?: string
   isTraceSampled: boolean
   startSpan: Tracer['startSpan']
   inject: Tracer['inject']
-  fallbackSpanContext: () => SpanContext
+  fallbackSpanContext: () => SpanContext | undefined
 }
 
 export const createTracingContextFromCarrier = (
@@ -28,15 +28,15 @@ export const createTracingContextFromCarrier = (
 
 export class UserLandTracer implements IUserLandTracer {
   private tracer: Tracer
-  private fallbackSpan: Span
+  private fallbackSpan: Span | undefined
   private fallbackSpanLock: boolean
 
   // tslint:disable-next-line
   private _isSampled: boolean
   // tslint:disable-next-line
-  private _traceId: string
+  private _traceId?: string
 
-  constructor(tracer: Tracer, fallbackSpan: Span) {
+  constructor(tracer: Tracer, fallbackSpan?: Span) {
     this.tracer = tracer
     this.fallbackSpan = fallbackSpan
     this.fallbackSpanLock = false
@@ -58,7 +58,7 @@ export class UserLandTracer implements IUserLandTracer {
     this.fallbackSpanLock = true
   }
 
-  public setFallbackSpan(newSpan: Span) {
+  public setFallbackSpan(newSpan?: Span) {
     if (this.fallbackSpanLock) {
       throw new Error(`FallbackSpan is locked, can't change it`)
     }
@@ -78,7 +78,7 @@ export class UserLandTracer implements IUserLandTracer {
     return this.tracer.inject(spanContext, format, carrier)
   }
 
-  public fallbackSpanContext(): SpanContext {
-    return this.fallbackSpan.context()
+  public fallbackSpanContext(): SpanContext | undefined {
+    return this.fallbackSpan?.context()
   }
 }
