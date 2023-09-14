@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- Error tracing spans not logging the details.
+
 ## [6.45.20] - 2023-08-30
 ### Changed
 - Remove sampling decision from runtime

@@ -15,6 +15,7 @@ export const enum ErrorReportLogFields {
    */
   ERROR_KIND = 'error.kind',
   ERROR_ID = 'error.id',
+  ERROR_DETAILS = 'error.details',
 
   /**
    * VTEX's Infra errors adds error details to the response
