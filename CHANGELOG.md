@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-### Changed
+### Removed
 
-- Replace Spunk's reference to the app's error/warn logs with a valid OpenSearch's query.
+- Remove reference of how to search for the app's errors on now-defunct Splunk.
 
 ## [6.45.20] - 2023-08-30
 ### Changed

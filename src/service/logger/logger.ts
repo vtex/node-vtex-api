@@ -89,23 +89,8 @@ export class Logger {
         __SKIDDER_TOPIC_1: `skidder.vendor.${APP.VENDOR}`,
         __SKIDDER_TOPIC_2: `skidder.app.${APP.VENDOR}.${APP.NAME}`,
       })
-    } else {
-      // Warn the developer how to retrieve the error in the logging service
-      this.logLoggingServiceQuery()
     }
 
     console.log(JSON.stringify(inflatedLog))
-  }
-
-  /**
-   * Logs query so the developer can search for the errors in the logging service.
-   * This function runs only once in the lifetime of the Logger class so we
-   * don't mess up with the developer's terminal
-   */
-  private logLoggingServiceQuery = () => {
-    if (linked) {
-      const message = `Try this query at the logging service to retrieve error log (index = io_vtex_logs): 'Attributes.app:${app} AND Attributes.account:${this.account} AND Attributes.workspace:${this.workspace} AND (Attributes.level:error OR Attributes.level:warn)'`
-      logOnceToDevConsole(message, LogLevel.Info)
-    }
   }
 }
