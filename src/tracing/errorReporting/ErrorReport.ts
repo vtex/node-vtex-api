@@ -72,6 +72,6 @@ export class ErrorReport extends ErrorReportBase {
   }
 
   private shouldLogToSplunk(span?: Span) {
-    return !this.isErrorReported() && getTraceInfo(span).isSampled
+    return !this.isErrorReported() && getTraceInfo(span)?.isSampled
   }
 }

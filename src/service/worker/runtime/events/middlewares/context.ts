@@ -11,7 +11,7 @@ import { prepareHandlerCtx } from '../../utils/context'
 export async function eventContextMiddleware <T extends IOClients, U extends RecorderState, V extends ParamsContext>(ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
   const { request: { header } } = ctx
   ctx.vtex = {
-    ...prepareHandlerCtx(header, ctx.tracing!),
+    ...prepareHandlerCtx(header, ctx.tracing),
     eventInfo: {
       key: header[EVENT_KEY_HEADER],
       sender: header[EVENT_SENDER_HEADER],

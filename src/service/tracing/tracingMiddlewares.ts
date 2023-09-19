@@ -77,12 +77,12 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       )
 
       const traceInfo = getTraceInfo(currentSpan)
-      if (traceInfo.isSampled) {
+      if (traceInfo?.isSampled) {
         if (!initialSamplingDecision) {
-          currentSpan.setTag(OpentracingTags.SPAN_KIND, OpentracingTags.SPAN_KIND_RPC_SERVER)
+          currentSpan?.setTag(OpentracingTags.SPAN_KIND, OpentracingTags.SPAN_KIND_RPC_SERVER)
         }
 
-        currentSpan.addTags({
+        currentSpan?.addTags({
           [OpentracingTags.HTTP_URL]: ctx.request.href,
           [OpentracingTags.HTTP_METHOD]: ctx.request.method,
           [OpentracingTags.HTTP_STATUS_CODE]: ctx.response.status,
@@ -92,8 +92,8 @@ export const addTracingMiddleware = (tracer: Tracer) => {
           [VTEXIncomingRequestTags.VTEX_ACCOUNT]: ctx.get(ACCOUNT_HEADER),
         })
 
-        currentSpan.log(cloneAndSanitizeHeaders(ctx.request.headers, 'req.headers.'))
-        currentSpan.log(cloneAndSanitizeHeaders(ctx.response.headers, 'res.headers.'))
+        currentSpan?.log(cloneAndSanitizeHeaders(ctx.request.headers, 'req.headers.'))
+        currentSpan?.log(cloneAndSanitizeHeaders(ctx.response.headers, 'res.headers.'))
         ctx.set(TRACE_ID_HEADER, traceInfo.traceId!)
       }
 
@@ -106,7 +106,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
         )
 
         concurrentRequests.dec(1)
-        currentSpan.finish()
+        currentSpan?.finish()
       }
 
       if (responseClosed) {
@@ -127,10 +127,10 @@ export const nameSpanOperationMiddleware = (operationType: string, operationName
 
 export const traceUserLandRemainingPipelineMiddleware = () => {
   return async function traceUserLandRemainingPipeline(ctx: ServiceContext, next: () => Promise<void>) {
-    const tracingCtx = ctx.tracing!
+    const tracingCtx = ctx.tracing
     ctx.tracing = undefined
 
-    const span = tracingCtx.currentSpan
+    const span = tracingCtx?.currentSpan
     const userLandTracer = ctx.vtex.tracer! as UserLandTracer
     userLandTracer.setFallbackSpan(span)
     userLandTracer.lockFallbackSpan()

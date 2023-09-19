@@ -26,7 +26,7 @@ export const requestSpanPrefix = 'http-request'
 const preRequestInterceptor = (http: AxiosInstance) => (
   config: TraceableAxiosRequestConfig
 ): TraceableAxiosRequestConfig => {
-  if (!config.tracing || !config.tracing.isSampled) {
+  if (!config.tracing || !config.tracing?.isSampled) {
     return config
   }
 
@@ -48,18 +48,18 @@ const preRequestInterceptor = (http: AxiosInstance) => (
 }
 
 const onResponseSuccess = (response: TraceableAxiosResponse): TraceableAxiosResponse => {
-  if (!response.config.tracing || !response.config.tracing.isSampled) {
+  if (!response.config.tracing || !response.config.tracing?.isSampled) {
     return response
   }
 
-  const requestSpan = response.config.tracing.requestSpan!
+  const requestSpan = response.config.tracing?.requestSpan
   injectResponseInfoOnSpan(requestSpan, response)
-  requestSpan.finish()
+  requestSpan?.finish()
   return response
 }
 
 const onResponseError = (err: ExtendedAxiosError) => {
-  if (!err?.config?.tracing?.requestSpan || !err.config.tracing.isSampled) {
+  if (!err?.config?.tracing?.requestSpan || !err.config.tracing?.isSampled) {
     return Promise.reject(err)
   }
 

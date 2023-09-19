@@ -90,13 +90,13 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
       return await next()
     }
 
-    const span = ctx.tracing!.rootSpan
+    const span = ctx.tracing?.rootSpan
 
     const key = cacheKey(ctx.config)
     const segmentToken = ctx.config.headers[SEGMENT_HEADER]
     const keyWithSegment = key + segmentToken
 
-    span.log({
+    span?.log({
       event: HttpLogEvents.CACHE_KEY_CREATE,
       [HttpCacheLogFields.CACHE_TYPE]: cacheType,
       [HttpCacheLogFields.KEY]: key,
@@ -115,7 +115,7 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
 
       const now = Date.now()
 
-      span.log({
+      span?.log({
         event: HttpLogEvents.LOCAL_CACHE_HIT_INFO,
         [HttpCacheLogFields.CACHE_TYPE]: cacheType,
         [HttpCacheLogFields.ETAG]: cachedEtag,
@@ -132,18 +132,18 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
           router: 0,
         }
 
-        span.setTag(CACHE_RESULT_TAG, CacheResult.HIT)
+        span?.setTag(CACHE_RESULT_TAG, CacheResult.HIT)
         return
       }
 
-      span.setTag(CACHE_RESULT_TAG, CacheResult.STALE)
+      span?.setTag(CACHE_RESULT_TAG, CacheResult.STALE)
       const validateStatus = addNotModified(ctx.config.validateStatus!)
       if (cachedEtag && validateStatus(response.status as number)) {
         ctx.config.headers['if-none-match'] = cachedEtag
         ctx.config.validateStatus = validateStatus
       }
     } else {
-      span.setTag(CACHE_RESULT_TAG, CacheResult.MISS)
+      span?.setTag(CACHE_RESULT_TAG, CacheResult.MISS)
     }
 
     await next()
@@ -168,7 +168,7 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
     const {forceMaxAge} = ctx.config
     const maxAge = forceMaxAge && cacheableStatusCodes.includes(status) ? Math.max(forceMaxAge, headerMaxAge) : headerMaxAge
 
-    span.log({
+    span?.log({
       event: HttpLogEvents.CACHE_CONFIG,
       [HttpCacheLogFields.CACHE_TYPE]: cacheType,
       [HttpCacheLogFields.AGE]: age,
@@ -182,7 +182,7 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
 
     // Indicates this should NOT be cached and this request will not be considered a miss.
     if (!forceMaxAge && (noStore || (noCache && !etag))) {
-      span.log({ event: HttpLogEvents.NO_LOCAL_CACHE_SAVE, [HttpCacheLogFields.CACHE_TYPE]: cacheType })
+      span?.log({ event: HttpLogEvents.NO_LOCAL_CACHE_SAVE, [HttpCacheLogFields.CACHE_TYPE]: cacheType })
       return
     }
 
@@ -207,7 +207,7 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
         responseType,
       })
 
-      span.log({
+      span?.log({
         event: HttpLogEvents.LOCAL_CACHE_SAVED,
         [HttpCacheLogFields.CACHE_TYPE]: cacheType,
         [HttpCacheLogFields.KEY_SET]: setKey,
@@ -221,7 +221,7 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
       return
     }
 
-    span.log({ event: HttpLogEvents.NO_LOCAL_CACHE_SAVE, [HttpCacheLogFields.CACHE_TYPE]: cacheType })
+    span?.log({ event: HttpLogEvents.NO_LOCAL_CACHE_SAVE, [HttpCacheLogFields.CACHE_TYPE]: cacheType })
   }
 }
 

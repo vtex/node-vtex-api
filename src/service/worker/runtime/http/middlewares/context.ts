@@ -27,7 +27,7 @@ export const createPvtContextMiddleware = (
       request: { header },
     } = ctx
     ctx.vtex = {
-      ...prepareHandlerCtx(header, ctx.tracing!),
+      ...prepareHandlerCtx(header, ctx.tracing),
       ...(smartcache && { recorder: ctx.state.recorder }),
       route: {
         id: routeId,
@@ -53,7 +53,7 @@ export const createPubContextMiddleware = (
     } = ctx
 
     ctx.vtex = {
-      ...prepareHandlerCtx(header, ctx.tracing!),
+      ...prepareHandlerCtx(header, ctx.tracing),
       ...(smartcache && { recorder: ctx.state.recorder }),
       route: {
         declarer: header[COLOSSUS_ROUTE_DECLARER_HEADER],
