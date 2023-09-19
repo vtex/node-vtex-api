@@ -89,12 +89,12 @@ export class Logger {
         __SKIDDER_TOPIC_1: `skidder.vendor.${APP.VENDOR}`,
         __SKIDDER_TOPIC_2: `skidder.app.${APP.VENDOR}.${APP.NAME}`,
       })
+    } else {
+      // Warn the developer how to retrieve the error in the logging service
+      this.logLoggingServiceQuery()
     }
 
     console.log(JSON.stringify(inflatedLog))
-
-    // Warn the developer how to retrieve the error in the logging service
-    this.logLoggingServiceQuery()
   }
 
   /**
