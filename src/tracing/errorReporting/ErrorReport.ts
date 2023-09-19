@@ -65,8 +65,8 @@ export class ErrorReport extends ErrorReportBase {
       event: 'error',
       ...indexedLogs,
       [ErrorReportLogFields.ERROR_MESSAGE]: serializableError.message,
-      [ErrorReportLogFields.ERROR_METADATA_METRICS_INSTANTIATION_TIME]: serializableError.metadata.reportCount,
-      [ErrorReportLogFields.ERROR_METADATA_REPORT_COUNT]: serializableError.metadata.metrics.instantiationTime,
+      [ErrorReportLogFields.ERROR_METADATA_METRICS_INSTANTIATION_TIME]: serializableError.metadata?.reportCount,
+      [ErrorReportLogFields.ERROR_METADATA_REPORT_COUNT]: serializableError.metadata?.metrics?.instantiationTime,
       [ErrorReportLogFields.ERROR_STACK]: serializableError.stack,
       [ErrorReportLogFields.ERROR_CODE]: serializableError.code,
     })
