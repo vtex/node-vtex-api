@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- Replace Spunk's reference to the app's error/warn logs with a valid OpenSearch's query.
+
 ## [6.45.20] - 2023-08-30
 ### Changed
 - Remove sampling decision from runtime

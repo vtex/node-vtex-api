@@ -93,18 +93,18 @@ export class Logger {
 
     console.log(JSON.stringify(inflatedLog))
 
-    // Warn the developer how to retrieve the error in splunk
-    this.logSplunkQuery()
+    // Warn the developer how to retrieve the error in the logging service
+    this.logLoggingServiceQuery()
   }
 
   /**
-   * Logs splunk query so the developer can search for the errors in splunk.
+   * Logs query so the developer can search for the errors in the logging service.
    * This function runs only once in the lifetime of the Logger class so we
    * don't mess up with the developer's terminal
    */
-  private logSplunkQuery = () => {
+  private logLoggingServiceQuery = () => {
     if (linked) {
-      const message = `Try this query at Splunk to retrieve error log: 'index=io_vtex_logs app="${app}" account=${this.account} workspace=${this.workspace} level=error OR level=warn'`
+      const message = `Try this query at the logging service to retrieve error log (index = io_vtex_logs): 'Attributes.app:${app} AND Attributes.account:${this.account} AND Attributes.workspace:${this.workspace} AND (Attributes.level:error OR Attributes.level:warn)'`
       logOnceToDevConsole(message, LogLevel.Info)
     }
   }
