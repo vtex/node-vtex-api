@@ -60,7 +60,7 @@ export const getServiceSettings = () => {
       clients: { apps, assets },
     } = ctx
 
-    const rootSpan = ctx.tracing!.currentSpan
+    const rootSpan = ctx.tracing?.currentSpan
     const dependenciesSettings = await getDependenciesSettings(apps, assets, { tracing: { rootSpan } })
 
     // TODO: for now returning all settings, but the ideia is to do merge
