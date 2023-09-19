@@ -31,6 +31,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
     const start = process.hrtime()
     concurrentRequests.inc(1)
     const rootSpan = tracer.extract(FORMAT_HTTP_HEADERS, ctx.request.headers) as undefined | SpanContext
+    ctx.tracing = { tracer, currentSpan: undefined}
 
     if (!shouldTrace(ctx, rootSpan)) {
       await next()
@@ -76,12 +77,12 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       )
 
       const traceInfo = getTraceInfo(currentSpan)
-      if (traceInfo.isSampled) {
+      if (traceInfo?.isSampled) {
         if (!initialSamplingDecision) {
-          currentSpan.setTag(OpentracingTags.SPAN_KIND, OpentracingTags.SPAN_KIND_RPC_SERVER)
+          currentSpan?.setTag(OpentracingTags.SPAN_KIND, OpentracingTags.SPAN_KIND_RPC_SERVER)
         }
 
-        currentSpan.addTags({
+        currentSpan?.addTags({
           [OpentracingTags.HTTP_URL]: ctx.request.href,
           [OpentracingTags.HTTP_METHOD]: ctx.request.method,
           [OpentracingTags.HTTP_STATUS_CODE]: ctx.response.status,
@@ -91,9 +92,9 @@ export const addTracingMiddleware = (tracer: Tracer) => {
           [VTEXIncomingRequestTags.VTEX_ACCOUNT]: ctx.get(ACCOUNT_HEADER),
         })
 
-        currentSpan.log(cloneAndSanitizeHeaders(ctx.request.headers, 'req.headers.'))
-        currentSpan.log(cloneAndSanitizeHeaders(ctx.response.headers, 'res.headers.'))
-        ctx.set(TRACE_ID_HEADER, traceInfo.traceId)
+        currentSpan?.log(cloneAndSanitizeHeaders(ctx.request.headers, 'req.headers.'))
+        currentSpan?.log(cloneAndSanitizeHeaders(ctx.response.headers, 'res.headers.'))
+        ctx.set(TRACE_ID_HEADER, traceInfo.traceId!)
       }
 
       const onResFinished = () => {
@@ -105,7 +106,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
         )
 
         concurrentRequests.dec(1)
-        currentSpan.finish()
+        currentSpan?.finish()
       }
 
       if (responseClosed) {
@@ -119,30 +120,30 @@ export const addTracingMiddleware = (tracer: Tracer) => {
 
 export const nameSpanOperationMiddleware = (operationType: string, operationName: string) => {
   return function nameSpanOperation(ctx: ServiceContext, next: () => Promise<void>) {
-    ctx.tracing?.currentSpan.setOperationName(`${operationType}:${operationName}`)
+    ctx.tracing?.currentSpan?.setOperationName(`${operationType}:${operationName}`)
     return next()
   }
 }
 
 export const traceUserLandRemainingPipelineMiddleware = () => {
   return async function traceUserLandRemainingPipeline(ctx: ServiceContext, next: () => Promise<void>) {
-    const tracingCtx = ctx.tracing!
+    const tracingCtx = ctx.tracing
     ctx.tracing = undefined
 
-    const span = tracingCtx.currentSpan
+    const span = tracingCtx?.currentSpan
     const userLandTracer = ctx.vtex.tracer! as UserLandTracer
     userLandTracer.setFallbackSpan(span)
     userLandTracer.lockFallbackSpan()
     const startTime = process.hrtime()
 
     try {
-      span.log({ event: RuntimeLogEvents.USER_MIDDLEWARES_START })
+      span?.log({ event: RuntimeLogEvents.USER_MIDDLEWARES_START })
       await next()
     } catch (err) {
       ErrorReport.create({ originalError: err }).injectOnSpan(span, ctx.vtex.logger)
       throw err
     } finally {
-      span.log({
+      span?.log({
         event: RuntimeLogEvents.USER_MIDDLEWARES_FINISH,
         [RuntimeLogFields.USER_MIDDLEWARES_DURATION]: hrToMillis(process.hrtime(startTime)),
       })
@@ -151,7 +152,10 @@ export const traceUserLandRemainingPipelineMiddleware = () => {
   }
 }
 function shouldTrace(ctx: ServiceContext, rootSpan: SpanContext | undefined) {
-  // Should trace if path isnt blacklisted and tracing decision came from the edge
-  return !PATHS_BLACKLISTED_FOR_TRACING.includes(ctx.request.path) && rootSpan != null
+  /** Should trace if path isnt blacklisted and sampling decision came from the edge
+   * ((rootSpan as any).isSampled. returns whether or not this span context was sampled
+   * There is a cast to bypass opentracing typescript
+   */
+  return !PATHS_BLACKLISTED_FOR_TRACING.includes(ctx.request.path) && ((rootSpan as any).isSampled?.() ?? false)
 }
 

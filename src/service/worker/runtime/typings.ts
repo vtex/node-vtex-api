@@ -28,7 +28,7 @@ export type Maybe<T> = T | null | undefined
 
 export interface TracingContext {
   tracer: Tracer
-  currentSpan: Span
+  currentSpan: Span | undefined
 }
 
 export interface Context<T extends IOClients> {
