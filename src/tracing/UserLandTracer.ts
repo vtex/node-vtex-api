@@ -68,14 +68,14 @@ export class UserLandTracer implements IUserLandTracer {
 
   public startSpan(name: string, options?: SpanOptions) {
     if (options && (options.childOf || options.references?.length)) {
-      return this.tracer?.startSpan(name, options)
+      return this.tracer.startSpan(name, options)
     }
 
-    return this.tracer?.startSpan(name, { ...options, childOf: this.fallbackSpan })
+    return this.tracer.startSpan(name, { ...options, childOf: this.fallbackSpan })
   }
 
   public inject(spanContext: SpanContext | Span, format: string, carrier: any) {
-    return this.tracer?.inject(spanContext, format, carrier)
+    return this.tracer.inject(spanContext, format, carrier)
   }
 
   public fallbackSpanContext(): SpanContext | undefined {
