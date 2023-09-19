@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [6.45.21] - 2023-09-19
 ### Changed
 - Fix tracingMiddleware shouldTrace decision
 - Fix HttpClient tracing based on sampling decision
@@ -1787,11 +1789,12 @@ instead
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
 
 
-[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.21-beta.2...HEAD
+[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.21...HEAD
 [6.45.15]: https://github.com/vtex/node-vtex-api/compare/v6.45.14...v6.45.15
 [6.45.14]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...v6.45.14
 [6.45.13]: https://github.com/vtex/node-vtex-api/compare/v6.45.12...v6.45.13
 
+[6.45.21]: https://github.com/vtex/node-vtex-api/compare/v6.45.21-beta.2...v6.45.21
 [6.45.21-beta.2]: https://github.com/vtex/node-vtex-api/compare/v6.45.21-beta.1...v6.45.21-beta.2
 [6.45.21-beta.1]: https://github.com/vtex/node-vtex-api/compare/v6.45.21-beta.0...v6.45.21-beta.1
 [6.45.21-beta.0]: https://github.com/vtex/node-vtex-api/compare/v6.45.21-beta...v6.45.21-beta.0
