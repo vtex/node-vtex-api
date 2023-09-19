@@ -18,7 +18,8 @@ export const enum ErrorReportLogFields {
   ERROR_MESSAGE = 'error.message',
   ERROR_CODE = 'error.code',
   ERROR_STACK = 'error.stack',
-  ERROR_METADATA = 'error.metadata',
+  ERROR_METADATA_REPORT_COUNT = 'error.metadata.reportCount',
+  ERROR_METADATA_METRICS_INSTANTIATION_TIME = 'error.metadata.metrics.InstantiationTime',
 
   /**
    * VTEX's Infra errors adds error details to the response
