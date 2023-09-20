@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- Error tracing spans not logging the details.
+
 ## [6.45.21] - 2023-09-19
 ### Changed
 - Fix tracingMiddleware shouldTrace decision

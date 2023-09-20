@@ -61,7 +61,15 @@ export class ErrorReport extends ErrorReportBase {
     }
 
     const serializableError = this.toObject()
-    span?.log({ event: 'error', ...indexedLogs, error: serializableError })
+    span?.log({
+      event: 'error',
+      ...indexedLogs,
+      [ErrorReportLogFields.ERROR_MESSAGE]: serializableError.message,
+      [ErrorReportLogFields.ERROR_METADATA_METRICS_INSTANTIATION_TIME]: serializableError.metadata?.reportCount,
+      [ErrorReportLogFields.ERROR_METADATA_REPORT_COUNT]: serializableError.metadata?.metrics?.instantiationTime,
+      [ErrorReportLogFields.ERROR_STACK]: serializableError.stack,
+      [ErrorReportLogFields.ERROR_CODE]: serializableError.code,
+    })
 
     if (logger && this.shouldLogToSplunk(span)) {
       logger.error(serializableError)
