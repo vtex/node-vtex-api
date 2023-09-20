@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Remove reference of how to search for the app's errors on now-defunct Splunk.
 
+### Fixed
+
+- Error tracing spans not logging the details.
+
+## [6.45.21] - 2023-09-19
+### Changed
+- Fix tracingMiddleware shouldTrace decision
+- Fix HttpClient tracing based on sampling decision
+
+## [6.45.21-beta.2] - 2023-09-19
+
+## [6.45.21-beta.1] - 2023-09-07
+
+## [6.45.21-beta.0] - 2023-09-04
+
+## [6.45.21-beta] - 2023-09-04
+
 ## [6.45.20] - 2023-08-30
 ### Changed
 - Remove sampling decision from runtime
@@ -1780,10 +1797,15 @@ instead
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
 
 
-[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.20...HEAD
+[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.21...HEAD
 [6.45.15]: https://github.com/vtex/node-vtex-api/compare/v6.45.14...v6.45.15
 [6.45.14]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...v6.45.14
 [6.45.13]: https://github.com/vtex/node-vtex-api/compare/v6.45.12...v6.45.13
 
+[6.45.21]: https://github.com/vtex/node-vtex-api/compare/v6.45.21-beta.2...v6.45.21
+[6.45.21-beta.2]: https://github.com/vtex/node-vtex-api/compare/v6.45.21-beta.1...v6.45.21-beta.2
+[6.45.21-beta.1]: https://github.com/vtex/node-vtex-api/compare/v6.45.21-beta.0...v6.45.21-beta.1
+[6.45.21-beta.0]: https://github.com/vtex/node-vtex-api/compare/v6.45.21-beta...v6.45.21-beta.0
+[6.45.21-beta]: https://github.com/vtex/node-vtex-api/compare/v6.45.20...v6.45.21-beta
 [6.45.20]: https://github.com/vtex/node-vtex-api/compare/v6.45.20-beta...v6.45.20
 [6.45.20-beta]: https://github.com/vtex/node-vtex-api/compare/v6.45.19...v6.45.20-beta

@@ -2,15 +2,15 @@ import { authFields, sanitizeAuth } from '@vtex/node-error-report'
 import { Span } from 'opentracing'
 
 export interface TraceInfo {
-  traceId: string
+  traceId?: string
   isSampled: boolean
 }
 
-export function getTraceInfo(span: Span): TraceInfo {
-  const spanContext = span.context()
+export function getTraceInfo(span?: Span): TraceInfo {
+  const spanContext = span?.context()
   return {
-    isSampled: (spanContext as any).isSampled?.() ?? false,
-    traceId: spanContext.toTraceId(),
+    isSampled: (spanContext as any)?.isSampled?.() ?? false,
+    traceId: spanContext?.toTraceId(),
   }
 }
 

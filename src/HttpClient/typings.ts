@@ -63,7 +63,7 @@ export interface CacheHit {
 export interface MiddlewaresTracingContext extends Omit<RequestTracingUserConfig, 'rootSpan'> {
   tracer: IUserLandTracer
   logger: IOContext['logger']
-  rootSpan: Span
+  rootSpan?: Span
   isSampled: boolean
 }
 

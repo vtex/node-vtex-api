@@ -43,8 +43,8 @@ export class ErrorReport extends ErrorReportBase {
    * instance on the provided Span. If a logger is provided and the
    * span is part of a **sampled** trace, then the error will be logged.
    */
-  public injectOnSpan(span: Span, logger?: IOContext['logger']) {
-    span.setTag(TracingTags.ERROR, 'true')
+  public injectOnSpan(span?: Span, logger?: IOContext['logger']) {
+    span?.setTag(TracingTags.ERROR, 'true')
 
     const indexedLogs: Record<string, string> = {
       [ErrorReportLogFields.ERROR_KIND]: this.kind,
@@ -61,7 +61,15 @@ export class ErrorReport extends ErrorReportBase {
     }
 
     const serializableError = this.toObject()
-    span.log({ event: 'error', ...indexedLogs, error: serializableError })
+    span?.log({
+      event: 'error',
+      ...indexedLogs,
+      [ErrorReportLogFields.ERROR_MESSAGE]: serializableError.message,
+      [ErrorReportLogFields.ERROR_METADATA_METRICS_INSTANTIATION_TIME]: serializableError.metadata?.reportCount,
+      [ErrorReportLogFields.ERROR_METADATA_REPORT_COUNT]: serializableError.metadata?.metrics?.instantiationTime,
+      [ErrorReportLogFields.ERROR_STACK]: serializableError.stack,
+      [ErrorReportLogFields.ERROR_CODE]: serializableError.code,
+    })
 
     if (logger && this.shouldLogToSplunk(span)) {
       logger.error(serializableError)
@@ -71,7 +79,7 @@ export class ErrorReport extends ErrorReportBase {
     return this
   }
 
-  private shouldLogToSplunk(span: Span) {
-    return !this.isErrorReported() && getTraceInfo(span).isSampled
+  private shouldLogToSplunk(span?: Span) {
+    return !this.isErrorReported() && getTraceInfo(span)?.isSampled
   }
 }

@@ -65,7 +65,7 @@ const onResponseError = (http: AxiosInstance) => (error: any) => {
       : config.timeout
     config.transformRequest = [data => data]
 
-    config.tracing!.rootSpan!.log({ event: HttpLogEvents.SETUP_REQUEST_RETRY, [HttpRetryLogFields.RETRY_NUMBER]: config.retryCount, [HttpRetryLogFields.RETRY_IN]: delay })
+    config.tracing?.rootSpan?.log({ event: HttpLogEvents.SETUP_REQUEST_RETRY, [HttpRetryLogFields.RETRY_NUMBER]: config.retryCount, [HttpRetryLogFields.RETRY_IN]: delay })
 
     return new Promise(resolve => setTimeout(() => resolve(http(config)), delay))
   }

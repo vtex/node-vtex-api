@@ -26,7 +26,7 @@ interface LoggerContext extends  Pick<IOContext, 'account'|'workspace'|'requestI
 
 interface TracingState {
   isTraceSampled: boolean,
-  traceId: string
+  traceId?: string
 }
 
 export class Logger {

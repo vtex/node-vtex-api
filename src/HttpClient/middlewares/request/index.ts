@@ -65,10 +65,10 @@ export const defaultsMiddleware = ({ baseURL, rawHeaders, params, timeout, retri
     }
 
 
-    if(ctx.tracing!.isSampled) {
+    if(ctx.tracing?.isSampled) {
       const { config } = ctx
       const fullUrl = buildFullPath(config.baseURL, http.getUri(config))
-      ctx.tracing!.rootSpan.addTags({
+      ctx.tracing?.rootSpan?.addTags({
         [OpentracingTags.HTTP_METHOD]: config.method || 'get',
         [OpentracingTags.HTTP_URL]: fullUrl,
       })
@@ -89,7 +89,7 @@ export const routerCacheMiddleware = async (ctx: MiddlewareContext, next: () => 
   const status = ctx.response?.status
 
   if(routerCacheHit) {
-    ctx.tracing!.rootSpan.setTag(CustomHttpTags.HTTP_ROUTER_CACHE_RESULT, routerCacheHit)
+    ctx.tracing?.rootSpan?.setTag(CustomHttpTags.HTTP_ROUTER_CACHE_RESULT, routerCacheHit)
   }
 
   if (routerCacheHit === ROUTER_CACHE_HIT || (routerCacheHit === ROUTER_CACHE_REVALIDATED && status !== 304)) {
