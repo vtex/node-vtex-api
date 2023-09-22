@@ -1,7 +1,7 @@
 import { contains, filter, isEmpty, pick as ramdaPick, zipObj } from 'ramda'
 import { Readable } from 'stream'
 
-import { AppMetaInfo } from '../..'
+import { AppMetaInfo, Logger } from '../..'
 import { CacheType, inflightURL, InstanceOptions, RequestTracingConfig } from '../../HttpClient'
 import {
   IgnoreNotFoundRequestConfig,
@@ -9,6 +9,38 @@ import {
 import { IOContext } from '../../service/worker/runtime/typings'
 import { parseAppId, ParsedLocator } from '../../utils'
 import { InfraClient } from './InfraClient'
+
+const LOGGER_JSON_SIZE_THRESHOLD_MB = 10
+
+function jsonSizeInMB(jsonData: any) {
+  try {
+    const sizeInBytes = Buffer.from(JSON.stringify(jsonData)).length
+
+    return sizeInBytes / (1024 * 1024)
+  } catch (error) {
+    return 0
+  }
+}
+
+function logJsonSize<T extends object | null>(url: string, logger: Logger, tracingConfig?: RequestTracingConfig) {
+  return function log(jsonData: T) {
+    const size = jsonSizeInMB(jsonData)
+
+    if (size >= LOGGER_JSON_SIZE_THRESHOLD_MB) {
+      const logMessage = {
+        message: 'Large JSON file',
+        size,
+        url,
+      }
+
+      logger.debug(logMessage)
+    }
+
+    tracingConfig?.tracing?.rootSpan?.addTags({ 'json-size': size })
+
+    return jsonData
+  }
+}
 
 const dependsOnApp = (appsAtMajor: string[]) => (a: AppMetaInfo) => {
   let dependsOn = false
@@ -153,7 +185,10 @@ export class Assets extends InfraClient {
     const vendor = locator.name.split('.')[0]
     const inflightKey = inflightURL
     const metric = 'assets-get-json-by-vendor'
-    return this.http.get<T>(this.routes.Files(vendor, locator, path), {
+    const url = this.routes.Files(vendor, locator, path)
+    const { logger } = this.context
+
+    return this.http.get<T>(url, {
         cacheable: CacheType.Any,
         inflightKey,
         metric,
@@ -162,7 +197,7 @@ export class Assets extends InfraClient {
           requestSpanNameSuffix: metric,
           ...tracingConfig?.tracing,
         },
-      } as IgnoreNotFoundRequestConfig)
+      } as IgnoreNotFoundRequestConfig).then(logJsonSize(url, logger, tracingConfig))
   }
 
   protected getAppFileByAccount = (app: string, path: string, nullIfNotFound?: boolean, tracingConfig?: RequestTracingConfig) => {
