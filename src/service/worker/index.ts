@@ -14,6 +14,7 @@ import { logOnceToDevConsole } from '../logger/console'
 import { LogLevel } from '../logger/logger'
 import { TracerSingleton } from '../tracing/TracerSingleton'
 import { addTracingMiddleware } from '../tracing/tracingMiddlewares'
+import { addRequestMetricsMiddleware } from '../metrics/requestMetricsMiddleware'
 import { addProcessListeners, logger } from './listeners'
 import {
   healthcheckHandler,
@@ -221,6 +222,7 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
     .use(error)
     .use(prometheusLoggerMiddleware())
     .use(addTracingMiddleware(tracer))
+    .use(addRequestMetricsMiddleware())
     .use(addMetricsLoggerMiddleware())
     .use(concurrentRateLimiter(serviceJSON?.rateLimitPerReplica?.concurrent))
     .use(compress())

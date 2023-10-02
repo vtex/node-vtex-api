@@ -7,35 +7,19 @@ import { RuntimeLogFields } from '../../tracing/LogFields'
 import { CustomHttpTags, OpentracingTags, VTEXIncomingRequestTags } from '../../tracing/Tags'
 import { UserLandTracer } from '../../tracing/UserLandTracer'
 import { cloneAndSanitizeHeaders } from '../../tracing/utils'
-import { hrToMillis, hrToMillisFloat } from '../../utils'
+import { hrToMillis } from '../../utils'
 import { ServiceContext } from '../worker/runtime/typings'
-import {
-  createConcurrentRequestsInstrument,
-  createRequestsResponseSizesInstrument,
-  createRequestsTimingsInstrument,
-  createTotalAbortedRequestsInstrument,
-  createTotalRequestsInstrument,
-  RequestsMetricLabels,
-} from './metrics/instruments'
 
 const PATHS_BLACKLISTED_FOR_TRACING = ['/_status', '/healthcheck']
 
 export const addTracingMiddleware = (tracer: Tracer) => {
-  const concurrentRequests = createConcurrentRequestsInstrument()
-  const requestTimings = createRequestsTimingsInstrument()
-  const totalRequests = createTotalRequestsInstrument()
-  const responseSizes = createRequestsResponseSizesInstrument()
-  const abortedRequests = createTotalAbortedRequestsInstrument()
 
   return async function addTracing(ctx: ServiceContext, next: () => Promise<void>) {
-    const start = process.hrtime()
-    concurrentRequests.inc(1)
     const rootSpan = tracer.extract(FORMAT_HTTP_HEADERS, ctx.request.headers) as undefined | SpanContext
     ctx.tracing = { tracer, currentSpan: undefined}
 
     if (!shouldTrace(ctx, rootSpan)) {
       await next()
-      concurrentRequests.dec(1)
       return
     }
 
@@ -47,9 +31,6 @@ export const addTracingMiddleware = (tracer: Tracer) => {
     const initialSamplingDecision = getTraceInfo(currentSpan).isSampled
 
     ctx.tracing = { currentSpan, tracer }
-    ctx.req.once('aborted', () =>
-      abortedRequests.inc({ [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName }, 1)
-    )
 
     let responseClosed = false
     ctx.res.once('close', () => (responseClosed = true))
@@ -60,22 +41,6 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       ErrorReport.create({ originalError: err }).injectOnSpan(currentSpan, ctx.vtex?.logger)
       throw err
     } finally {
-      const responseLength = ctx.response.length
-      if (responseLength) {
-        responseSizes.observe(
-          { [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName },
-          responseLength
-        )
-      }
-
-      totalRequests.inc(
-        {
-          [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
-          [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
-        },
-        1
-      )
-
       const traceInfo = getTraceInfo(currentSpan)
       if (traceInfo?.isSampled) {
         if (!initialSamplingDecision) {
@@ -98,14 +63,6 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       }
 
       const onResFinished = () => {
-        requestTimings.observe(
-          {
-            [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
-          },
-          hrToMillisFloat(process.hrtime(start))
-        )
-
-        concurrentRequests.dec(1)
         currentSpan?.finish()
       }
 
