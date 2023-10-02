@@ -12,9 +12,9 @@ import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
 import { getService } from '../loaders'
 import { logOnceToDevConsole } from '../logger/console'
 import { LogLevel } from '../logger/logger'
+import { addRequestMetricsMiddleware } from '../metrics/requestMetricsMiddleware'
 import { TracerSingleton } from '../tracing/TracerSingleton'
 import { addTracingMiddleware } from '../tracing/tracingMiddlewares'
-import { addRequestMetricsMiddleware } from '../metrics/requestMetricsMiddleware'
 import { addProcessListeners, logger } from './listeners'
 import {
   healthcheckHandler,

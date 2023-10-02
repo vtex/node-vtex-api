@@ -1,6 +1,5 @@
 import { finished as onStreamFinished } from 'stream'
 import { hrToMillisFloat } from '../../utils'
-import { ServiceContext } from '../worker/runtime/typings'
 import {
   createConcurrentRequestsInstrument,
   createRequestsResponseSizesInstrument,
@@ -9,6 +8,7 @@ import {
   createTotalRequestsInstrument,
   RequestsMetricLabels,
 } from '../tracing/metrics/instruments'
+import { ServiceContext } from '../worker/runtime/typings'
 
 
 export const addRequestMetricsMiddleware = () => {
@@ -55,7 +55,7 @@ export const addRequestMetricsMiddleware = () => {
           },
           hrToMillisFloat(process.hrtime(start))
         )
-        
+
         concurrentRequests.dec(1)
       }
 
