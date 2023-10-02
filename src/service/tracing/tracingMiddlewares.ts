@@ -48,7 +48,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
 
     ctx.tracing = { currentSpan, tracer }
     ctx.req.once('aborted', () =>
-      abortedRequests.inc({ [RequestsMetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string }, 1)
+      abortedRequests.inc({ [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName }, 1)
     )
 
     let responseClosed = false
@@ -63,14 +63,14 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       const responseLength = ctx.response.length
       if (responseLength) {
         responseSizes.observe(
-          { [RequestsMetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string },
+          { [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName },
           responseLength
         )
       }
 
       totalRequests.inc(
         {
-          [RequestsMetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string,
+          [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
           [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
         },
         1
@@ -100,7 +100,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
       const onResFinished = () => {
         requestTimings.observe(
           {
-            [RequestsMetricLabels.REQUEST_HANDLER]: (currentSpan as any).operationName as string,
+            [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
           },
           hrToMillisFloat(process.hrtime(start))
         )
@@ -120,7 +120,8 @@ export const addTracingMiddleware = (tracer: Tracer) => {
 
 export const nameSpanOperationMiddleware = (operationType: string, operationName: string) => {
   return function nameSpanOperation(ctx: ServiceContext, next: () => Promise<void>) {
-    ctx.tracing?.currentSpan?.setOperationName(`${operationType}:${operationName}`)
+    ctx.requestHandlerName = `${operationType}:${operationName}`
+    ctx.tracing?.currentSpan?.setOperationName(ctx.requestHandlerName)
     return next()
   }
 }
