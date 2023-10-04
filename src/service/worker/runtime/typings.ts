@@ -37,6 +37,7 @@ export interface Context<T extends IOClients> {
   timings: Record<string, [number, number]>
   metrics: Record<string, [number, number]>
   previousTimerStart: [number, number]
+  requestHandlerName?: string
   serverTiming?: ServerTiming
   tracing?: TracingContext
 }

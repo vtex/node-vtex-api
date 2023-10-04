@@ -12,6 +12,7 @@ import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
 import { getService } from '../loaders'
 import { logOnceToDevConsole } from '../logger/console'
 import { LogLevel } from '../logger/logger'
+import { addRequestMetricsMiddleware } from '../metrics/requestMetricsMiddleware'
 import { TracerSingleton } from '../tracing/TracerSingleton'
 import { addTracingMiddleware } from '../tracing/tracingMiddlewares'
 import { addProcessListeners, logger } from './listeners'
@@ -221,6 +222,7 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
     .use(error)
     .use(prometheusLoggerMiddleware())
     .use(addTracingMiddleware(tracer))
+    .use(addRequestMetricsMiddleware())
     .use(addMetricsLoggerMiddleware())
     .use(concurrentRateLimiter(serviceJSON?.rateLimitPerReplica?.concurrent))
     .use(compress())
