@@ -83,6 +83,7 @@ export interface InstanceOptions {
   timeout?: number
   memoryCache?: CacheLayer<string, Cached>
   diskCache?: CacheLayer<string, Cached>
+  memoizable?: boolean
   baseURL?: string
   retries?: number
   exponentialTimeoutCoefficient?: number
