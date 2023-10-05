@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 
 - Allow disabling memoization for all requests of a client
+## [6.45.23] - 2023-10-04
+
+### Fixed
+- Fix metrics being restricted by tracing restrictions
 
 ## [6.45.22] - 2023-09-20
 
