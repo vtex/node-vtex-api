@@ -83,6 +83,18 @@ export interface InstanceOptions {
   timeout?: number
   memoryCache?: CacheLayer<string, Cached>
   diskCache?: CacheLayer<string, Cached>
+
+  /**
+   * Enables memoization, ephemeral within each request, for all requests of this client.
+   * Useful for services that makes recursive requests, like graphql resolvers, which
+   * might fetch the same endpoint more than once.
+   * If that's not the case for your service, disabling it might improve the CPU and
+   * memory usage.
+   *
+   * Default value: true
+   */
+  memoizable?: boolean
+
   baseURL?: string
   retries?: number
   exponentialTimeoutCoefficient?: number
