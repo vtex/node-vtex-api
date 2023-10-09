@@ -1,7 +1,9 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios'
+import { Span } from 'opentracing'
 
 import { CacheLayer } from '../../caches/CacheLayer'
 import { LOCALE_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../../constants'
+import { IOContext } from '../../service/worker/runtime/typings'
 import { HttpLogEvents } from '../../tracing/LogEvents'
 import { HttpCacheLogFields } from '../../tracing/LogFields'
 import { CustomHttpTags } from '../../tracing/Tags'
@@ -79,9 +81,10 @@ const CacheTypeNames = {
 interface CacheOptions {
   type: CacheType
   storage: CacheLayer<string, Cached>
+  tracer: IOContext['tracer']
 }
 
-export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
+export const cacheMiddleware = ({ type, storage, tracer }: CacheOptions) => {
   const CACHE_RESULT_TAG = type === CacheType.Disk ? CustomHttpTags.HTTP_DISK_CACHE_RESULT : CustomHttpTags.HTTP_MEMORY_CACHE_RESULT
   const cacheType = CacheTypeNames[type]
 
@@ -103,8 +106,11 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
       [HttpCacheLogFields.KEY_WITH_SEGMENT]: keyWithSegment,
     })
 
+
+    const cacheReadSpan = createCacheSpan(tracer, cacheType, 'read', span)
     const cacheHasWithSegment = await storage.has(keyWithSegment)
     const cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
+    cacheReadSpan?.finish()
 
     if (cached && cached.response) {
       const {etag: cachedEtag, response, expiration, responseType, responseEncoding} = cached as Cached
@@ -199,6 +205,8 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
         : data
 
       const expiration = Date.now() + (maxAge - currentAge) * 1000
+
+      const cacheWriteSpan = createCacheSpan(tracer, cacheType, 'write', span)
       await storage.set(setKey, {
         etag,
         expiration,
@@ -206,6 +214,7 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
         responseEncoding,
         responseType,
       })
+      cacheWriteSpan?.finish()
 
       span?.log({
         event: HttpLogEvents.LOCAL_CACHE_SAVED,
@@ -222,6 +231,12 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
     }
 
     span?.log({ event: HttpLogEvents.NO_LOCAL_CACHE_SAVE, [HttpCacheLogFields.CACHE_TYPE]: cacheType })
+  }
+}
+
+const createCacheSpan = (tracer: IOContext['tracer'], cacheType: string, operation: 'read' | 'write', parentSpan?: Span) => {
+  if (tracer.isTraceSampled && cacheType === 'disk') {
+    return tracer.startSpan(`${operation}-disk-cache`, { childOf: parentSpan })
   }
 }
 
