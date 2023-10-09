@@ -3,11 +3,10 @@ import {
   ETAG_HEADER,
   FORWARDED_HOST_HEADER,
   META_HEADER,
+  SEARCH_SEGMENT_HEADER,
   SEGMENT_HEADER,
   SESSION_HEADER,
 } from '../../../../../constants'
-import { Maybe } from '../../typings'
-import { Recorder } from '../../utils/recorder'
 import { GraphQLCacheControl, GraphQLServiceContext } from '../typings'
 import { cacheControlHTTP } from '../utils/cacheControl'
 
@@ -17,8 +16,14 @@ function setVaryHeaders (ctx: GraphQLServiceContext, cacheControl: GraphQLCacheC
     ctx.vary(SEGMENT_HEADER)
   }
 
+  if (cacheControl.scope === 'search_segment') {
+    ctx.vary(SEGMENT_HEADER)
+    ctx.vary(SEARCH_SEGMENT_HEADER)
+  }
+
   if (cacheControl.scope === 'private' || ctx.query.scope === 'private') {
     ctx.vary(SEGMENT_HEADER)
+    ctx.vary(SEARCH_SEGMENT_HEADER)
     ctx.vary(SESSION_HEADER)
   } else if (ctx.vtex.sessionToken) {
     ctx.vtex.logger.warn({

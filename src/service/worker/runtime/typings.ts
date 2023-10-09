@@ -138,6 +138,7 @@ export interface IOContext {
   userAgent: string
   workspace: string
   segmentToken?: string
+  searchSegmentToken?: string
   sessionToken?: string
   requestId: string
   operationId: string

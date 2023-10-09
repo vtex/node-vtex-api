@@ -41,6 +41,9 @@ export const enum HttpCacheLogFields {
   /** The generated cache key for local cache with the segment added to it */
   KEY_WITH_SEGMENT = 'key-with-segment',
 
+  /** The generated cache key for local cache with the segment and the searchSegment added to it */
+  KEY_WITH_SEGMENT_AND_SEARCH_SEGMENT = 'key-with-segment-and-search-segment',
+
   /** The key that was just set on the cache */
   KEY_SET = 'key-set',
 

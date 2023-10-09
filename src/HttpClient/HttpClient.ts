@@ -10,6 +10,7 @@ import {
   FORWARDED_HOST_HEADER,
   LOCALE_HEADER,
   PRODUCT_HEADER,
+  SEARCH_SEGMENT_HEADER,
   SEGMENT_HEADER,
   SESSION_HEADER,
   TENANT_HEADER,
@@ -60,6 +61,7 @@ export class HttpClient {
       userAgent,
       timeout = DEFAULT_TIMEOUT_MS,
       segmentToken,
+      searchSegmentToken,
       sessionToken,
       retries,
       concurrency,
@@ -95,6 +97,7 @@ export class HttpClient {
       ...operationId ? { 'x-vtex-operation-id': operationId } : null,
       ...product ? { [PRODUCT_HEADER]: product } : null,
       ...segmentToken ? { [SEGMENT_HEADER]: segmentToken } : null,
+      ...searchSegmentToken ? { [SEARCH_SEGMENT_HEADER]: searchSegmentToken } : null,
       ...sessionToken ? { [SESSION_HEADER]: sessionToken } : null,
     }
 
@@ -138,16 +141,16 @@ export class HttpClient {
         return typeof v !== 'object' || v === null || Array.isArray(v) ? v :
                   Object.fromEntries(Object.entries(v).sort(([ka], [kb]) =>
                     ka < kb ? -1 : ka > kb ? 1 : 0))
-      } 
-      catch(error) { 
+      }
+      catch(error) {
         // I don't believe this will ever happen, but just in case
         // Also, I didn't include error as I am unsure if it would have sensitive information
         this.logger.warn({message: 'Error while sorting object for cache key'})
         return v
       }
     }
-      
-    
+
+
     const bodyHash = createHash('md5').update(JSON.stringify(data, deterministicReplacer)).digest('hex')
     const cacheableConfig = this.getConfig(url, {
       ...config,
