@@ -108,9 +108,13 @@ export const cacheMiddleware = ({ type, storage, tracer }: CacheOptions) => {
 
 
     const cacheReadSpan = createCacheSpan(tracer, cacheType, 'read', span)
-    const cacheHasWithSegment = await storage.has(keyWithSegment)
-    const cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
-    cacheReadSpan?.finish()
+    let cached: void | Cached
+    try {
+      const cacheHasWithSegment = await storage.has(keyWithSegment)
+      cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
+    } finally {
+      cacheReadSpan?.finish()
+    }
 
     if (cached && cached.response) {
       const {etag: cachedEtag, response, expiration, responseType, responseEncoding} = cached as Cached
@@ -207,25 +211,28 @@ export const cacheMiddleware = ({ type, storage, tracer }: CacheOptions) => {
       const expiration = Date.now() + (maxAge - currentAge) * 1000
 
       const cacheWriteSpan = createCacheSpan(tracer, cacheType, 'write', span)
-      await storage.set(setKey, {
-        etag,
-        expiration,
-        response: {data: cacheableData, headers, status},
-        responseEncoding,
-        responseType,
-      })
-      cacheWriteSpan?.finish()
+      try {
+        await storage.set(setKey, {
+          etag,
+          expiration,
+          response: {data: cacheableData, headers, status},
+          responseEncoding,
+          responseType,
+        })
 
-      span?.log({
-        event: HttpLogEvents.LOCAL_CACHE_SAVED,
-        [HttpCacheLogFields.CACHE_TYPE]: cacheType,
-        [HttpCacheLogFields.KEY_SET]: setKey,
-        [HttpCacheLogFields.AGE]: currentAge,
-        [HttpCacheLogFields.ETAG]: etag,
-        [HttpCacheLogFields.EXPIRATION_TIME]: (expiration - Date.now())/1000,
-        [HttpCacheLogFields.RESPONSE_ENCONDING]: responseEncoding,
-        [HttpCacheLogFields.RESPONSE_TYPE]: responseType,
-      })
+        span?.log({
+          event: HttpLogEvents.LOCAL_CACHE_SAVED,
+          [HttpCacheLogFields.CACHE_TYPE]: cacheType,
+          [HttpCacheLogFields.KEY_SET]: setKey,
+          [HttpCacheLogFields.AGE]: currentAge,
+          [HttpCacheLogFields.ETAG]: etag,
+          [HttpCacheLogFields.EXPIRATION_TIME]: (expiration - Date.now())/1000,
+          [HttpCacheLogFields.RESPONSE_ENCONDING]: responseEncoding,
+          [HttpCacheLogFields.RESPONSE_TYPE]: responseType,
+        })
+      } finally {
+        cacheWriteSpan?.finish()
+      }
 
       return
     }
