@@ -8,6 +8,7 @@ import { HttpLogEvents } from '../../tracing/LogEvents'
 import { HttpCacheLogFields } from '../../tracing/LogFields'
 import { CustomHttpTags } from '../../tracing/Tags'
 import { MiddlewareContext, RequestConfig } from '../typings'
+import { ErrorReport } from '../../tracing'
 
 const RANGE_HEADER_QS_KEY = '__range_header'
 const cacheableStatusCodes = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501] // https://tools.ietf.org/html/rfc7231#section-6.1
@@ -81,10 +82,9 @@ const CacheTypeNames = {
 interface CacheOptions {
   type: CacheType
   storage: CacheLayer<string, Cached>
-  tracer: IOContext['tracer']
 }
 
-export const cacheMiddleware = ({ type, storage, tracer }: CacheOptions) => {
+export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
   const CACHE_RESULT_TAG = type === CacheType.Disk ? CustomHttpTags.HTTP_DISK_CACHE_RESULT : CustomHttpTags.HTTP_MEMORY_CACHE_RESULT
   const cacheType = CacheTypeNames[type]
 
@@ -93,7 +93,7 @@ export const cacheMiddleware = ({ type, storage, tracer }: CacheOptions) => {
       return await next()
     }
 
-    const span = ctx.tracing?.rootSpan
+    const { rootSpan: span, tracer, logger } = ctx.tracing ?? {}
 
     const key = cacheKey(ctx.config)
     const segmentToken = ctx.config.headers[SEGMENT_HEADER]
@@ -107,11 +107,14 @@ export const cacheMiddleware = ({ type, storage, tracer }: CacheOptions) => {
     })
 
 
-    const cacheReadSpan = createCacheSpan(tracer, cacheType, 'read', span)
-    let cached: void | Cached
+    const cacheReadSpan = createCacheSpan(cacheType, 'read', tracer, span)
+    let cached: void | Cached = undefined
     try {
       const cacheHasWithSegment = await storage.has(keyWithSegment)
       cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
+    } catch (error) {
+      ErrorReport.create({ originalError: error }).injectOnSpan(cacheReadSpan)
+      logger?.warn({ message: 'Error reading from the HttpClient cache', error })
     } finally {
       cacheReadSpan?.finish()
     }
@@ -210,7 +213,7 @@ export const cacheMiddleware = ({ type, storage, tracer }: CacheOptions) => {
 
       const expiration = Date.now() + (maxAge - currentAge) * 1000
 
-      const cacheWriteSpan = createCacheSpan(tracer, cacheType, 'write', span)
+      const cacheWriteSpan = createCacheSpan(cacheType, 'write', tracer, span)
       try {
         await storage.set(setKey, {
           etag,
@@ -230,6 +233,9 @@ export const cacheMiddleware = ({ type, storage, tracer }: CacheOptions) => {
           [HttpCacheLogFields.RESPONSE_ENCONDING]: responseEncoding,
           [HttpCacheLogFields.RESPONSE_TYPE]: responseType,
         })
+      } catch (error) {
+        ErrorReport.create({ originalError: error }).injectOnSpan(cacheReadSpan)
+        logger?.warn({ message: 'Error writing to the HttpClient cache', error })
       } finally {
         cacheWriteSpan?.finish()
       }
@@ -241,8 +247,8 @@ export const cacheMiddleware = ({ type, storage, tracer }: CacheOptions) => {
   }
 }
 
-const createCacheSpan = (tracer: IOContext['tracer'], cacheType: string, operation: 'read' | 'write', parentSpan?: Span) => {
-  if (tracer.isTraceSampled && cacheType === 'disk') {
+const createCacheSpan = (cacheType: string, operation: 'read' | 'write', tracer?: IOContext['tracer'], parentSpan?: Span) => {
+  if (tracer && tracer.isTraceSampled && cacheType === 'disk') {
     return tracer.startSpan(`${operation}-disk-cache`, { childOf: parentSpan })
   }
 }
