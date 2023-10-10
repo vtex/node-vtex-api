@@ -1,9 +1,9 @@
 import { AxiosInstance } from 'axios'
 import { HttpLogEvents } from '../../../../../tracing/LogEvents'
 import { HttpRetryLogFields } from '../../../../../tracing/LogFields'
+import { CustomHttpTags } from '../../../../../tracing/Tags'
 import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../../../../utils/retry'
 import { RequestConfig } from '../../../../typings'
-import { CustomHttpTags } from '../../../../../tracing/Tags'
 
 function fixConfig(axiosInstance: AxiosInstance, config: RequestConfig) {
   if (axiosInstance.defaults.httpAgent === config.httpAgent) {
@@ -68,7 +68,7 @@ const onResponseError = (http: AxiosInstance) => (error: any) => {
     config.tracing?.rootSpan?.log({ event: HttpLogEvents.SETUP_REQUEST_RETRY, [HttpRetryLogFields.RETRY_NUMBER]: config.retryCount, [HttpRetryLogFields.RETRY_IN]: delay })
     config.tracing?.rootSpan?.addTags({
       [CustomHttpTags.HTTP_RETRY_COUNT]: config.retryCount,
-      [CustomHttpTags.HTTP_RETRY_ERROR_CODE]: error.code
+      [CustomHttpTags.HTTP_RETRY_ERROR_CODE]: error.code,
     })
 
     return new Promise(resolve => setTimeout(() => resolve(http(config)), delay))

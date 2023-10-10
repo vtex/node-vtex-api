@@ -4,11 +4,11 @@ import { Span } from 'opentracing'
 import { CacheLayer } from '../../caches/CacheLayer'
 import { LOCALE_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../../constants'
 import { IOContext } from '../../service/worker/runtime/typings'
+import { ErrorReport } from '../../tracing'
 import { HttpLogEvents } from '../../tracing/LogEvents'
 import { HttpCacheLogFields } from '../../tracing/LogFields'
 import { CustomHttpTags } from '../../tracing/Tags'
 import { MiddlewareContext, RequestConfig } from '../typings'
-import { ErrorReport } from '../../tracing'
 
 const RANGE_HEADER_QS_KEY = '__range_header'
 const cacheableStatusCodes = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501] // https://tools.ietf.org/html/rfc7231#section-6.1
@@ -108,7 +108,7 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
 
 
     const cacheReadSpan = createCacheSpan(cacheType, 'read', tracer, span)
-    let cached: void | Cached = undefined
+    let cached: void | Cached
     try {
       const cacheHasWithSegment = await storage.has(keyWithSegment)
       cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)

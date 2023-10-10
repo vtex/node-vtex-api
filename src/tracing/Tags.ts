@@ -71,7 +71,7 @@ export const enum CustomHttpTags {
   HTTP_ROUTER_CACHE_RESULT = 'http.cache.router',
 
   HTTP_RETRY_ERROR_CODE = 'http.retry.error.code',
-  HTTP_RETRY_COUNT = 'http.retry.count'
+  HTTP_RETRY_COUNT = 'http.retry.count',
 }
 
 export const UserlandTags = {
