@@ -199,7 +199,7 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
         : data
 
       const expiration = Date.now() + (maxAge - currentAge) * 1000
-      await storage.set(setKey, {
+      storage.set(setKey, {
         etag,
         expiration,
         response: {data: cacheableData, headers, status},
