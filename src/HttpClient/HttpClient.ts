@@ -39,6 +39,7 @@ export class HttpClient {
 
   private logger: Logger
   private cacheableType: CacheType
+  private memoizable: boolean
 
   private runMiddlewares: compose.ComposedMiddleware<MiddlewareContext>
 
@@ -49,6 +50,7 @@ export class HttpClient {
       authType,
       memoryCache,
       diskCache,
+      memoizable = true,
       locale,
       name,
       metrics,
@@ -79,6 +81,7 @@ export class HttpClient {
     this.name = name || baseURL || 'unknown'
     this.logger = logger
     this.cacheableType = cacheableType
+    this.memoizable = memoizable
 
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
@@ -210,7 +213,7 @@ export class HttpClient {
 
   private getConfig = (url: string, config: RequestConfig = {}): CacheableRequestConfig => ({
     cacheable: this.cacheableType,
-    memoizable: true,
+    memoizable: this.memoizable,
     ...config,
     url,
   })
