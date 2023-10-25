@@ -1,7 +1,10 @@
 import { AxiosRequestConfig, AxiosResponse } from 'axios'
+import { Span } from 'opentracing'
 
 import { CacheLayer } from '../../caches/CacheLayer'
 import { LOCALE_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../../constants'
+import { IOContext } from '../../service/worker/runtime/typings'
+import { ErrorReport } from '../../tracing'
 import { HttpLogEvents } from '../../tracing/LogEvents'
 import { HttpCacheLogFields } from '../../tracing/LogFields'
 import { CustomHttpTags } from '../../tracing/Tags'
@@ -90,7 +93,7 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
       return await next()
     }
 
-    const span = ctx.tracing?.rootSpan
+    const { rootSpan: span, tracer, logger } = ctx.tracing ?? {}
 
     const key = cacheKey(ctx.config)
     const segmentToken = ctx.config.headers[SEGMENT_HEADER]
@@ -103,8 +106,18 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
       [HttpCacheLogFields.KEY_WITH_SEGMENT]: keyWithSegment,
     })
 
-    const cacheHasWithSegment = await storage.has(keyWithSegment)
-    const cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
+
+    const cacheReadSpan = createCacheSpan(cacheType, 'read', tracer, span)
+    let cached: void | Cached
+    try {
+      const cacheHasWithSegment = await storage.has(keyWithSegment)
+      cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
+    } catch (error) {
+      ErrorReport.create({ originalError: error }).injectOnSpan(cacheReadSpan)
+      logger?.warn({ message: 'Error reading from the HttpClient cache', error })
+    } finally {
+      cacheReadSpan?.finish()
+    }
 
     if (cached && cached.response) {
       const {etag: cachedEtag, response, expiration, responseType, responseEncoding} = cached as Cached
@@ -208,29 +221,43 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
         return
       }
 
-      await storage.set(setKey, {
-        etag,
-        expiration,
-        response: {data: cacheableData, headers, status},
-        responseEncoding,
-        responseType,
-      })
+      const cacheWriteSpan = createCacheSpan(cacheType, 'write', tracer, span)
+      try {
+        await storage.set(setKey, {
+          etag,
+          expiration,
+          response: {data: cacheableData, headers, status},
+          responseEncoding,
+          responseType,
+        })
 
-      span?.log({
-        event: HttpLogEvents.LOCAL_CACHE_SAVED,
-        [HttpCacheLogFields.CACHE_TYPE]: cacheType,
-        [HttpCacheLogFields.KEY_SET]: setKey,
-        [HttpCacheLogFields.AGE]: currentAge,
-        [HttpCacheLogFields.ETAG]: etag,
-        [HttpCacheLogFields.EXPIRATION_TIME]: (expiration - Date.now())/1000,
-        [HttpCacheLogFields.RESPONSE_ENCONDING]: responseEncoding,
-        [HttpCacheLogFields.RESPONSE_TYPE]: responseType,
-      })
+        span?.log({
+          event: HttpLogEvents.LOCAL_CACHE_SAVED,
+          [HttpCacheLogFields.CACHE_TYPE]: cacheType,
+          [HttpCacheLogFields.KEY_SET]: setKey,
+          [HttpCacheLogFields.AGE]: currentAge,
+          [HttpCacheLogFields.ETAG]: etag,
+          [HttpCacheLogFields.EXPIRATION_TIME]: (expiration - Date.now())/1000,
+          [HttpCacheLogFields.RESPONSE_ENCONDING]: responseEncoding,
+          [HttpCacheLogFields.RESPONSE_TYPE]: responseType,
+        })
+      } catch (error) {
+        ErrorReport.create({ originalError: error }).injectOnSpan(cacheWriteSpan)
+        logger?.warn({ message: 'Error writing to the HttpClient cache', error })
+      } finally {
+        cacheWriteSpan?.finish()
+      }
 
       return
     }
 
     span?.log({ event: HttpLogEvents.NO_LOCAL_CACHE_SAVE, [HttpCacheLogFields.CACHE_TYPE]: cacheType })
+  }
+}
+
+const createCacheSpan = (cacheType: string, operation: 'read' | 'write', tracer?: IOContext['tracer'], parentSpan?: Span) => {
+  if (tracer && tracer.isTraceSampled && cacheType === 'disk') {
+    return tracer.startSpan(`${operation}-disk-cache`, { childOf: parentSpan })
   }
 }
 

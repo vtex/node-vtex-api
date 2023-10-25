@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.46.0] - 2023-10-25
+### Added
+- Add disk cache steps and retry count to tracing
+
 ### Changed
 - Stop updating client cache when revalidated and still expired
 

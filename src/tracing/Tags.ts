@@ -69,6 +69,9 @@ export const enum CustomHttpTags {
   HTTP_MEMOIZATION_CACHE_RESULT = 'http.cache.memoization',
   HTTP_DISK_CACHE_RESULT = 'http.cache.disk',
   HTTP_ROUTER_CACHE_RESULT = 'http.cache.router',
+
+  HTTP_RETRY_ERROR_CODE = 'http.retry.error.code',
+  HTTP_RETRY_COUNT = 'http.retry.count',
 }
 
 export const UserlandTags = {
