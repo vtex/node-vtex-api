@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Add disk cache steps and retry count to tracing
+
 ## [6.45.24] - 2023-10-05
 ### Added
 
