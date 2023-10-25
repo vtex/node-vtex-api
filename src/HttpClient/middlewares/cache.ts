@@ -234,7 +234,7 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
           [HttpCacheLogFields.RESPONSE_TYPE]: responseType,
         })
       } catch (error) {
-        ErrorReport.create({ originalError: error }).injectOnSpan(cacheReadSpan)
+        ErrorReport.create({ originalError: error }).injectOnSpan(cacheWriteSpan)
         logger?.warn({ message: 'Error writing to the HttpClient cache', error })
       } finally {
         cacheWriteSpan?.finish()
