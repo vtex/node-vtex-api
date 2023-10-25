@@ -198,7 +198,16 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
         ? (data as Buffer).toString(responseEncoding)
         : data
 
-      const expiration = Date.now() + (maxAge - currentAge) * 1000
+      const now = Date.now()
+      const expiration = now + (maxAge - currentAge) * 1000
+
+      const alreadyExpired = expiration <= now
+      const reusingRevalidatedCache = cached && (ctx.response === cached.response)
+      const shouldSkipCacheUpdate = alreadyExpired && reusingRevalidatedCache
+      if (shouldSkipCacheUpdate) {
+        return
+      }
+
       await storage.set(setKey, {
         etag,
         expiration,

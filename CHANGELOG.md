@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+- Stop updating client cache when revalidated and still expired
+
 ## [6.45.24] - 2023-10-05
 ### Added
 
 - Allow disabling memoization for all requests of a client
+
 ## [6.45.23] - 2023-10-04
 
 ### Fixed
