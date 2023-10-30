@@ -5,6 +5,9 @@ import { outputJSON, readJSON, remove } from 'fs-extra'
 import LRU from 'lru-cache'
 import { join } from 'path'
 import ReadWriteLock from 'rwlock'
+import { LocalCacheOptions } from '../HttpClient'
+
+export type LRUData = Record<string, unknown> & { timeOfDeath: number }
 
 export class LRUDiskCache<V> implements CacheLayer<string, V>{
 
@@ -12,7 +15,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   private disposed: number
   private hits = 0
   private total = 0
-  private lruStorage: LRU<string, number>
+  private lruStorage: LRU<string, LRUData>
   private keyToBeDeleted: string
 
   constructor(private cachePath: string, options: LRUDiskCacheOptions, private readFile=readJSON, private writeFile=outputJSON) {
@@ -33,8 +36,17 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
       noDisposeOnSet: true,
     }
 
-    this.lruStorage = new LRU<string, number>(lruOptions)
+    this.lruStorage = new LRU<string, LRUData>(lruOptions)
 
+  }
+
+  /**
+   * Builds the data object that will be stored at the LRU memory storage.
+   * Subclasses that need to store more than just the time of death should
+   * override this.
+   */
+  protected buildLruData(timeOfDeath: number, localCacheOptions?: LocalCacheOptions): LRUData {
+    return { timeOfDeath }
   }
 
   public has = (key: string): boolean => this.lruStorage.has(key)
@@ -57,9 +69,9 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   }
 
   public get = async (key: string): Promise<V | void>  => {
-    const timeOfDeath = this.lruStorage.get(key)
+    const lruData = this.lruStorage.get(key)
     this.total += 1
-    if (timeOfDeath === undefined) {
+    if (lruData === undefined) {
 
       // if it is an outdated file when stale=false
       if (this.keyToBeDeleted) {
@@ -85,7 +97,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     })
 
     // if it is an outdated file when stale=true
-    if (timeOfDeath < Date.now()) {
+    if (lruData.timeOfDeath < Date.now()) {
       this.lruStorage.del(key)
       await this.deleteFile(key)
     }
@@ -93,15 +105,10 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     return data
   }
 
-  public set = async (key: string, value: V, maxAge?: number): Promise<boolean> => {
-    let timeOfDeath = NaN
-    if (maxAge) {
-      timeOfDeath = maxAge + Date.now()
-      this.lruStorage.set(key, timeOfDeath, maxAge)
-    }
-    else {
-      this.lruStorage.set(key, NaN)
-    }
+  public set = async (key: string, value: V, maxAge?: number, localCacheOptions?: LocalCacheOptions): Promise<boolean> => {
+    let timeOfDeath = maxAge ? maxAge + Date.now() : NaN
+    const lruData = this.buildLruData(timeOfDeath, localCacheOptions)
+    this.lruStorage.set(key, lruData, maxAge ? maxAge : undefined)
 
     if (this.keyToBeDeleted && this.keyToBeDeleted !== key) {
       await this.deleteFile(this.keyToBeDeleted)
