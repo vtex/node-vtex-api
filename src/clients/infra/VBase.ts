@@ -11,6 +11,7 @@ import {
   inflightUrlWithQuery,
   InstanceOptions,
   IOResponse,
+  RequestConfig,
   RequestTracingConfig,
 } from '../../HttpClient'
 import {
@@ -83,8 +84,15 @@ export class VBase extends InfraClient {
     }})
   }
 
-  public getJSON = <T>(bucket: string, path: string, nullIfNotFound?: boolean, conflictsResolver?: ConflictsResolver<T>, tracingConfig?: RequestTracingConfig) => {
-    return this.getRawJSON<T>(bucket, path, nullIfNotFound, conflictsResolver, tracingConfig)
+  public getJSON = <T>(
+    bucket: string,
+    path: string,
+    nullIfNotFound?: boolean,
+    conflictsResolver?: ConflictsResolver<T>,
+    tracingConfig?: RequestTracingConfig,
+    requestConfig?: RequestConfig
+  ) => {
+    return this.getRawJSON<T>(bucket, path, nullIfNotFound, conflictsResolver, tracingConfig, requestConfig)
       .then(response => response.data)
   }
 
@@ -93,7 +101,8 @@ export class VBase extends InfraClient {
     path: string,
     nullIfNotFound?: boolean,
     conflictsResolver?: ConflictsResolver<T>,
-    tracingConfig?: RequestTracingConfig
+    tracingConfig?: RequestTracingConfig,
+    requestConfig?: RequestConfig
   ) => {
     const headers = conflictsResolver ? { 'X-Vtex-Detect-Conflicts': true } : {}
     const inflightKey = inflightURL
@@ -108,6 +117,7 @@ export class VBase extends InfraClient {
           requestSpanNameSuffix: metric,
           ...tracingConfig?.tracing,
         },
+        ...requestConfig
       } as IgnoreNotFoundRequestConfig)
       .catch(async (error: AxiosError<T>) => {
         const { response } = error
