@@ -45,11 +45,17 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
    * Subclasses that need to store more than just the time of death should
    * override this.
    */
-  protected buildLruData(timeOfDeath: number, localCacheOptions?: LocalCacheOptions): LRUData {
+  protected buildLRUData(timeOfDeath: number, localCacheOptions?: LocalCacheOptions): LRUData {
     return { timeOfDeath }
   }
 
-  public has = (key: string): boolean => this.lruStorage.has(key)
+  protected getLRU() {
+    return this.lruStorage
+  }
+
+  public has (key: string): boolean {
+    return this.lruStorage.has(key)
+  } 
 
   public getStats = (name='disk-lru-cache'): LRUStats => {
     const stats = {
@@ -68,7 +74,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     return stats
   }
 
-  public get = async (key: string): Promise<V | void>  => {
+  public async get (key: string): Promise<V | void> {
     const lruData = this.lruStorage.get(key)
     this.total += 1
     if (lruData === undefined) {
@@ -105,9 +111,9 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     return data
   }
 
-  public set = async (key: string, value: V, maxAge?: number, localCacheOptions?: LocalCacheOptions): Promise<boolean> => {
+  public async set (key: string, value: V, maxAge?: number, localCacheOptions?: LocalCacheOptions): Promise<boolean> {
     let timeOfDeath = maxAge ? maxAge + Date.now() : NaN
-    const lruData = this.buildLruData(timeOfDeath, localCacheOptions)
+    const lruData = this.buildLRUData(timeOfDeath, localCacheOptions)
     this.lruStorage.set(key, lruData, maxAge ? maxAge : undefined)
 
     if (this.keyToBeDeleted && this.keyToBeDeleted !== key) {
