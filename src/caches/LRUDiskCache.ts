@@ -12,9 +12,9 @@ export type LRUData = Record<string, unknown> & { timeOfDeath: number }
 export class LRUDiskCache<V> implements CacheLayer<string, V>{
 
   private lock: ReadWriteLock
-  private disposed: number
-  private hits = 0
-  private total = 0
+  protected disposed: number
+  protected hits = 0
+  protected total = 0
   private lruStorage: LRU<string, LRUData>
   private keyToBeDeleted: string
 
