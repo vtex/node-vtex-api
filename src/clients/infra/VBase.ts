@@ -117,7 +117,7 @@ export class VBase extends InfraClient {
           requestSpanNameSuffix: metric,
           ...tracingConfig?.tracing,
         },
-        ...requestConfig
+        ...requestConfig,
       } as IgnoreNotFoundRequestConfig)
       .catch(async (error: AxiosError<T>) => {
         const { response } = error
