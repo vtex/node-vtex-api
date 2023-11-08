@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 ### Added
+- Create new optional request option for customizing local cache behavior
 - Allow passing request config to VBase's getJSON method
 
 ## [6.46.0] - 2023-10-25

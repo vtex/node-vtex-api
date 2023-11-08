@@ -107,11 +107,14 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
     })
 
 
+    const { localCacheOptions } = ctx.config
+
     const cacheReadSpan = createCacheSpan(cacheType, 'read', tracer, span)
     let cached: void | Cached
     try {
-      const cacheHasWithSegment = await storage.has(keyWithSegment)
-      cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
+      const cacheHasWithSegment = await storage.has(keyWithSegment, localCacheOptions)
+      const keyToUse = cacheHasWithSegment ? keyWithSegment : key
+      cached = await storage.get(keyToUse, undefined, localCacheOptions)
     } catch (error) {
       ErrorReport.create({ originalError: error }).injectOnSpan(cacheReadSpan)
       logger?.warn({ message: 'Error reading from the HttpClient cache', error })
@@ -223,13 +226,18 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
 
       const cacheWriteSpan = createCacheSpan(cacheType, 'write', tracer, span)
       try {
-        await storage.set(setKey, {
-          etag,
-          expiration,
-          response: {data: cacheableData, headers, status},
-          responseEncoding,
-          responseType,
-        })
+        await storage.set(
+          setKey,
+          {
+            etag,
+            expiration,
+            response: {data: cacheableData, headers, status},
+            responseEncoding,
+            responseType,
+          },
+          undefined,
+          localCacheOptions
+        )
 
         span?.log({
           event: HttpLogEvents.LOCAL_CACHE_SAVED,

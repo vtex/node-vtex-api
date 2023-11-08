@@ -51,7 +51,10 @@ export interface RequestConfig extends AxiosRequestConfig, RequestTracingConfig 
   responseEncoding?: BufferEncoding
   nullIfNotFound?: boolean
   ignoreRecorder?: boolean
+  localCacheOptions?: LocalCacheOptions
 }
+
+export type LocalCacheOptions = Record<string, unknown>
 
 export interface CacheHit {
   disk?: 0 | 1
