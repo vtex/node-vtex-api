@@ -11,10 +11,10 @@ export type LRUData = Record<string, unknown> & { timeOfDeath: number }
 
 export class LRUDiskCache<V> implements CacheLayer<string, V>{
 
-  private lock: ReadWriteLock
   protected disposed: number
   protected hits = 0
   protected total = 0
+  private lock: ReadWriteLock
   private lruStorage: LRU<string, LRUData>
   private keyToBeDeleted: string
 
@@ -38,19 +38,6 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
 
     this.lruStorage = new LRU<string, LRUData>(lruOptions)
 
-  }
-
-  /**
-   * Builds the data object that will be stored at the LRU memory storage.
-   * Subclasses that need to store more than just the time of death should
-   * override this.
-   */
-  protected buildLRUData(timeOfDeath: number, localCacheOptions?: LocalCacheOptions): LRUData {
-    return { timeOfDeath }
-  }
-
-  protected getLRU() {
-    return this.lruStorage
   }
 
   public has (key: string): boolean {
@@ -112,7 +99,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   }
 
   public async set (key: string, value: V, maxAge?: number, localCacheOptions?: LocalCacheOptions): Promise<boolean> {
-    let timeOfDeath = maxAge ? maxAge + Date.now() : NaN
+    const timeOfDeath = maxAge ? maxAge + Date.now() : NaN
     const lruData = this.buildLRUData(timeOfDeath, localCacheOptions)
     this.lruStorage.set(key, lruData, maxAge ? maxAge : undefined)
 
@@ -135,6 +122,19 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     })
 
     return !failure
+  }
+
+  /**
+   * Builds the data object that will be stored at the LRU memory storage.
+   * Subclasses that need to store more than just the time of death should
+   * override this.
+   */
+  protected buildLRUData(timeOfDeath: number, localCacheOptions?: LocalCacheOptions): LRUData {
+    return { timeOfDeath }
+  }
+
+  protected getLRU() {
+    return this.lruStorage
   }
 
   private getPathKey = (key: string): string => {
