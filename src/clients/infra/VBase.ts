@@ -16,7 +16,7 @@ import {
 import {
   IgnoreNotFoundRequestConfig,
 } from '../../HttpClient/middlewares/notFound'
-import { BucketMetadata, FileListItem } from '../../responses'
+import { BucketMetadata, FileListItem, VBaseSaveResponse } from '../../responses'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { InfraClient } from './InfraClient'
 
@@ -118,7 +118,7 @@ export class VBase extends InfraClient {
             return { ...response, data: conflictsMergedData } as IOResponse<T>
           } catch (resolverError) {
             const typedResolverError = resolverError as { status?: number; message: string }
-            
+
             if (typedResolverError?.status === 404) {
               return this.http.getRaw<T>(routes.File(bucket, path), {
                 'X-Vtex-Detect-Conflicts': false,
@@ -165,7 +165,7 @@ export class VBase extends InfraClient {
       headers['If-Match'] = ifMatch
     }
     const metric = 'vbase-save-json'
-    return this.http.put(routes.File(bucket, path), data, {headers, metric, tracing: {
+    return this.http.put<VBaseSaveResponse>(routes.File(bucket, path), data, {headers, metric, tracing: {
       requestSpanNameSuffix: metric,
       ...tracingConfig?.tracing,
     }})

@@ -86,3 +86,5 @@ export interface HousekeeperStatesAndUpdates {
   state: HouseKeeperState
   updates: HouseKeeperUpdates
 }
+
+export type VBaseSaveResponse = FileListItem[]
