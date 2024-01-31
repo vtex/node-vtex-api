@@ -44,9 +44,9 @@ const defaultClients: ClientsConfig = {
       timeout: 1000,
     },
     messagesGraphQL: {
-      concurrency: 10,
+      concurrency: 12,
       retries: 2,
-      timeout: 1000,
+      timeout: 2000,
     },
   },
 }
