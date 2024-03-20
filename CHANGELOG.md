@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## Fixed
+- Add handler name for runtime http handlers
+
 ## [6.46.1] - 2024-01-31
 
 ### Fixed
