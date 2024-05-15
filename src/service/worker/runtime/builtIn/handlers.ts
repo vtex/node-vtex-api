@@ -4,7 +4,8 @@ export const whoAmIHandler = ({
   events,
   routes,
 }: ServiceJSON) => (ctx: ServiceContext) => {
-  ctx.tracing?.currentSpan?.setOperationName('builtin:whoami')
+  ctx.requestHandlerName = 'builtin:whoami'
+  ctx.tracing?.currentSpan?.setOperationName(ctx.requestHandlerName)
   ctx.status = 200
   ctx.body = {
     events,
@@ -17,7 +18,8 @@ export const healthcheckHandler = ({
   events,
   routes,
 }: ServiceJSON) => (ctx: ServiceContext) => {
-  ctx.tracing?.currentSpan?.setOperationName('builtin:healthcheck')
+  ctx.requestHandlerName = 'builtin:healthcheck'
+  ctx.tracing?.currentSpan?.setOperationName(ctx.requestHandlerName)
   ctx.status = 200
   ctx.body = {
     events,
@@ -26,7 +28,8 @@ export const healthcheckHandler = ({
 }
 
 export const metricsLoggerHandler = (ctx: ServiceContext) => {
-  ctx.tracing?.currentSpan?.setOperationName('builtin:metrics-logger')
+  ctx.requestHandlerName = 'builtin:metrics-logger'
+  ctx.tracing?.currentSpan?.setOperationName(ctx.requestHandlerName)
   ctx.status = 200
   ctx.body = ctx.metricsLogger.getSummaries()
 }
