@@ -248,10 +248,10 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
           })
         }
       } catch (error) {
-          ErrorReport.create({ originalError: error }).injectOnSpan(cacheWriteSpan)
-          logger?.warn({ message: 'Error writing to the HttpClient cache', error })
+        ErrorReport.create({ originalError: error }).injectOnSpan(cacheWriteSpan)
+        logger?.warn({ message: 'Error writing to the HttpClient cache', error })
       } finally {
-          cacheWriteSpan?.finish()
+        cacheWriteSpan?.finish()
       }
 
       return
