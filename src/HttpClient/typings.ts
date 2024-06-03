@@ -83,7 +83,7 @@ export interface InstanceOptions {
   timeout?: number
   memoryCache?: CacheLayer<string, Cached>
   diskCache?: CacheLayer<string, Cached>
-  asyncSetCache?: Boolean
+  asyncSetCache?: boolean
 
   /**
    * Enables memoization, ephemeral within each request, for all requests of this client.
