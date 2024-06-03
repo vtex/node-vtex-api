@@ -82,7 +82,7 @@ const CacheTypeNames = {
 interface CacheOptions {
   type: CacheType
   storage: CacheLayer<string, Cached>
-  asyncSet?: Boolean
+  asyncSet?: boolean
 }
 
 export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
