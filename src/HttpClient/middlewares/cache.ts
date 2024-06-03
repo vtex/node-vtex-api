@@ -224,8 +224,8 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
 
       const cacheWriteSpan = createCacheSpan(cacheType, 'write', tracer, span)
       try {
-        const storageSet = () =>
-          storage.set(setKey, {
+        const storageSet = async () =>
+          await storage.set(setKey, {
             etag,
             expiration,
             response: {data: cacheableData, headers, status},
@@ -233,7 +233,10 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
             responseType,
           })
         if (asyncSet) {
-          storageSet()
+          storageSet().catch(error => {
+            ErrorReport.create({ originalError: error }).injectOnSpan(cacheWriteSpan);
+            logger?.warn({ message: 'Error writing to the HttpClient cache asynchronously', error });
+          })
         } else {
           await storageSet()
           span?.log({
