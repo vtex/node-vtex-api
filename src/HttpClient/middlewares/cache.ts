@@ -82,9 +82,10 @@ const CacheTypeNames = {
 interface CacheOptions {
   type: CacheType
   storage: CacheLayer<string, Cached>
+  asyncSet?: Boolean
 }
 
-export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
+export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
   const CACHE_RESULT_TAG = type === CacheType.Disk ? CustomHttpTags.HTTP_DISK_CACHE_RESULT : CustomHttpTags.HTTP_MEMORY_CACHE_RESULT
   const cacheType = CacheTypeNames[type]
 
@@ -223,29 +224,34 @@ export const cacheMiddleware = ({ type, storage }: CacheOptions) => {
 
       const cacheWriteSpan = createCacheSpan(cacheType, 'write', tracer, span)
       try {
-        await storage.set(setKey, {
-          etag,
-          expiration,
-          response: {data: cacheableData, headers, status},
-          responseEncoding,
-          responseType,
-        })
-
-        span?.log({
-          event: HttpLogEvents.LOCAL_CACHE_SAVED,
-          [HttpCacheLogFields.CACHE_TYPE]: cacheType,
-          [HttpCacheLogFields.KEY_SET]: setKey,
-          [HttpCacheLogFields.AGE]: currentAge,
-          [HttpCacheLogFields.ETAG]: etag,
-          [HttpCacheLogFields.EXPIRATION_TIME]: (expiration - Date.now())/1000,
-          [HttpCacheLogFields.RESPONSE_ENCONDING]: responseEncoding,
-          [HttpCacheLogFields.RESPONSE_TYPE]: responseType,
-        })
+        const storageSet = () =>
+          storage.set(setKey, {
+            etag,
+            expiration,
+            response: {data: cacheableData, headers, status},
+            responseEncoding,
+            responseType,
+          })
+        if (asyncSet) {
+          storageSet()
+        } else {
+          await storageSet()
+          span?.log({
+            event: HttpLogEvents.LOCAL_CACHE_SAVED,
+            [HttpCacheLogFields.CACHE_TYPE]: cacheType,
+            [HttpCacheLogFields.KEY_SET]: setKey,
+            [HttpCacheLogFields.AGE]: currentAge,
+            [HttpCacheLogFields.ETAG]: etag,
+            [HttpCacheLogFields.EXPIRATION_TIME]: (expiration - Date.now())/1000,
+            [HttpCacheLogFields.RESPONSE_ENCONDING]: responseEncoding,
+            [HttpCacheLogFields.RESPONSE_TYPE]: responseType,
+          })
+        }
       } catch (error) {
-        ErrorReport.create({ originalError: error }).injectOnSpan(cacheWriteSpan)
-        logger?.warn({ message: 'Error writing to the HttpClient cache', error })
+          ErrorReport.create({ originalError: error }).injectOnSpan(cacheWriteSpan)
+          logger?.warn({ message: 'Error writing to the HttpClient cache', error })
       } finally {
-        cacheWriteSpan?.finish()
+          cacheWriteSpan?.finish()
       }
 
       return
