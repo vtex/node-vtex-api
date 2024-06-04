@@ -51,7 +51,7 @@ export class HttpClient {
       memoryCache,
       diskCache,
       memoizable = true,
-      asyncSetCache,
+      asyncSetCache = true,
       locale,
       name,
       metrics,
