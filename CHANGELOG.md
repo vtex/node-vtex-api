@@ -145,7 +145,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [6.54.5] - 2021-10-22
 
-### Fixed
+### Fixed 
 
 - Extract session cookie in a safe manner
 
