@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## Fixed
+## [6.47.0] - 2024-06-11
+### Added
+- Add option to save asynchronous cache
+
+### Fixed
 - Add handler name for runtime http handlers
 
 ## [6.46.1] - 2024-01-31
