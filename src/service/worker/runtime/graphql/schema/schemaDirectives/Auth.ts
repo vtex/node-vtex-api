@@ -1,4 +1,4 @@
-import { ForbiddenError, UserInputError } from 'apollo-server-errors'
+import { AuthenticationError, ForbiddenError, UserInputError } from 'apollo-server-errors'
 import axios from 'axios'
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
@@ -10,7 +10,12 @@ interface AuthDirectiveArgs {
   readonly resourceCode: string
 }
 
-async function getUserEmail (authToken: string, vtexIdToken: string): Promise<string | void> {
+type VtexIdParsedToken = {
+  user: string
+  account: string
+}
+
+async function parseIdToken(authToken: string, vtexIdToken: string): Promise<VtexIdParsedToken | void> {
   const url = `vtexid.vtex.com.br/api/vtexid/pub/authenticated/user?authToken=${vtexIdToken}`
   const req = await axios.request({
     headers: {
@@ -24,7 +29,7 @@ async function getUserEmail (authToken: string, vtexIdToken: string): Promise<st
   if (!req.data) {
     return undefined
   }
-  return req.data.user
+  return { ...req.data }
 }
 
 async function getUserCanAccessResource (authToken: string, account: string, userEmail: string, productCode: string, resourceCode: string): Promise<boolean> {
@@ -42,15 +47,21 @@ async function getUserCanAccessResource (authToken: string, account: string, use
 async function auth (ctx: ServiceContext, authArgs: AuthDirectiveArgs): Promise<void> {
   const vtexIdToken = ctx.cookies.get('VtexIdclientAutCookie') || ctx.get('VtexIdclientAutCookie')
   if (!vtexIdToken) {
-    throw new ForbiddenError('VtexIdclientAutCookie not found.')
+    throw new AuthenticationError('VtexIdclientAutCookie not found.')
   }
 
-  const userEmail = await getUserEmail(ctx.vtex.authToken, vtexIdToken)
-  if (!userEmail) {
-    throw new ForbiddenError('Could not find user specified by VtexIdclientAutCookie.')
+  const parsedToken = await parseIdToken(ctx.vtex.authToken, vtexIdToken)
+  if (!parsedToken || parsedToken.account != ctx.vtex.account) {
+    throw new AuthenticationError('Could not find user specified by VtexIdclientAutCookie.')
   }
 
-  const userCanAccessResource = await getUserCanAccessResource(ctx.vtex.authToken, ctx.vtex.account, userEmail, authArgs.productCode, authArgs.resourceCode)
+  const userCanAccessResource = await getUserCanAccessResource(
+    ctx.vtex.authToken,
+    ctx.vtex.account,
+    parsedToken.user,
+    authArgs.productCode,
+    authArgs.resourceCode
+  )
   if (!userCanAccessResource) {
     throw new ForbiddenError('User indicated by VtexIdclientAutCookie is not authorized to access the indicated resource.')
   }
