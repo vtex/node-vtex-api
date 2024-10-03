@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- resolveAll to `MineWinsConflictsResolver` to handle an array of conflicts.
+
 ## [6.47.0] - 2024-06-11
 ### Added
 - Add option to save asynchronous cache
