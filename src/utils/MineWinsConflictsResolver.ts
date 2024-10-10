@@ -48,6 +48,20 @@ export class MineWinsConflictsResolver<T> implements ConflictsResolver<T> {
     })
   }
 
+  public async resolveAll() {
+    const conflictsResponse = await this.client.getConflicts<AxiosResponse<VBaseConflictData[]>>(this.bucket)
+    const { data: conflicts }: { data: VBaseConflictData[] } = conflictsResponse
+
+    const resolvedConflicts = conflicts.map((conflict) => {
+      conflict.base.parsedContent = this.parseConflict(conflict.base)
+      conflict.master.parsedContent = this.parseConflict(conflict.master)
+      conflict.mine.parsedContent = this.parseConflict(conflict.mine)
+      return this.resolveConflictMineWins(conflict)
+    })
+
+    return resolvedConflicts
+  }
+
   protected mergeMineWins(base: Configuration, master: Configuration, mine: Configuration) {
     if (isArray(master)) {
       return this.mergeMineWinsArray((base || []) as ConfigurationData[], master, (mine || []) as ConfigurationData[])
