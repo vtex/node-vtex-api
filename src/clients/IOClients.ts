@@ -3,7 +3,7 @@ import { IOContext } from '../service/worker/runtime/typings'
 import { Billing, Builder, MessagesGraphQL, Settings } from './apps'
 import { CatalogGraphQL } from './apps/catalogGraphQL/index'
 import { ID, MasterData, PaymentProvider } from './external'
-import { Apps, Assets, BillingMetrics, Events, Metadata, Registry, Router, VBase, Workspaces } from './infra'
+import { Apps, Assets, BillingMetrics, Events, Registry, Router, VBase, Workspaces } from './infra'
 import { IOClient, IOClientConstructor } from './IOClient'
 import { LicenseManager, Segment, Session, TenantClient } from './janus'
 
@@ -55,10 +55,6 @@ export class IOClients {
 
   public get messagesGraphQL() {
     return this.getOrSet('messagesGraphQL', MessagesGraphQL)
-  }
-
-  public get metadata() {
-    return this.getOrSet('metadata', Metadata)
   }
 
   public get registry() {
