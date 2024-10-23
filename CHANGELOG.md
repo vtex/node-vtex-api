@@ -7,8 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.48.0] - 2024-10-23
 ### Added
 - resolveAll to `MineWinsConflictsResolver` to handle an array of conflicts.
+
+### Fixed
+- Avoid using async/await with then callbacks
+- Bump semver from 5.7.1 to 5.7.2
+
+### Changed
+- @auth: Validate token's `account` scope
+- Delete Metadata client
 
 ## [6.47.0] - 2024-06-11
 ### Added
