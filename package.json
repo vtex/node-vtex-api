@@ -54,7 +54,7 @@
     "agentkeepalive": "^4.0.2",
     "apollo-server-errors": "^2.2.1",
     "archiver": "^3.0.0",
-    "axios": "^0.21.1",
+    "axios": "^1.8.2",
     "axios-retry": "^3.1.2",
     "bluebird": "^3.5.4",
     "chalk": "^2.4.2",
