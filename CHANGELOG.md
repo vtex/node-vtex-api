@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Fix `yarn gen` script
 - Update node-version on publish workflows
 
+## [6.48.1-beta] - 2025-03-19
+
 ## [6.48.0] - 2024-10-23
 ### Added
 - resolveAll to `MineWinsConflictsResolver` to handle an array of conflicts.
@@ -1856,7 +1858,7 @@ instead
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
 
 
-[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.22...HEAD
+[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta...HEAD
 [6.45.15]: https://github.com/vtex/node-vtex-api/compare/v6.45.14...v6.45.15
 [6.45.14]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...v6.45.14
 [6.45.13]: https://github.com/vtex/node-vtex-api/compare/v6.45.12...v6.45.13
@@ -1869,3 +1871,5 @@ instead
 [6.45.21-beta]: https://github.com/vtex/node-vtex-api/compare/v6.45.20...v6.45.21-beta
 [6.45.20]: https://github.com/vtex/node-vtex-api/compare/v6.45.20-beta...v6.45.20
 [6.45.20-beta]: https://github.com/vtex/node-vtex-api/compare/v6.45.19...v6.45.20-beta
+
+[6.48.1-beta]: https://github.com/vtex/node-vtex-api/compare/v6.48.0...v6.48.1-beta
