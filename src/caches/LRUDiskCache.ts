@@ -70,7 +70,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
 
     const pathKey = this.getPathKey(key)
 
-    const data = await new Promise<V>(resolve => {
+    const data = await new Promise<V | undefined>(resolve => {
       this.lock.readLock(key, async (release: () => void) => {
         try {
           const fileData = await this.readFile(pathKey)
