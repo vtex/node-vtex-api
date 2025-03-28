@@ -190,7 +190,9 @@ export class Apps extends InfraClient {
       response.bundleSize = zip.pointer()
       return response
     } catch (e) {
-      e.bundleSize = zip.pointer()
+      // Typing cast for compatibility with error handling in TS versions > 4.0
+      // Source: https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-0.html#unknown-on-catch-clause-bindings
+      (e as Error & { bundleSize: number }).bundleSize = zip.pointer()
       throw e
     }
   }
