@@ -232,7 +232,8 @@ export class Registry extends InfraClient {
       response.bundleSize = zip.pointer()
       return response
     } catch (e) {
-      e.bundleSize = zip.pointer()
+      // See Apps.ts `link` method for more information on this cast
+      (e as Error & { bundleSize: number }).bundleSize = zip.pointer()
       throw e
     }
   }
