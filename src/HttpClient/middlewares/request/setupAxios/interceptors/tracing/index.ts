@@ -1,4 +1,4 @@
-import { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
+import { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
 import { FORMAT_HTTP_HEADERS, Span } from 'opentracing'
 import { createSpanReference, ErrorReport } from '../../../../../../tracing'
 import { SpanReferenceTypes } from '../../../../../../tracing/spanReference/SpanReferenceTypes'
@@ -9,7 +9,7 @@ interface AxiosRequestTracingContext extends MiddlewaresTracingContext {
   requestSpan?: Span
 }
 
-interface TraceableAxiosRequestConfig extends AxiosRequestConfig {
+interface TraceableAxiosRequestConfig extends InternalAxiosRequestConfig {
   tracing?: AxiosRequestTracingContext
 }
 
