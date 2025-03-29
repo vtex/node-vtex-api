@@ -17,6 +17,9 @@ export const startApp = () => {
       startWorker(serviceJSON).listen(HTTP_SERVER_PORT)
     }
   } catch (err) {
+    if (!(err instanceof Error)) {
+      throw err
+    }
     logOnceToDevConsole(err.stack || err.message, LogLevel.Error)
     process.exit(2)
   }
