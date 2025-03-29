@@ -12,7 +12,7 @@ export const injectRequestInfoOnSpan = (span: Span | undefined, http: AxiosInsta
     [OpentracingTags.HTTP_URL]: buildFullPath(config.baseURL, http.getUri(config)),
   })
 
-  span?.log({ 'request-headers': cloneAndSanitizeHeaders(config.headers) })
+  span?.log({ 'request-headers': cloneAndSanitizeHeaders(config.headers as any) })
 }
 
 // Response may be undefined in case of client timeout, invalid URL, ...
