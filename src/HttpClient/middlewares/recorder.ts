@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios'
 import { MiddlewareContext } from '../typings'
 import {
   Recorder,
@@ -13,11 +14,11 @@ export const recorderMiddleware = (recorder: Recorder) =>
     try {
       await next()
       if (ctx.response) {
-        (recorder as Recorder).record(ctx.response.headers)
+        (recorder as Recorder).record(ctx.response.headers as any)
       }
     } catch (err: any) {
       if (err.response && err.response.headers && err.response.status === 404) {
-        (recorder as Recorder).record(err.response.headers)
+        (recorder as Recorder).record(err.response.headers as any)
       }
       throw err
     }
