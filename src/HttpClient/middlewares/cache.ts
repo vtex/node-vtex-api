@@ -15,7 +15,7 @@ const cacheableStatusCodes = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 
 
 export const cacheKey = (config: AxiosRequestConfig) => {
   const {baseURL = '', url = '', params, headers} = config
-  const locale = headers[LOCALE_HEADER]
+  const locale = headers?.[LOCALE_HEADER]
 
   const encodedBaseURL = baseURL.replace(/\//g, '\\')
   const encodedURL = url.replace(/\//g, '\\')
@@ -97,7 +97,7 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
     const { rootSpan: span, tracer, logger } = ctx.tracing ?? {}
 
     const key = cacheKey(ctx.config)
-    const segmentToken = ctx.config.headers[SEGMENT_HEADER]
+    const segmentToken = ctx.config.headers?.[SEGMENT_HEADER]
     const keyWithSegment = key + segmentToken
 
     span?.log({
@@ -109,12 +109,12 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
 
 
     const cacheReadSpan = createCacheSpan(cacheType, 'read', tracer, span)
-    let cached: void | Cached
+    let cached: void | Cached = undefined
     try {
       const cacheHasWithSegment = await storage.has(keyWithSegment)
       cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
     } catch (error) {
-      ErrorReport.create({ originalError: error }).injectOnSpan(cacheReadSpan)
+      ErrorReport.create({ originalError: error as any }).injectOnSpan(cacheReadSpan)
       logger?.warn({ message: 'Error reading from the HttpClient cache', error })
     } finally {
       cacheReadSpan?.finish()
@@ -153,7 +153,10 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
       span?.setTag(CACHE_RESULT_TAG, CacheResult.STALE)
       const validateStatus = addNotModified(ctx.config.validateStatus!)
       if (cachedEtag && validateStatus(response.status as number)) {
-        ctx.config.headers['if-none-match'] = cachedEtag
+        ctx.config.headers = {
+          ...ctx.config.headers,
+          'if-none-match': cachedEtag
+        }
         ctx.config.validateStatus = validateStatus
       }
     } else {
@@ -177,7 +180,7 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
     }
 
     const {data, headers, status} = ctx.response as AxiosResponse
-    const {age, etag, maxAge: headerMaxAge, noStore, noCache} = parseCacheHeaders(headers)
+    const {age, etag, maxAge: headerMaxAge, noStore, noCache} = parseCacheHeaders(headers as any)
 
     const {forceMaxAge} = ctx.config
     const maxAge = forceMaxAge && cacheableStatusCodes.includes(status) ? Math.max(forceMaxAge, headerMaxAge) : headerMaxAge
@@ -229,7 +232,7 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
             etag,
             expiration,
             response: {data: cacheableData, headers, status},
-            responseEncoding,
+            responseEncoding: responseEncoding as any,
             responseType,
           })
         if (asyncSet) {
@@ -248,7 +251,7 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
           })
         }
       } catch (error) {
-        ErrorReport.create({ originalError: error }).injectOnSpan(cacheWriteSpan)
+        ErrorReport.create({ originalError: error as any }).injectOnSpan(cacheWriteSpan)
         logger?.warn({ message: 'Error writing to the HttpClient cache', error })
       } finally {
         cacheWriteSpan?.finish()
