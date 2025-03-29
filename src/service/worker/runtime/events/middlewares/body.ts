@@ -9,6 +9,9 @@ export async function parseBodyMiddleware <T extends IOClients, U extends Record
   try {
     ctx.state.body = await bodyParse(ctx.req)
   } catch (err) {
+    if (!(err instanceof Error)) {
+      throw err
+    }
     const msg = `Error parsing event body: ${err.message || err}`
     ctx.status = 500
     ctx.body = msg
