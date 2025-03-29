@@ -1,4 +1,4 @@
-import { formatApolloErrors } from 'apollo-server-errors'
+import { ApolloError, formatApolloErrors } from 'apollo-server-errors'
 import { uniqBy } from 'ramda'
 
 import { LINKED } from '../../../../../constants'
@@ -74,6 +74,9 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
     }
   }
   catch (e) {
+    if (!(e instanceof ApolloError)) {
+      throw e
+    }
     if (e.code === cancelledErrorCode) {
       ctx.status = cancelledRequestStatus
       return
