@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios'
 import { MiddlewaresTracingContext, RequestConfig } from '..'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { ErrorReport, getTraceInfo } from '../../tracing'
@@ -63,6 +64,9 @@ export const createHttpClientTracingMiddleware = ({
       await next()
       response = ctx.response
     } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        throw err
+      }
       response = err.response
       if(ctx.tracing?.isSampled) {
         ErrorReport.create({ originalError: err }).injectOnSpan(span, logger)
