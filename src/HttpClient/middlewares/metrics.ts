@@ -13,6 +13,7 @@ import {
 import { TIMEOUT_CODE } from '../../utils/retry'
 import { statusLabel } from '../../utils/status'
 import { MiddlewareContext } from '../typings'
+import { AxiosError } from 'axios'
 
 interface MetricsOpts {
   metrics?: MetricsAccumulator
@@ -44,6 +45,10 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
         status = statusLabel(ctx.response.status)
       }
     } catch (err) {
+      if (!(err instanceof AxiosError)) {
+        throw err
+      }
+      
       const isCancelled = (err.message === cancelMessage)
       if (ctx.config.metric) {
         errorCode = err.code
