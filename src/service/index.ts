@@ -16,7 +16,7 @@ export const startApp = () => {
       // to setup server configurations and share port address for incoming requests
       startWorker(serviceJSON).listen(HTTP_SERVER_PORT)
     }
-  } catch (err) {
+  } catch (err: any) {
     logOnceToDevConsole(err.stack || err.message, LogLevel.Error)
     process.exit(2)
   }

@@ -62,7 +62,7 @@ export const createHttpClientTracingMiddleware = ({
     try {
       await next()
       response = ctx.response
-    } catch (err) {
+    } catch (err: any) {
       response = err.response
       if(ctx.tracing?.isSampled) {
         ErrorReport.create({ originalError: err }).injectOnSpan(span, logger)

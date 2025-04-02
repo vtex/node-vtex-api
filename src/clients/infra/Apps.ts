@@ -116,11 +116,11 @@ export class Apps extends InfraClient {
       return this.installRuntime(descriptor, tracingConfig)
     }
 
-    const metric = 'apps-install' 
+    const metric = 'apps-install'
     return this.http.post<AppInstallResponse>(
       this.routes.Apps(),
       { id: descriptor },
-      { 
+      {
         metric,
         tracing: {
           requestSpanNameSuffix: metric,
@@ -131,9 +131,9 @@ export class Apps extends InfraClient {
   }
 
   public uninstallApp = (app: string, tracingConfig?: RequestTracingConfig) => {
-    const metric = 'apps-uninstall' 
-    return this.http.delete(this.routes.App(app), { 
-      metric, 
+    const metric = 'apps-uninstall'
+    return this.http.delete(this.routes.App(app), {
+      metric,
       tracing: {
         requestSpanNameSuffix: metric,
         ...tracingConfig?.tracing,
@@ -142,9 +142,9 @@ export class Apps extends InfraClient {
   }
 
   public acknowledgeApp = (app: string, service: string, tracingConfig?: RequestTracingConfig) => {
-    const metric = 'apps-ack' 
-    return this.http.put(this.routes.Acknowledge(app, service), null, { 
-      metric, 
+    const metric = 'apps-ack'
+    return this.http.put(this.routes.Acknowledge(app, service), null, {
+      metric,
       tracing: {
         requestSpanNameSuffix: metric,
         ...tracingConfig?.tracing,
@@ -189,7 +189,7 @@ export class Apps extends InfraClient {
       const [response] = await Promise.all([request, finalize])
       response.bundleSize = zip.pointer()
       return response
-    } catch (e) {
+    } catch (e: any) {
       e.bundleSize = zip.pointer()
       throw e
     }
@@ -212,7 +212,7 @@ export class Apps extends InfraClient {
       throw e
     })
 
-    const metric = 'apps-patch' 
+    const metric = 'apps-patch'
     const request = this.http.patch(this.routes.Link(app), zip, {
       headers: { 'Content-Type': 'application/zip' },
       metric,
@@ -252,8 +252,8 @@ export class Apps extends InfraClient {
     const headers = {'Content-Type': 'application/json'}
     const metric = 'apps-save'
     return this.http.put(this.routes.Settings(app), settings, {
-      headers, 
-      metric, 
+      headers,
+      metric,
       tracing: {
         requestSpanNameSuffix: metric,
         ...tracingConfig?.tracing,
@@ -302,7 +302,7 @@ export class Apps extends InfraClient {
 
   public listLinks = (tracingConfig?: RequestTracingConfig) => {
     const inflightKey = inflightURL
-    const metric = 'apps-list-links' 
+    const metric = 'apps-list-links'
     return this.http.get<string[]>(this.routes.Links(), {
       inflightKey,
       metric,
@@ -363,7 +363,7 @@ export class Apps extends InfraClient {
 
   public getFileFromApps = <T extends object | null>(app: string, path: string, nullIfNotFound?: boolean, tracingConfig?: RequestTracingConfig) => {
     const inflightKey = inflightURL
-    const metric = 'get-file-from-apps' 
+    const metric = 'get-file-from-apps'
     return this.http.get<T>(this.routes.FileFromApps(app, path), {
       cacheable: CacheType.Memory,
       inflightKey,
@@ -519,7 +519,7 @@ export class Apps extends InfraClient {
   }
 
   public updateDependencies = (tracingConfig?: RequestTracingConfig) => {
-    const metric = 'apps-update-deps' 
+    const metric = 'apps-update-deps'
     return this.http.put<Record<string, string[]>>(this.routes.Dependencies(), null, {
       metric,
       tracing: {
@@ -530,7 +530,7 @@ export class Apps extends InfraClient {
   }
 
   public updateDependency = (name: string, version: string, registry: string, tracingConfig?: RequestTracingConfig) => {
-    const metric = 'apps-update-dep' 
+    const metric = 'apps-update-dep'
     return this.http.patch(this.routes.Apps(), [{name, version, registry}], {
       metric,
       tracing: {

@@ -43,7 +43,7 @@ export class DiskCache<V> implements CacheLayer<string, V>{
           resolve(fileData)
         } catch (e) {
           release()
-          resolve(undefined)
+          resolve(null as unknown as V)
         }
       })
     })
