@@ -43,7 +43,7 @@ export class Logger {
 
     this.clientInitializing = true;
     try {
-      this.logClient = await getLogClient(this.account, this.workspace);
+      this.logClient = await getLogClient(this.account, this.workspace, APP.NAME);
       this.clientInitialized = true;
     } catch (error) {
       console.error('Failed to initialize log client:', error);

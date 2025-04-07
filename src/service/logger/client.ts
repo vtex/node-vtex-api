@@ -6,7 +6,7 @@ let logClient: LogClient | undefined;
 let isInitializing = false;
 let initPromise: Promise<LogClient> | undefined = undefined;
 
-export async function getLogClient(account: string, workspace: string): Promise<LogClient> {
+export async function getLogClient(account: string, workspace: string, appName: string): Promise<LogClient> {
 
   if (logClient) {
     return logClient;
@@ -17,12 +17,12 @@ export async function getLogClient(account: string, workspace: string): Promise<
   }
 
   isInitializing = true;
-  initPromise = initializeClient(account, workspace);
+  initPromise = initializeClient(account, workspace, appName);
 
   return initPromise;
 }
 
-async function initializeClient(account: string, workspace: string): Promise<LogClient> {
+async function initializeClient(account: string, workspace: string, appName: string): Promise<LogClient> {
   try {
     const telemetryClient = await getTelemetryClient();
 
@@ -38,7 +38,7 @@ async function initializeClient(account: string, workspace: string): Promise<Log
     const logsExporter = Exporters.CreateExporter(logsConfig, 'otlp');
     await logsExporter.initialize();
 
-    const clientKey = `${account}-${workspace}`;
+    const clientKey = `${account}-${workspace}-${appName}`;
     logClient = await telemetryClient.newLogsClient({
       exporter: logsExporter,
       loggerName: `node-vtex-api-${clientKey}`,
