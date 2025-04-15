@@ -1,4 +1,4 @@
-import { APP } from '../../constants'
+import { APP, LOG_CLIENT_INIT_TIMEOUT } from '../../constants'
 import { cleanError } from '../../utils/error'
 import { cleanLog } from '../../utils/log'
 import { LogClient } from '@vtex/diagnostics-nodejs/dist/types';
@@ -16,8 +16,7 @@ export class Logger {
   private production: boolean
   private tracingState?: TracingState
   private logClient: LogClient | undefined = undefined
-  private clientInitialized: boolean = false
-  private clientInitializing: boolean = false
+  private clientInitPromise: Promise<LogClient | undefined> | undefined = undefined
 
   constructor(ctx: LoggerContext) {
     this.account = ctx.account
@@ -36,21 +35,30 @@ export class Logger {
     this.initLogClient();
   }
 
-  private async initLogClient() {
-    if (this.clientInitialized || this.clientInitializing) {
-      return;
+  private initLogClient(): Promise<LogClient | undefined> {
+    if (this.clientInitPromise) {
+      return this.clientInitPromise;
     }
 
-    this.clientInitializing = true;
-    try {
-      this.logClient = await getLogClient(this.account, this.workspace, APP.NAME);
-      this.clientInitialized = true;
-    } catch (error) {
-      console.error('Failed to initialize log client:', error);
-      throw error;
-    } finally {
-      this.clientInitializing = false;
-    }
+    this.clientInitPromise = (async () => {
+      try {
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Log client initialization timeout')), LOG_CLIENT_INIT_TIMEOUT);
+        });
+
+        this.logClient = await Promise.race([
+          getLogClient(this.account, this.workspace, APP.NAME),
+          timeoutPromise
+        ]);
+
+        return this.logClient;
+      } catch (error) {
+        console.error('Failed to initialize log client:', error);
+        return undefined;
+      }
+    })();
+
+    return this.clientInitPromise;
   }
 
   public debug = (message: any) =>
@@ -115,6 +123,7 @@ export class Logger {
         console.error('Error using diagnostics client for logging:', e);
       }
     }
+
     console.log(typeof inflatedLog === 'string' ? JSON.stringify(inflatedLog) : inflatedLog)
   }
 }
