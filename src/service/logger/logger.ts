@@ -1,4 +1,4 @@
-import { APP, LOG_CLIENT_INIT_TIMEOUT } from '../../constants'
+import { APP, LOG_CLIENT_INIT_TIMEOUT_MS } from '../../constants'
 import { cleanError } from '../../utils/error'
 import { cleanLog } from '../../utils/log'
 import { LogClient } from '@vtex/diagnostics-nodejs/dist/types';
@@ -43,7 +43,7 @@ export class Logger {
     this.clientInitPromise = (async () => {
       try {
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error('Log client initialization timeout')), LOG_CLIENT_INIT_TIMEOUT);
+          setTimeout(() => reject(new Error('Log client initialization timeout')), LOG_CLIENT_INIT_TIMEOUT_MS);
         });
 
         this.logClient = await Promise.race([

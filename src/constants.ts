@@ -73,4 +73,4 @@ export const INSPECT_DEBUGGER_PORT = 5858
 
 export const cancellableMethods = new Set(['GET', 'OPTIONS', 'HEAD'])
 
-export const LOG_CLIENT_INIT_TIMEOUT = 5000
+export const LOG_CLIENT_INIT_TIMEOUT_MS = 5000
