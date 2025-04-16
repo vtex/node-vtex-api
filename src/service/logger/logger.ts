@@ -32,7 +32,7 @@ export class Logger {
       }
     }
 
-    this.initLogClient();
+    // this.initLogClient();
   }
 
   private initLogClient(): Promise<LogClient | undefined> {
