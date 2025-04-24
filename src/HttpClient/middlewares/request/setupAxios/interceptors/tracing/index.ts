@@ -1,4 +1,4 @@
-import { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios'
+import { AxiosError, AxiosInstance, AxiosResponse, AxiosRequestConfig } from 'axios'
 import { FORMAT_HTTP_HEADERS, Span } from 'opentracing'
 import { createSpanReference, ErrorReport } from '../../../../../../tracing'
 import { SpanReferenceTypes } from '../../../../../../tracing/spanReference/SpanReferenceTypes'
@@ -9,7 +9,8 @@ interface AxiosRequestTracingContext extends MiddlewaresTracingContext {
   requestSpan?: Span
 }
 
-interface TraceableAxiosRequestConfig extends InternalAxiosRequestConfig {
+// Modificado para usar AxiosRequestConfig em vez de InternalAxiosRequestConfig
+interface TraceableAxiosRequestConfig extends AxiosRequestConfig {
   tracing?: AxiosRequestTracingContext
 }
 
@@ -31,7 +32,6 @@ const preRequestInterceptor = (http: AxiosInstance) => (
   }
 
   const { tracer, rootSpan, requestSpanNameSuffix } = config.tracing
-
   const spanName = requestSpanNameSuffix ? `${requestSpanPrefix}:${requestSpanNameSuffix}` : requestSpanPrefix
 
   const span = rootSpan
@@ -44,6 +44,7 @@ const preRequestInterceptor = (http: AxiosInstance) => (
 
   config.tracing.requestSpan = span
   tracer.inject(span, FORMAT_HTTP_HEADERS, config.headers)
+
   return config
 }
 
@@ -55,6 +56,7 @@ const onResponseSuccess = (response: TraceableAxiosResponse): TraceableAxiosResp
   const requestSpan = response.config.tracing?.requestSpan
   injectResponseInfoOnSpan(requestSpan, response)
   requestSpan?.finish()
+
   return response
 }
 
@@ -67,17 +69,26 @@ const onResponseError = (err: ExtendedAxiosError) => {
   injectResponseInfoOnSpan(requestSpan, err.response)
   ErrorReport.create({ originalError: err }).injectOnSpan(requestSpan, err.config.tracing.logger)
   requestSpan.finish()
+
   return Promise.reject(err)
 }
 
 export const addTracingPreRequestInterceptor = (http: AxiosInstance) => {
-  const requestTracingInterceptor = http.interceptors.request.use(preRequestInterceptor(http), undefined)
+  // Usando type assertion para compatibilidade com TypeScript 3.9.7
+  const requestTracingInterceptor = http.interceptors.request.use(
+    preRequestInterceptor(http) as any,
+    undefined
+  )
 
   return { requestTracingInterceptor }
 }
 
 export const addTracingResponseInterceptor = (http: AxiosInstance) => {
-  const responseTracingInterceptor = http.interceptors.response.use(onResponseSuccess, onResponseError)
+  // Usando type assertion para compatibilidade com TypeScript 3.9.7
+  const responseTracingInterceptor = http.interceptors.response.use(
+    onResponseSuccess as any,
+    onResponseError as any
+  )
 
   return { responseTracingInterceptor }
 }

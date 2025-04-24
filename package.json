@@ -11,14 +11,15 @@
   "scripts": {
     "clean": "rimraf lib/",
     "watch": "yarn clean && tsc --watch",
-    "build": "yarn clean && tsc",
+    "build": "yarn clean && bash ./scripts/fix-axios-types.sh && tsc && bash ./scripts/fix-axios-types.sh restore",
+    "build:compat": "yarn clean && bash ./scripts/fix-axios-types.sh && tsc && bash ./scripts/fix-axios-types.sh restore",
     "gen": "typescript-json-schema tsconfig.json PublicAppManifest > gen/manifest.schema",
     "test": "jest",
     "lint": "tslint -c tslint.json './src/**/*.ts'",
     "format": "prettier --config ./.prettierrc --write \"src/**/*.ts\" \"src/**/*.js\"",
     "format-lint": "yarn format && yarn lint",
     "prepublishOnly": "bash ./scripts/publishLock.sh",
-    "ci:build": "yarn build && yarn gen",
+    "ci:build": "yarn build:compat && yarn gen",
     "ci:test": "yarn test --ci",
     "ci:prettier-check": "prettier --check --config ./.prettierrc \"src/**/*.ts\" \"src/**/*.js\""
   },
@@ -121,7 +122,7 @@
     "tslint-config-vtex": "^2.1.0",
     "tslint-eslint-rules": "^5.4.0",
     "typemoq": "^2.1.0",
-    "typescript": "4.9.5",
+    "typescript": "3.9.7",
     "typescript-json-schema": "^0.65.1"
   }
 }
