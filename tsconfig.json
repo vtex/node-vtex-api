@@ -13,7 +13,11 @@
     "declaration": true,
     "outDir": "lib",
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": "./",
+    "paths": {
+      "axios": ["src/axios.d.ts"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["**/__tests__", "**/*.test.ts"]

@@ -1,5 +1,5 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
-import buildFullPath from 'axios/lib/core/buildFullPath'
+import buildFullPath from '../../../../../../utils/buildFullPath'
 import { Span } from 'opentracing'
 import { ROUTER_CACHE_HEADER } from '../../../../../../constants'
 import { CustomHttpTags, OpentracingTags } from '../../../../../../tracing/Tags'
