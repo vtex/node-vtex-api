@@ -1,5 +1,5 @@
 import { AxiosRequestConfig } from 'axios'
-import buildFullPath from 'axios/lib/core/buildFullPath'
+import buildFullPath from '../../../utils/buildFullPath'
 import { Limit } from 'p-limit'
 import { stringify } from 'qs'
 import { toLower } from 'ramda'
