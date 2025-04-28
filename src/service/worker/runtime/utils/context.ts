@@ -1,22 +1,8 @@
 import { Context } from 'koa'
 import uuid from 'uuid/v4'
-
 import {
-  ACCOUNT_HEADER,
-  BINDING_HEADER,
-  CREDENTIAL_HEADER,
-  FORWARDED_HOST_HEADER,
-  LOCALE_HEADER,
-  OPERATION_ID_HEADER,
-  PLATFORM_HEADER,
-  PRODUCT_HEADER,
+  HeaderKeys,
   REGION,
-  REQUEST_ID_HEADER,
-  SEGMENT_HEADER,
-  SESSION_HEADER,
-  TENANT_HEADER,
-  WORKSPACE_HEADER,
-  WORKSPACE_IS_PRODUCTION_HEADER,
 } from '../../../../constants'
 import { UserLandTracer } from '../../../../tracing/UserLandTracer'
 import { parseTenantHeaderValue } from '../../../../utils/tenant'
@@ -32,23 +18,23 @@ const getPlatform = (account: string): string => {
 
 export const prepareHandlerCtx = (header: Context['request']['header'], tracingContext?: TracingContext): HandlerContext => {
   const partialContext = {
-    account: header[ACCOUNT_HEADER],
-    authToken: header[CREDENTIAL_HEADER],
-    binding: header[BINDING_HEADER] ? parseBindingHeaderValue(header[BINDING_HEADER]) : undefined,
-    host: header[FORWARDED_HOST_HEADER],
-    locale: header[LOCALE_HEADER],
-    operationId: header[OPERATION_ID_HEADER] || uuid(),
-    platform: header[PLATFORM_HEADER] || getPlatform(header[ACCOUNT_HEADER]),
-    product: header[PRODUCT_HEADER],
-    production: header[WORKSPACE_IS_PRODUCTION_HEADER]?.toLowerCase() === 'true' || false,
+    account: header[HeaderKeys.ACCOUNT],
+    authToken: header[HeaderKeys.CREDENTIAL],
+    binding: header[HeaderKeys.BINDING] ? parseBindingHeaderValue(header[HeaderKeys.BINDING]) : undefined,
+    host: header[HeaderKeys.FORWARDED_HOST],
+    locale: header[HeaderKeys.LOCALE],
+    operationId: header[HeaderKeys.OPERATION_ID] || uuid(),
+    platform: header[HeaderKeys.PLATFORM] || getPlatform(header[HeaderKeys.ACCOUNT]),
+    product: header[HeaderKeys.PRODUCT],
+    production: header[HeaderKeys.WORKSPACE_IS_PRODUCTION]?.toLowerCase() === 'true' || false,
     region: REGION,
-    requestId: header[REQUEST_ID_HEADER],
-    segmentToken: header[SEGMENT_HEADER],
-    sessionToken: header[SESSION_HEADER],
-    tenant: header[TENANT_HEADER] ? parseTenantHeaderValue(header[TENANT_HEADER]) : undefined,
+    requestId: header[HeaderKeys.REQUEST_ID],
+    segmentToken: header[HeaderKeys.SEGMENT],
+    sessionToken: header[HeaderKeys.SESSION],
+    tenant: header[HeaderKeys.TENANT] ? parseTenantHeaderValue(header[HeaderKeys.TENANT]) : undefined,
     tracer: new UserLandTracer(tracingContext?.tracer!, tracingContext?.currentSpan),
     userAgent: process.env.VTEX_APP_ID || '',
-    workspace: header[WORKSPACE_HEADER],
+    workspace: header[HeaderKeys.WORKSPACE],
   }
 
   return {

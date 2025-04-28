@@ -1,6 +1,5 @@
 import { collectDefaultMetrics, register } from 'prom-client'
-import { COLOSSUS_ROUTE_ID_HEADER } from '../../../../constants'
-
+import { HeaderKeys } from '../../../../constants'
 import { MetricsLogger } from '../../../logger/metricsLogger'
 import { EventLoopLagMeasurer } from '../../../tracing/metrics/measurers/EventLoopLagMeasurer'
 import { ServiceContext } from '../typings'
@@ -32,7 +31,7 @@ export const prometheusLoggerMiddleware = () => {
       return next()
     }
 
-    const routeId = ctx.get(COLOSSUS_ROUTE_ID_HEADER)
+    const routeId = ctx.get(HeaderKeys.COLOSSUS_ROUTE_ID)
     if (routeId) {
       return next()
     }

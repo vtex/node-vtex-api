@@ -3,16 +3,9 @@ import { createHash } from 'crypto'
 import { IncomingMessage } from 'http'
 import compose from 'koa-compose'
 import pLimit from 'p-limit'
-
 import {
-  BINDING_HEADER,
+  HeaderKeys,
   BODY_HASH,
-  FORWARDED_HOST_HEADER,
-  LOCALE_HEADER,
-  PRODUCT_HEADER,
-  SEGMENT_HEADER,
-  SESSION_HEADER,
-  TENANT_HEADER,
 } from '../constants'
 import { Logger } from '../service/logger'
 import { IOContext } from '../service/worker/runtime/typings'
@@ -89,14 +82,14 @@ export class HttpClient {
       ...defaultHeaders,
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
-      ...host ? { [FORWARDED_HOST_HEADER]: host } : null,
-      ...tenant ? { [TENANT_HEADER]: formatTenantHeaderValue(tenant) } : null,
-      ...binding ? { [BINDING_HEADER]: formatBindingHeaderValue(binding) } : null,
-      ...locale ? { [LOCALE_HEADER]: locale } : null,
-      ...operationId ? { 'x-vtex-operation-id': operationId } : null,
-      ...product ? { [PRODUCT_HEADER]: product } : null,
-      ...segmentToken ? { [SEGMENT_HEADER]: segmentToken } : null,
-      ...sessionToken ? { [SESSION_HEADER]: sessionToken } : null,
+      ...host ? { [HeaderKeys.FORWARDED_HOST]: host } : null,
+      ...tenant ? { [HeaderKeys.TENANT]: formatTenantHeaderValue(tenant) } : null,
+      ...binding ? { [HeaderKeys.BINDING]: formatBindingHeaderValue(binding) } : null,
+      ...locale ? { [HeaderKeys.LOCALE]: locale } : null,
+      ...operationId ? { [HeaderKeys.OPERATION_ID]: operationId } : null,
+      ...product ? { [HeaderKeys.PRODUCT]: product } : null,
+      ...segmentToken ? { [HeaderKeys.SEGMENT]: segmentToken } : null,
+      ...sessionToken ? { [HeaderKeys.SESSION]: sessionToken } : null,
     }
 
     if (authType && authToken) {
@@ -139,16 +132,16 @@ export class HttpClient {
         return typeof v !== 'object' || v === null || Array.isArray(v) ? v :
                   Object.fromEntries(Object.entries(v).sort(([ka], [kb]) =>
                     ka < kb ? -1 : ka > kb ? 1 : 0))
-      } 
-      catch(error) { 
+      }
+      catch(error) {
         // I don't believe this will ever happen, but just in case
         // Also, I didn't include error as I am unsure if it would have sensitive information
         this.logger.warn({message: 'Error while sorting object for cache key'})
         return v
       }
     }
-      
-    
+
+
     const bodyHash = createHash('md5').update(JSON.stringify(data, deterministicReplacer)).digest('hex')
     const cacheableConfig = this.getConfig(url, {
       ...config,
