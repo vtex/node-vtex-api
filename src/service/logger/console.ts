@@ -1,7 +1,7 @@
 import { isMaster, isWorker } from 'cluster'
 
 import { LRUCache } from '../../caches'
-import { LogLevel } from './logger'
+import { LogLevel } from './loggerTypes'
 
 export interface LogMessage {
   cmd: typeof LOG_ONCE

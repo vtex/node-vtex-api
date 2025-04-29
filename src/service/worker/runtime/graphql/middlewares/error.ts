@@ -73,7 +73,7 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
       graphQLErrors = formatApolloErrors(response.errors, { formatter })
     }
   }
-  catch (e) {
+  catch (e: any) {
     if (e.code === cancelledErrorCode) {
       ctx.status = cancelledRequestStatus
       return

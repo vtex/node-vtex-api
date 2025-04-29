@@ -231,7 +231,7 @@ export class Registry extends InfraClient {
       const [response] = await Promise.all([request, finalize])
       response.bundleSize = zip.pointer()
       return response
-    } catch (e) {
+    } catch (e: any) {
       e.bundleSize = zip.pointer()
       throw e
     }

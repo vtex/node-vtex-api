@@ -89,7 +89,7 @@ const logAndRemoveSensitiveData = <
 export async function error (ctx: ServiceContext, next: () => Promise<void>) {
   try {
     await next()
-  } catch (e) {
+  } catch (e: any) {
     if (e instanceof RequestCancelledError) {
       ctx.status = cancelledRequestStatus
       return

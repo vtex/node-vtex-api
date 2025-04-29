@@ -15,7 +15,7 @@ export const recorderMiddleware = (recorder: Recorder) =>
       if (ctx.response) {
         (recorder as Recorder).record(ctx.response.headers)
       }
-    } catch (err) {
+    } catch (err: any) {
       if (err.response && err.response.headers && err.response.status === 404) {
         (recorder as Recorder).record(err.response.headers)
       }

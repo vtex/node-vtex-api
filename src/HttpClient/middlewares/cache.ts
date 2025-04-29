@@ -109,11 +109,11 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
 
 
     const cacheReadSpan = createCacheSpan(cacheType, 'read', tracer, span)
-    let cached: void | Cached
+    let cached: void | Cached = undefined
     try {
       const cacheHasWithSegment = await storage.has(keyWithSegment)
       cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
-    } catch (error) {
+    } catch (error: any) {
       ErrorReport.create({ originalError: error }).injectOnSpan(cacheReadSpan)
       logger?.warn({ message: 'Error reading from the HttpClient cache', error })
     } finally {
@@ -247,7 +247,7 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
             [HttpCacheLogFields.RESPONSE_TYPE]: responseType,
           })
         }
-      } catch (error) {
+      } catch (error: any) {
         ErrorReport.create({ originalError: error }).injectOnSpan(cacheWriteSpan)
         logger?.warn({ message: 'Error writing to the HttpClient cache', error })
       } finally {

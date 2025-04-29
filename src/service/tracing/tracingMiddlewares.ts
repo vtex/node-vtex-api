@@ -37,7 +37,7 @@ export const addTracingMiddleware = (tracer: Tracer) => {
 
     try {
       await next()
-    } catch (err) {
+    } catch (err: any) {
       ErrorReport.create({ originalError: err }).injectOnSpan(currentSpan, ctx.vtex?.logger)
       throw err
     } finally {
@@ -97,7 +97,7 @@ export const traceUserLandRemainingPipelineMiddleware = () => {
     try {
       span?.log({ event: RuntimeLogEvents.USER_MIDDLEWARES_START })
       await next()
-    } catch (err) {
+    } catch (err: any) {
       ErrorReport.create({ originalError: err }).injectOnSpan(span, ctx.vtex.logger)
       throw err
     } finally {

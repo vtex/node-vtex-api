@@ -43,7 +43,7 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
       if (ctx.config.metric && ctx.response && ctx.response.status) {
         status = statusLabel(ctx.response.status)
       }
-    } catch (err) {
+    } catch (err: any) {
       const isCancelled = (err.message === cancelMessage)
       if (ctx.config.metric) {
         errorCode = err.code
