@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.49.0] - 2025-04-29
+### Changed
+- Update logging instrumentation
+
+### Fixed
+- Bump typescript-json-schema from 0.40.0 to 0.52.0
+- Fix `yarn gen` script
+- Update node-version on publish workflows
+
 ## [6.48.0] - 2024-10-23
 ### Added
 - resolveAll to `MineWinsConflictsResolver` to handle an array of conflicts.
