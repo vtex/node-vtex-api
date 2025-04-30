@@ -1,7 +1,7 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
 import buildFullPath from 'axios/lib/core/buildFullPath'
 import { Span } from 'opentracing'
-import { ROUTER_CACHE_HEADER } from '../../../../../../constants'
+import { HeaderKeys } from '../../../../../../constants'
 import { CustomHttpTags, OpentracingTags } from '../../../../../../tracing/Tags'
 import { cloneAndSanitizeHeaders } from '../../../../../../tracing/utils'
 
@@ -11,7 +11,6 @@ export const injectRequestInfoOnSpan = (span: Span | undefined, http: AxiosInsta
     [OpentracingTags.HTTP_METHOD]: config.method,
     [OpentracingTags.HTTP_URL]: buildFullPath(config.baseURL, http.getUri(config)),
   })
-
   span?.log({ 'request-headers': cloneAndSanitizeHeaders(config.headers) })
 }
 
@@ -24,7 +23,8 @@ export const injectResponseInfoOnSpan = (span: Span | undefined, response: Axios
 
   span?.log({ 'response-headers': cloneAndSanitizeHeaders(response.headers) })
   span?.setTag(OpentracingTags.HTTP_STATUS_CODE, response.status)
-  if (response.headers[ROUTER_CACHE_HEADER]) {
-    span?.setTag(CustomHttpTags.HTTP_ROUTER_CACHE_RESULT, response.headers[ROUTER_CACHE_HEADER])
+
+  if (response.headers[HeaderKeys.ROUTER_CACHE]) {
+    span?.setTag(CustomHttpTags.HTTP_ROUTER_CACHE_RESULT, response.headers[HeaderKeys.ROUTER_CACHE])
   }
 }

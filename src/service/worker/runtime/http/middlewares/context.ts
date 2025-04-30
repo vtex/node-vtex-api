@@ -1,10 +1,7 @@
 import { parse as qsParse } from 'querystring'
 
 import { IOClients } from '../../../../../clients/IOClients'
-import {
-  COLOSSUS_PARAMS_HEADER,
-  COLOSSUS_ROUTE_DECLARER_HEADER,
-} from '../../../../../constants'
+import { HeaderKeys } from '../../../../../constants'
 import { prepareHandlerCtx } from '../../utils/context'
 import {
   ParamsContext,
@@ -56,9 +53,9 @@ export const createPubContextMiddleware = (
       ...prepareHandlerCtx(header, ctx.tracing),
       ...(smartcache && { recorder: ctx.state.recorder }),
       route: {
-        declarer: header[COLOSSUS_ROUTE_DECLARER_HEADER],
+        declarer: header[HeaderKeys.COLOSSUS_ROUTE_DECLARER],
         id: routeId,
-        params: qsParse(header[COLOSSUS_PARAMS_HEADER]),
+        params: qsParse(header[HeaderKeys.COLOSSUS_PARAMS]),
         type: 'public',
       },
     }
