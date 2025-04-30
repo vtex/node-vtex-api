@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.49.1] - 2025-04-30
+### Fixed
+- Add yarn.lock changes from previous release
+
 ## [6.49.0] - 2025-04-29
 ### Changed
 - Update logging instrumentation
