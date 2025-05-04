@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.48.1-beta.4] - 2025-05-04
+
 ## [6.49.1] - 2025-04-30
 ### Fixed
 - Add yarn.lock changes from previous release
@@ -1866,7 +1868,7 @@ instead
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
 
 
-[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta.3...HEAD
+[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta.4...HEAD
 [6.45.15]: https://github.com/vtex/node-vtex-api/compare/v6.45.14...v6.45.15
 [6.45.14]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...v6.45.14
 [6.45.13]: https://github.com/vtex/node-vtex-api/compare/v6.45.12...v6.45.13
@@ -1880,6 +1882,7 @@ instead
 [6.45.20]: https://github.com/vtex/node-vtex-api/compare/v6.45.20-beta...v6.45.20
 [6.45.20-beta]: https://github.com/vtex/node-vtex-api/compare/v6.45.19...v6.45.20-beta
 
+[6.48.1-beta.4]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta.3...v6.48.1-beta.4
 [6.48.1-beta.3]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta.2...v6.48.1-beta.3
 [6.48.1-beta.2]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta.1...v6.48.1-beta.2
 [6.48.1-beta.1]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta.0...v6.48.1-beta.1
