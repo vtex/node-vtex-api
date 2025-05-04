@@ -10,7 +10,7 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
   constructor (private caches: Array<CacheLayer<K, V>>) {}
 
   public get = async (key: K, fetcher?: () => Promise<FetchResult<V>>): Promise<V | void> => {
-    let value: V | void
+    let value: V | void = undefined
     let maxAge: number | void
     let successIndex = await this.findIndex(async (cache: CacheLayer<K, V>) => {
       const [getValue, hasKey] = await Promise.all([cache.get(key), cache.has(key)])

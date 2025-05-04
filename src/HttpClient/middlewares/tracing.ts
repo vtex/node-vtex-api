@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios'
 import { MiddlewaresTracingContext, RequestConfig } from '..'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { ErrorReport, getTraceInfo } from '../../tracing'
