@@ -13,7 +13,6 @@ import {
 import { TIMEOUT_CODE } from '../../utils/retry'
 import { statusLabel } from '../../utils/status'
 import { MiddlewareContext } from '../typings'
-import { AxiosError } from 'axios'
 
 interface MetricsOpts {
   metrics?: MetricsAccumulator
