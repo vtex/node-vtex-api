@@ -1,4 +1,4 @@
-import { ApolloError, formatApolloErrors } from 'apollo-server-errors'
+import { formatApolloErrors } from 'apollo-server-errors'
 import { uniqBy } from 'ramda'
 
 import { LINKED } from '../../../../../constants'

@@ -1,4 +1,3 @@
-import { AxiosError } from 'axios'
 import { MiddlewareContext } from '../typings'
 import {
   Recorder,

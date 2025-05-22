@@ -1,4 +1,4 @@
-import { AxiosRequestConfig, AxiosResponse, RawAxiosResponseHeaders } from 'axios'
+import { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { Middleware } from 'koa-compose'
 import { Span } from 'opentracing'
 
