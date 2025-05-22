@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [6.48.1-beta.4] - 2025-05-04
+### Fixed
+- Bumped `axios` to newest version without vuln CVE-2025-27152
 
 ## [6.49.1] - 2025-04-30
 ### Fixed
@@ -21,16 +22,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Bump typescript-json-schema from 0.40.0 to 0.52.0
 - Fix `yarn gen` script
 - Update node-version on publish workflows
-
-## [6.48.1-beta.3] - 2025-04-28
-
-## [6.48.1-beta.2] - 2025-03-31
-
-## [6.48.1-beta.1] - 2025-03-31
-
-## [6.48.1-beta.0] - 2025-03-31
-
-## [6.48.1-beta] - 2025-03-19
 
 ## [6.48.0] - 2024-10-23
 ### Added
