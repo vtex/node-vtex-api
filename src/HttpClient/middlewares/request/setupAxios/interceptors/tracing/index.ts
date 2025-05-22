@@ -9,7 +9,6 @@ interface AxiosRequestTracingContext extends MiddlewaresTracingContext {
   requestSpan?: Span
 }
 
-// Modificado para usar AxiosRequestConfig em vez de InternalAxiosRequestConfig
 interface TraceableAxiosRequestConfig extends AxiosRequestConfig {
   tracing?: AxiosRequestTracingContext
 }
@@ -74,7 +73,6 @@ const onResponseError = (err: ExtendedAxiosError) => {
 }
 
 export const addTracingPreRequestInterceptor = (http: AxiosInstance) => {
-  // Usando type assertion para compatibilidade com TypeScript 3.9.7
   const requestTracingInterceptor = http.interceptors.request.use(
     preRequestInterceptor(http) as any,
     undefined
@@ -84,7 +82,6 @@ export const addTracingPreRequestInterceptor = (http: AxiosInstance) => {
 }
 
 export const addTracingResponseInterceptor = (http: AxiosInstance) => {
-  // Usando type assertion para compatibilidade com TypeScript 3.9.7
   const responseTracingInterceptor = http.interceptors.response.use(
     onResponseSuccess as any,
     onResponseError as any
