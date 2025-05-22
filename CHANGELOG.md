@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [6.48.1-beta.4] - 2025-05-04
+### Fixed
+- Bumped `axios` to newest version without vuln CVE-2025-27152
 
 ## [6.49.1] - 2025-04-30
 ### Fixed
@@ -21,16 +22,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Bump typescript-json-schema from 0.40.0 to 0.52.0
 - Fix `yarn gen` script
 - Update node-version on publish workflows
-
-## [6.48.1-beta.3] - 2025-04-28
-
-## [6.48.1-beta.2] - 2025-03-31
-
-## [6.48.1-beta.1] - 2025-03-31
-
-## [6.48.1-beta.0] - 2025-03-31
-
-## [6.48.1-beta] - 2025-03-19
 
 ## [6.48.0] - 2024-10-23
 ### Added
@@ -1881,10 +1872,3 @@ instead
 [6.45.21-beta]: https://github.com/vtex/node-vtex-api/compare/v6.45.20...v6.45.21-beta
 [6.45.20]: https://github.com/vtex/node-vtex-api/compare/v6.45.20-beta...v6.45.20
 [6.45.20-beta]: https://github.com/vtex/node-vtex-api/compare/v6.45.19...v6.45.20-beta
-
-[6.48.1-beta.4]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta.3...v6.48.1-beta.4
-[6.48.1-beta.3]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta.2...v6.48.1-beta.3
-[6.48.1-beta.2]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta.1...v6.48.1-beta.2
-[6.48.1-beta.1]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta.0...v6.48.1-beta.1
-[6.48.1-beta.0]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta...v6.48.1-beta.0
-[6.48.1-beta]: https://github.com/vtex/node-vtex-api/compare/v6.48.0...v6.48.1-beta
