@@ -1,4 +1,4 @@
-import { AxiosError } from 'axios'
+import { AxiosError, RawAxiosRequestHeaders } from 'axios'
 import { IncomingMessage } from 'http'
 import mime from 'mime-types'
 import { basename } from 'path'
@@ -176,7 +176,7 @@ export class VBase extends InfraClient {
   }
 
   public deleteFile = (bucket: string, path: string, tracingConfig?: RequestTracingConfig, ifMatch?: string) => {
-    const headers = ifMatch ? { 'If-Match': ifMatch } : null
+    const headers: RawAxiosRequestHeaders | {} = ifMatch ? { 'If-Match': ifMatch } : {}
     const metric = 'vbase-delete-file'
     return this.http.delete(routes.File(bucket, path), {headers, metric, tracing: {
       requestSpanNameSuffix: metric,
