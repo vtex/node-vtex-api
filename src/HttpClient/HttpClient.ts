@@ -130,7 +130,7 @@ export class HttpClient {
 
   public getRaw = <T = any>(url: string, config: RequestConfig = {}): Promise<IOResponse<T>> => {
     const cacheableConfig = this.getConfig(url, config)
-    return this.request(cacheableConfig) as any
+    return this.request(cacheableConfig)
   }
 
   public getWithBody = <T = any>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
@@ -198,12 +198,12 @@ export class HttpClient {
 
   public head = (url: string, config: RequestConfig = {}): Promise<IOResponse<void>> => {
     const headConfig: RequestConfig = { ...config, url, method: 'head' }
-    return this.request(headConfig) as any
+    return this.request(headConfig)
   }
 
   public delete = <T = void>(url: string, config?: RequestConfig): Promise<IOResponse<T>> => {
     const deleteConfig: RequestConfig = { ...config, url, method: 'delete' }
-    return this.request(deleteConfig) as any
+    return this.request(deleteConfig)
   }
 
   protected request = async (config: RequestConfig): Promise<AxiosResponse> => {
