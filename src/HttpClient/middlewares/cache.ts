@@ -180,7 +180,7 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
     }
 
     const {data, headers, status} = ctx.response as AxiosResponse
-    const {age, etag, maxAge: headerMaxAge, noStore, noCache} = parseCacheHeaders(headers as any)
+    const {age, etag, maxAge: headerMaxAge, noStore, noCache} = parseCacheHeaders(headers)
 
     const {forceMaxAge} = ctx.config
     const maxAge = forceMaxAge && cacheableStatusCodes.includes(status) ? Math.max(forceMaxAge, headerMaxAge) : headerMaxAge
