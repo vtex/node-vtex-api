@@ -48,7 +48,7 @@ export interface RequestConfig extends AxiosRequestConfig, RequestTracingConfig 
   memoizeable?: boolean
   inflightKey?: InflightKeyGenerator
   forceMaxAge?: number
-  responseEncoding?: BufferEncoding
+  responseEncoding?: BufferEncoding | string
   nullIfNotFound?: boolean
   ignoreRecorder?: boolean
 }
