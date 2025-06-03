@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.49.2] - 2025-06-03
 ### Fixed
 - Bumped `axios` to newest version without vuln CVE-2025-27152
 
