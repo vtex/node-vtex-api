@@ -102,12 +102,12 @@ export async function error (ctx: ServiceContext, next: () => Promise<void>) {
     const err = cleanError(e)
 
     // Add response
-    ctx.status = e && e.status >= 400 && e.status <= 599
+    ctx.status = e?.status && e.status >= 400 && e.status <= 599
       ? e.status
       : ctx.status >= 500 && ctx.status <= 599
         ? ctx.status
         : 500
-
+    
     // Do not generate etag for errors
     ctx.remove(META_HEADER)
     ctx.remove(ETAG_HEADER)

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.49.2] - 2025-06-03
+### Fixed
+- Bumped `axios` to newest version without vuln CVE-2025-27152
+
 ## [6.49.1] - 2025-04-30
 ### Fixed
 - Add yarn.lock changes from previous release
@@ -1856,7 +1860,7 @@ instead
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
 
 
-[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.45.22...HEAD
+[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta.4...HEAD
 [6.45.15]: https://github.com/vtex/node-vtex-api/compare/v6.45.14...v6.45.15
 [6.45.14]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...v6.45.14
 [6.45.13]: https://github.com/vtex/node-vtex-api/compare/v6.45.12...v6.45.13

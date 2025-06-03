@@ -10,7 +10,7 @@ interface AuthDirectiveArgs {
   readonly resourceCode: string
 }
 
-type VtexIdParsedToken = {
+interface VtexIdParsedToken {
   user: string
   account: string
 }
@@ -51,7 +51,7 @@ async function auth (ctx: ServiceContext, authArgs: AuthDirectiveArgs): Promise<
   }
 
   const parsedToken = await parseIdToken(ctx.vtex.authToken, vtexIdToken)
-  if (!parsedToken || parsedToken.account != ctx.vtex.account) {
+  if (!parsedToken || parsedToken.account !== ctx.vtex.account) {
     throw new AuthenticationError('Could not find user specified by VtexIdclientAutCookie.')
   }
 
