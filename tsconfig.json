@@ -16,7 +16,8 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": "./",
     "paths": {
-      "axios": ["src/axios.d.ts"]
+      "axios": ["src/axios.d.ts"],
+      "@opentelemetry/sdk-metrics": ["src/custom-typings/opentelemetry-sdk-metrics.d.ts"]
     }
   },
   "include": ["src/**/*.ts"],
