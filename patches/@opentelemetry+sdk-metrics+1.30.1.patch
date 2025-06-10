@@ -1,0 +1,13 @@
+diff --git a/node_modules/@opentelemetry/sdk-metrics/build/src/aggregator/exponential-histogram/mapping/types.d.ts b/node_modules/@opentelemetry/sdk-metrics/build/src/aggregator/exponential-histogram/mapping/types.d.ts
+index d38a74b..15e309f 100644
+--- a/node_modules/@opentelemetry/sdk-metrics/build/src/aggregator/exponential-histogram/mapping/types.d.ts
++++ b/node_modules/@opentelemetry/sdk-metrics/build/src/aggregator/exponential-histogram/mapping/types.d.ts
+@@ -8,6 +8,6 @@ export declare class MappingError extends Error {
+ export interface Mapping {
+     mapToIndex(value: number): number;
+     lowerBoundary(index: number): number;
+-    get scale(): number;
++    scale: number;
+ }
+ //# sourceMappingURL=types.d.ts.map
+\ No newline at end of file

@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "6.49.3-beta.0",
+  "version": "6.49.3-beta.1",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -9,7 +9,7 @@
     "gen/"
   ],
   "scripts": {
-    "clean": "rimraf lib/ && yarn fix-otel-type-definitions",
+    "clean": "rimraf lib/",
     "watch": "yarn clean && tsc --watch",
     "build": "yarn clean && tsc",
     "gen": "typescript-json-schema src/responses.ts PublicAppManifest > gen/manifest.schema",
@@ -18,7 +18,8 @@
     "format": "prettier --config ./.prettierrc --write \"src/**/*.ts\" \"src/**/*.js\"",
     "format-lint": "yarn format && yarn lint",
     "prepublishOnly": "bash ./scripts/publishLock.sh",
-    "fix-otel-type-definitions": "node ./scripts/fix-otel.js",
+    "postinstall": "patch-package",
+    "prebuild": "patch-package",
     "ci:build": "yarn build && yarn gen",
     "ci:test": "yarn test --ci",
     "ci:prettier-check": "prettier --check --config ./.prettierrc \"src/**/*.ts\" \"src/**/*.js\""
@@ -78,6 +79,8 @@
     "mime-types": "^2.1.12",
     "opentracing": "^0.14.4",
     "p-limit": "^2.2.0",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0",
     "prom-client": "^14.2.0",
     "qs": "^6.5.1",
     "querystring": "^0.2.0",
