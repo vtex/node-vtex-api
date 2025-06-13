@@ -54,6 +54,9 @@ export const INTERESTING_HEADERS = [
   'cookie',
 ]
 
+// Create the set once for performance
+const INTERESTING_HEADERS_SET = new Set(INTERESTING_HEADERS.map(h => h.toLowerCase()))
+
 export function getTraceInfo(span?: Span): TraceInfo {
   const spanContext = span?.context()
   return {
@@ -73,14 +76,11 @@ export const cloneAndSanitizeHeaders = (headersObj: Record<string, any>, resultF
   const ret: Record<string, string> = {}
   const entries = Object.entries(headersObj)
   
-  // Create a set of lowercase header names for case-insensitive matching
-  const interestingHeadersSet = new Set(INTERESTING_HEADERS.map(h => h.toLowerCase()))
-  
   for (const [key, val] of entries) {
     const lowerKey = key.toLowerCase()
     
     // Only include headers that are in our whitelist or start with x-vtex-
-    if (!interestingHeadersSet.has(lowerKey) && !lowerKey.startsWith('x-vtex-')) {
+    if (!INTERESTING_HEADERS_SET.has(lowerKey) && !lowerKey.startsWith('x-vtex-')) {
       continue
     }
     
