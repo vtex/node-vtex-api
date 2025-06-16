@@ -44,6 +44,7 @@ export const INTERESTING_HEADERS = [
   // VTEX/E-commerce Specific (x-vtex-* headers are handled automatically)
   'x-router-cache',
   'x-powered-by-vtex-cache',
+  'jaeger-debug-id',
   
   // API & Service Headers
   'x-api-version',
