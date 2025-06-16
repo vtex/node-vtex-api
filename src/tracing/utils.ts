@@ -42,6 +42,8 @@ export const INTERESTING_HEADERS = [
   'x-forwarded-port',
   
   // VTEX/E-commerce Specific (x-vtex-* headers are handled automatically)
+  'x-router-cache',
+  'x-powered-by-vtex-cache',
   
   // API & Service Headers
   'x-api-version',
