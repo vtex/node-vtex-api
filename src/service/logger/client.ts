@@ -1,6 +1,7 @@
 import { Exporters } from '@vtex/diagnostics-nodejs';
-import { LogClient } from '@vtex/diagnostics-nodejs/dist/types';
+import { LogClient, TelemetryType } from '@vtex/diagnostics-nodejs/dist/types';
 import { getTelemetryClient } from '../telemetry';
+import { createExporterConfig } from '../telemetry/config';
 
 let logClient: LogClient | undefined;
 let isInitializing = false;
@@ -26,14 +27,9 @@ async function initializeClient(account: string, workspace: string, appName: str
   try {
     const telemetryClient = await getTelemetryClient();
 
-    const logsConfig = Exporters.CreateLogsExporterConfig({
-      endpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
-      path: process.env.OTEL_EXPORTER_OTLP_PATH || '/v1/logs',
-      protocol: 'http',
-      interval: 5,
-      timeoutSeconds: 5,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    const logsConfig = Exporters.CreateLogsExporterConfig(
+      createExporterConfig(TelemetryType.LOGS)
+    );
 
     const logsExporter = Exporters.CreateExporter(logsConfig, 'otlp');
     await logsExporter.initialize();
