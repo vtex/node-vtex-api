@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [6.49.2] - 2025-07-02
+## [6.49.4] - 2025-07-02
 ### Fixed
 - Userland logs that wouldn't be collected
 
