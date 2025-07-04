@@ -2,7 +2,7 @@ import { AxiosRequestConfig, AxiosResponse } from 'axios'
 import { Span } from 'opentracing'
 
 import { CacheLayer } from '../../caches/CacheLayer'
-import { LOCALE_HEADER, SEGMENT_HEADER, SESSION_HEADER } from '../../constants'
+import { HeaderKeys } from '../../constants'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { ErrorReport } from '../../tracing'
 import { HttpLogEvents } from '../../tracing/LogEvents'
@@ -15,7 +15,7 @@ const cacheableStatusCodes = [200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 
 
 export const cacheKey = (config: AxiosRequestConfig) => {
   const {baseURL = '', url = '', params, headers} = config
-  const locale = headers?.[LOCALE_HEADER]
+  const locale = headers?.[HeaderKeys.LOCALE]
 
   const encodedBaseURL = baseURL.replace(/\//g, '\\')
   const encodedURL = url.replace(/\//g, '\\')
@@ -97,7 +97,7 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
     const { rootSpan: span, tracer, logger } = ctx.tracing ?? {}
 
     const key = cacheKey(ctx.config)
-    const segmentToken = ctx.config.headers?.[SEGMENT_HEADER]
+    const segmentToken = ctx.config.headers?.[HeaderKeys.SEGMENT]
     const keyWithSegment = key + segmentToken
 
     span?.log({
@@ -204,11 +204,11 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
     }
 
     const shouldCache = maxAge || etag
-    const varySession = ctx.response.headers.vary && ctx.response.headers.vary.includes(SESSION_HEADER)
+    const varySession = ctx.response.headers.vary && ctx.response.headers.vary.includes(HeaderKeys.SESSION)
     if (shouldCache && !varySession) {
       const {responseType, responseEncoding: configResponseEncoding} = ctx.config
       const currentAge = revalidated ? 0 : age
-      const varySegment = ctx.response.headers.vary && ctx.response.headers.vary.includes(SEGMENT_HEADER)
+      const varySegment = ctx.response.headers.vary && ctx.response.headers.vary.includes(HeaderKeys.SEGMENT)
       const setKey = varySegment ? keyWithSegment : key
       const responseEncoding = configResponseEncoding || (responseType === 'arraybuffer' ? 'base64' : undefined)
       const cacheableData = type === CacheType.Disk && responseType === 'arraybuffer'

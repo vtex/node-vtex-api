@@ -1,9 +1,8 @@
 import { Context } from 'koa'
 import { trim } from 'ramda'
+import { HeaderKeys } from './../../../../constants'
 
-import { META_HEADER, META_HEADER_BUCKET } from './../../../../constants'
-
-const HEADERS = [META_HEADER, META_HEADER_BUCKET]
+const HEADERS = [HeaderKeys.META, HeaderKeys.META_BUCKET]
 
 export class Recorder {
   // tslint:disable-next-line: variable-name

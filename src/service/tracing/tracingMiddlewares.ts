@@ -1,6 +1,6 @@
 import { FORMAT_HTTP_HEADERS, SpanContext, Tracer } from 'opentracing'
 import { finished as onStreamFinished } from 'stream'
-import { ACCOUNT_HEADER, REQUEST_ID_HEADER, TRACE_ID_HEADER, WORKSPACE_HEADER } from '../../constants'
+import { HeaderKeys } from '../../constants'
 import { ErrorReport, getTraceInfo } from '../../tracing'
 import { RuntimeLogEvents } from '../../tracing/LogEvents'
 import { RuntimeLogFields } from '../../tracing/LogFields'
@@ -52,14 +52,14 @@ export const addTracingMiddleware = (tracer: Tracer) => {
           [OpentracingTags.HTTP_METHOD]: ctx.request.method,
           [OpentracingTags.HTTP_STATUS_CODE]: ctx.response.status,
           [CustomHttpTags.HTTP_PATH]: ctx.request.path,
-          [VTEXIncomingRequestTags.VTEX_REQUEST_ID]: ctx.get(REQUEST_ID_HEADER),
-          [VTEXIncomingRequestTags.VTEX_WORKSPACE]: ctx.get(WORKSPACE_HEADER),
-          [VTEXIncomingRequestTags.VTEX_ACCOUNT]: ctx.get(ACCOUNT_HEADER),
+          [VTEXIncomingRequestTags.VTEX_REQUEST_ID]: ctx.get(HeaderKeys.REQUEST_ID),
+          [VTEXIncomingRequestTags.VTEX_WORKSPACE]: ctx.get(HeaderKeys.WORKSPACE),
+          [VTEXIncomingRequestTags.VTEX_ACCOUNT]: ctx.get(HeaderKeys.ACCOUNT),
         })
 
         currentSpan?.log(cloneAndSanitizeHeaders(ctx.request.headers, 'req.headers.'))
         currentSpan?.log(cloneAndSanitizeHeaders(ctx.response.headers, 'res.headers.'))
-        ctx.set(TRACE_ID_HEADER, traceInfo.traceId!)
+        ctx.set(HeaderKeys.TRACE_ID, traceInfo.traceId!)
       }
 
       const onResFinished = () => {

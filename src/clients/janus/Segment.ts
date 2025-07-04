@@ -1,7 +1,6 @@
 import parseCookie from 'cookie'
 import { prop } from 'ramda'
-
-import { PRODUCT_HEADER } from '../../constants'
+import { HeaderKeys } from '../../constants'
 import { inflightUrlWithQuery, RequestTracingConfig } from '../../HttpClient'
 import { JanusClient } from './JanusClient'
 
@@ -87,7 +86,7 @@ export class Segment extends JanusClient {
       forceMaxAge: SEGMENT_MAX_AGE_S,
       headers: {
         'Content-Type': 'application/json',
-        [PRODUCT_HEADER]: product || '',
+        [HeaderKeys.PRODUCT]: product || '',
       },
       inflightKey: inflightUrlWithQuery,
       metric,

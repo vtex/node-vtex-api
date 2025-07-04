@@ -1,5 +1,4 @@
 import { IOClients } from '../../../../../clients/IOClients'
-import { CREDENTIAL_HEADER } from '../../../../../constants'
 import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
 
 const JANUS_ENV_COOKIE_KEY = 'vtex-commerce-env'

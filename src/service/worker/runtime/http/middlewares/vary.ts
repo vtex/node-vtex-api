@@ -1,9 +1,7 @@
 import { IOClients } from '../../../../../clients/IOClients'
 import {
-  LOCALE_HEADER,
-  SEGMENT_HEADER,
-  SESSION_HEADER,
-  VaryHeaders,
+  HeaderKeys,
+  VaryHeaders
 } from '../../../../../constants'
 import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
 
@@ -17,17 +15,17 @@ const cachingStrategies: CachingStrategy[] = [
   {
     forbidden: [],
     path: '/_v/private/',
-    vary: [SEGMENT_HEADER, SESSION_HEADER],
+    vary: [HeaderKeys.SEGMENT, HeaderKeys.SESSION],
   },
   {
-    forbidden: [SEGMENT_HEADER, SESSION_HEADER],
+    forbidden: [HeaderKeys.SEGMENT, HeaderKeys.SESSION],
     path: '/_v/public/',
     vary: [],
   },
   {
-    forbidden: [SESSION_HEADER],
+    forbidden: [HeaderKeys.SESSION],
     path: '/_v/segment/',
-    vary: [SEGMENT_HEADER],
+    vary: [HeaderKeys.SEGMENT],
   },
 ]
 
@@ -39,14 +37,11 @@ const shouldVaryByHeader = <T extends IOClients, U extends RecorderState, V exte
   if (strategy && strategy.vary.includes(header)) {
     return true
   }
-
   if (process.env.DETERMINISTIC_VARY) {
     return false
   }
-
   return !!ctx.get(header)
 }
-
 
 export async function vary <
   T extends IOClients,
@@ -62,19 +57,20 @@ export async function vary <
     })
   }
 
-
   // We don't need to vary non GET requests, since they are never cached
   if (method.toUpperCase() !== 'GET') {
     await next()
     return
   }
 
-  ctx.vary(LOCALE_HEADER)
-  if (shouldVaryByHeader(ctx, SEGMENT_HEADER, strategy)) {
-    ctx.vary(SEGMENT_HEADER)
+  ctx.vary(HeaderKeys.LOCALE)
+
+  if (shouldVaryByHeader(ctx, HeaderKeys.SEGMENT, strategy)) {
+    ctx.vary(HeaderKeys.SEGMENT)
   }
-  if (shouldVaryByHeader(ctx, SESSION_HEADER, strategy)) {
-    ctx.vary(SESSION_HEADER)
+
+  if (shouldVaryByHeader(ctx, HeaderKeys.SESSION, strategy)) {
+    ctx.vary(HeaderKeys.SESSION)
   }
 
   await next()
