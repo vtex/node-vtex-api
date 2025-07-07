@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.49.5-beta.0] - 2025-07-07
+### Changed
+- Update `@vtex/diagnostics-nodejs` to 0.1.0-beta.10
+
 ## [6.49.4] - 2025-07-02
 ### Fixed
 - Userland logs that wouldn't be collected
