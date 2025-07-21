@@ -5,4 +5,7 @@ module.exports = {
   },
   testRegex: '(.*(test|spec)).tsx?$',
   testEnvironment: 'node',
+  moduleNameMapper: {
+    '^@vtex/diagnostics-semconv$': '<rootDir>/__mocks__/@vtex/diagnostics-semconv.ts',
+  },
 }

@@ -1,9 +1,6 @@
 import { IOClients } from '../../../../../clients/IOClients'
 import {
-  EVENT_HANDLER_ID_HEADER,
-  EVENT_KEY_HEADER,
-  EVENT_SENDER_HEADER,
-  EVENT_SUBJECT_HEADER,
+  HeaderKeys,
 } from '../../../../../constants'
 import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
 import { prepareHandlerCtx } from '../../utils/context'
@@ -13,12 +10,12 @@ export async function eventContextMiddleware <T extends IOClients, U extends Rec
   ctx.vtex = {
     ...prepareHandlerCtx(header, ctx.tracing),
     eventInfo: {
-      key: header[EVENT_KEY_HEADER],
-      sender: header[EVENT_SENDER_HEADER],
-      subject: header[EVENT_SUBJECT_HEADER],
+      key: header[HeaderKeys.EVENT_KEY],
+      sender: header[HeaderKeys.EVENT_SENDER],
+      subject: header[HeaderKeys.EVENT_SUBJECT],
     },
     route: {
-      id: header[EVENT_HANDLER_ID_HEADER],
+      id: header[HeaderKeys.EVENT_HANDLER_ID],
       params: {},
       type: 'event',
     },
