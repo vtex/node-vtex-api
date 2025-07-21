@@ -124,6 +124,6 @@ export class Logger {
       }
     }
 
-    console.log(typeof inflatedLog === 'string' ? JSON.stringify(inflatedLog) : inflatedLog)
+    console.log(JSON.stringify(inflatedLog))
   }
 }
