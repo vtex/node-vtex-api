@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.49.5] - 2025-07-21
+### Changed
+- Defining a list of headers to be added as trace span information
+
 ## [6.49.4] - 2025-07-02
 ### Fixed
 - Userland logs that wouldn't be collected
