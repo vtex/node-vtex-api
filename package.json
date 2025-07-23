@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "6.49.4",
+  "version": "6.50.0-beta",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -145,5 +145,6 @@
     "@opentelemetry/sdk-metrics": "1.30.1",
     "@opentelemetry/sdk-trace-base": "1.30.1",
     "@opentelemetry/sdk-trace-node": "1.30.1"
-  }
+  },
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
