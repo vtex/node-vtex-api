@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-## [6.49.6] - 2025-07-21
+## [6.49.6] - 2025-07-25
 ### Changed
 - Bump `@vtex/diagnostics-nodejs` version
 - Remove `resolutions` field from `package.json`
