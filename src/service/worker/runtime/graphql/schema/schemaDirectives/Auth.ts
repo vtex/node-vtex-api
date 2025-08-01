@@ -5,15 +5,10 @@ import { SchemaDirectiveVisitor } from 'graphql-tools'
 
 import { ServiceContext } from '../../../typings'
 
-enum Scope {
-  PUBLIC = 'PUBLIC',
-  PRIVATE = 'PRIVATE'
-}
-
 interface AuthDirectiveArgs {
   readonly productCode: string
   readonly resourceCode: string
-  readonly scope: Scope
+  readonly scope: 'PRIVATE' | 'PUBLIC'
 }
 
 interface VtexIdParsedToken {
@@ -74,8 +69,12 @@ async function auth (ctx: ServiceContext, authArgs: AuthDirectiveArgs): Promise<
 }
 
 function parseArgs (authArgs: AuthDirectiveArgs): AuthDirectiveArgs {
+  if (authArgs.scope == 'PUBLIC') {
+    return authArgs
+  }
+
   if (!authArgs.productCode || !authArgs.resourceCode) {
-    throw new UserInputError('Invalid auth schema directive args. Usage: @auth(scope: Scope, productCode: String, resourceCode: String).')
+    throw new UserInputError('Invalid auth schema directive args. Usage: @auth(scope: IOAuthScope, productCode: String, resourceCode: String).')
   }
   return authArgs
 }
@@ -85,7 +84,7 @@ export class Auth extends SchemaDirectiveVisitor {
     const {resolve = defaultFieldResolver} = field
     field.resolve = async (root, args, ctx, info) => {
       const authArgs = parseArgs(this.args as AuthDirectiveArgs)
-      if (!authArgs.scope || authArgs.scope == Scope.PRIVATE) {
+      if (!authArgs.scope || authArgs.scope == 'PRIVATE') {
         await auth(ctx, authArgs)
       }
       return resolve(root, args, ctx, info)
@@ -94,13 +93,14 @@ export class Auth extends SchemaDirectiveVisitor {
 }
 
 export const authDirectiveTypeDefs = `
-enum Scope {
+
+enum IOAuthScope {
   PUBLIC
   PRIVATE
 }
 
 directive @auth(
-  scope: Scope
+  scope: IOAuthScope
   productCode: String
   resourceCode: String
 ) on FIELD_DEFINITION
