@@ -47,7 +47,7 @@ export class Logger {
         });
 
         this.logClient = await Promise.race([
-          getLogClient(this.account, this.workspace, APP.NAME),
+          getLogClient(),
           timeoutPromise
         ]);
 
