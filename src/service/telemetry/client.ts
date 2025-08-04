@@ -1,11 +1,27 @@
-import { NewTelemetryClient } from '@vtex/diagnostics-nodejs';
-import { TelemetryClient } from '@vtex/diagnostics-nodejs/dist/telemetry';
+import {
+  NewTelemetryClient,
+  Instrumentation,
+  Exporters,
+  Logs,
+  Metrics,
+  Traces,
+} from '@vtex/diagnostics-nodejs';
 import { APP } from '../../constants';
+
+const CLIENT_NAME = APP.NAME || 'node-vtex-api';
+const APPLICATION_ID = APP.ID || 'vtex-io-app';
+const EXPORTER_OTLP_ENDPOINT = process.env.EXPORTER_OTLP_ENDPOINT;
+
+interface TelemetryClients {
+  logsClient: Logs.LogClient;
+  metricsClient: Metrics.MetricsClient;
+  tracesClient: Traces.TraceClient;
+}
 
 class TelemetryClientSingleton {
   private static instance: TelemetryClientSingleton;
-  private telemetryClient: TelemetryClient | undefined;
-  private initializationPromise: Promise<TelemetryClient> | undefined = undefined;
+  private telemetryClients: TelemetryClients | undefined;
+  private initializationPromise: Promise<TelemetryClients> | undefined = undefined;
 
   private constructor() {}
 
@@ -16,11 +32,12 @@ class TelemetryClientSingleton {
     return TelemetryClientSingleton.instance;
   }
 
-  private async initTelemetryClient(): Promise<TelemetryClient> {
+  private async initializeTelemetryClients(): Promise<TelemetryClients> {
     try {
       const telemetryClient = await NewTelemetryClient(
+        APPLICATION_ID,
+        CLIENT_NAME,
         'node-vtex-api',
-        APP.ID || 'vtex-app',
         {
           additionalAttrs: {
             'version': APP.VERSION || '',
@@ -29,41 +46,72 @@ class TelemetryClientSingleton {
         }
       );
 
-      this.telemetryClient = telemetryClient;
-      return telemetryClient;
+      const tracesClient = await telemetryClient.newTracesClient({
+        exporter: Exporters.CreateExporter(Exporters.CreateTracesExporterConfig({
+          endpoint: EXPORTER_OTLP_ENDPOINT,
+        }), 'otlp'),
+      });
+
+      const metricsClient = await telemetryClient.newMetricsClient({
+        exporter: Exporters.CreateExporter(Exporters.CreateMetricsExporterConfig({
+          endpoint: EXPORTER_OTLP_ENDPOINT,
+          interval: 5,
+          timeoutSeconds: 5,
+        }), 'otlp'),
+      });
+
+      const logsClient = await telemetryClient.newLogsClient({
+        exporter: Exporters.CreateExporter(Exporters.CreateLogsExporterConfig({
+          endpoint: EXPORTER_OTLP_ENDPOINT,
+        }), 'otlp'),
+        loggerName: `node-vtex-api-${APPLICATION_ID}`,
+      });
+
+      const instrumentations = [
+        ...Instrumentation.CommonInstrumentations.minimal(),
+      ];
+
+      telemetryClient.registerInstrumentations(instrumentations);
+
+      const clients: TelemetryClients = {
+        logsClient,
+        metricsClient,
+        tracesClient,
+      };
+
+      this.telemetryClients = clients;
+      return clients;
     } catch (error) {
-      console.error('Failed to initialize telemetry client:', error);
+      console.error('Failed to initialize telemetry clients:', error);
       throw error;
     } finally {
       this.initializationPromise = undefined;
     }
   }
 
-  public async getClient(): Promise<TelemetryClient> {
-    if (this.telemetryClient) {
-      return this.telemetryClient;
+  public async getTelemetryClients(): Promise<TelemetryClients> {
+    if (this.telemetryClients) {
+      return this.telemetryClients;
     }
 
     if (this.initializationPromise) {
       return this.initializationPromise;
     }
 
-    this.initializationPromise = this.initTelemetryClient();
-
+    this.initializationPromise = this.initializeTelemetryClients();
     return this.initializationPromise;
   }
 
   public reset(): void {
-    this.telemetryClient = undefined;
+    this.telemetryClients = undefined;
     this.initializationPromise = undefined;
   }
-
 }
 
-export async function getTelemetryClient(): Promise<TelemetryClient> {
-  return TelemetryClientSingleton.getInstance().getClient();
+export async function initializeTelemetry(): Promise<TelemetryClients> {
+  return TelemetryClientSingleton.getInstance().getTelemetryClients();
 }
 
-export function resetTelemetryClient(): void {
+export function resetTelemetry(): void {
   TelemetryClientSingleton.getInstance().reset();
 }
