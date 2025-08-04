@@ -1,12 +1,11 @@
 import { Types } from '@vtex/diagnostics-nodejs';
-import { LogClient } from '@vtex/diagnostics-nodejs/dist/types';
 import { initializeTelemetry } from '../telemetry';
 
-let client: LogClient | undefined;
+let client: Types.LogClient | undefined;
 let isInitializing = false;
-let initPromise: Promise<LogClient> | undefined = undefined;
+let initPromise: Promise<Types.LogClient> | undefined = undefined;
 
-export async function getLogClient(): Promise<LogClient> {
+export async function getLogClient(): Promise<Types.LogClient> {
 
   if (client) {
     return client;
