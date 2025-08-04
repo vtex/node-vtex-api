@@ -1,15 +1,15 @@
-import { Exporters } from '@vtex/diagnostics-nodejs';
+import { Types } from '@vtex/diagnostics-nodejs';
 import { LogClient } from '@vtex/diagnostics-nodejs/dist/types';
-import { getTelemetryClient } from '../telemetry';
+import { initializeTelemetry } from '../telemetry';
 
-let logClient: LogClient | undefined;
+let client: LogClient | undefined;
 let isInitializing = false;
 let initPromise: Promise<LogClient> | undefined = undefined;
 
-export async function getLogClient(account: string, workspace: string, appName: string): Promise<LogClient> {
+export async function getLogClient(): Promise<LogClient> {
 
-  if (logClient) {
-    return logClient;
+  if (client) {
+    return client;
   }
 
   if (initPromise) {
@@ -17,36 +17,20 @@ export async function getLogClient(account: string, workspace: string, appName: 
   }
 
   isInitializing = true;
-  initPromise = initializeClient(account, workspace, appName);
+  initPromise = initializeClient();
 
   return initPromise;
 }
 
-async function initializeClient(account: string, workspace: string, appName: string): Promise<LogClient> {
+async function initializeClient(): Promise<Types.LogClient> {
   try {
-    const telemetryClient = await getTelemetryClient();
-
-    const logsConfig = Exporters.CreateLogsExporterConfig({
-      endpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
-      path: process.env.OTEL_EXPORTER_OTLP_PATH || '/v1/logs',
-      protocol: 'http',
-      interval: 5,
-      timeoutSeconds: 5,
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    const logsExporter = Exporters.CreateExporter(logsConfig, 'otlp');
-    await logsExporter.initialize();
-
-    const clientKey = `${account}-${workspace}-${appName}`;
-    logClient = await telemetryClient.newLogsClient({
-      exporter: logsExporter,
-      loggerName: `node-vtex-api-${clientKey}`,
-    });
-
-    return logClient;
+    const { logsClient } = await initializeTelemetry();
+    client = logsClient;
+    initPromise = undefined;
+    return logsClient;
   } catch (error) {
     console.error('Failed to initialize logs client:', error);
+    initPromise = undefined;
     throw error;
   } finally {
     isInitializing = false;
