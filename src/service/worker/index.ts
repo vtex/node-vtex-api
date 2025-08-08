@@ -1,3 +1,4 @@
+import { Instrumentation } from '@vtex/diagnostics-nodejs';
 import { request } from 'http'
 import Koa from 'koa'
 import compress from 'koa-compress'
@@ -221,6 +222,7 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
   app.proxy = true
   app
     .use(error)
+    .use(Instrumentation.Middlewares.ContextMiddlewares.Koa.ContextPropagationMiddleware())
     .use(prometheusLoggerMiddleware())
     .use(addTracingMiddleware(tracer))
     .use(addRequestMetricsMiddleware())
