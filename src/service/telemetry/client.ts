@@ -8,6 +8,7 @@ import {
 } from '@vtex/diagnostics-nodejs';
 import { APP } from '../../constants';
 import { TelemetryClient } from '@vtex/diagnostics-nodejs/dist/telemetry';
+import { KoaInstrumentation } from '@opentelemetry/instrumentation-koa';
 
 const CLIENT_NAME = APP.NAME || 'node-vtex-api';
 const APPLICATION_ID = APP.ID || 'vtex-io-app';
@@ -79,6 +80,7 @@ class TelemetryClientSingleton {
 
       const instrumentations = [
         ...Instrumentation.CommonInstrumentations.minimal(),
+        new KoaInstrumentation(),
       ];
 
       telemetryClient.registerInstrumentations(instrumentations);
