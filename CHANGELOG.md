@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [6.49.7] - 2025-08-13
+### Fixed
+- Version of Axios that is incompatible with Asset Builder
+
 ## [6.49.6] - 2025-07-25
 ### Changed
 - Bump `@vtex/diagnostics-nodejs` version
@@ -1872,7 +1876,7 @@ instead
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
 
 
-[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta.4...HEAD
+[6.49.7]: https://github.com/vtex/node-vtex-api/compare/v6.48.6...v6.49.7
 [6.45.15]: https://github.com/vtex/node-vtex-api/compare/v6.45.14...v6.45.15
 [6.45.14]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...v6.45.14
 [6.45.13]: https://github.com/vtex/node-vtex-api/compare/v6.45.12...v6.45.13
