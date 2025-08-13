@@ -71,9 +71,11 @@ class TelemetryClientSingleton {
         }
       );
 
-      const tracesClient = await this.initializeTracesClient(telemetryClient);
-      const metricsClient = await this.initializeMetricsClient(telemetryClient);
-      const logsClient = await this.initializeLogsClient(telemetryClient);
+      const [tracesClient, metricsClient, logsClient] = await Promise.all([
+        this.initializeTracesClient(telemetryClient),
+        this.initializeMetricsClient(telemetryClient),
+        this.initializeLogsClient(telemetryClient),
+      ]);
 
       const instrumentations = [
         ...Instrumentation.CommonInstrumentations.minimal(),
