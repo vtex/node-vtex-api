@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [7.0.1] - 2025-08-14
+### Changed
+- Update `diagnostics-nodejs` version, simplifying client initialization, consolidating telemetry logic, and improving type safety
+
+## [7.0.0] - 2025-08-13
+### Changed
+- Version created to keep track of Runtime 7-compatible implementation of this lib
+
 ## [6.49.6] - 2025-07-25
 ### Changed
 - Bump `@vtex/diagnostics-nodejs` version
@@ -1872,7 +1880,7 @@ instead
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
 
 
-[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta.4...HEAD
+[7.0.0]: https://github.com/vtex/node-vtex-api/compare/v7.0.0...v6.49.6
 [6.45.15]: https://github.com/vtex/node-vtex-api/compare/v6.45.14...v6.45.15
 [6.45.14]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...v6.45.14
 [6.45.13]: https://github.com/vtex/node-vtex-api/compare/v6.45.12...v6.45.13
