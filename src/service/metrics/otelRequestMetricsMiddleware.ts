@@ -8,24 +8,29 @@ const INSTRUMENTS_INITIALIZATION_TIMEOUT = 500
 export const addOtelRequestMetricsMiddleware = () => {
   let instruments: OtelRequestInstruments | undefined
 
-  return async function addOtelRequestMetrics(ctx: ServiceContext, next: () => Promise<void>) {
-    if (!instruments) {
-      try {
-        instruments = await Promise.race([
-          getOtelInstruments(),
-          new Promise<never>((_, reject) =>
-            setTimeout(
-              () => reject(new Error('Timeout waiting for OpenTelemetry instruments initialization')),
-              INSTRUMENTS_INITIALIZATION_TIMEOUT
-            )
+  const tryGetInstruments = async (ctx: ServiceContext): Promise<OtelRequestInstruments | undefined> => {
+    try {
+      return await Promise.race([
+        getOtelInstruments(),
+        new Promise<never>((_, reject) =>
+          setTimeout(
+            () => reject(new Error('Timeout waiting for OpenTelemetry instruments initialization')),
+            INSTRUMENTS_INITIALIZATION_TIMEOUT
           )
-        ])
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error)
-        console.warn(`OpenTelemetry instruments not ready for request ${ctx.requestHandlerName}: ${errorMessage}`)
-        await next()
-        return
-      }
+        )
+      ])
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      console.warn(`OpenTelemetry instruments not ready for request ${ctx.requestHandlerName}: ${errorMessage}`)
+      return undefined
+    }
+  }
+
+  return async function addOtelRequestMetrics(ctx: ServiceContext, next: () => Promise<void>) {
+    instruments = instruments ? instruments : await tryGetInstruments(ctx)
+    if (!instruments) {
+      await next()
+      return
     }
 
     const start = process.hrtime()
