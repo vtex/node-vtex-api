@@ -14,8 +14,10 @@ export const addOtelRequestMetricsMiddleware = () => {
         instruments = await Promise.race([
           getOtelInstruments(),
           new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Timeout waiting for OpenTelemetry instruments initialization')),
-            INSTRUMENTS_INITIALIZATION_TIMEOUT)
+            setTimeout(
+              () => reject(new Error('Timeout waiting for OpenTelemetry instruments initialization')),
+              INSTRUMENTS_INITIALIZATION_TIMEOUT
+            )
           )
         ])
       } catch (error) {
