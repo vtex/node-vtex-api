@@ -1,6 +1,6 @@
 import { IOClients } from '../../../../../clients'
 import { PROVIDER_HEADER } from '../../../../../constants'
-import { majorEqualAndGreaterThan, parseAppId } from '../../../../../utils'
+import { isDifferentVersion, parseAppId } from '../../../../../utils'
 import { GraphQLOptions, ParamsContext, RecorderState } from '../../typings'
 import { makeSchema } from '../schema/index'
 import { ExecutableSchema } from '../typings'
@@ -26,10 +26,7 @@ export const updateSchema = <T extends IOClients, U extends RecorderState, V ext
     if (
       executableSchema.hasProvider &&
       (!executableSchema.provider ||
-        majorEqualAndGreaterThan(
-          parseAppId(ctx.headers[PROVIDER_HEADER]).version,
-          parseAppId(executableSchema.provider).version
-        ))
+        isDifferentVersion(parseAppId(ctx.headers[PROVIDER_HEADER]), parseAppId(executableSchema.provider)))
     ) {
       try {
         const newSchema = (await apps.getAppFile(ctx.headers[PROVIDER_HEADER], 'public/schema.graphql')).data.toString(

@@ -146,6 +146,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Deterministic cache for getWithBody
 - Remove socket metrics per origin
 
+### Fixed
+- Update the schema every time the provider version is different instead of when it is higher. 
+
 ## [6.45.12] - 2022-04-14
 
 ### Fixed
