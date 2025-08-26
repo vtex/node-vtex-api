@@ -82,6 +82,10 @@ class OtelInstrumentsSingleton {
     try {
       this.instruments = await this.initializingPromise;
       return this.instruments;
+    } catch (error) {
+      console.error('Failed to initialize OTel instruments:', error);
+      this.initializingPromise = undefined;
+      throw error;
     } finally {
       this.initializingPromise = undefined;
     }
