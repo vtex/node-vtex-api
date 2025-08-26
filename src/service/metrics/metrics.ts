@@ -14,9 +14,6 @@ export interface OtelRequestInstruments {
   abortedRequests: Types.Counter
 }
 
-let instruments: OtelRequestInstruments | undefined
-let initializingPromise: Promise<OtelRequestInstruments> | undefined
-
 const createOtelConcurrentRequestsInstrument = async (): Promise<Types.Gauge> => {
   const metricsClient = await getMetricClient()
   return metricsClient.createGauge('io_http_requests_current', {
@@ -57,45 +54,62 @@ const createOtelTotalAbortedRequestsInstrument = async (): Promise<Types.Counter
   })
 }
 
-export const getOtelInstruments = async (): Promise<OtelRequestInstruments> => {
-  if (instruments) {
-    return instruments
+class OtelInstrumentsSingleton {
+  private static instance: OtelInstrumentsSingleton | undefined;
+  private instruments: OtelRequestInstruments | undefined;
+  private initializingPromise: Promise<OtelRequestInstruments> | undefined;
+
+  private constructor() {}
+
+  public static getInstance(): OtelInstrumentsSingleton {
+    if (!OtelInstrumentsSingleton.instance) {
+      OtelInstrumentsSingleton.instance = new OtelInstrumentsSingleton();
+    }
+    return OtelInstrumentsSingleton.instance;
   }
 
-  if (initializingPromise) {
-    return initializingPromise
+  public async getInstruments(): Promise<OtelRequestInstruments> {
+    if (this.instruments) {
+      return this.instruments;
+    }
+
+    if (this.initializingPromise) {
+      return this.initializingPromise;
+    }
+
+    this.initializingPromise = this.initializeInstruments();
+
+    try {
+      this.instruments = await this.initializingPromise;
+      return this.instruments;
+    } finally {
+      this.initializingPromise = undefined;
+    }
   }
 
-  initializingPromise = initializeOtelInstruments()
+  private async initializeInstruments(): Promise<OtelRequestInstruments> {
+    const [
+      concurrentRequests,
+      requestTimings,
+      totalRequests,
+      responseSizes,
+      abortedRequests
+    ] = await Promise.all([
+      createOtelConcurrentRequestsInstrument(),
+      createOtelRequestsTimingsInstrument(),
+      createOtelTotalRequestsInstrument(),
+      createOtelRequestsResponseSizesInstrument(),
+      createOtelTotalAbortedRequestsInstrument()
+    ])
 
-  try {
-    instruments = await initializingPromise
-    return instruments
-  } finally {
-    initializingPromise = undefined
+    return {
+      concurrentRequests,
+      requestTimings,
+      totalRequests,
+      responseSizes,
+      abortedRequests
+    }
   }
 }
 
-const initializeOtelInstruments = async (): Promise<OtelRequestInstruments> => {
-  const [
-    concurrentRequests,
-    requestTimings,
-    totalRequests,
-    responseSizes,
-    abortedRequests
-  ] = await Promise.all([
-    createOtelConcurrentRequestsInstrument(),
-    createOtelRequestsTimingsInstrument(),
-    createOtelTotalRequestsInstrument(),
-    createOtelRequestsResponseSizesInstrument(),
-    createOtelTotalAbortedRequestsInstrument()
-  ])
-
-  return {
-    concurrentRequests,
-    requestTimings,
-    totalRequests,
-    responseSizes,
-    abortedRequests
-  }
-}
+export const getOtelInstruments = () => OtelInstrumentsSingleton.getInstance().getInstruments();
