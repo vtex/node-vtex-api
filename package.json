@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "7.0.0",
+  "version": "7.0.1",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -49,7 +49,7 @@
   "dependencies": {
     "@types/koa": "^2.11.0",
     "@types/koa-compose": "^3.2.3",
-    "@vtex/diagnostics-nodejs": "0.1.0-beta.10",
+    "@vtex/diagnostics-nodejs": "0.1.0-io-beta.19",
     "@vtex/node-error-report": "^0.0.3",
     "@wry/equality": "^0.1.9",
     "agentkeepalive": "^4.0.2",
@@ -124,5 +124,8 @@
     "typemoq": "^2.1.0",
     "typescript": "^4.4.4",
     "typescript-json-schema": "^0.52.0"
+  },
+  "resolutions": {
+    "@grpc/grpc-js": "^1.13.4"
   }
 }
