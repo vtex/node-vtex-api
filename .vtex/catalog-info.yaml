@@ -14,6 +14,6 @@ metadata:
     vtex.com/application-id: SHSTJA2W
 spec:
   lifecycle: stable
-  owner: apps
+  owner: te-0029
   type: library
   dependsOn: []
