@@ -47,6 +47,10 @@
   },
   "license": "MIT",
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/host-metrics": "0.35.5",
+    "@opentelemetry/instrumentation": "0.57.2",
+    "@opentelemetry/instrumentation-koa": "0.47.1",
     "@types/koa": "^2.11.0",
     "@types/koa-compose": "^3.2.3",
     "@vtex/diagnostics-nodejs": "0.1.0-io-beta.19",
