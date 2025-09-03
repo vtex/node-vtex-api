@@ -11,7 +11,6 @@ import { TelemetryClient } from '@vtex/diagnostics-nodejs/dist/telemetry';
 import { KoaInstrumentation } from '@opentelemetry/instrumentation-koa';
 import { HostMetricsInstrumentation } from '../metrics/instruments/hostMetrics';
 
-const CLIENT_NAME = APP.NAME || 'node-vtex-api';
 const APPLICATION_ID = APP.ID || 'vtex-io-app';
 
 interface TelemetryClients {
@@ -63,8 +62,11 @@ class TelemetryClientSingleton {
       const telemetryClient = await NewTelemetryClient(
         DK_APP_ID,
         'node-vtex-api',
+        APPLICATION_ID,
         {
           additionalAttrs: {
+            'app.id': APPLICATION_ID,
+            'vendor': APP.VENDOR,
             'version': APP.VERSION || '',
             'environment': process.env.VTEX_WORKSPACE || 'development',
           },
