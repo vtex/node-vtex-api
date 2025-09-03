@@ -61,8 +61,7 @@ class TelemetryClientSingleton {
   private async initializeTelemetryClients(): Promise<TelemetryClients> {
     try {
       const telemetryClient = await NewTelemetryClient(
-        APPLICATION_ID,
-        CLIENT_NAME,
+        DK_APP_ID,
         'node-vtex-api',
         {
           additionalAttrs: {
