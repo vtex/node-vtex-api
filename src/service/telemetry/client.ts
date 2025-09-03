@@ -58,12 +58,19 @@ class TelemetryClientSingleton {
     });
 
   private async initializeTelemetryClients(): Promise<TelemetryClients> {
+    // Check if telemetry is enabled for this app
+    if (!DIAGNOSTICS_TELEMETRY_ENABLED) {
+      console.warn(`Telemetry disabled for app: ${APP.ID} (vendor: ${APP.VENDOR})`);
+    }
+
     try {
       const telemetryClient = await NewTelemetryClient(
         DK_APP_ID,
         'node-vtex-api',
         APPLICATION_ID,
         {
+          // Use built-in no-op functionality when telemetry is disabled
+          noop: !DIAGNOSTICS_TELEMETRY_ENABLED,
           additionalAttrs: {
             'app.id': APPLICATION_ID,
             'vendor': APP.VENDOR,
@@ -79,16 +86,18 @@ class TelemetryClientSingleton {
         this.initializeLogsClient(telemetryClient),
       ]);
 
-      const instrumentations = [
-        ...Instrumentation.CommonInstrumentations.minimal(),
-        new KoaInstrumentation(),
-        new HostMetricsInstrumentation({
-          name: 'host-metrics-instrumentation',
-          meterProvider: metricsClient.provider(),
-        }),
-      ];
+      if (DIAGNOSTICS_TELEMETRY_ENABLED) {
+        const instrumentations = [
+          ...Instrumentation.CommonInstrumentations.minimal(),
+          new KoaInstrumentation(),
+          new HostMetricsInstrumentation({
+            name: 'host-metrics-instrumentation',
+            meterProvider: metricsClient.provider(),
+          }),
+        ];
 
-      telemetryClient.registerInstrumentations(instrumentations);
+        telemetryClient.registerInstrumentations(instrumentations);
+      }
 
       const clients: TelemetryClients = {
         logsClient,
