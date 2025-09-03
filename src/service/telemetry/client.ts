@@ -6,7 +6,7 @@ import {
   Metrics,
   Traces,
 } from '@vtex/diagnostics-nodejs';
-import { APP } from '../../constants';
+import { APP, OTEL_EXPORTER_OTLP_ENDPOINT, DK_APP_ID, DIAGNOSTICS_TELEMETRY_ENABLED } from '../../constants';
 import { TelemetryClient } from '@vtex/diagnostics-nodejs/dist/telemetry';
 import { KoaInstrumentation } from '@opentelemetry/instrumentation-koa';
 import { HostMetricsInstrumentation } from '../metrics/instruments/hostMetrics';
