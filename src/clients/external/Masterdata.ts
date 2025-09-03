@@ -9,6 +9,7 @@ const routes = {
   schema: (dataEntity: string, schema: string) => `${dataEntity}/schemas/${schema}`,
   scroll: (dataEntity: string) => `${dataEntity}/scroll`,
   search: (dataEntity: string) => `${dataEntity}/search`,
+  searchKeyword: (dataEntity: string, keyword: string) => `${dataEntity}/search?_keyword=${encodeURIComponent(keyword)}`,
 }
 
 export class MasterData extends ExternalClient {
@@ -39,8 +40,8 @@ export class MasterData extends ExternalClient {
     })
   }
 
-  public createOrUpdateSchema<T>(
-    { dataEntity, schemaName, schemaBody }: CreateSchemaInput,
+  public searchDocumentsWithKeyword<T>(
+    { dataEntity, fields, keyword, pagination, schema, sort }: SearchWithKeywordInput,
     tracingConfig?: RequestTracingConfig
   ) {
     const metric = 'masterdata-createOrUpdateSchema'
@@ -165,7 +166,9 @@ export class MasterData extends ExternalClient {
   public searchDocuments<T>(
     { dataEntity, fields, where, pagination, schema, sort }: SearchInput,
     tracingConfig?: RequestTracingConfig
-  ) {
+  )
+
+  {
     const metric = 'masterdata-searchDocuments'
     return this.http.get<T[]>(routes.search(dataEntity), {
       cacheable: CacheType.None,
