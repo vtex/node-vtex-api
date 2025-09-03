@@ -13,7 +13,6 @@ import { HostMetricsInstrumentation } from '../metrics/instruments/hostMetrics';
 
 const CLIENT_NAME = APP.NAME || 'node-vtex-api';
 const APPLICATION_ID = APP.ID || 'vtex-io-app';
-const EXPORTER_OTLP_ENDPOINT = process.env.EXPORTER_OTLP_ENDPOINT;
 
 interface TelemetryClients {
   logsClient: Logs.LogClient;
@@ -38,14 +37,14 @@ class TelemetryClientSingleton {
   private initializeTracesClient = async (telemetryClient: TelemetryClient) =>
     await telemetryClient.newTracesClient({
       exporter: Exporters.CreateExporter(Exporters.CreateTracesExporterConfig({
-        endpoint: EXPORTER_OTLP_ENDPOINT,
+        endpoint: OTEL_EXPORTER_OTLP_ENDPOINT,
       }), 'otlp'),
     });
 
   private initializeMetricsClient = async (telemetryClient: TelemetryClient) =>
     await telemetryClient.newMetricsClient({
       exporter: Exporters.CreateExporter(Exporters.CreateMetricsExporterConfig({
-        endpoint: EXPORTER_OTLP_ENDPOINT,
+        endpoint: OTEL_EXPORTER_OTLP_ENDPOINT,
         interval: 5,
         timeoutSeconds: 5,
       }), 'otlp'),
@@ -54,7 +53,7 @@ class TelemetryClientSingleton {
   private initializeLogsClient = async (telemetryClient: TelemetryClient) =>
     await telemetryClient.newLogsClient({
       exporter: Exporters.CreateExporter(Exporters.CreateLogsExporterConfig({
-        endpoint: EXPORTER_OTLP_ENDPOINT,
+        endpoint: OTEL_EXPORTER_OTLP_ENDPOINT,
       }), 'otlp'),
       loggerName: `node-vtex-api-${APPLICATION_ID}`,
     });
