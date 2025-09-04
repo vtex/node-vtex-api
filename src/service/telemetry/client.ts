@@ -58,10 +58,6 @@ class TelemetryClientSingleton {
     });
 
   private async initializeTelemetryClients(): Promise<TelemetryClients> {
-    // Check if telemetry is enabled for this app
-    if (!DIAGNOSTICS_TELEMETRY_ENABLED) {
-      console.warn(`Telemetry disabled for app: ${APP.ID} (vendor: ${APP.VENDOR})`);
-    }
 
     try {
       const telemetryClient = await NewTelemetryClient(
@@ -87,6 +83,8 @@ class TelemetryClientSingleton {
       ]);
 
       if (DIAGNOSTICS_TELEMETRY_ENABLED) {
+        console.log(`Telemetry enabled for app: ${APP.ID} (vendor: ${APP.VENDOR})`);
+        
         const instrumentations = [
           ...Instrumentation.CommonInstrumentations.minimal(),
           new KoaInstrumentation(),
