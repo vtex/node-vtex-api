@@ -1,0 +1,19 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: node-vtex-api
+  description: VTEX IO API Client for Node
+  tags:
+    - typescript
+  annotations:
+    vtex.com/janus-acronym: ""
+    vtex.com/o11y-os-index: ""
+    grafana/dashboard-selector: ""
+    github.com/project-slug: vtex/node-vtex-api
+    backstage.io/techdocs-ref: dir:../
+    vtex.com/application-id: SHSTJA2W
+spec:
+  lifecycle: stable
+  owner: te-0029
+  type: library
+  dependsOn: []
