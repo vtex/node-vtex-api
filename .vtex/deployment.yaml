@@ -1,4 +1,5 @@
 - name: node-vtex-api
+  referenceId: SHSTJA2W
   build:
     provider: dkcicd
     pipelines:
