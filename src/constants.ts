@@ -77,6 +77,6 @@ export const LOG_CLIENT_INIT_TIMEOUT_MS = 5000
 
 export const OTEL_EXPORTER_OTLP_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT as string;
 
-export const DK_APP_ID = process.env.NODE_VTEX_API_DK_APP_ID as string || "apps";
+export const DK_APP_ID = process.env.NODE_VTEX_API_DK_APP_ID as string || "apps-team";
 
 export const DIAGNOSTICS_TELEMETRY_ENABLED = process.env.VTEX_DIAGNOSTICS_TELEMETRY_ENABLED === 'true';
