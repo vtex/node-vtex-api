@@ -6,7 +6,7 @@ import {
   Metrics,
   Traces,
 } from '@vtex/diagnostics-nodejs';
-import { APP, OTEL_EXPORTER_OTLP_ENDPOINT, DK_APP_ID, DIAGNOSTICS_TELEMETRY_ENABLED } from '../../constants';
+import { APP, OTEL_EXPORTER_OTLP_ENDPOINT, DK_APP_ID, DIAGNOSTICS_TELEMETRY_ENABLED, WORKSPACE, PRODUCTION } from '../../constants';
 import { TelemetryClient } from '@vtex/diagnostics-nodejs/dist/telemetry';
 import { KoaInstrumentation } from '@opentelemetry/instrumentation-koa';
 import { HostMetricsInstrumentation } from '../metrics/instruments/hostMetrics';
@@ -71,7 +71,8 @@ class TelemetryClientSingleton {
             'app.id': APPLICATION_ID,
             'vendor': APP.VENDOR,
             'version': APP.VERSION || '',
-            'environment': process.env.VTEX_WORKSPACE || 'development',
+            'workspace': WORKSPACE,
+            'production': PRODUCTION.toString(),
           },
         }
       );
