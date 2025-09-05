@@ -1251,10 +1251,10 @@
   dependencies:
     "@types/yargs-parser" "*"
 
-"@vtex/diagnostics-nodejs@0.1.0-io-beta.19":
-  version "0.1.0-io-beta.19"
-  resolved "https://registry.yarnpkg.com/@vtex/diagnostics-nodejs/-/diagnostics-nodejs-0.1.0-io-beta.19.tgz#e8ebc6a0b44014d0ffcda9df736291c52604ee9e"
-  integrity sha512-p3bcfpCI12k1DXqD2wJvO53dDdrULYsK7muJFHlwiZio4WvnSfPU1Ay5ni9Y8alD/MLX4fP4EEjRYXTGc7wFWQ==
+"@vtex/diagnostics-nodejs@0.1.0-io-beta.20":
+  version "0.1.0-io-beta.20"
+  resolved "https://registry.yarnpkg.com/@vtex/diagnostics-nodejs/-/diagnostics-nodejs-0.1.0-io-beta.20.tgz#79ee25a88827a501206d1a8ef0715674fa1521b5"
+  integrity sha512-8DbibPcPEd2yJCRKZOM2JAf4FYr9W90lD+DRV/mOwgMd1ZGdZuXupfoqqOzOdrkOidXhCeLBPhRXne8O2N3QEQ==
   dependencies:
     "@grpc/grpc-js" "^1.13.4"
     "@opentelemetry/api" "^1.9.0"
