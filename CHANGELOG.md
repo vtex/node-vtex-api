@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+## [7.1.0] - 2025-09-02
+### Changed
+- Add new scope argument into auth directive
+
 ## [7.0.1] - 2025-08-14
 ### Changed
 - Update `diagnostics-nodejs` version, simplifying client initialization, consolidating telemetry logic, and improving type safety
