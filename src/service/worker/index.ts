@@ -1,3 +1,4 @@
+import { Instrumentation } from '@vtex/diagnostics-nodejs';
 import { request } from 'http'
 import Koa from 'koa'
 import compress from 'koa-compress'
@@ -13,6 +14,7 @@ import { getService } from '../loaders'
 import { logOnceToDevConsole } from '../logger/console'
 import { LogLevel } from '../logger/loggerTypes'
 import { addRequestMetricsMiddleware } from '../metrics/requestMetricsMiddleware'
+import { addOtelRequestMetricsMiddleware } from '../metrics/otelRequestMetricsMiddleware'
 import { TracerSingleton } from '../tracing/TracerSingleton'
 import { addTracingMiddleware } from '../tracing/tracingMiddlewares'
 import { addProcessListeners, logger } from './listeners'
@@ -220,9 +222,11 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
   app.proxy = true
   app
     .use(error)
+    .use(Instrumentation.Middlewares.ContextMiddlewares.Koa.ContextPropagationMiddleware())
     .use(prometheusLoggerMiddleware())
     .use(addTracingMiddleware(tracer))
     .use(addRequestMetricsMiddleware())
+    .use(addOtelRequestMetricsMiddleware())
     .use(addMetricsLoggerMiddleware())
     .use(concurrentRateLimiter(serviceJSON?.rateLimitPerReplica?.concurrent))
     .use(compress())
