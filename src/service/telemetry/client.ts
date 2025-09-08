@@ -6,14 +6,12 @@ import {
   Metrics,
   Traces,
 } from '@vtex/diagnostics-nodejs';
-import { APP } from '../../constants';
+import { APP, OTEL_EXPORTER_OTLP_ENDPOINT, DK_APP_ID, DIAGNOSTICS_TELEMETRY_ENABLED, WORKSPACE, PRODUCTION } from '../../constants';
 import { TelemetryClient } from '@vtex/diagnostics-nodejs/dist/telemetry';
 import { KoaInstrumentation } from '@opentelemetry/instrumentation-koa';
 import { HostMetricsInstrumentation } from '../metrics/instruments/hostMetrics';
 
-const CLIENT_NAME = APP.NAME || 'node-vtex-api';
 const APPLICATION_ID = APP.ID || 'vtex-io-app';
-const EXPORTER_OTLP_ENDPOINT = process.env.EXPORTER_OTLP_ENDPOINT;
 
 interface TelemetryClients {
   logsClient: Logs.LogClient;
@@ -38,14 +36,14 @@ class TelemetryClientSingleton {
   private initializeTracesClient = async (telemetryClient: TelemetryClient) =>
     await telemetryClient.newTracesClient({
       exporter: Exporters.CreateExporter(Exporters.CreateTracesExporterConfig({
-        endpoint: EXPORTER_OTLP_ENDPOINT,
+        endpoint: OTEL_EXPORTER_OTLP_ENDPOINT,
       }), 'otlp'),
     });
 
   private initializeMetricsClient = async (telemetryClient: TelemetryClient) =>
     await telemetryClient.newMetricsClient({
       exporter: Exporters.CreateExporter(Exporters.CreateMetricsExporterConfig({
-        endpoint: EXPORTER_OTLP_ENDPOINT,
+        endpoint: OTEL_EXPORTER_OTLP_ENDPOINT,
         interval: 5,
         timeoutSeconds: 5,
       }), 'otlp'),
@@ -54,21 +52,27 @@ class TelemetryClientSingleton {
   private initializeLogsClient = async (telemetryClient: TelemetryClient) =>
     await telemetryClient.newLogsClient({
       exporter: Exporters.CreateExporter(Exporters.CreateLogsExporterConfig({
-        endpoint: EXPORTER_OTLP_ENDPOINT,
+        endpoint: OTEL_EXPORTER_OTLP_ENDPOINT,
       }), 'otlp'),
       loggerName: `node-vtex-api-${APPLICATION_ID}`,
     });
 
   private async initializeTelemetryClients(): Promise<TelemetryClients> {
+
     try {
       const telemetryClient = await NewTelemetryClient(
-        APPLICATION_ID,
-        CLIENT_NAME,
+        DK_APP_ID,
         'node-vtex-api',
+        APPLICATION_ID,
         {
+          // Use built-in no-op functionality when telemetry is disabled
+          noop: !DIAGNOSTICS_TELEMETRY_ENABLED,
           additionalAttrs: {
+            'app.id': APPLICATION_ID,
+            'vendor': APP.VENDOR,
             'version': APP.VERSION || '',
-            'environment': process.env.VTEX_WORKSPACE || 'development',
+            'workspace': WORKSPACE,
+            'production': PRODUCTION.toString(),
           },
         }
       );
@@ -79,16 +83,20 @@ class TelemetryClientSingleton {
         this.initializeLogsClient(telemetryClient),
       ]);
 
-      const instrumentations = [
-        ...Instrumentation.CommonInstrumentations.minimal(),
-        new KoaInstrumentation(),
-        new HostMetricsInstrumentation({
-          name: 'host-metrics-instrumentation',
-          meterProvider: metricsClient.provider(),
-        }),
-      ];
+      if (DIAGNOSTICS_TELEMETRY_ENABLED) {
+        console.log(`Telemetry enabled for app: ${APP.ID} (vendor: ${APP.VENDOR})`);
+        
+        const instrumentations = [
+          ...Instrumentation.CommonInstrumentations.minimal(),
+          new KoaInstrumentation(),
+          new HostMetricsInstrumentation({
+            name: 'host-metrics-instrumentation',
+            meterProvider: metricsClient.provider(),
+          }),
+        ];
 
-      telemetryClient.registerInstrumentations(instrumentations);
+        telemetryClient.registerInstrumentations(instrumentations);
+      }
 
       const clients: TelemetryClients = {
         logsClient,

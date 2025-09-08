@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "7.1.0",
+  "version": "7.1.1",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -53,7 +53,7 @@
     "@opentelemetry/instrumentation-koa": "0.47.1",
     "@types/koa": "^2.11.0",
     "@types/koa-compose": "^3.2.3",
-    "@vtex/diagnostics-nodejs": "0.1.0-io-beta.19",
+    "@vtex/diagnostics-nodejs": "0.1.0-io-beta.20",
     "@vtex/node-error-report": "^0.0.3",
     "@wry/equality": "^0.1.9",
     "agentkeepalive": "^4.0.2",
