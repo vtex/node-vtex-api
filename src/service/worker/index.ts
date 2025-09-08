@@ -263,12 +263,12 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
     app.use(privateHandlersRouter.routes())
   }
 
-  global.metrics = new MetricsAccumulator()
-
   process.on('message', onMessage(serviceJSON))
 
   return app
 }
+
+global.metrics = new MetricsAccumulator()
 
 declare global {
   namespace NodeJS {
