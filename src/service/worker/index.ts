@@ -267,13 +267,3 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
 
   return app
 }
-
-global.metrics = new MetricsAccumulator()
-
-declare global {
-  namespace NodeJS {
-    interface Global {
-      metrics: MetricsAccumulator
-    }
-  }
-}
