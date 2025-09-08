@@ -7,13 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [7.1.1] - 2025-09-08
-### Changed
-- Add conditional enabling for diagnostics telemetry signals
-
-## [7.1.0] - 2025-09-08
+## [7.2.0] - 2025-09-08
 ### Changed
 - Add metrics instrumentation based on diagnostics lib
+- Add conditional enabling for diagnostics telemetry signals
 
 ## [7.1.0] - 2025-09-02
 ### Changed
