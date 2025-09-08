@@ -33,9 +33,11 @@ export const statusTrackHandler = async (ctx: ServiceContext) => {
 }
 
 export const trackStatus = () => {
-  global.metrics.statusTrack().forEach(status => {
-    logStatus(status)
-  })
+  if (global.metrics) {
+    global.metrics.statusTrack().forEach(status => {
+      logStatus(status)
+    })
+  }
 }
 
 export const broadcastStatusTrack = () => Object.values(cluster.workers).forEach(
