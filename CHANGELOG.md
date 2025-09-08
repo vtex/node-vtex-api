@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [7.2.1] - 2025-09-08
+### Fixed
+- Ensure `global.metrics` is initialized in both master and worker processes to prevent undefined errors in status tracking and metrics reporting
+
 ## [7.2.0] - 2025-09-08
 ### Changed
 - Add metrics instrumentation based on diagnostics lib
