@@ -2,11 +2,16 @@ import { initializeTelemetry } from './telemetry'
 import cluster from 'cluster'
 
 import { HTTP_SERVER_PORT } from '../constants'
+import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
 import { getServiceJSON } from './loaders'
 import { LogLevel, logOnceToDevConsole } from './logger'
 
 export const startApp = async () => {
   await initializeTelemetry()
+  
+  // Initialize global.metrics for both master and worker processes
+  global.metrics = new MetricsAccumulator()
+  
   const serviceJSON = getServiceJSON()
   try {
     // if it is a master process then call setting up worker process
@@ -26,4 +31,12 @@ export const startApp = async () => {
 }
 
 export { appPath } from './loaders'
+
+declare global {
+  namespace NodeJS {
+    interface Global {
+      metrics: MetricsAccumulator
+    }
+  }
+}
 
