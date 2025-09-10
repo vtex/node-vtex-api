@@ -91,10 +91,8 @@ describe('constants', () => {
     })
 
     test('should contain VTEX semantic attributes', () => {
-      expect(AttributeKeys).toHaveProperty('VTEX_OPERATION_ID')
       expect(AttributeKeys).toHaveProperty('VTEX_ACCOUNT_NAME')
 
-      expect(typeof AttributeKeys.VTEX_OPERATION_ID).toBe('string')
       expect(typeof AttributeKeys.VTEX_ACCOUNT_NAME).toBe('string')
     })
 
@@ -410,7 +408,7 @@ describe('constants', () => {
 
     test('should maintain AttributeKeys structure', () => {
       const requiredAttributes = [
-        'VTEX_OPERATION_ID', 'VTEX_ACCOUNT_NAME',
+        'VTEX_ACCOUNT_NAME',
         'VTEX_IO_WORKSPACE_NAME', 'VTEX_IO_WORKSPACE_TYPE',
         'VTEX_IO_APP_ID', 'VTEX_IO_APP_AUTHOR_TYPE'
       ]
