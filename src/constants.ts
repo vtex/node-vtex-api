@@ -1,6 +1,5 @@
 import { versionToMajor } from './utils/app'
 import {
-  ATTR_VTEX_OPERATION_ID,
   ATTR_VTEX_ACCOUNT_NAME,
   ATTR_VTEX_IO_WORKSPACE_NAME,
   ATTR_VTEX_IO_WORKSPACE_TYPE,
@@ -56,7 +55,6 @@ export const HeaderKeys = {
 
 export const AttributeKeys = {
   // VTEX Semantic Attributes
-  VTEX_OPERATION_ID: ATTR_VTEX_OPERATION_ID,
   VTEX_ACCOUNT_NAME: ATTR_VTEX_ACCOUNT_NAME,
 
   // VTEX IO Semantic Attributes
