@@ -1,7 +1,7 @@
 import { APP, LOG_CLIENT_INIT_TIMEOUT_MS, AttributeKeys } from '../../constants'
 import { cleanError } from '../../utils/error'
 import { cleanLog } from '../../utils/log'
-import { LogClient } from '@vtex/diagnostics-nodejs/dist/types';
+import { Types } from '@vtex/diagnostics-nodejs';
 import { LoggerContext, LogLevel, TracingState } from './loggerTypes'
 import { getLogClient } from './client'
 
@@ -15,8 +15,8 @@ export class Logger {
   private requestId: string
   private production: boolean
   private tracingState?: TracingState
-  private logClient: LogClient | undefined = undefined
-  private clientInitPromise: Promise<LogClient | undefined> | undefined = undefined
+  private logClient: Types.LogClient | undefined = undefined
+  private clientInitPromise: Promise<Types.LogClient | undefined> | undefined = undefined
 
   constructor(ctx: LoggerContext) {
     this.account = ctx.account
@@ -32,10 +32,10 @@ export class Logger {
       }
     }
 
-    // this.initLogClient();
+    this.initLogClient();
   }
 
-  private initLogClient(): Promise<LogClient | undefined> {
+  private initLogClient(): Promise<Types.LogClient | undefined> {
     if (this.clientInitPromise) {
       return this.clientInitPromise;
     }
@@ -47,7 +47,7 @@ export class Logger {
         });
 
         this.logClient = await Promise.race([
-          getLogClient(this.account, this.workspace, APP.NAME),
+          getLogClient(),
           timeoutPromise
         ]);
 
@@ -125,6 +125,6 @@ export class Logger {
       }
     }
 
-    console.log(typeof inflatedLog === 'string' ? JSON.stringify(inflatedLog) : inflatedLog)
+    console.log(JSON.stringify(inflatedLog))
   }
 }

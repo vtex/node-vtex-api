@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [7.2.1] - 2025-09-08
+### Fixed
+- Ensure `global.metrics` is initialized in both master and worker processes to prevent undefined errors in status tracking and metrics reporting
+
+## [7.2.0] - 2025-09-08
+### Changed
+- Add metrics instrumentation based on diagnostics lib
+- Add conditional enabling for diagnostics telemetry signals
+
+## [7.1.0] - 2025-09-02
+### Changed
+- Add new scope argument into auth directive
+
+## [7.0.1] - 2025-08-14
+### Changed
+- Update `diagnostics-nodejs` version, simplifying client initialization, consolidating telemetry logic, and improving type safety
+
+## [7.0.0] - 2025-08-13
+### Changed
+- Version created to keep track of Runtime 7-compatible implementation of this lib
+
+## [6.49.6] - 2025-07-25
+### Changed
+- Bump `@vtex/diagnostics-nodejs` version
+- Remove `resolutions` field from `package.json`
+
+## [6.49.5] - 2025-07-21
+### Changed
+- Defining a list of headers to be added as trace span information
+
+## [6.49.4] - 2025-07-02
+### Fixed
+- Userland logs that wouldn't be collected
+
 ## [6.49.2] - 2025-06-03
 ### Fixed
 - Bumped `axios` to newest version without vuln CVE-2025-27152
@@ -1860,7 +1894,7 @@ instead
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
 
 
-[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.48.1-beta.4...HEAD
+[7.0.0]: https://github.com/vtex/node-vtex-api/compare/v7.0.0...v6.49.6
 [6.45.15]: https://github.com/vtex/node-vtex-api/compare/v6.45.14...v6.45.15
 [6.45.14]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...v6.45.14
 [6.45.13]: https://github.com/vtex/node-vtex-api/compare/v6.45.12...v6.45.13
