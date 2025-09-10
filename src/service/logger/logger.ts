@@ -87,7 +87,7 @@ export class Logger {
       [AttributeKeys.VTEX_IO_WORKSPACE_NAME]: this.workspace,
       [AttributeKeys.VTEX_IO_WORKSPACE_TYPE]: this.production ? 'production' : 'development',
       [AttributeKeys.VTEX_IO_APP_AUTHOR_TYPE]: APP.IS_THIRD_PARTY() ? '3p' : '1p',
-      [AttributeKeys.VTEX_OPERATION_ID]: this.operationId,
+      operationId: this.operationId,
       requestId: this.requestId,
       data,
       ... (this.tracingState?.isTraceSampled ? { traceId: this.tracingState.traceId } : null),
