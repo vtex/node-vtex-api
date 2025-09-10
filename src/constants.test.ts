@@ -1,26 +1,26 @@
 import {
-  NODE_VTEX_API_VERSION,
-  DEFAULT_WORKSPACE,
-  IS_IO,
-  PID,
-  HeaderKeys,
+  ACCOUNT,
+  APP,
   AttributeKeys,
   BODY_HASH,
-  UP_SIGNAL,
-  MAX_AGE,
-  HTTP_SERVER_PORT,
-  MAX_WORKERS,
-  LINKED,
-  REGION,
-  PUBLIC_ENDPOINT,
-  APP,
-  NODE_ENV,
-  ACCOUNT,
-  WORKSPACE,
-  PRODUCTION,
-  INSPECT_DEBUGGER_PORT,
   cancellableMethods,
-  LOG_CLIENT_INIT_TIMEOUT_MS
+  DEFAULT_WORKSPACE,
+  HeaderKeys,
+  HTTP_SERVER_PORT,
+  INSPECT_DEBUGGER_PORT,
+  IS_IO,
+  LINKED,
+  LOG_CLIENT_INIT_TIMEOUT_MS,
+  MAX_AGE,
+  MAX_WORKERS,
+  NODE_ENV,
+  NODE_VTEX_API_VERSION,
+  PID,
+  PRODUCTION,
+  PUBLIC_ENDPOINT,
+  REGION,
+  UP_SIGNAL,
+  WORKSPACE
 } from './constants'
 
 describe('constants', () => {
@@ -249,7 +249,7 @@ describe('constants', () => {
         { vendor: 'vtex', expected: false },
         { vendor: 'gocommerce', expected: false },
         { vendor: 'other', expected: true },
-        { vendor: undefined, expected: true }
+        { vendor: undefined, expected: true },
       ]
 
       testCases.forEach(({ vendor, expected }) => {
@@ -257,7 +257,7 @@ describe('constants', () => {
           VENDOR: vendor,
           IS_THIRD_PARTY() {
             return 'vtex' !== this.VENDOR && 'gocommerce' !== this.VENDOR
-          }
+          },
         }
         expect(mockApp.IS_THIRD_PARTY()).toBe(expected)
       })
@@ -342,7 +342,7 @@ describe('constants', () => {
         PRODUCTION,
         INSPECT_DEBUGGER_PORT,
         cancellableMethods,
-        LOG_CLIENT_INIT_TIMEOUT_MS
+        LOG_CLIENT_INIT_TIMEOUT_MS,
       }
 
       // Environment-based constants that can be undefined in test environment
@@ -410,7 +410,7 @@ describe('constants', () => {
       const requiredAttributes = [
         'VTEX_ACCOUNT_NAME',
         'VTEX_IO_WORKSPACE_NAME', 'VTEX_IO_WORKSPACE_TYPE',
-        'VTEX_IO_APP_ID', 'VTEX_IO_APP_AUTHOR_TYPE'
+        'VTEX_IO_APP_ID', 'VTEX_IO_APP_AUTHOR_TYPE',
       ]
 
       requiredAttributes.forEach(attr => {
