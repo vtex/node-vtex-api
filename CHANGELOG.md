@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [6.50.1] - 2025-09-10
 ### Fixed
 - Axios vuln GHSA-jr5f-v2jv-69x6 by using axios@^0.30.1
 
@@ -1898,5 +1900,6 @@ instead
 [6.45.20-beta]: https://github.com/vtex/node-vtex-api/compare/v6.45.19...v6.45.20-beta
 
 
-[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.50.1-beta...HEAD
+[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.50.1...HEAD
+[6.50.1]: https://github.com/vtex/node-vtex-api/compare/v6.50.1-beta...v6.50.1
 [6.50.1-beta]: https://github.com/vtex/node-vtex-api/compare/v6.50.0...v6.50.1-beta
