@@ -11,7 +11,7 @@
   "scripts": {
     "clean": "rimraf lib/",
     "watch": "yarn clean && tsc --watch",
-    "build": "yarn clean && tsc",
+    "build": "yarn lint && yarn clean && tsc",
     "gen": "typescript-json-schema src/responses.ts PublicAppManifest > gen/manifest.schema",
     "test": "jest",
     "lint": "tslint -c tslint.json './src/**/*.ts'",
