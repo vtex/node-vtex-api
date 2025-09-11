@@ -55,7 +55,7 @@ export class TestServer {
           return reject(err)
         }
 
-        resolve()
+        resolve(undefined)
       })
     })
   }
