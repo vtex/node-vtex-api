@@ -22,19 +22,6 @@
     "ci:test": "yarn test --ci",
     "ci:prettier-check": "prettier --check --config ./.prettierrc \"src/**/*.ts\" \"src/**/*.js\""
   },
-  "jest": {
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
-    "testMatch": [
-      "**/__tests__/**/*.(js|ts)?(x)",
-      "**/?(*.)+(spec|test).(js|ts)?(x)"
-    ],
-    "moduleFileExtensions": [
-      "ts",
-      "js"
-    ]
-  },
   "engines": {
     "node": ">=8"
   },
