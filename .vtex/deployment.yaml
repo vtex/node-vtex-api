@@ -1,0 +1,17 @@
+- name: node-vtex-api
+  referenceId: SHSTJA2W
+  build:
+    provider: dkcicd
+    pipelines:
+      - name: techdocs-v1
+        parameters:
+          entityReference: default/component/node-vtex-api
+          sourceDir: ./
+        when:
+          - event: push
+            source: branch
+            regex: main
+            path:
+              - "docs/**"
+              - README.md
+              - .vtex/deployment.yaml
