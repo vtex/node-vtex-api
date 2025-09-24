@@ -1,9 +1,9 @@
 import { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
-import buildFullPath from '../../../../../../utils/buildFullPath'
 import { Span } from 'opentracing'
 import { HeaderKeys } from '../../../../../../constants'
 import { CustomHttpTags, OpentracingTags } from '../../../../../../tracing/Tags'
 import { cloneAndSanitizeHeaders } from '../../../../../../tracing/utils'
+import buildFullPath from '../../../../../../utils/buildFullPath'
 
 export const injectRequestInfoOnSpan = (span: Span | undefined, http: AxiosInstance, config: AxiosRequestConfig) => {
   span?.addTags({

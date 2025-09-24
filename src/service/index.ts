@@ -1,3 +1,4 @@
+// tslint:disable:ordered-imports
 import { initializeTelemetry } from './telemetry'
 import cluster from 'cluster'
 
@@ -39,4 +40,3 @@ declare global {
     }
   }
 }
-

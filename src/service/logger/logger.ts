@@ -1,9 +1,9 @@
-import { APP, LOG_CLIENT_INIT_TIMEOUT_MS, AttributeKeys } from '../../constants'
+import { Types } from '@vtex/diagnostics-nodejs'
+import { APP, AttributeKeys, LOG_CLIENT_INIT_TIMEOUT_MS } from '../../constants'
 import { cleanError } from '../../utils/error'
 import { cleanLog } from '../../utils/log'
-import { Types } from '@vtex/diagnostics-nodejs';
-import { LoggerContext, LogLevel, TracingState } from './loggerTypes'
 import { getLogClient } from './client'
+import { LoggerContext, LogLevel, TracingState } from './loggerTypes'
 
 const app = APP.ID
 const EMPTY_MESSAGE = 'Logger.log was called with null or undefined message'
@@ -32,33 +32,7 @@ export class Logger {
       }
     }
 
-    this.initLogClient();
-  }
-
-  private initLogClient(): Promise<Types.LogClient | undefined> {
-    if (this.clientInitPromise) {
-      return this.clientInitPromise;
-    }
-
-    this.clientInitPromise = (async () => {
-      try {
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error('Log client initialization timeout')), LOG_CLIENT_INIT_TIMEOUT_MS);
-        });
-
-        this.logClient = await Promise.race([
-          getLogClient(),
-          timeoutPromise
-        ]);
-
-        return this.logClient;
-      } catch (error) {
-        console.error('Failed to initialize log client:', error);
-        return undefined;
-      }
-    })();
-
-    return this.clientInitPromise;
+    this.initLogClient()
   }
 
   public debug = (message: any) =>
@@ -98,33 +72,59 @@ export class Logger {
       Object.assign(inflatedLog, {
         '__SKIDDER_TOPIC_1': `skidder.vendor.${APP.VENDOR}`,
         '__SKIDDER_TOPIC_2': `skidder.app.${APP.VENDOR}.${APP.NAME}`,
-      });
+      })
     }
 
     if (this.logClient) {
       try {
-        let logMessage = typeof data === 'string' ? data : JSON.stringify(data)
+        const logMessage = typeof data === 'string' ? data : JSON.stringify(data)
         switch (level) {
           case LogLevel.Debug:
-            this.logClient.debug(logMessage, inflatedLog);
-            break;
+            this.logClient.debug(logMessage, inflatedLog)
+            break
           case LogLevel.Info:
-            this.logClient.info(logMessage, inflatedLog);
-            break;
+            this.logClient.info(logMessage, inflatedLog)
+            break
           case LogLevel.Warn:
-            this.logClient.warn(logMessage, inflatedLog);
-            break;
+            this.logClient.warn(logMessage, inflatedLog)
+            break
           case LogLevel.Error:
-            this.logClient.error(logMessage, inflatedLog);
-            break;
+            this.logClient.error(logMessage, inflatedLog)
+            break
           default:
-            this.logClient.info(logMessage, inflatedLog);
+            this.logClient.info(logMessage, inflatedLog)
         }
       } catch (e) {
-        console.error('Error using diagnostics client for logging:', e);
+        console.error('Error using diagnostics client for logging:', e)
       }
     }
 
     console.log(JSON.stringify(inflatedLog))
+  }
+
+  private initLogClient(): Promise<Types.LogClient | undefined> {
+    if (this.clientInitPromise) {
+      return this.clientInitPromise
+    }
+
+    this.clientInitPromise = (async () => {
+      try {
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Log client initialization timeout')), LOG_CLIENT_INIT_TIMEOUT_MS)
+        })
+
+        this.logClient = await Promise.race([
+          getLogClient(),
+          timeoutPromise,
+        ])
+
+        return this.logClient
+      } catch (error) {
+        console.error('Failed to initialize log client:', error)
+        return undefined
+      }
+    })()
+
+    return this.clientInitPromise
   }
 }

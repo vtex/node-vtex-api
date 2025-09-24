@@ -1,3 +1,4 @@
+/* tslint:disable:no-unnecessary-initializer */
 import { any, map, slice } from 'ramda'
 import { CacheLayer } from './CacheLayer'
 import { FetchResult, MultilayerStats } from './typings'

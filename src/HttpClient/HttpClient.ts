@@ -4,8 +4,8 @@ import { IncomingMessage } from 'http'
 import compose from 'koa-compose'
 import pLimit from 'p-limit'
 import {
-  HeaderKeys,
   BODY_HASH,
+  HeaderKeys,
 } from '../constants'
 import { Logger } from '../service/logger'
 import { IOContext } from '../service/worker/runtime/typings'

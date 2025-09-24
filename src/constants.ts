@@ -1,11 +1,11 @@
-import { versionToMajor } from './utils/app'
 import {
   ATTR_VTEX_ACCOUNT_NAME,
-  ATTR_VTEX_IO_WORKSPACE_NAME,
-  ATTR_VTEX_IO_WORKSPACE_TYPE,
+  ATTR_VTEX_IO_APP_AUTHOR_TYPE,
   ATTR_VTEX_IO_APP_ID,
-  ATTR_VTEX_IO_APP_AUTHOR_TYPE
+  ATTR_VTEX_IO_WORKSPACE_NAME,
+  ATTR_VTEX_IO_WORKSPACE_TYPE
 } from '@vtex/diagnostics-semconv'
+import { versionToMajor } from './utils/app'
 
 // tslint:disable-next-line
 const pkg = require('../package.json')
@@ -50,7 +50,7 @@ export const HeaderKeys = {
   VTEX_IO_CALLER: 'x-vtex-io-caller',
   VTEX_APP_SERVICE: 'x-vtex-app-service',
   VTEX_APP_KEY: 'x-vtex-app-key',
-  VTEX_RETRY_COUNT: 'x-vtex-retry-count'
+  VTEX_RETRY_COUNT: 'x-vtex-retry-count',
 }
 
 export const AttributeKeys = {
@@ -103,8 +103,8 @@ export const cancellableMethods = new Set(['GET', 'OPTIONS', 'HEAD'])
 
 export const LOG_CLIENT_INIT_TIMEOUT_MS = 5000
 
-export const OTEL_EXPORTER_OTLP_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT as string;
+export const OTEL_EXPORTER_OTLP_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT as string
 
-export const DK_APP_ID = process.env.NODE_VTEX_API_DK_APP_ID as string || "apps-team";
+export const DK_APP_ID = process.env.NODE_VTEX_API_DK_APP_ID as string || 'apps-team'
 
-export const DIAGNOSTICS_TELEMETRY_ENABLED = process.env.VTEX_DIAGNOSTICS_TELEMETRY_ENABLED === 'true';
+export const DIAGNOSTICS_TELEMETRY_ENABLED = process.env.VTEX_DIAGNOSTICS_TELEMETRY_ENABLED === 'true'
