@@ -6,7 +6,7 @@ import {
   Metrics,
   Traces,
 } from '@vtex/diagnostics-nodejs';
-import { APP, OTEL_EXPORTER_OTLP_ENDPOINT, DK_APP_ID, DIAGNOSTICS_TELEMETRY_ENABLED, WORKSPACE, PRODUCTION } from '../../constants';
+import { APP, OTEL_EXPORTER_OTLP_ENDPOINT, DK_APP_ID, DIAGNOSTICS_TELEMETRY_ENABLED, WORKSPACE, PRODUCTION, AttributeKeys } from '../../constants';
 import { TelemetryClient } from '@vtex/diagnostics-nodejs/dist/telemetry';
 import { KoaInstrumentation } from '@opentelemetry/instrumentation-koa';
 import { HostMetricsInstrumentation } from '../metrics/instruments/hostMetrics';
@@ -68,11 +68,11 @@ class TelemetryClientSingleton {
           // Use built-in no-op functionality when telemetry is disabled
           noop: !DIAGNOSTICS_TELEMETRY_ENABLED,
           additionalAttrs: {
-            'app.id': APPLICATION_ID,
+            [AttributeKeys.VTEX_IO_APP_ID]: APPLICATION_ID,
             'vendor': APP.VENDOR,
             'version': APP.VERSION || '',
-            'workspace': WORKSPACE,
-            'production': PRODUCTION.toString(),
+            [AttributeKeys.VTEX_IO_WORKSPACE_NAME]: WORKSPACE,
+            [AttributeKeys.VTEX_IO_WORKSPACE_TYPE]: PRODUCTION.toString(),
           },
         }
       );
