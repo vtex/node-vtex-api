@@ -1,5 +1,5 @@
 import { IOClients } from '../../../../../clients'
-import { PROVIDER_HEADER } from '../../../../../constants'
+import { HeaderKeys } from '../../../../../constants'
 import { majorEqualAndGreaterThan, parseAppId } from '../../../../../utils'
 import { GraphQLOptions, ParamsContext, RecorderState } from '../../typings'
 import { makeSchema } from '../schema/index'
@@ -17,7 +17,7 @@ export const updateSchema = <T extends IOClients, U extends RecorderState, V ext
       app,
     } = ctx
 
-    if (!ctx.headers[PROVIDER_HEADER]) {
+    if (!ctx.headers[HeaderKeys.PROVIDER]) {
       await next()
       return
     }
@@ -27,18 +27,18 @@ export const updateSchema = <T extends IOClients, U extends RecorderState, V ext
       executableSchema.hasProvider &&
       (!executableSchema.provider ||
         majorEqualAndGreaterThan(
-          parseAppId(ctx.headers[PROVIDER_HEADER]).version,
+          parseAppId(ctx.headers[HeaderKeys.PROVIDER]).version,
           parseAppId(executableSchema.provider).version
         ))
     ) {
       try {
-        const newSchema = (await apps.getAppFile(ctx.headers[PROVIDER_HEADER], 'public/schema.graphql')).data.toString(
+        const newSchema = (await apps.getAppFile(ctx.headers[HeaderKeys.PROVIDER], 'public/schema.graphql')).data.toString(
           'utf-8'
         )
         graphql.schema = newSchema
         const newRunnableSchema = makeSchema(graphql)
         executableSchema.schema = newRunnableSchema.schema
-        executableSchema.provider = ctx.headers[PROVIDER_HEADER]
+        executableSchema.provider = ctx.headers[HeaderKeys.PROVIDER]
       } catch (error) {
         logger.error({ error, message: 'Update schema failed', app })
       }

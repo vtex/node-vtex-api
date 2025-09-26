@@ -1287,6 +1287,11 @@
   resolved "https://registry.yarnpkg.com/@vtex/diagnostics-semconv/-/diagnostics-semconv-0.1.0-beta.11.tgz#2ddfff7dffdc1c052d23b335f914de91653d9659"
   integrity sha512-H3KM5fYAFmcxhlA4wT5iPgWJtgKsumFqGkkxjcA/BSwC5tgSWezN82sZDKvBsVo24EoZxVGgLlsjNw1tsp9U3Q==
 
+"@vtex/diagnostics-semconv@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@vtex/diagnostics-semconv/-/diagnostics-semconv-1.1.2.tgz#ed58b4c0f403cf5d9ff5e3d487e959ff9c1802e2"
+  integrity sha512-CUz58FTeYHC6z5n0qJKcHesJK00ykwDAFKXUaBKjzI166lm/LqMkdPJA8KE2h4RWGDdSaPDIUDdkueSD76oUfw==
+
 "@vtex/node-error-report@^0.0.3":
   version "0.0.3"
   resolved "https://registry.yarnpkg.com/@vtex/node-error-report/-/node-error-report-0.0.3.tgz#365a2652aeebbd6b51ddc5d64c3c0bc1a326dc71"

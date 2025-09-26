@@ -1,4 +1,12 @@
 import { versionToMajor } from './utils/app'
+import {
+  ATTR_VTEX_ACCOUNT_NAME,
+  ATTR_VTEX_IO_WORKSPACE_NAME,
+  ATTR_VTEX_IO_WORKSPACE_TYPE,
+  ATTR_VTEX_IO_APP_ID,
+  ATTR_VTEX_IO_APP_AUTHOR_TYPE
+} from '@vtex/diagnostics-semconv'
+
 // tslint:disable-next-line
 const pkg = require('../package.json')
 
@@ -7,36 +15,56 @@ export const DEFAULT_WORKSPACE = 'master'
 export const IS_IO = process.env.VTEX_IO
 export const PID = process.pid
 
-export const CACHE_CONTROL_HEADER = 'cache-control'
-export const SEGMENT_HEADER = 'x-vtex-segment'
-export const SESSION_HEADER = 'x-vtex-session'
-export const PRODUCT_HEADER = 'x-vtex-product'
-export const LOCALE_HEADER = 'x-vtex-locale'
-export const FORWARDED_HOST_HEADER = 'x-forwarded-host'
-export const TENANT_HEADER = 'x-vtex-tenant'
-export const BINDING_HEADER = 'x-vtex-binding'
-export const META_HEADER = 'x-vtex-meta'
-export const META_HEADER_BUCKET = 'x-vtex-meta-bucket'
-export const ETAG_HEADER = 'etag'
-export const ACCOUNT_HEADER = 'x-vtex-account'
-export const CREDENTIAL_HEADER = 'x-vtex-credential'
-export const REQUEST_ID_HEADER = 'x-request-id'
-export const ROUTER_CACHE_HEADER = 'x-router-cache'
-export const OPERATION_ID_HEADER = 'x-vtex-operation-id'
-export const PLATFORM_HEADER = 'x-vtex-platform'
-export const WORKSPACE_IS_PRODUCTION_HEADER = 'x-vtex-workspace-is-production'
-export const WORKSPACE_HEADER = 'x-vtex-workspace'
-export const EVENT_KEY_HEADER = 'x-event-key'
-export const EVENT_SENDER_HEADER = 'x-event-sender'
-export const EVENT_SUBJECT_HEADER = 'x-event-subject'
-export const EVENT_HANDLER_ID_HEADER = 'x-event-handler-id'
-export const COLOSSUS_ROUTE_DECLARER_HEADER = 'x-colossus-route-declarer'
-export const COLOSSUS_ROUTE_ID_HEADER = 'x-colossus-route-id'
-export const COLOSSUS_PARAMS_HEADER = 'x-colossus-params'
-export const TRACE_ID_HEADER = 'x-trace-id'
-export const PROVIDER_HEADER = 'x-vtex-provider'
+export const HeaderKeys = {
+  CACHE_CONTROL: 'cache-control',
+  SEGMENT: 'x-vtex-segment',
+  SESSION: 'x-vtex-session',
+  PRODUCT: 'x-vtex-product',
+  LOCALE: 'x-vtex-locale',
+  FORWARDED_HOST: 'x-forwarded-host',
+  FORWARDED_FOR: 'x-forwarded-for',
+  TENANT: 'x-vtex-tenant',
+  BINDING: 'x-vtex-binding',
+  META: 'x-vtex-meta',
+  META_BUCKET: 'x-vtex-meta-bucket',
+  ETAG: 'etag',
+  ACCOUNT: 'x-vtex-account',
+  CREDENTIAL: 'x-vtex-credential',
+  REQUEST_ID: 'x-request-id',
+  ROUTER_CACHE: 'x-router-cache',
+  OPERATION_ID: 'x-vtex-operation-id',
+  PLATFORM: 'x-vtex-platform',
+  WORKSPACE_IS_PRODUCTION: 'x-vtex-workspace-is-production',
+  WORKSPACE: 'x-vtex-workspace',
+  EVENT_KEY: 'x-event-key',
+  EVENT_SENDER: 'x-event-sender',
+  EVENT_SUBJECT: 'x-event-subject',
+  EVENT_HANDLER_ID: 'x-event-handler-id',
+  COLOSSUS_ROUTE_DECLARER: 'x-colossus-route-declarer',
+  COLOSSUS_ROUTE_ID: 'x-colossus-route-id',
+  COLOSSUS_PARAMS: 'x-colossus-params',
+  TRACE_ID: 'x-trace-id',
+  PROVIDER: 'x-vtex-provider',
+  USER_AGENT: 'user-agent',
+  VTEX_USER_AGENT: 'x-vtex-user-agent',
+  VTEX_IO_CALLER: 'x-vtex-io-caller',
+  VTEX_APP_SERVICE: 'x-vtex-app-service',
+  VTEX_APP_KEY: 'x-vtex-app-key',
+  VTEX_RETRY_COUNT: 'x-vtex-retry-count'
+}
 
-export type VaryHeaders = typeof SEGMENT_HEADER | typeof SESSION_HEADER | typeof PRODUCT_HEADER | typeof LOCALE_HEADER
+export const AttributeKeys = {
+  // VTEX Semantic Attributes
+  VTEX_ACCOUNT_NAME: ATTR_VTEX_ACCOUNT_NAME,
+
+  // VTEX IO Semantic Attributes
+  VTEX_IO_WORKSPACE_NAME: ATTR_VTEX_IO_WORKSPACE_NAME,
+  VTEX_IO_WORKSPACE_TYPE: ATTR_VTEX_IO_WORKSPACE_TYPE,
+  VTEX_IO_APP_ID: ATTR_VTEX_IO_APP_ID,
+  VTEX_IO_APP_AUTHOR_TYPE: ATTR_VTEX_IO_APP_AUTHOR_TYPE,
+}
+
+export type VaryHeaders = typeof HeaderKeys.SEGMENT | typeof HeaderKeys.SESSION | typeof HeaderKeys.PRODUCT | typeof HeaderKeys.LOCALE
 
 export const BODY_HASH = '__graphqlBodyHash'
 

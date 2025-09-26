@@ -1,7 +1,7 @@
 import { MockSpanContext } from '@tiagonapoli/opentracing-alternate-mock'
 import { AxiosError, AxiosInstance } from 'axios'
 import { REFERENCE_CHILD_OF, REFERENCE_FOLLOWS_FROM } from 'opentracing'
-import { ROUTER_CACHE_HEADER } from '../../../../../constants'
+import { HeaderKeys } from '../../../../../constants'
 import { SpanReferenceTypes } from '../../../../../tracing'
 import { ErrorReportLogFields } from '../../../../../tracing/LogFields'
 import { CustomHttpTags, OpentracingTags } from '../../../../../tracing/Tags'
@@ -141,7 +141,7 @@ export const registerSharedTestSuite = (testSuiteConfig: TestSuiteConfig) => {
 
     if (testSuiteConfig.testServer) {
       it(`Properly assigns router cache tag when it's present`, async () => {
-        testSuiteConfig.testServer!.mockResponseHeaders({ [ROUTER_CACHE_HEADER]: 'MISS' })
+        testSuiteConfig.testServer!.mockResponseHeaders({ [HeaderKeys.ROUTER_CACHE]: 'MISS' })
         const { allRequestSpans } = await TracedTestRequest.doRequest(http, testSuiteConfig.requestsConfig)
         allRequestSpans.forEach((requestSpan) => {
           expect(requestSpan.tags()[CustomHttpTags.HTTP_ROUTER_CACHE_RESULT]).toEqual('MISS')

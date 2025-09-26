@@ -1,4 +1,4 @@
-import { APP, LOG_CLIENT_INIT_TIMEOUT_MS } from '../../constants'
+import { APP, LOG_CLIENT_INIT_TIMEOUT_MS, AttributeKeys } from '../../constants'
 import { cleanError } from '../../utils/error'
 import { cleanLog } from '../../utils/log'
 import { Types } from '@vtex/diagnostics-nodejs';
@@ -82,13 +82,14 @@ export class Logger {
     const inflatedLog = {
       __VTEX_IO_LOG: true,
       level,
-      app,
-      account: this.account,
-      workspace: this.workspace,
-      production: this.production,
-      data,
+      [AttributeKeys.VTEX_IO_APP_ID]: app,
+      [AttributeKeys.VTEX_ACCOUNT_NAME]: this.account,
+      [AttributeKeys.VTEX_IO_WORKSPACE_NAME]: this.workspace,
+      [AttributeKeys.VTEX_IO_WORKSPACE_TYPE]: this.production ? 'production' : 'development',
+      [AttributeKeys.VTEX_IO_APP_AUTHOR_TYPE]: APP.IS_THIRD_PARTY() ? '3p' : '1p',
       operationId: this.operationId,
       requestId: this.requestId,
+      data,
       ... (this.tracingState?.isTraceSampled ? { traceId: this.tracingState.traceId } : null),
     }
 
