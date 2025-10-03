@@ -25,8 +25,25 @@ class IncomingRequestStats {
 
 export const incomingRequestStats = new IncomingRequestStats()
 
-const requestClosed = () => {
+const requestClosed = <
+  T extends IOClients,
+  U extends RecorderState,
+  V extends ParamsContext
+>(ctx: ServiceContext<T, U, V>) => () => {
   incomingRequestStats.closed++
+  
+  // Report to diagnostics metrics (cumulative counter)
+  const { status: statusCode, vtex: { route: { id, type } } } = ctx
+
+  if (global.diagnosticsMetrics) {
+    global.diagnosticsMetrics.incrementCounter('http_server_requests_closed_total', 1, {
+      route_id: id,
+      route_type: type,
+      status_code: statusCode,
+    })
+  } else {
+    console.warn('DiagnosticsMetrics not available. Request closed metric not reported.')
+  }
 }
 const requestAborted = <
   T extends IOClients,
@@ -46,7 +63,7 @@ export async function trackIncomingRequestStats <
   U extends RecorderState,
   V extends ParamsContext
 > (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
-  ctx.req.on('close', requestClosed)
+  ctx.req.on('close', requestClosed(ctx))
   ctx.req.on('aborted', requestAborted(ctx))
   incomingRequestStats.total++
   
