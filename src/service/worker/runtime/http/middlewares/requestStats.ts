@@ -52,6 +52,19 @@ const requestAborted = <
 >(ctx: ServiceContext<T, U, V>) => () => {
   incomingRequestStats.aborted++
 
+  // Report to diagnostics metrics (cumulative counter)
+  const { status: statusCode, vtex: { route: { id, type } } } = ctx
+
+  if (global.diagnosticsMetrics) {
+    global.diagnosticsMetrics.incrementCounter('http_server_requests_aborted_total', 1, {
+      route_id: id,
+      route_type: type,
+      status_code: statusCode,
+    })
+  } else {
+    console.warn('DiagnosticsMetrics not available. Request aborted metric not reported.')
+  }
+
   if (ctx.vtex.cancellation && ctx.vtex.cancellation.cancelable) {
     ctx.vtex.cancellation.source.cancel(cancelMessage)
     ctx.vtex.cancellation.cancelled = true
