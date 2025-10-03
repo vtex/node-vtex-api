@@ -21,6 +21,25 @@ export class HttpAgentSingleton {
       sockets,
     }
   }
+
+  /**
+   * Update HTTP agent statistics as diagnostics metrics (gauges).
+   * This method should be called periodically to export current HTTP agent state.
+   */
+  public static updateHttpAgentMetrics() {
+    if (!global.diagnosticsMetrics) {
+      console.warn('DiagnosticsMetrics not available. HTTP agent metrics not reported.')
+      return
+    }
+
+    const stats = HttpAgentSingleton.httpAgentStats()
+    
+    // Report HTTP agent stats as gauges (current state)
+    global.diagnosticsMetrics.setGauge('http_agent_sockets_current', stats.sockets, {})
+    global.diagnosticsMetrics.setGauge('http_agent_free_sockets_current', stats.freeSockets, {})
+    global.diagnosticsMetrics.setGauge('http_agent_pending_requests_current', stats.pendingRequests, {})
+  }
+
   private static httpAgent: HttpAgent
 
   private static count(obj: { [key: string]: any[] }) {
