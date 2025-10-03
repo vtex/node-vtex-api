@@ -97,12 +97,10 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
           cacheState = 'memoized'
         }
 
-        if (ctx.config.retryCount) {
-          const retryCount = ctx.config.retryCount
+        const retryCount = ctx.config.retryCount || 0
 
-          if (retryCount > 0) {
-            extensions[`retry-${status}-${retryCount}`] = 1
-          }
+        if (retryCount > 0) {
+          extensions[`retry-${status}-${retryCount}`] = 1
         }
 
         const end = status === 'success' && !ctx.cacheHit && !ctx.inflightHit && !ctx.memoizedHit
@@ -138,6 +136,14 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
             global.diagnosticsMetrics.incrementCounter('http_client_cache_total', 1, {
               ...baseAttributes,
               cache_state: cacheState,
+            })
+          }
+
+          // Retry counter (replaces 'retry-{status}-{count}' extensions)
+          if (retryCount > 0) {
+            global.diagnosticsMetrics.incrementCounter('http_client_requests_retried_total', 1, {
+              ...baseAttributes,
+              retry_count: retryCount,
             })
           }
         } else {
