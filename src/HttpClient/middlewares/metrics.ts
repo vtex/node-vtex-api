@@ -76,19 +76,25 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
 
         Object.assign(extensions, {[status]: 1})
 
+        // Determine cache state for diagnostics metrics
+        let cacheState = 'none'
         if (ctx.cacheHit) {
           Object.assign(extensions, ctx.cacheHit, {[`${status}-hit`]: 1})
+          cacheState = 'hit'
         } else if (!ctx.inflightHit && !ctx.memoizedHit) {
           // Lets us know how many calls passed through to origin
           Object.assign(extensions, {[`${status}-miss`]: 1})
+          cacheState = 'miss'
         }
 
         if (ctx.inflightHit) {
           Object.assign(extensions, {[`${status}-inflight`]: 1})
+          cacheState = 'inflight'
         }
 
         if (ctx.memoizedHit) {
           Object.assign(extensions, {[`${status}-memoized`]: 1})
+          cacheState = 'memoized'
         }
 
         if (ctx.config.retryCount) {
@@ -120,11 +126,20 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
           // Record latency histogram with all context
           global.diagnosticsMetrics.recordLatency(elapsed, {
             ...baseAttributes,
+            cache_state: cacheState,
           })
 
           // Increment counters for different event types (replaces extensions behavior)
           // Main request counter with status as attribute
           global.diagnosticsMetrics.incrementCounter('http_client_requests_total', 1, baseAttributes)
+
+          // Cache counter with cache_state as attribute (replaces extensions like 'success-hit', 'error-miss')
+          if (cacheState !== 'none') {
+            global.diagnosticsMetrics.incrementCounter('http_client_cache_total', 1, {
+              ...baseAttributes,
+              cache_state: cacheState,
+            })
+          }
         } else {
           console.warn('DiagnosticsMetrics not available. HTTP client metrics not reported.')
         }
