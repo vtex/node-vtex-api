@@ -49,5 +49,18 @@ export async function trackIncomingRequestStats <
   ctx.req.on('close', requestClosed)
   ctx.req.on('aborted', requestAborted(ctx))
   incomingRequestStats.total++
+  
+  // Report total requests to diagnostics metrics (cumulative counter)
+  const { status: statusCode, vtex: { route: { id, type } } } = ctx
+  if (global.diagnosticsMetrics) {
+    global.diagnosticsMetrics.incrementCounter('http_server_requests_total', 1, {
+      route_id: id,
+      route_type: type,
+      status_code: statusCode,
+    })
+  } else {
+    console.warn('DiagnosticsMetrics not available. Request total metric not reported.')
+  }
+  
   await next()
 }
