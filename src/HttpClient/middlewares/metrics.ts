@@ -13,6 +13,7 @@ import {
 import { TIMEOUT_CODE } from '../../utils/retry'
 import { statusLabel } from '../../utils/status'
 import { MiddlewareContext } from '../typings'
+import { Attributes } from '@opentelemetry/api'
 
 interface MetricsOpts {
   metrics?: MetricsAccumulator
@@ -102,7 +103,31 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
           ? process.hrtime(start)
           : undefined
 
+        // Legacy metrics (backward compatibility)
         metrics.batch(label, end, extensions)
+
+        // New diagnostics metrics with stable names and attributes
+        if (global.diagnosticsMetrics) {
+          const elapsed = process.hrtime(start)
+          const rawStatusCode = ctx.response?.status || errorStatus
+          const baseAttributes: Attributes = {
+            component: 'http-client',
+            client_metric: ctx.config.metric,
+            status_code: rawStatusCode,
+            status,
+          }
+
+          // Record latency histogram with all context
+          global.diagnosticsMetrics.recordLatency(elapsed, {
+            ...baseAttributes,
+          })
+
+          // Increment counters for different event types (replaces extensions behavior)
+          // Main request counter with status as attribute
+          global.diagnosticsMetrics.incrementCounter('http_client_requests_total', 1, baseAttributes)
+        } else {
+          console.warn('DiagnosticsMetrics not available. HTTP client metrics not reported.')
+        }
 
         if (ctx.config.verbose) {
           console.log(`VERBOSE: ${name}.${ctx.config.label}`, {
