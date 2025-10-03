@@ -102,6 +102,7 @@ export const INSPECT_DEBUGGER_PORT = 5858
 export const cancellableMethods = new Set(['GET', 'OPTIONS', 'HEAD'])
 
 export const LOG_CLIENT_INIT_TIMEOUT_MS = 5000
+export const METRIC_CLIENT_INIT_TIMEOUT_MS = 5000
 
 export const OTEL_EXPORTER_OTLP_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT as string;
 
