@@ -79,18 +79,21 @@ export class Logger {
     cleanLog(data)
 
     /* tslint:disable:object-literal-sort-keys */
-    const inflatedLog = {
+    const commonLogFields = {
       __VTEX_IO_LOG: true,
       level,
-      [AttributeKeys.VTEX_IO_APP_ID]: app,
-      [AttributeKeys.VTEX_ACCOUNT_NAME]: this.account,
-      [AttributeKeys.VTEX_IO_WORKSPACE_NAME]: this.workspace,
-      [AttributeKeys.VTEX_IO_WORKSPACE_TYPE]: this.production ? 'production' : 'development',
-      [AttributeKeys.VTEX_IO_APP_AUTHOR_TYPE]: APP.IS_THIRD_PARTY() ? '3p' : '1p',
       operationId: this.operationId,
       requestId: this.requestId,
-      data,
       ... (this.tracingState?.isTraceSampled ? { traceId: this.tracingState.traceId } : null),
+    }
+
+    const inflatedLog = {
+      app,
+      account: this.account,
+      workspace: this.workspace,
+      production: this.production,
+      data,
+      ...commonLogFields,
     }
 
     // Mark third-party apps logs to send to skidder
@@ -101,30 +104,40 @@ export class Logger {
       });
     }
 
+    console.log(JSON.stringify(inflatedLog))
+
+    const diagnosticsLog = {
+      [AttributeKeys.VTEX_IO_APP_ID]: app,
+      [AttributeKeys.VTEX_ACCOUNT_NAME]: this.account,
+      [AttributeKeys.VTEX_IO_WORKSPACE_NAME]: this.workspace,
+      [AttributeKeys.VTEX_IO_WORKSPACE_TYPE]: this.production ? 'production' : 'development',
+      [AttributeKeys.VTEX_IO_APP_AUTHOR_TYPE]: APP.IS_THIRD_PARTY() ? '3p' : '1p',
+      ...commonLogFields,
+    }
+
     if (this.logClient) {
       try {
         let logMessage = typeof data === 'string' ? data : JSON.stringify(data)
         switch (level) {
           case LogLevel.Debug:
-            this.logClient.debug(logMessage, inflatedLog);
+            this.logClient.debug(logMessage, diagnosticsLog);
             break;
           case LogLevel.Info:
-            this.logClient.info(logMessage, inflatedLog);
+            this.logClient.info(logMessage, diagnosticsLog);
             break;
           case LogLevel.Warn:
-            this.logClient.warn(logMessage, inflatedLog);
+            this.logClient.warn(logMessage, diagnosticsLog);
             break;
           case LogLevel.Error:
-            this.logClient.error(logMessage, inflatedLog);
+            this.logClient.error(logMessage, diagnosticsLog);
             break;
           default:
-            this.logClient.info(logMessage, inflatedLog);
+            this.logClient.info(logMessage, diagnosticsLog);
         }
       } catch (e) {
         console.error('Error using diagnostics client for logging:', e);
       }
     }
 
-    console.log(JSON.stringify(inflatedLog))
   }
 }
