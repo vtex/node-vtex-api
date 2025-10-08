@@ -52,7 +52,10 @@ export const addOtelRequestMetricsMiddleware = () => {
       if (responseLength && instruments) {
         instruments.responseSizes.record(
           responseLength,
-          { [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName }
+          {
+            [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
+            [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
+          }
         )
       }
 
@@ -72,6 +75,7 @@ export const addOtelRequestMetricsMiddleware = () => {
             hrToMillisFloat(process.hrtime(start)),
             {
               [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
+              [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
             }
           )
 
