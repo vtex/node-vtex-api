@@ -26,7 +26,7 @@ export const parseTranslatableStringV2 = (rawMessage: string): TranslatableMessa
     content: content?.trim(),
     context: context?.trim(),
     from: from?.trim(),
-    state: state?.trim() as 'original' | 'translated' | undefined,
+    state: (state?.trim() === 'translated' ? 'translated' : 'original') as 'translated' | 'original',
   }
 }
 
