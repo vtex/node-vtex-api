@@ -20,7 +20,36 @@ import {
   PRODUCTION,
   INSPECT_DEBUGGER_PORT,
   cancellableMethods,
-  LOG_CLIENT_INIT_TIMEOUT_MS
+  LOG_CLIENT_INIT_TIMEOUT_MS,
+  // Backward-compatible individual header constants
+  CACHE_CONTROL_HEADER,
+  SEGMENT_HEADER,
+  SESSION_HEADER,
+  PRODUCT_HEADER,
+  LOCALE_HEADER,
+  FORWARDED_HOST_HEADER,
+  TENANT_HEADER,
+  BINDING_HEADER,
+  META_HEADER,
+  META_HEADER_BUCKET,
+  ETAG_HEADER,
+  ACCOUNT_HEADER,
+  CREDENTIAL_HEADER,
+  REQUEST_ID_HEADER,
+  ROUTER_CACHE_HEADER,
+  OPERATION_ID_HEADER,
+  PLATFORM_HEADER,
+  WORKSPACE_IS_PRODUCTION_HEADER,
+  WORKSPACE_HEADER,
+  EVENT_KEY_HEADER,
+  EVENT_SENDER_HEADER,
+  EVENT_SUBJECT_HEADER,
+  EVENT_HANDLER_ID_HEADER,
+  COLOSSUS_ROUTE_DECLARER_HEADER,
+  COLOSSUS_ROUTE_ID_HEADER,
+  COLOSSUS_PARAMS_HEADER,
+  TRACE_ID_HEADER,
+  PROVIDER_HEADER
 } from './constants'
 
 describe('constants', () => {
@@ -424,6 +453,87 @@ describe('constants', () => {
 
       requiredProperties.forEach(prop => {
         expect(APP).toHaveProperty(prop)
+      })
+    })
+
+    describe('Individual header constants (deprecated)', () => {
+      test('all individual header constants should be defined', () => {
+        expect(CACHE_CONTROL_HEADER).toBeDefined()
+        expect(SEGMENT_HEADER).toBeDefined()
+        expect(SESSION_HEADER).toBeDefined()
+        expect(PRODUCT_HEADER).toBeDefined()
+        expect(LOCALE_HEADER).toBeDefined()
+        expect(FORWARDED_HOST_HEADER).toBeDefined()
+        expect(TENANT_HEADER).toBeDefined()
+        expect(BINDING_HEADER).toBeDefined()
+        expect(META_HEADER).toBeDefined()
+        expect(META_HEADER_BUCKET).toBeDefined()
+        expect(ETAG_HEADER).toBeDefined()
+        expect(ACCOUNT_HEADER).toBeDefined()
+        expect(CREDENTIAL_HEADER).toBeDefined()
+        expect(REQUEST_ID_HEADER).toBeDefined()
+        expect(ROUTER_CACHE_HEADER).toBeDefined()
+        expect(OPERATION_ID_HEADER).toBeDefined()
+        expect(PLATFORM_HEADER).toBeDefined()
+        expect(WORKSPACE_IS_PRODUCTION_HEADER).toBeDefined()
+        expect(WORKSPACE_HEADER).toBeDefined()
+        expect(EVENT_KEY_HEADER).toBeDefined()
+        expect(EVENT_SENDER_HEADER).toBeDefined()
+        expect(EVENT_SUBJECT_HEADER).toBeDefined()
+        expect(EVENT_HANDLER_ID_HEADER).toBeDefined()
+        expect(COLOSSUS_ROUTE_DECLARER_HEADER).toBeDefined()
+        expect(COLOSSUS_ROUTE_ID_HEADER).toBeDefined()
+        expect(COLOSSUS_PARAMS_HEADER).toBeDefined()
+        expect(TRACE_ID_HEADER).toBeDefined()
+        expect(PROVIDER_HEADER).toBeDefined()
+      })
+
+      test('individual constants should equal HeaderKeys values', () => {
+        expect(CACHE_CONTROL_HEADER).toBe(HeaderKeys.CACHE_CONTROL)
+        expect(SEGMENT_HEADER).toBe(HeaderKeys.SEGMENT)
+        expect(SESSION_HEADER).toBe(HeaderKeys.SESSION)
+        expect(PRODUCT_HEADER).toBe(HeaderKeys.PRODUCT)
+        expect(LOCALE_HEADER).toBe(HeaderKeys.LOCALE)
+        expect(FORWARDED_HOST_HEADER).toBe(HeaderKeys.FORWARDED_HOST)
+        expect(TENANT_HEADER).toBe(HeaderKeys.TENANT)
+        expect(BINDING_HEADER).toBe(HeaderKeys.BINDING)
+        expect(META_HEADER).toBe(HeaderKeys.META)
+        expect(META_HEADER_BUCKET).toBe(HeaderKeys.META_BUCKET)
+        expect(ETAG_HEADER).toBe(HeaderKeys.ETAG)
+        expect(ACCOUNT_HEADER).toBe(HeaderKeys.ACCOUNT)
+        expect(CREDENTIAL_HEADER).toBe(HeaderKeys.CREDENTIAL)
+        expect(REQUEST_ID_HEADER).toBe(HeaderKeys.REQUEST_ID)
+        expect(ROUTER_CACHE_HEADER).toBe(HeaderKeys.ROUTER_CACHE)
+        expect(OPERATION_ID_HEADER).toBe(HeaderKeys.OPERATION_ID)
+        expect(PLATFORM_HEADER).toBe(HeaderKeys.PLATFORM)
+        expect(WORKSPACE_IS_PRODUCTION_HEADER).toBe(HeaderKeys.WORKSPACE_IS_PRODUCTION)
+        expect(WORKSPACE_HEADER).toBe(HeaderKeys.WORKSPACE)
+        expect(EVENT_KEY_HEADER).toBe(HeaderKeys.EVENT_KEY)
+        expect(EVENT_SENDER_HEADER).toBe(HeaderKeys.EVENT_SENDER)
+        expect(EVENT_SUBJECT_HEADER).toBe(HeaderKeys.EVENT_SUBJECT)
+        expect(EVENT_HANDLER_ID_HEADER).toBe(HeaderKeys.EVENT_HANDLER_ID)
+        expect(COLOSSUS_ROUTE_DECLARER_HEADER).toBe(HeaderKeys.COLOSSUS_ROUTE_DECLARER)
+        expect(COLOSSUS_ROUTE_ID_HEADER).toBe(HeaderKeys.COLOSSUS_ROUTE_ID)
+        expect(COLOSSUS_PARAMS_HEADER).toBe(HeaderKeys.COLOSSUS_PARAMS)
+        expect(TRACE_ID_HEADER).toBe(HeaderKeys.TRACE_ID)
+        expect(PROVIDER_HEADER).toBe(HeaderKeys.PROVIDER)
+      })
+
+      test('critical individual constants should have expected string values', () => {
+        expect(TENANT_HEADER).toBe('x-vtex-tenant')
+        expect(BINDING_HEADER).toBe('x-vtex-binding')
+        expect(LOCALE_HEADER).toBe('x-vtex-locale')
+        expect(SEGMENT_HEADER).toBe('x-vtex-segment')
+        expect(SESSION_HEADER).toBe('x-vtex-session')
+        expect(ACCOUNT_HEADER).toBe('x-vtex-account')
+        expect(WORKSPACE_HEADER).toBe('x-vtex-workspace')
+      })
+
+      test('individual constants should be strings', () => {
+        expect(typeof TENANT_HEADER).toBe('string')
+        expect(typeof BINDING_HEADER).toBe('string')
+        expect(typeof LOCALE_HEADER).toBe('string')
+        expect(typeof SEGMENT_HEADER).toBe('string')
       })
     })
   })
