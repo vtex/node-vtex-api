@@ -1,7 +1,7 @@
 import { Attributes } from '@opentelemetry/api'
 import { Types } from '@vtex/diagnostics-nodejs'
 import { getMetricClient } from '../service/metrics/client'
-import { METRIC_CLIENT_INIT_TIMEOUT_MS } from '../constants'
+import { METRIC_CLIENT_INIT_TIMEOUT_MS, LINKED } from '../constants'
 
 /**
  * Maximum number of attributes allowed per metric to control cardinality.
@@ -33,10 +33,12 @@ function limitAttributes(attributes?: Attributes): Attributes | undefined {
     return attributes
   }
 
-  console.warn(
-    `Attribute limit exceeded: ${entries.length} attributes provided, using only the first ${MAX_ATTRIBUTES}. ` +
-    `Consider reducing the number of attributes to avoid high cardinality.`
-  )
+  if (LINKED) {
+    console.warn(
+      `Attribute limit exceeded: ${entries.length} attributes provided, using only the first ${MAX_ATTRIBUTES}. ` +
+      `Consider reducing the number of attributes to avoid high cardinality.`
+    )
+  }
 
   return Object.fromEntries(entries.slice(0, MAX_ATTRIBUTES))
 }
