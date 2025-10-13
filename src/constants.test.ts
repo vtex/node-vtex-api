@@ -535,6 +535,138 @@ describe('constants', () => {
         expect(typeof LOCALE_HEADER).toBe('string')
         expect(typeof SEGMENT_HEADER).toBe('string')
       })
+
+      test('constants can be used as object keys without runtime errors', () => {
+        // This is how IO apps use them in practice
+        const headers = {
+          [TENANT_HEADER]: 'example-value',
+          [BINDING_HEADER]: 'example-binding',
+          [LOCALE_HEADER]: 'en-US',
+          [SEGMENT_HEADER]: 'segment-token',
+          [SESSION_HEADER]: 'session-token',
+          [ACCOUNT_HEADER]: 'account-name',
+          [WORKSPACE_HEADER]: 'master'
+        }
+
+        expect(headers['x-vtex-tenant']).toBe('example-value')
+        expect(headers['x-vtex-binding']).toBe('example-binding')
+        expect(headers['x-vtex-locale']).toBe('en-US')
+        expect(headers['x-vtex-segment']).toBe('segment-token')
+        expect(Object.keys(headers)).toHaveLength(7)
+        
+        // Verify no undefined keys were created
+        Object.keys(headers).forEach(key => {
+          expect(key).not.toBe('undefined')
+          expect(headers[key]).toBeDefined()
+        })
+      })
+
+      test('constants can be destructured from module exports', () => {
+        // Simulates: import { TENANT_HEADER, BINDING_HEADER } from '@vtex/api'
+        const constants = require('./constants')
+        const {
+          TENANT_HEADER: tenant,
+          BINDING_HEADER: binding,
+          LOCALE_HEADER: locale,
+          SEGMENT_HEADER: segment
+        } = constants
+
+        expect(tenant).toBeDefined()
+        expect(binding).toBeDefined()
+        expect(locale).toBeDefined()
+        expect(segment).toBeDefined()
+
+        expect(tenant).toBe('x-vtex-tenant')
+        expect(binding).toBe('x-vtex-binding')
+        expect(locale).toBe('x-vtex-locale')
+        expect(segment).toBe('x-vtex-segment')
+
+        // Ensure they're not undefined
+        expect(tenant).not.toBe(undefined)
+        expect(binding).not.toBe(undefined)
+      })
+
+      test('individual constants are compatible with VaryHeaders type', () => {
+        // VaryHeaders type uses HeaderKeys internally, but should accept old constants
+        const varyHeaderValues: string[] = [SEGMENT_HEADER, SESSION_HEADER, PRODUCT_HEADER, LOCALE_HEADER]
+
+        varyHeaderValues.forEach(header => {
+          expect(typeof header).toBe('string')
+          expect(header.length).toBeGreaterThan(0)
+          // VTEX headers follow x-vtex- pattern, except standard headers like cache-control
+          expect(header).toMatch(/^x-vtex-|^cache-control$|^etag$/)
+        })
+
+        // Verify they match the type definition (HeaderKeys values)
+        const expectedVaryHeaders = [
+          HeaderKeys.SEGMENT,
+          HeaderKeys.SESSION,
+          HeaderKeys.PRODUCT,
+          HeaderKeys.LOCALE
+        ]
+
+        expect(varyHeaderValues).toEqual(expectedVaryHeaders)
+
+        // Ensure VaryHeaders type inference works
+        expect(SEGMENT_HEADER).toBe(HeaderKeys.SEGMENT)
+        expect(SESSION_HEADER).toBe(HeaderKeys.SESSION)
+        expect(PRODUCT_HEADER).toBe(HeaderKeys.PRODUCT)
+        expect(LOCALE_HEADER).toBe(HeaderKeys.LOCALE)
+      })
+
+      test('constants work correctly as header keys in realistic scenarios', () => {
+        // Simulates IO apps usage patterns
+        const mockBinding = { locale: 'en-US', currency: 'USD' }
+        const mockTenant = { locale: 'pt-BR' }
+        const mockSegmentToken = 'eyJjYW1wYWlnbnMiOm51bGx9'
+        const mockSessionToken = 'session-abc-123'
+
+        // Pattern 1: Building headers object
+        const requestHeaders = {
+          [BINDING_HEADER]: JSON.stringify(mockBinding),
+          [TENANT_HEADER]: mockTenant.locale,
+          [LOCALE_HEADER]: 'en-US',
+          [SEGMENT_HEADER]: mockSegmentToken,
+          [SESSION_HEADER]: mockSessionToken,
+          [ACCOUNT_HEADER]: 'vtexstore',
+          [WORKSPACE_HEADER]: 'master'
+        }
+
+        expect(requestHeaders['x-vtex-binding']).toBe(JSON.stringify(mockBinding))
+        expect(requestHeaders['x-vtex-tenant']).toBe('pt-BR')
+        expect(requestHeaders['x-vtex-locale']).toBe('en-US')
+        expect(requestHeaders['x-vtex-segment']).toBe(mockSegmentToken)
+        expect(requestHeaders['x-vtex-session']).toBe(mockSessionToken)
+
+        // Pattern 2: Conditional header setting
+        const conditionalHeaders: Record<string, string> = {}
+        if (mockSegmentToken) {
+          conditionalHeaders[SEGMENT_HEADER] = mockSegmentToken
+        }
+        if (mockSessionToken) {
+          conditionalHeaders[SESSION_HEADER] = mockSessionToken
+        }
+
+        expect(conditionalHeaders['x-vtex-segment']).toBe(mockSegmentToken)
+        expect(conditionalHeaders['x-vtex-session']).toBe(mockSessionToken)
+        expect(Object.keys(conditionalHeaders)).toHaveLength(2)
+
+        // Pattern 3: Reading from headers object
+        const incomingHeaders = {
+          'x-vtex-tenant': 'es-AR',
+          'x-vtex-binding': '{"locale":"es-AR"}',
+          'x-vtex-account': 'mystore'
+        }
+
+        expect(incomingHeaders[TENANT_HEADER]).toBe('es-AR')
+        expect(incomingHeaders[BINDING_HEADER]).toBe('{"locale":"es-AR"}')
+        expect(incomingHeaders[ACCOUNT_HEADER]).toBe('mystore')
+
+        // Verify no undefined keys in any pattern
+        expect(TENANT_HEADER).not.toBe('undefined')
+        expect(BINDING_HEADER).not.toBe('undefined')
+        expect(SEGMENT_HEADER).not.toBe('undefined')
+      })
     })
   })
 })
