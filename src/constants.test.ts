@@ -652,7 +652,7 @@ describe('constants', () => {
         expect(Object.keys(conditionalHeaders)).toHaveLength(2)
 
         // Pattern 3: Reading from headers object
-        const incomingHeaders = {
+        const incomingHeaders: Record<string, string> = {
           'x-vtex-tenant': 'es-AR',
           'x-vtex-binding': '{"locale":"es-AR"}',
           'x-vtex-account': 'mystore'
