@@ -19,7 +19,6 @@ jobs:
       - run: yarn run lint
 
   test:
-    needs: [lint]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
