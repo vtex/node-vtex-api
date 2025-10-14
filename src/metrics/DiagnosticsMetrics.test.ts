@@ -70,7 +70,37 @@ describe('DiagnosticsMetrics', () => {
       expect(recordedHistogramCalls[0].value).toBe(100)
     })
 
+    /**
+     * @description
+     * Verifies that DiagnosticsMetrics handles metric client initialization failures gracefully
+     * without crashing the application.
+     * 
+     * Test Strategy:
+     * 1. Configure getMetricClient() mock to reject before instance creation
+     *   - This simulates diagnostics service being unavailable
+     *   - Must be done BEFORE constructor runs since it immediately calls getMetricClient()
+     *   
+     * 2. Create DiagnosticsMetrics instance
+     *   - Constructor calls initMetricClient() synchronously
+     *   - initMetricClient() starts async initialization (returns immediately)
+     *   - Async code races getMetricClient() vs timeout
+     *   - getMetricClient() rejects due to our mock
+     *   - catch block logs error and sets metricsClient = undefined
+     * 
+     * 3. Wait for async initialization to complete
+     *   - Constructor returns immediately (can't await in constructor)
+     *   - Need to wait for async promise to settle before checking results
+     *   - 10ms is sufficient for promise rejection and catch block execution
+     * 
+     * 4. Verify graceful degradation
+     *   - Instance was created successfully (no exception thrown)
+     *   - Error was logged to console (operational visibility)
+     *   - metricsClient remains undefined (all record methods will no-op)
+     * */
     it('should handle initialization errors gracefully', async () => {
+      
+      // Mock the getMetricClient (which is a Jest mock) to return an error
+      // Using mockRejectedValueOnce to configure the mock to reject with an error the next time it's called
       const error = new Error('Initialization failed')
       ;(getMetricClient as jest.Mock).mockRejectedValueOnce(error)
 
@@ -79,9 +109,10 @@ describe('DiagnosticsMetrics', () => {
       // Create new instance that will fail initialization
       const failingMetrics = new DiagnosticsMetrics()
       
-      // Wait for initialization attempt
+      // Wait for initialization attempt (async operation in constructor)
       await new Promise(resolve => setTimeout(resolve, 10))
 
+      // Verify error was logged (provides operational visibility)
       expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to initialize metric client:', error)
 
       consoleErrorSpy.mockRestore()
