@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [7.2.4] - 2025-10-15
+### Fix
+- Restores backward compatibility for individual header constant exports
+
 ## [7.2.3] - 2025-10-08
 ### Fix
 - Separate console and diagnostics client logging formats
