@@ -3,14 +3,20 @@ import cluster from 'cluster'
 
 import { HTTP_SERVER_PORT } from '../constants'
 import { MetricsAccumulator } from '../metrics/MetricsAccumulator'
+import { DiagnosticsMetrics } from '../metrics/DiagnosticsMetrics'
 import { getServiceJSON } from './loaders'
 import { LogLevel, logOnceToDevConsole } from './logger'
 
 export const startApp = async () => {
   await initializeTelemetry()
   
-  // Initialize global.metrics for both master and worker processes
+  // Initialize both legacy and new metrics systems independently
+  // Legacy: MetricsAccumulator for backward compatibility
+  // External apps and internal code can continue using this during migration
   global.metrics = new MetricsAccumulator()
+  
+  // New: DiagnosticsMetrics for new diagnostics-based instrumentation
+  global.diagnosticsMetrics = new DiagnosticsMetrics()
   
   const serviceJSON = getServiceJSON()
   try {
@@ -36,6 +42,7 @@ declare global {
   namespace NodeJS {
     interface Global {
       metrics: MetricsAccumulator
+      diagnosticsMetrics: DiagnosticsMetrics
     }
   }
 }

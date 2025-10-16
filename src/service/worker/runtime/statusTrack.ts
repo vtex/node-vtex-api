@@ -1,6 +1,7 @@
 import cluster from 'cluster'
 
 import { ACCOUNT, APP, LINKED, PRODUCTION, WORKSPACE } from '../../../constants'
+import { HttpAgentSingleton } from '../../../HttpClient/middlewares/request/HttpAgentSingleton'
 import { ServiceContext } from './typings'
 
 export type StatusTrack = () => EnvMetric[]
@@ -33,6 +34,10 @@ export const statusTrackHandler = async (ctx: ServiceContext) => {
 }
 
 export const trackStatus = () => {
+  // Update diagnostics metrics (gauges for HTTP agent stats)
+  HttpAgentSingleton.updateHttpAgentMetrics()
+  
+  // Legacy status tracking (console.log export)
   global.metrics.statusTrack().forEach(status => {
     logStatus(status)
   })
