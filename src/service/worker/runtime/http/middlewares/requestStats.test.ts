@@ -75,7 +75,12 @@ describe('requestStats', () => {
       mockNext = jest.fn().mockResolvedValue(undefined)
       mockCtx = {
         req: mockRequest,
+        status: 200,
         vtex: {
+          route: {
+            id: 'test-route',
+            type: 'public',
+          },
           cancellation: {
             cancelable: true,
             source: { cancel: jest.fn() },
@@ -92,7 +97,11 @@ describe('requestStats', () => {
       expect(mockDiagnosticsMetrics.incrementCounter).toHaveBeenCalledWith(
         'http_server_requests_total',
         1,
-        {}
+        {
+          route_id: 'test-route',
+          route_type: 'public',
+          status_code: 200,
+        }
       )
     })
 
@@ -111,7 +120,11 @@ describe('requestStats', () => {
       expect(mockDiagnosticsMetrics.incrementCounter).toHaveBeenCalledWith(
         'http_server_requests_closed_total',
         1,
-        {}
+        {
+          route_id: 'test-route',
+          route_type: 'public',
+          status_code: 200,
+        }
       )
     })
 
@@ -124,7 +137,11 @@ describe('requestStats', () => {
       expect(mockDiagnosticsMetrics.incrementCounter).toHaveBeenCalledWith(
         'http_server_requests_aborted_total',
         1,
-        {}
+        {
+          route_id: 'test-route',
+          route_type: 'public',
+          status_code: 200,
+        }
       )
     })
 

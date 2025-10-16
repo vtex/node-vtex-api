@@ -6,6 +6,12 @@ jest.mock('../service/metrics/client', () => ({
   getMetricClient: jest.fn(),
 }))
 
+// Mock constants to control LINKED value
+jest.mock('../constants', () => ({
+  ...jest.requireActual('../constants'),
+  LINKED: false, // Default to false, will override in specific tests
+}))
+
 import { getMetricClient } from '../service/metrics/client'
 
 describe('DiagnosticsMetrics', () => {
@@ -291,6 +297,26 @@ describe('DiagnosticsMetrics', () => {
   })
 
   describe('Attribute Limiting', () => {
+    beforeEach(() => {
+      // Enable LINKED for these tests so warnings are triggered
+      const constants = require('../constants')
+      Object.defineProperty(constants, 'LINKED', {
+        value: true,
+        writable: true,
+        configurable: true,
+      })
+    })
+
+    afterEach(() => {
+      // Reset LINKED back to false
+      const constants = require('../constants')
+      Object.defineProperty(constants, 'LINKED', {
+        value: false,
+        writable: true,
+        configurable: true,
+      })
+    })
+
     it('should allow up to 5 attributes without warning', async () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
       
