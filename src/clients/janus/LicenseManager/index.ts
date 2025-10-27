@@ -1,7 +1,7 @@
 import { stringify } from 'qs'
 
-import { RequestConfig, RequestTracingConfig } from '../../HttpClient'
-import { JanusClient } from './JanusClient'
+import { RequestConfig, RequestTracingConfig } from '../../../HttpClient'
+import { JanusClient } from '../JanusClient'
 
 const TWO_MINUTES_S = 2 * 60
 
