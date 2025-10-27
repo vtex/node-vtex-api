@@ -13,12 +13,12 @@ const routes = {
   topbarData: `${BASE_URL}/site/pvt/newtopbar`,
 }
 
-const inflightKey = ({baseURL, url, params}: RequestConfig) => {
-  return baseURL! + url! + stringify(params, {arrayFormat: 'repeat', addQueryPrefix: true})
+const inflightKey = ({ baseURL, url, params }: RequestConfig) => {
+  return baseURL! + url! + stringify(params, { arrayFormat: 'repeat', addQueryPrefix: true })
 }
 
 export class LicenseManager extends JanusClient {
-  public getAccountData (VtexIdclientAutCookie: string, tracingConfig?: RequestTracingConfig) {
+  public getAccountData(VtexIdclientAutCookie: string, tracingConfig?: RequestTracingConfig) {
     const metric = 'lm-account-data'
     return this.http.get(routes.accountData, {
       forceMaxAge: TWO_MINUTES_S,
@@ -34,7 +34,7 @@ export class LicenseManager extends JanusClient {
     })
   }
 
-  public getTopbarData (VtexIdclientAutCookie: string, tracingConfig?: RequestTracingConfig) {
+  public getTopbarData(VtexIdclientAutCookie: string, tracingConfig?: RequestTracingConfig) {
     const metric = 'lm-topbar-data'
     return this.http.get(routes.topbarData, {
       headers: {
@@ -48,17 +48,22 @@ export class LicenseManager extends JanusClient {
     })
   }
 
-  public canAccessResource (VtexIdclientAutCookie: string, resourceKey: string, tracingConfig?: RequestTracingConfig) {
+  public canAccessResource(VtexIdclientAutCookie: string, resourceKey: string, tracingConfig?: RequestTracingConfig) {
     const metric = 'lm-resource-access'
-    return this.http.get(`${routes.resourceAccess}/${resourceKey}/access`, {
-      headers: {
-        VtexIdclientAutCookie,
-      },
-      metric,
-      tracing: {
-        requestSpanNameSuffix: metric,
-        ...tracingConfig?.tracing,
-      },
-    }).then(() => true, () => false)
+    return this.http
+      .get(`${routes.resourceAccess}/${resourceKey}/access`, {
+        headers: {
+          VtexIdclientAutCookie,
+        },
+        metric,
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
+      })
+      .then(
+        () => true,
+        () => false
+      )
   }
 }
