@@ -8,9 +8,9 @@ const BASE_URL = '/api/license-manager'
 
 const routes = {
   accountData: () => `${BASE_URL}/account`,
-  resourceAccess: (resourceKey: string) => `${BASE_URL}/resources/${resourceKey}/access`,
+  resourceAccess: (resourceKey: string) => `${BASE_URL}/resources/${encodeURIComponent(resourceKey)}/access`,
   topbarData: () => `${BASE_URL}/site/pvt/newtopbar`,
-  listBindings: (tenant: string) => `${BASE_URL}/binding/site/${tenant}`,
+  listBindings: (tenant: string) => `${BASE_URL}/binding/site/${encodeURIComponent(tenant)}`,
 }
 
 export class LicenseManager extends JanusClient {
