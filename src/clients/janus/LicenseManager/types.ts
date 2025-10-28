@@ -3,6 +3,11 @@ export interface OptionsListBindings {
   adminUserAuthToken: string
 }
 
+export interface OptionsGetBinding {
+  adminUserAuthToken: string
+  bindingId: string
+}
+
 export interface APIAddress {
   Host: string
   IsCanonical: boolean

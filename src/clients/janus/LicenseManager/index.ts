@@ -1,6 +1,6 @@
 import { RequestTracingConfig, RequestConfig, inflightUrlWithQuery } from '../../../HttpClient'
 import { JanusClient } from '../JanusClient'
-import { OptionsListBindings, APIBindingRes } from './types'
+import { OptionsListBindings, APIBindingRes, OptionsGetBinding } from './types'
 
 const TWO_MINUTES_S = 2 * 60
 
@@ -11,6 +11,7 @@ const routes = {
   resourceAccess: (resourceKey: string) => `${BASE_URL}/resources/${encodeURIComponent(resourceKey)}/access`,
   topbarData: () => `${BASE_URL}/site/pvt/newtopbar`,
   listBindings: (tenant: string) => `${BASE_URL}/binding/site/${encodeURIComponent(tenant)}`,
+  getBinding: (bindingId: string) => `${BASE_URL}/binding/${encodeURIComponent(bindingId)}`,
 }
 
 export class LicenseManager extends JanusClient {
@@ -66,6 +67,23 @@ export class LicenseManager extends JanusClient {
   public listBindings = ({ tenant, adminUserAuthToken }: OptionsListBindings, config?: RequestConfig) => {
     const metric = 'lm-list-bindings'
     return this.http.get<APIBindingRes[]>(routes.listBindings(tenant), {
+      inflightKey: inflightUrlWithQuery,
+      memoizeable: true,
+      metric,
+      headers: {
+        VtexIdclientAutCookie: adminUserAuthToken,
+      },
+      ...config,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...config?.tracing,
+      },
+    })
+  }
+
+  public getBinding = ({ adminUserAuthToken, bindingId }: OptionsGetBinding, config?: RequestConfig) => {
+    const metric = 'lm-get-binding'
+    return this.http.get<APIBindingRes[]>(routes.getBinding(bindingId), {
       inflightKey: inflightUrlWithQuery,
       memoizeable: true,
       metric,
