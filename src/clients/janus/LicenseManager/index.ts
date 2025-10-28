@@ -9,6 +9,8 @@ import {
   Addr,
   APICreateBindingRes,
   OptionsDeleteBinding,
+  OptionsUpdateBinding,
+  APIBindingUpdate,
 } from './types'
 
 const TWO_MINUTES_S = 2 * 60
@@ -23,6 +25,7 @@ const routes = {
   getBinding: (bindingId: string) => `${BASE_URL}/binding/${encodeURIComponent(bindingId)}`,
   createBinding: () => `${BASE_URL}/binding`,
   deleteBinding: (bindingId: string) => `${BASE_URL}/binding/${encodeURIComponent(bindingId)}`,
+  updateBinding: (bindingId: string) => `${BASE_URL}/binding/${bindingId}`,
 }
 
 export class LicenseManager extends JanusClient {
@@ -178,6 +181,73 @@ export class LicenseManager extends JanusClient {
     const metric = 'lm-delete-binding'
 
     return this.http.delete(routes.deleteBinding(bindingId), {
+      inflightKey: inflightUrlWithQuery,
+      metric,
+      headers: {
+        VtexIdclientAutCookie: adminUserAuthToken,
+      },
+      ...config,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...config?.tracing,
+      },
+    })
+  }
+
+  public updateBinding = (
+    {
+      tenant,
+      adminUserAuthToken,
+      bindingId,
+      defaultLocale,
+      supportedLocales,
+      salesChannelId,
+      addrs,
+      canonicalAddr,
+    }: OptionsUpdateBinding,
+    config?: RequestConfig
+  ) => {
+    const metric = 'lm-update-binding'
+
+    if (addrs.length === 0) {
+      throw new Error('A binding must have at least one address')
+    }
+
+    const canonicalAddrExists = addrs.some(
+      (addr) => canonicalAddr.host === addr.host && canonicalAddr.path === addr.path
+    )
+
+    if (!canonicalAddrExists) {
+      throw new Error('The canonical address must exist within the address list')
+    }
+
+    if (supportedLocales.length === 0) {
+      throw new Error('A binding must have at least one locale')
+    }
+
+    const defaultLocaleExists = supportedLocales.some((locale) => defaultLocale === locale)
+
+    if (!defaultLocaleExists) {
+      throw new Error('The default locale must exist within the supported locales')
+    }
+
+    const bindingObj: APIBindingUpdate = {
+      Id: bindingId,
+      SiteName: tenant,
+      DefaultLocale: defaultLocale,
+      SupportedLocales: supportedLocales,
+      DefaultSalesChannelId: salesChannelId,
+      Addresses: addrs.map((addr: Addr) => ({
+        Host: addr.host,
+        BasePath: addr.path,
+        IsCanonical: canonicalAddr.host === addr.host && canonicalAddr.path === addr.path,
+        Localization: {
+          '': defaultLocale,
+        },
+      })),
+    }
+
+    return this.http.put(routes.updateBinding(bindingId), bindingObj, {
       inflightKey: inflightUrlWithQuery,
       metric,
       headers: {

@@ -28,6 +28,10 @@ export interface OptionsCreateBinding {
   canonicalAddr: Addr
 }
 
+export interface OptionsUpdateBinding extends OptionsCreateBinding {
+  bindingId: string
+}
+
 export interface APIAddress {
   Host: string
   IsCanonical: boolean
@@ -43,6 +47,10 @@ export interface APIBindingCreate {
   DefaultSalesChannelId: number | null
   DefaultLocale: string
   SupportedLocales: string[]
+}
+
+export interface APIBindingUpdate extends APIBindingCreate {
+  Id: string
 }
 
 export interface APIBindingRes extends APIBindingCreate {
