@@ -1,6 +1,4 @@
-import { stringify } from 'qs'
-
-import { RequestConfig, RequestTracingConfig } from '../../../HttpClient'
+import { RequestTracingConfig, inflightUrlWithQuery } from '../../../HttpClient'
 import { JanusClient } from '../JanusClient'
 
 const TWO_MINUTES_S = 2 * 60
@@ -13,10 +11,6 @@ const routes = {
   topbarData: () => `${BASE_URL}/site/pvt/newtopbar`,
 }
 
-const inflightKey = ({ baseURL, url, params }: RequestConfig) => {
-  return baseURL! + url! + stringify(params, { arrayFormat: 'repeat', addQueryPrefix: true })
-}
-
 export class LicenseManager extends JanusClient {
   public getAccountData(VtexIdclientAutCookie: string, tracingConfig?: RequestTracingConfig) {
     const metric = 'lm-account-data'
@@ -25,7 +19,7 @@ export class LicenseManager extends JanusClient {
       headers: {
         VtexIdclientAutCookie,
       },
-      inflightKey,
+      inflightKey: inflightUrlWithQuery,
       metric,
       tracing: {
         requestSpanNameSuffix: metric,
