@@ -74,7 +74,7 @@
     "graphql-upload": "^13.0.0",
     "jaeger-client": "^3.18.0",
     "js-base64": "^2.5.1",
-    "koa": "^2.11.0",
+    "koa": "^3.0.3",
     "koa-compose": "^4.1.0",
     "koa-compress": "^3.0.0",
     "koa-router": "^7.4.0",
