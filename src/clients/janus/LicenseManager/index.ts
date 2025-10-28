@@ -1,5 +1,6 @@
 import { RequestTracingConfig, RequestConfig, inflightUrlWithQuery } from '../../../HttpClient'
 import { JanusClient } from '../JanusClient'
+import assertBindingInput from './assertBindingInput'
 import {
   OptionsListBindings,
   APIBindingRes,
@@ -112,41 +113,12 @@ export class LicenseManager extends JanusClient {
     })
   }
 
-  public createBinding = (
-    {
-      tenant,
-      adminUserAuthToken,
-      defaultLocale,
-      supportedLocales,
-      salesChannelId,
-      addrs,
-      canonicalAddr,
-    }: OptionsCreateBinding,
-    config?: RequestConfig
-  ) => {
+  public createBinding = (options: OptionsCreateBinding, config?: RequestConfig) => {
+    assertBindingInput(options)
+
     const metric = 'lm-create-binding'
-
-    if (addrs.length === 0) {
-      throw new Error('A binding must have at least one address')
-    }
-
-    const canonicalAddrExists = addrs.some(
-      (addr) => canonicalAddr.host === addr.host && canonicalAddr.path === addr.path
-    )
-
-    if (!canonicalAddrExists) {
-      throw new Error('The canonical address must exist within the address list')
-    }
-
-    if (supportedLocales.length === 0) {
-      throw new Error('A binding must have at least one locale')
-    }
-
-    const defaultLocaleExists = supportedLocales.some((locale) => defaultLocale === locale)
-
-    if (!defaultLocaleExists) {
-      throw new Error('The default locale must exist within the supported locales')
-    }
+    const { tenant, adminUserAuthToken, defaultLocale, supportedLocales, salesChannelId, addrs, canonicalAddr } =
+      options
 
     const bindingObj: APIBindingCreate = {
       SiteName: tenant,
@@ -194,8 +166,11 @@ export class LicenseManager extends JanusClient {
     })
   }
 
-  public updateBinding = (
-    {
+  public updateBinding = (options: OptionsUpdateBinding, config?: RequestConfig) => {
+    assertBindingInput(options)
+
+    const metric = 'lm-update-binding'
+    const {
       tenant,
       adminUserAuthToken,
       bindingId,
@@ -204,32 +179,7 @@ export class LicenseManager extends JanusClient {
       salesChannelId,
       addrs,
       canonicalAddr,
-    }: OptionsUpdateBinding,
-    config?: RequestConfig
-  ) => {
-    const metric = 'lm-update-binding'
-
-    if (addrs.length === 0) {
-      throw new Error('A binding must have at least one address')
-    }
-
-    const canonicalAddrExists = addrs.some(
-      (addr) => canonicalAddr.host === addr.host && canonicalAddr.path === addr.path
-    )
-
-    if (!canonicalAddrExists) {
-      throw new Error('The canonical address must exist within the address list')
-    }
-
-    if (supportedLocales.length === 0) {
-      throw new Error('A binding must have at least one locale')
-    }
-
-    const defaultLocaleExists = supportedLocales.some((locale) => defaultLocale === locale)
-
-    if (!defaultLocaleExists) {
-      throw new Error('The default locale must exist within the supported locales')
-    }
+    } = options
 
     const bindingObj: APIBindingUpdate = {
       Id: bindingId,
