@@ -8,6 +8,7 @@ import {
   APIBindingCreate,
   Addr,
   APICreateBindingRes,
+  OptionsDeleteBinding,
 } from './types'
 
 const TWO_MINUTES_S = 2 * 60
@@ -21,6 +22,7 @@ const routes = {
   listBindings: (tenant: string) => `${BASE_URL}/binding/site/${encodeURIComponent(tenant)}`,
   getBinding: (bindingId: string) => `${BASE_URL}/binding/${encodeURIComponent(bindingId)}`,
   createBinding: () => `${BASE_URL}/binding`,
+  deleteBinding: (bindingId: string) => `${BASE_URL}/binding/${encodeURIComponent(bindingId)}`,
 }
 
 export class LicenseManager extends JanusClient {
@@ -159,6 +161,23 @@ export class LicenseManager extends JanusClient {
     }
 
     return this.http.post<APICreateBindingRes[]>(routes.createBinding(), bindingObj, {
+      inflightKey: inflightUrlWithQuery,
+      metric,
+      headers: {
+        VtexIdclientAutCookie: adminUserAuthToken,
+      },
+      ...config,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...config?.tracing,
+      },
+    })
+  }
+
+  public deleteBinding = ({ adminUserAuthToken, bindingId }: OptionsDeleteBinding, config?: RequestConfig) => {
+    const metric = 'lm-delete-binding'
+
+    return this.http.delete(routes.deleteBinding(bindingId), {
       inflightKey: inflightUrlWithQuery,
       metric,
       headers: {

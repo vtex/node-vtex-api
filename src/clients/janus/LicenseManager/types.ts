@@ -8,6 +8,11 @@ export interface OptionsGetBinding {
   bindingId: string
 }
 
+export interface OptionsDeleteBinding {
+  adminUserAuthToken: string
+  bindingId: string
+}
+
 export interface Addr {
   host: string
   path: string
