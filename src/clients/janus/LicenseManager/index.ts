@@ -97,7 +97,7 @@ export class LicenseManager extends JanusClient {
 
   public getBinding = ({ adminUserAuthToken, bindingId }: OptionsGetBinding, config?: RequestConfig) => {
     const metric = 'lm-get-binding'
-    return this.http.get<APIBindingRes[]>(routes.getBinding(bindingId), {
+    return this.http.get<APIBindingRes>(routes.getBinding(bindingId), {
       inflightKey: inflightUrlWithQuery,
       memoizeable: true,
       metric,
@@ -163,7 +163,7 @@ export class LicenseManager extends JanusClient {
       })),
     }
 
-    return this.http.post<APICreateBindingRes[]>(routes.createBinding(), bindingObj, {
+    return this.http.post<APICreateBindingRes>(routes.createBinding(), bindingObj, {
       inflightKey: inflightUrlWithQuery,
       metric,
       headers: {
