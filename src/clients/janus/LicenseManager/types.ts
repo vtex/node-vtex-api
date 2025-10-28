@@ -8,6 +8,21 @@ export interface OptionsGetBinding {
   bindingId: string
 }
 
+export interface Addr {
+  host: string
+  path: string
+}
+
+export interface OptionsCreateBinding {
+  tenant: string
+  adminUserAuthToken: string
+  defaultLocale: string
+  supportedLocales: string[]
+  salesChannelId: number | null
+  addrs: Addr[]
+  canonicalAddr: Addr
+}
+
 export interface APIAddress {
   Host: string
   IsCanonical: boolean
@@ -26,5 +41,9 @@ export interface APIBindingCreate {
 }
 
 export interface APIBindingRes extends APIBindingCreate {
+  Id: string
+}
+
+export interface APICreateBindingRes {
   Id: string
 }

@@ -1,6 +1,14 @@
 import { RequestTracingConfig, RequestConfig, inflightUrlWithQuery } from '../../../HttpClient'
 import { JanusClient } from '../JanusClient'
-import { OptionsListBindings, APIBindingRes, OptionsGetBinding } from './types'
+import {
+  OptionsListBindings,
+  APIBindingRes,
+  OptionsGetBinding,
+  OptionsCreateBinding,
+  APIBindingCreate,
+  Addr,
+  APICreateBindingRes,
+} from './types'
 
 const TWO_MINUTES_S = 2 * 60
 
@@ -12,6 +20,7 @@ const routes = {
   topbarData: () => `${BASE_URL}/site/pvt/newtopbar`,
   listBindings: (tenant: string) => `${BASE_URL}/binding/site/${encodeURIComponent(tenant)}`,
   getBinding: (bindingId: string) => `${BASE_URL}/binding/${encodeURIComponent(bindingId)}`,
+  createBinding: () => `${BASE_URL}/binding`,
 }
 
 export class LicenseManager extends JanusClient {
@@ -86,6 +95,71 @@ export class LicenseManager extends JanusClient {
     return this.http.get<APIBindingRes[]>(routes.getBinding(bindingId), {
       inflightKey: inflightUrlWithQuery,
       memoizeable: true,
+      metric,
+      headers: {
+        VtexIdclientAutCookie: adminUserAuthToken,
+      },
+      ...config,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...config?.tracing,
+      },
+    })
+  }
+
+  public createBinding = (
+    {
+      tenant,
+      adminUserAuthToken,
+      defaultLocale,
+      supportedLocales,
+      salesChannelId,
+      addrs,
+      canonicalAddr,
+    }: OptionsCreateBinding,
+    config?: RequestConfig
+  ) => {
+    const metric = 'lm-create-binding'
+
+    if (addrs.length === 0) {
+      throw new Error('A binding must have at least one address')
+    }
+
+    const canonicalAddrExists = addrs.some(
+      (addr) => canonicalAddr.host === addr.host && canonicalAddr.path === addr.path
+    )
+
+    if (!canonicalAddrExists) {
+      throw new Error('The canonical address must exist within the address list')
+    }
+
+    if (supportedLocales.length === 0) {
+      throw new Error('A binding must have at least one locale')
+    }
+
+    const defaultLocaleExists = supportedLocales.some((locale) => defaultLocale === locale)
+
+    if (!defaultLocaleExists) {
+      throw new Error('The default locale must exist within the supported locales')
+    }
+
+    const bindingObj: APIBindingCreate = {
+      SiteName: tenant,
+      DefaultLocale: defaultLocale,
+      SupportedLocales: supportedLocales,
+      DefaultSalesChannelId: salesChannelId,
+      Addresses: addrs.map((addr: Addr) => ({
+        Host: addr.host,
+        BasePath: addr.path,
+        IsCanonical: canonicalAddr.host === addr.host && canonicalAddr.path === addr.path,
+        Localization: {
+          '': defaultLocale,
+        },
+      })),
+    }
+
+    return this.http.post<APICreateBindingRes[]>(routes.createBinding(), bindingObj, {
+      inflightKey: inflightUrlWithQuery,
       metric,
       headers: {
         VtexIdclientAutCookie: adminUserAuthToken,
