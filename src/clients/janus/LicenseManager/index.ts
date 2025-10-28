@@ -8,9 +8,9 @@ const TWO_MINUTES_S = 2 * 60
 const BASE_URL = '/api/license-manager'
 
 const routes = {
-  accountData: `${BASE_URL}/account`,
-  resourceAccess: `${BASE_URL}/resources`,
-  topbarData: `${BASE_URL}/site/pvt/newtopbar`,
+  accountData: () => `${BASE_URL}/account`,
+  resourceAccess: (resourceKey: string) => `${BASE_URL}/resources/${resourceKey}/access`,
+  topbarData: () => `${BASE_URL}/site/pvt/newtopbar`,
 }
 
 const inflightKey = ({ baseURL, url, params }: RequestConfig) => {
@@ -20,7 +20,7 @@ const inflightKey = ({ baseURL, url, params }: RequestConfig) => {
 export class LicenseManager extends JanusClient {
   public getAccountData(VtexIdclientAutCookie: string, tracingConfig?: RequestTracingConfig) {
     const metric = 'lm-account-data'
-    return this.http.get(routes.accountData, {
+    return this.http.get(routes.accountData(), {
       forceMaxAge: TWO_MINUTES_S,
       headers: {
         VtexIdclientAutCookie,
@@ -36,7 +36,7 @@ export class LicenseManager extends JanusClient {
 
   public getTopbarData(VtexIdclientAutCookie: string, tracingConfig?: RequestTracingConfig) {
     const metric = 'lm-topbar-data'
-    return this.http.get(routes.topbarData, {
+    return this.http.get(routes.topbarData(), {
       headers: {
         VtexIdclientAutCookie,
       },
@@ -51,7 +51,7 @@ export class LicenseManager extends JanusClient {
   public canAccessResource(VtexIdclientAutCookie: string, resourceKey: string, tracingConfig?: RequestTracingConfig) {
     const metric = 'lm-resource-access'
     return this.http
-      .get(`${routes.resourceAccess}/${resourceKey}/access`, {
+      .get(routes.resourceAccess(resourceKey), {
         headers: {
           VtexIdclientAutCookie,
         },
