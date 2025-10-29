@@ -26,7 +26,7 @@ const routes = {
   getBinding: (bindingId: string) => `${BASE_URL}/binding/${encodeURIComponent(bindingId)}`,
   createBinding: () => `${BASE_URL}/binding`,
   deleteBinding: (bindingId: string) => `${BASE_URL}/binding/${encodeURIComponent(bindingId)}`,
-  updateBinding: (bindingId: string) => `${BASE_URL}/binding/${bindingId}`,
+  updateBinding: (bindingId: string) => `${BASE_URL}/binding/${encodeURIComponent(bindingId)}`,
 }
 
 export class LicenseManager extends JanusClient {
