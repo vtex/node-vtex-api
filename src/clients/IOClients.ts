@@ -5,7 +5,7 @@ import { CatalogGraphQL } from './apps/catalogGraphQL/index'
 import { ID, MasterData, PaymentProvider } from './external'
 import { Apps, Assets, BillingMetrics, Events, Registry, Router, VBase, Workspaces } from './infra'
 import { IOClient, IOClientConstructor } from './IOClient'
-import { LicenseManager, Segment, Session, TenantClient } from './janus'
+import { LicenseManager, Segment, Session, TenantClient, Catalog } from './janus'
 
 export type ClientsImplementation<T extends IOClients> = new (
   clientOptions: Record<string, InstanceOptions>,
@@ -91,6 +91,10 @@ export class IOClients {
 
   public get catalogGraphQL() {
     return this.getOrSet('catalogGraphQL', CatalogGraphQL)
+  }
+
+  public get catalog() {
+    return this.getOrSet('catalog', Catalog)
   }
 
   public get paymentProvider() {
