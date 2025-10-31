@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [7.2.5] - 2025-10-28
+### Changed
+- Added a new metrics tooling layer using @vtex/diagnostics-nodejs to replace the legacy MetricsAccumulator system
+
+## [7.2.4] - 2025-10-15
+### Fix
+- Restores backward compatibility for individual header constant exports
+
+## [7.2.3] - 2025-10-08
+### Fix
+- Separate console and diagnostics client logging formats
+
 ## [7.2.2] - 2025-09-26
 ### Changed
 - Adds integration with @vtex/diagnostics-semconv library to support VTEX semantic conventions for diagnostics-based logs

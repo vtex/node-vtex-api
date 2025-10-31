@@ -64,6 +64,90 @@ export const AttributeKeys = {
   VTEX_IO_APP_AUTHOR_TYPE: ATTR_VTEX_IO_APP_AUTHOR_TYPE,
 }
 
+/** @deprecated Use HeaderKeys.CACHE_CONTROL instead */
+export const CACHE_CONTROL_HEADER = HeaderKeys.CACHE_CONTROL
+
+/** @deprecated Use HeaderKeys.SEGMENT instead */
+export const SEGMENT_HEADER = HeaderKeys.SEGMENT
+
+/** @deprecated Use HeaderKeys.SESSION instead */
+export const SESSION_HEADER = HeaderKeys.SESSION
+
+/** @deprecated Use HeaderKeys.PRODUCT instead */
+export const PRODUCT_HEADER = HeaderKeys.PRODUCT
+
+/** @deprecated Use HeaderKeys.LOCALE instead */
+export const LOCALE_HEADER = HeaderKeys.LOCALE
+
+/** @deprecated Use HeaderKeys.FORWARDED_HOST instead */
+export const FORWARDED_HOST_HEADER = HeaderKeys.FORWARDED_HOST
+
+/** @deprecated Use HeaderKeys.TENANT instead */
+export const TENANT_HEADER = HeaderKeys.TENANT
+
+/** @deprecated Use HeaderKeys.BINDING instead */
+export const BINDING_HEADER = HeaderKeys.BINDING
+
+/** @deprecated Use HeaderKeys.META instead */
+export const META_HEADER = HeaderKeys.META
+
+/** @deprecated Use HeaderKeys.META_BUCKET instead */
+export const META_HEADER_BUCKET = HeaderKeys.META_BUCKET
+
+/** @deprecated Use HeaderKeys.ETAG instead */
+export const ETAG_HEADER = HeaderKeys.ETAG
+
+/** @deprecated Use HeaderKeys.ACCOUNT instead */
+export const ACCOUNT_HEADER = HeaderKeys.ACCOUNT
+
+/** @deprecated Use HeaderKeys.CREDENTIAL instead */
+export const CREDENTIAL_HEADER = HeaderKeys.CREDENTIAL
+
+/** @deprecated Use HeaderKeys.REQUEST_ID instead */
+export const REQUEST_ID_HEADER = HeaderKeys.REQUEST_ID
+
+/** @deprecated Use HeaderKeys.ROUTER_CACHE instead */
+export const ROUTER_CACHE_HEADER = HeaderKeys.ROUTER_CACHE
+
+/** @deprecated Use HeaderKeys.OPERATION_ID instead */
+export const OPERATION_ID_HEADER = HeaderKeys.OPERATION_ID
+
+/** @deprecated Use HeaderKeys.PLATFORM instead */
+export const PLATFORM_HEADER = HeaderKeys.PLATFORM
+
+/** @deprecated Use HeaderKeys.WORKSPACE_IS_PRODUCTION instead */
+export const WORKSPACE_IS_PRODUCTION_HEADER = HeaderKeys.WORKSPACE_IS_PRODUCTION
+
+/** @deprecated Use HeaderKeys.WORKSPACE instead */
+export const WORKSPACE_HEADER = HeaderKeys.WORKSPACE
+
+/** @deprecated Use HeaderKeys.EVENT_KEY instead */
+export const EVENT_KEY_HEADER = HeaderKeys.EVENT_KEY
+
+/** @deprecated Use HeaderKeys.EVENT_SENDER instead */
+export const EVENT_SENDER_HEADER = HeaderKeys.EVENT_SENDER
+
+/** @deprecated Use HeaderKeys.EVENT_SUBJECT instead */
+export const EVENT_SUBJECT_HEADER = HeaderKeys.EVENT_SUBJECT
+
+/** @deprecated Use HeaderKeys.EVENT_HANDLER_ID instead */
+export const EVENT_HANDLER_ID_HEADER = HeaderKeys.EVENT_HANDLER_ID
+
+/** @deprecated Use HeaderKeys.COLOSSUS_ROUTE_DECLARER instead */
+export const COLOSSUS_ROUTE_DECLARER_HEADER = HeaderKeys.COLOSSUS_ROUTE_DECLARER
+
+/** @deprecated Use HeaderKeys.COLOSSUS_ROUTE_ID instead */
+export const COLOSSUS_ROUTE_ID_HEADER = HeaderKeys.COLOSSUS_ROUTE_ID
+
+/** @deprecated Use HeaderKeys.COLOSSUS_PARAMS instead */
+export const COLOSSUS_PARAMS_HEADER = HeaderKeys.COLOSSUS_PARAMS
+
+/** @deprecated Use HeaderKeys.TRACE_ID instead */
+export const TRACE_ID_HEADER = HeaderKeys.TRACE_ID
+
+/** @deprecated Use HeaderKeys.PROVIDER instead */
+export const PROVIDER_HEADER = HeaderKeys.PROVIDER
+
 export type VaryHeaders = typeof HeaderKeys.SEGMENT | typeof HeaderKeys.SESSION | typeof HeaderKeys.PRODUCT | typeof HeaderKeys.LOCALE
 
 export const BODY_HASH = '__graphqlBodyHash'
@@ -102,6 +186,7 @@ export const INSPECT_DEBUGGER_PORT = 5858
 export const cancellableMethods = new Set(['GET', 'OPTIONS', 'HEAD'])
 
 export const LOG_CLIENT_INIT_TIMEOUT_MS = 5000
+export const METRIC_CLIENT_INIT_TIMEOUT_MS = 5000
 
 export const OTEL_EXPORTER_OTLP_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT as string;
 

@@ -1,4 +1,5 @@
 import chalk from 'chalk'
+import { Attributes } from '@opentelemetry/api'
 
 import { IOClients } from '../../../../../clients/IOClients'
 import { APP, LINKED, PID } from '../../../../../constants'
@@ -63,12 +64,33 @@ export async function timings <
   // Errors will be caught by the next middleware so we don't have to catch.
   await next()
 
-  const { status: statusCode, vtex: { route: { id } }, timings: {total}, vtex } = ctx
+  const { status: statusCode, vtex: { route: { id, type } }, timings: {total}, vtex } = ctx
   const totalMillis = hrToMillis(total)
   console.log(log(ctx, totalMillis))
   console.log(logBillingInfo(vtex, totalMillis))
 
   const status = statusLabel(statusCode)
+  
+  // Legacy metrics (backward compatibility)
   // Only batch successful responses so metrics don't consider errors
   metrics.batch(`http-handler-${id}`, status === 'success' ? total : undefined, { [status]: 1 })
+
+  // New diagnostics metrics with stable names and attributes
+  if (global.diagnosticsMetrics) {
+    const attributes: Attributes = {
+      component: 'http-handler',
+      route_id: id,
+      route_type: type,
+      status_code: statusCode,
+      status,
+    }
+
+    // Record latency histogram (record all requests, not just successful ones)
+    global.diagnosticsMetrics.recordLatency(total, attributes)
+
+    // Increment counter (status is an attribute, not in metric name)
+    global.diagnosticsMetrics.incrementCounter('http_handler_requests_total', 1, attributes)
+  } else {
+    console.warn('DiagnosticsMetrics not available. HTTP handler metrics not reported.')
+  }
 }
