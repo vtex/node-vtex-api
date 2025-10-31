@@ -50,16 +50,16 @@ export const handleSingleString =
       )
     }
 
+    if (state === 'translated') {
+      return content
+    }
+
     const from = maybeFrom || binding?.locale || tenant?.locale
 
     if (from == null) {
       throw new Error(
         `@${directiveName} directive needs a source language to translate from. You can do this by either setting ${'`ctx.vtex.tenant`'} variable, call this app with the header ${'`x-vtex-tenant`'} or format the string with the ${'`formatTranslatableStringV2`'} function with the ${'`from`'} option set`
       )
-    }
-
-    if (state === 'translated') {
-      return content
     }
 
     return loader.load({
