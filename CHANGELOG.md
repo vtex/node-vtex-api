@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [7.2.6] - 2025-11-05
+### Changed
+- Enhance the translation utilities by introducing a new state marker for translatable message strings, updating the parsing and formatting logic to handle this marker and ensuring that already translated messages are bypassed further processing
+
 ## [7.2.5] - 2025-10-28
 ### Changed
 - Added a new metrics tooling layer using @vtex/diagnostics-nodejs to replace the legacy MetricsAccumulator system
