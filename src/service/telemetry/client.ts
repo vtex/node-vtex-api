@@ -44,8 +44,8 @@ class TelemetryClientSingleton {
     await telemetryClient.newMetricsClient({
       exporter: Exporters.CreateExporter(Exporters.CreateMetricsExporterConfig({
         endpoint: OTEL_EXPORTER_OTLP_ENDPOINT,
-        interval: 5,
-        timeoutSeconds: 5,
+        interval: 60,
+        timeoutSeconds: 60,
       }), 'otlp'),
     });
 
