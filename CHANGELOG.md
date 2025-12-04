@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [7.2.7] - 2025-12-04
+### Changed
+- Increased metrics client interval from 5s to 60s and timeout from 5s to 60s
+
 ## [7.2.6] - 2025-11-05
 ### Changed
 - Enhance the translation utilities by introducing a new state marker for translatable message strings, updating the parsing and formatting logic to handle this marker and ensuring that already translated messages are bypassed further processing
