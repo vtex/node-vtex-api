@@ -7,10 +7,8 @@
         parameters:
           nodeVersion: "22-bookworm"
           packageManager: yarn
-          skipInstall: true
+          skipInstall: false
           nodeCommands:
-            - npm install -g yarn
-            - yarn install --ignore-scripts
             - yarn run lint
             - yarn run ci:test
         when:
