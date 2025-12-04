@@ -9,8 +9,8 @@
           packageManager: yarn
           skipInstall: false
           nodeCommands:
-            - yarn run lint
-            - yarn run ci:test
+            - lint
+            - ci:test
         when:
           - event: push
             source: branch
@@ -19,10 +19,9 @@
         parameters:
           nodeVersion: "22-bookworm"
           packageManager: yarn
-          skipInstall: true
+          skipInstall: false
           nodeCommands:
-            - yarn install --ignore-scripts
-            - yarn ci:build
+            - ci:build
           publishViaGithubWorkflow: true
           workflowFile: publish-npm.yml
           workflowVersion: '{{ ref_name }}'
