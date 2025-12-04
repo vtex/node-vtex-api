@@ -9,6 +9,7 @@
           packageManager: yarn
           skipInstall: true
           nodeCommands:
+            - npm install -g yarn
             - yarn install --ignore-scripts
             - yarn run lint
             - yarn run ci:test
