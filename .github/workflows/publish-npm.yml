@@ -62,7 +62,6 @@ jobs:
 
           echo "Configuring npm to use ${CODEARTIFACT_URL}"
 
-          npm config set always-auth true
           npm config set registry "${CODEARTIFACT_URL}"
           npm config set "//${CODEARTIFACT_DOMAIN}-${CODEARTIFACT_DOMAIN_OWNER}.d.codeartifact.${AWS_REGION}.amazonaws.com/npm/${CODEARTIFACT_REPOSITORY}/:_authToken" "${CODEARTIFACT_TOKEN}"
 
