@@ -49,8 +49,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          export CODEARTIFACT_TOKEN="::add-mask::$(jq -r '.inputs.CA_TOKEN' $GITHUB_EVENT_PATH)"
-          export CODEARTIFACT_DOMAIN_OWNER="::add-mask::$(jq -r '.inputs.CA_OWNER' $GITHUB_EVENT_PATH)"
+          export CODEARTIFACT_TOKEN="${{ github.event.inputs.CA_TOKEN}}"
+          echo "::add-mask::${{ github.event.inputs.CA_TOKEN}}"
+          export CODEARTIFACT_DOMAIN_OWNER="${{ github.event.inputs.CA_OWNER}}"
+          echo "::add-mask::${{ github.event.inputs.CA_OWNER}}"
 
           if [ -z "${CODEARTIFACT_TOKEN:-}" ]; then
             echo "CODEARTIFACT_TOKEN not set"; exit 1
