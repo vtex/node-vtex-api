@@ -29,7 +29,7 @@ permissions:
 
 env:
   CODEARTIFACT_DOMAIN: main
-  CODEARTIFACT_REPOSITORY: vtex-npm
+  CODEARTIFACT_REPOSITORY: internal-npm
   NPM_PACKAGE_NAME: "vtex"
   AWS_REGION: us-east-1
 
@@ -68,7 +68,7 @@ jobs:
       - name: Download package from CodeArtifact
         run: |
           set -euo pipefail
-          VERSION="${{ inputs.version }}"
+          VERSION="${{ github.event.inputs.version }}"
 
           echo "Downloading ${NPM_PACKAGE_NAME}@${VERSION} from CodeArtifact..."
           npm pack "${NPM_PACKAGE_NAME}@${VERSION}"
@@ -86,7 +86,7 @@ jobs:
           set -euo pipefail
           TARBALL=$(ls -1 *.tgz | head -n 1)
           TAG_FLAG=""
-          if [ "${{ inputs.environment }}" = "beta" ]; then
+          if [ "${{ github.event.inputs.environment }}" = "beta" ]; then
             TAG_FLAG="--tag beta"
           fi
           echo "Publishing ${TARBALL} to npmjs..."
