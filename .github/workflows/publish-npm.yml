@@ -30,7 +30,7 @@ permissions:
 env:
   CODEARTIFACT_DOMAIN: main
   CODEARTIFACT_REPOSITORY: internal-npm
-  NPM_PACKAGE_NAME: "vtex"
+  NPM_PACKAGE_NAME: "@vtex/api"
   AWS_REGION: us-east-1
 
 jobs:
