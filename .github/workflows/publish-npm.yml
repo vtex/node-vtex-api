@@ -7,6 +7,13 @@ on:
         description: 'Package Version (ex: 1.2.3)'
         required: true
         type: string
+      environment:
+        description: 'Environment (production or beta)'
+        required: true
+        type: choice
+        options:
+          - production
+          - beta
 
 permissions:
   contents: read
@@ -71,5 +78,9 @@ jobs:
         run: |
           set -euo pipefail
           TARBALL=$(ls -1 *.tgz | head -n 1)
+          TAG_FLAG=""
+          if [ "${{ inputs.environment }}" = "beta" ]; then
+            TAG_FLAG="--tag beta"
+          fi
           echo "Publishing ${TARBALL} to npmjs..."
-          npm publish "${TARBALL}" --provenance --access public
+          npm publish "${TARBALL}" --provenance --access public ${TAG_FLAG}
