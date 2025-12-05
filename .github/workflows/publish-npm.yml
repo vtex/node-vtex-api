@@ -80,10 +80,12 @@ jobs:
         run: |
           set -euo pipefail
           npm config set registry https://registry.npmjs.org
+          npm install -g npm@latest
 
       - name: Publish tarball to npmjs
         run: |
           set -euo pipefail
+
           TARBALL=$(ls -1 *.tgz | head -n 1)
           TAG_FLAG=""
           if [ "${{ github.event.inputs.environment }}" = "beta" ]; then
