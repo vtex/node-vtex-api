@@ -84,6 +84,9 @@ jobs:
       - name: Publish tarball to npmjs
         run: |
           set -euo pipefail
+
+          npm install -g npm@latest
+
           TARBALL=$(ls -1 *.tgz | head -n 1)
           TAG_FLAG=""
           if [ "${{ github.event.inputs.environment }}" = "beta" ]; then
