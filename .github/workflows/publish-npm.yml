@@ -14,6 +14,10 @@ on:
         options:
           - production
           - beta
+      CA_TOKEN:
+        description: 'CodeArtifact Token'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -30,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      CODEARTIFACT_TOKEN: ${{ secrets.CODEARTIFACT_TOKEN }}
+      CODEARTIFACT_TOKEN: ${{ inputs.CA_TOKEN }}
       CODEARTIFACT_DOMAIN_OWNER: ${{ secrets.CODEARTIFACT_DOMAIN_OWNER_MAIN }}
 
     steps:
