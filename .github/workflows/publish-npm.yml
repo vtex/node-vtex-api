@@ -18,6 +18,10 @@ on:
         description: 'CodeArtifact Token'
         required: true
         type: string
+      CA_OWNER:
+        description: 'CodeArtifact Domain Owner'
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -35,7 +39,7 @@ jobs:
 
     env:
       CODEARTIFACT_TOKEN: ${{ inputs.CA_TOKEN }}
-      CODEARTIFACT_DOMAIN_OWNER: ${{ secrets.CODEARTIFACT_DOMAIN_OWNER_MAIN }}
+      CODEARTIFACT_DOMAIN_OWNER: ${{ inputs.CA_OWNER }}
 
     steps:
       - name: Checkout
