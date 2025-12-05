@@ -36,11 +36,6 @@ env:
 jobs:
   publish:
     runs-on: ubuntu-latest
-
-    env:
-      CODEARTIFACT_TOKEN: ${{ inputs.CA_TOKEN }}
-      CODEARTIFACT_DOMAIN_OWNER: ${{ inputs.CA_OWNER }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -54,6 +49,9 @@ jobs:
         run: |
           set -euo pipefail
 
+          export CODEARTIFACT_TOKEN="::add-mask::$(jq -r '.inputs.CA_TOKEN' $GITHUB_EVENT_PATH)"
+          export CODEARTIFACT_DOMAIN_OWNER="::add-mask::$(jq -r '.inputs.CA_OWNER' $GITHUB_EVENT_PATH)"
+
           if [ -z "${CODEARTIFACT_TOKEN:-}" ]; then
             echo "CODEARTIFACT_TOKEN not set"; exit 1
           fi
@@ -62,7 +60,6 @@ jobs:
 
           echo "Configuring npm to use ${CODEARTIFACT_URL}"
 
-          npm config set always-auth true
           npm config set registry "${CODEARTIFACT_URL}"
           npm config set "//${CODEARTIFACT_DOMAIN}-${CODEARTIFACT_DOMAIN_OWNER}.d.codeartifact.${AWS_REGION}.amazonaws.com/npm/${CODEARTIFACT_REPOSITORY}/:_authToken" "${CODEARTIFACT_TOKEN}"
 
