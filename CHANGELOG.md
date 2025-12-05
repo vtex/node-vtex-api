@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [7.2.8] - 2025-12-05
+### Changed
+- New deploy pipeline. No functional changes in the code
+
 ## [7.2.7] - 2025-12-04
 ### Changed
 - Increased metrics client interval from 5s to 60s and timeout from 5s to 60s
