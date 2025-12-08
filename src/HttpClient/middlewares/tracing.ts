@@ -57,14 +57,6 @@ export const createHttpClientTracingMiddleware = ({
 
     const isGraphQLRequest = !!graphqlOperationName
 
-    console.log('[GraphQL Debug] Request:', {
-      url: ctx.config.url,
-      method: ctx.config.method || 'GET',
-      isGraphQLRequest,
-      graphqlOperationName,
-      graphqlOperationType,
-    })
-
     if(!tracer.isTraceSampled){
       await next()
 
@@ -110,14 +102,10 @@ export const createHttpClientTracingMiddleware = ({
         [GraphQLTags.GRAPHQL_OPERATION_NAME]: graphqlOperationName,
         [GraphQLTags.GRAPHQL_OPERATION_TYPE]: graphqlOperationType,
       })
-      const debugInfo = {
-        'graphql.operation.name': graphqlOperationName,
-        'graphql.operation.type': graphqlOperationType,
-      }
-      console.log('[GraphQL Debug] Added tags to span:', debugInfo)
       logger.info({
         message: '[GraphQL Debug] Added tags to span',
-        ...debugInfo,
+        'graphql.operation.name': graphqlOperationName,
+        'graphql.operation.type': graphqlOperationType,
       })
     }
 

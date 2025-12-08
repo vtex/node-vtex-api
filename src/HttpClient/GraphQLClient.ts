@@ -45,8 +45,6 @@ const enrichConfigWithOperationInfo = (
 ): RequestConfig => {
   const { operationName, operationType } = operationInfo
 
-  console.log('[GraphQL Debug] Extracted operation info:', { operationName, operationType })
-
   return {
     ...config,
     graphqlOperationName: operationName,

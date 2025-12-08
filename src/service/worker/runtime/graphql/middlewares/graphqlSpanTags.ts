@@ -15,15 +15,6 @@ export const graphqlSpanTags = () =>
     const query = graphql?.query
     const tracer = vtex?.tracer
 
-    // Debug: Log what we have available
-    console.log('[GraphQL Debug] graphqlSpanTags middleware:', {
-      hasQuery: !!query,
-      hasQueryDocument: !!query?.document,
-      hasTracer: !!tracer,
-      isTraceSampled: tracer?.isTraceSampled,
-      queryOperationName: query?.operationName,
-    })
-
     // Get operation name - either from explicit operationName field or from the parsed document
     let operationName = query?.operationName
     let operationType: string | undefined
@@ -42,20 +33,13 @@ export const graphqlSpanTags = () =>
       }
     }
 
-    console.log('[GraphQL Debug] Extracted operation info:', {
-      operationName,
-      operationType,
-    })
-
     // Add tags to the span via tracer (ctx.tracing is undefined at this point)
     if (tracer?.isTraceSampled) {
       if (operationName) {
         tracer.setFallbackSpanTag(GraphQLTags.GRAPHQL_OPERATION_NAME, operationName)
-        console.log('[GraphQL Debug] Set tag graphql.operation.name =', operationName)
       }
       if (operationType) {
         tracer.setFallbackSpanTag(GraphQLTags.GRAPHQL_OPERATION_TYPE, operationType)
-        console.log('[GraphQL Debug] Set tag graphql.operation.type =', operationType)
       }
 
       // Update span operation name to include the GraphQL operation
@@ -64,10 +48,7 @@ export const graphqlSpanTags = () =>
         const newOpName = `${currentOpName}:${operationName}`
         tracer.setFallbackSpanOperationName(newOpName)
         ctx.requestHandlerName = newOpName
-        console.log('[GraphQL Debug] Updated span name to:', newOpName)
       }
-    } else {
-      console.log('[GraphQL Debug] Tracing not sampled, skipping tags')
     }
 
     await next()
