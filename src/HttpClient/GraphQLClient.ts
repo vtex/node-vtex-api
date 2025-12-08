@@ -4,6 +4,7 @@ import CustomGraphQLError from '../errors/customGraphQLError'
 import { HttpClient } from './HttpClient'
 import { inflightUrlWithQuery } from './middlewares/inflight'
 import { RequestConfig } from './typings'
+import { extractGraphQLOperationInfoSync, GraphQLOperationInfo } from './utils/graphqlOperation'
 
 interface QueryOptions<Variables extends object> {
   query: string
@@ -34,6 +35,30 @@ const throwOnGraphQLErrors = <T extends Serializable>(message: string, response:
   return response
 }
 
+/**
+ * Enriches the request config with GraphQL operation info for tracing and logging.
+ * If the caller already provided a requestSpanNameSuffix, it takes precedence.
+ */
+const enrichConfigWithOperationInfo = (
+  config: RequestConfig,
+  operationInfo: GraphQLOperationInfo
+): RequestConfig => {
+  const { operationName, operationType } = operationInfo
+
+  console.log('[GraphQL Debug] Extracted operation info:', { operationName, operationType })
+
+  return {
+    ...config,
+    graphqlOperationName: operationName,
+    graphqlOperationType: operationType,
+    tracing: {
+      ...config.tracing,
+      // Only set requestSpanNameSuffix if not already provided by the caller
+      requestSpanNameSuffix: config.tracing?.requestSpanNameSuffix ?? `${operationType}:${operationName}`,
+    },
+  }
+}
+
 export class GraphQLClient {
   constructor(
     private http: HttpClient
@@ -42,29 +67,38 @@ export class GraphQLClient {
   public query = <Data extends Serializable, Variables extends object>(
     { query, variables, inflight, extensions, throwOnError }: QueryOptions<Variables>,
     config: RequestConfig = {}
-  ): Promise<GraphQLResponse<Data>> => this.http.getWithBody<GraphQLResponse<Data>>(
-    config.url || '',
-    { query, variables, extensions },
-    {
-      inflightKey: inflight !== false ? inflightUrlWithQuery : undefined,
-      ...config,
-    })
-    .then(graphqlResponse => throwOnError === false
-      ? graphqlResponse
-      : throwOnGraphQLErrors(this.http.name, graphqlResponse)
-    )
+  ): Promise<GraphQLResponse<Data>> => {
+    const operationInfo = extractGraphQLOperationInfoSync(query)
+    const enrichedConfig = enrichConfigWithOperationInfo(config, operationInfo)
+
+    return this.http.getWithBody<GraphQLResponse<Data>>(
+      enrichedConfig.url || '',
+      { query, variables, extensions },
+      {
+        inflightKey: inflight !== false ? inflightUrlWithQuery : undefined,
+        ...enrichedConfig,
+      })
+      .then(graphqlResponse => throwOnError === false
+        ? graphqlResponse
+        : throwOnGraphQLErrors(this.http.name, graphqlResponse)
+      )
+  }
 
   public mutate = <Data extends Serializable, Variables extends object>(
     { mutate, variables, throwOnError }: MutateOptions<Variables>,
     config: RequestConfig = {}
-  ) =>
-    this.http.post<GraphQLResponse<Data>>(
-      config.url || '',
+  ) => {
+    const operationInfo = extractGraphQLOperationInfoSync(mutate)
+    const enrichedConfig = enrichConfigWithOperationInfo(config, operationInfo)
+
+    return this.http.post<GraphQLResponse<Data>>(
+      enrichedConfig.url || '',
       { query: mutate, variables },
-      config
+      enrichedConfig
     )
     .then(graphqlResponse => throwOnError === false
       ? graphqlResponse
       : throwOnGraphQLErrors(this.http.name, graphqlResponse)
     )
+  }
 }

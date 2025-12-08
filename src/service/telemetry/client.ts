@@ -8,8 +8,16 @@ import {
 } from '@vtex/diagnostics-nodejs';
 import { APP, OTEL_EXPORTER_OTLP_ENDPOINT, DK_APP_ID, DIAGNOSTICS_TELEMETRY_ENABLED, WORKSPACE, PRODUCTION, AttributeKeys } from '../../constants';
 import { TelemetryClient } from '@vtex/diagnostics-nodejs/dist/telemetry';
-import { KoaInstrumentation } from '@opentelemetry/instrumentation-koa';
 import { HostMetricsInstrumentation } from '../metrics/instruments/hostMetrics';
+
+// Optional dependency - may not be available in all environments
+let KoaInstrumentation: any;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  KoaInstrumentation = require('@opentelemetry/instrumentation-koa').KoaInstrumentation;
+} catch {
+  // Module not available - will be handled when creating instrumentations
+}
 
 const APPLICATION_ID = APP.ID || 'vtex-io-app';
 
@@ -65,8 +73,6 @@ class TelemetryClientSingleton {
         'node-vtex-api',
         APPLICATION_ID,
         {
-          // Use built-in no-op functionality when telemetry is disabled
-          noop: !DIAGNOSTICS_TELEMETRY_ENABLED,
           additionalAttrs: {
             [AttributeKeys.VTEX_IO_APP_ID]: APPLICATION_ID,
             'vendor': APP.VENDOR,
@@ -85,10 +91,10 @@ class TelemetryClientSingleton {
 
       if (DIAGNOSTICS_TELEMETRY_ENABLED) {
         console.log(`Telemetry enabled for app: ${APP.ID} (vendor: ${APP.VENDOR})`);
-        
+
         const instrumentations = [
           ...Instrumentation.CommonInstrumentations.minimal(),
-          new KoaInstrumentation(),
+          ...(KoaInstrumentation ? [new KoaInstrumentation()] : []),
           new HostMetricsInstrumentation({
             name: 'host-metrics-instrumentation',
             meterProvider: metricsClient.provider(),

@@ -21,7 +21,14 @@ export interface RequestTracingConfig {
   tracing?: RequestTracingUserConfig
 }
 
-export interface RequestConfig extends AxiosRequestConfig, RequestTracingConfig {
+export interface GraphQLOperationConfig {
+  /** The GraphQL operation name extracted from the query (e.g. 'GetProduct', 'CreateOrder') */
+  graphqlOperationName?: string
+  /** The GraphQL operation type: 'query', 'mutation', or 'subscription' */
+  graphqlOperationType?: 'query' | 'mutation' | 'subscription'
+}
+
+export interface RequestConfig extends AxiosRequestConfig, RequestTracingConfig, GraphQLOperationConfig {
   retries?: number
   exponentialTimeoutCoefficient?: number
   initialBackoffDelay?: number
