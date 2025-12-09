@@ -20,7 +20,6 @@
           nodeVersion: "22-bookworm"
           packageManager: yarn
           skipInstall: false
-          awsAccountId: "053131491888"
           nodeCommands:
             - ci:build
           publishViaGithubWorkflow: true
