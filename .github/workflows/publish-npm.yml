@@ -1,0 +1,95 @@
+name: Publish from CodeArtifact to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Package Version (ex: 1.2.3)'
+        required: true
+        type: string
+      environment:
+        description: 'Environment (production or beta)'
+        required: true
+        type: choice
+        options:
+          - production
+          - beta
+      CA_TOKEN:
+        description: 'CodeArtifact Token'
+        required: true
+        type: string
+      CA_OWNER:
+        description: 'CodeArtifact Domain Owner'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write   # required for Trusted Publishing
+
+env:
+  CODEARTIFACT_DOMAIN: main
+  CODEARTIFACT_REPOSITORY: internal-npm
+  NPM_PACKAGE_NAME: "@vtex/api"
+  AWS_REGION: us-east-1
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Configure npm for CodeArtifact
+        run: |
+          set -euo pipefail
+
+          export CODEARTIFACT_TOKEN="${{ github.event.inputs.CA_TOKEN}}"
+          echo "::add-mask::${{ github.event.inputs.CA_TOKEN}}"
+          export CODEARTIFACT_DOMAIN_OWNER="${{ github.event.inputs.CA_OWNER}}"
+          echo "::add-mask::${{ github.event.inputs.CA_OWNER}}"
+
+          if [ -z "${CODEARTIFACT_TOKEN:-}" ]; then
+            echo "CODEARTIFACT_TOKEN not set"; exit 1
+          fi
+
+          CODEARTIFACT_URL="https://${CODEARTIFACT_DOMAIN}-${CODEARTIFACT_DOMAIN_OWNER}.d.codeartifact.${AWS_REGION}.amazonaws.com/npm/${CODEARTIFACT_REPOSITORY}/"
+
+          echo "Configuring npm to use ${CODEARTIFACT_URL}"
+
+          npm config set registry "${CODEARTIFACT_URL}"
+          npm config set "//${CODEARTIFACT_DOMAIN}-${CODEARTIFACT_DOMAIN_OWNER}.d.codeartifact.${AWS_REGION}.amazonaws.com/npm/${CODEARTIFACT_REPOSITORY}/:_authToken" "${CODEARTIFACT_TOKEN}"
+
+      - name: Download package from CodeArtifact
+        run: |
+          set -euo pipefail
+          VERSION="${{ github.event.inputs.version }}"
+
+          echo "Downloading ${NPM_PACKAGE_NAME}@${VERSION} from CodeArtifact..."
+          npm pack "${NPM_PACKAGE_NAME}@${VERSION}"
+
+          echo "Generated files:"
+          ls -1 *.tgz
+
+      - name: Set npm registry to npmjs
+        run: |
+          set -euo pipefail
+          npm config set registry https://registry.npmjs.org
+          npm install -g npm@latest
+
+      - name: Publish tarball to npmjs
+        run: |
+          set -euo pipefail
+
+          TARBALL=$(ls -1 *.tgz | head -n 1)
+          TAG_FLAG=""
+          if [ "${{ github.event.inputs.environment }}" = "beta" ]; then
+            TAG_FLAG="--tag beta"
+          fi
+          echo "Publishing ${TARBALL} to npmjs..."
+          npm publish "${TARBALL}" --provenance --access public ${TAG_FLAG}

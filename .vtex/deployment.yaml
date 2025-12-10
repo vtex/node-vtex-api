@@ -1,0 +1,30 @@
+- name: node-vtex-api
+  referenceId: SHSTJA2W
+  build:
+    provider: dkcicd
+    pipelines:
+      - name: node-ci-v2
+        parameters:
+          nodeVersion: "22-bookworm"
+          packageManager: yarn
+          skipInstall: false
+          nodeCommands:
+            - lint
+            - ci:test
+        when:
+          - event: push
+            source: branch
+
+      - name: npm-publish-v1
+        parameters:
+          nodeVersion: "22-bookworm"
+          packageManager: yarn
+          skipInstall: false
+          nodeCommands:
+            - ci:build
+          publishViaGithubWorkflow: true
+          workflowFile: publish-npm.yml
+          workflowVersion: '{{ ref_name }}'
+        when:
+          - event: push
+            source: tag
