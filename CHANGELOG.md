@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [7.2.9-beta.0] - 2025-12-11
+### Fix
+- Add account attribute to diagnostics metrics for improved observability
+
 ## [7.2.8-beta.4] - 2025-12-08
 ### Changed
 - New deploy pipeline. No functional changes in the code
