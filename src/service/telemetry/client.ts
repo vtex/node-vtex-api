@@ -46,6 +46,7 @@ class TelemetryClientSingleton {
         endpoint: OTEL_EXPORTER_OTLP_ENDPOINT,
         interval: 60,
         timeoutSeconds: 60,
+        temporality: 'delta',
       }), 'otlp'),
     });
 
