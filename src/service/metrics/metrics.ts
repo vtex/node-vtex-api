@@ -4,6 +4,7 @@ import { getMetricClient } from './client'
 export const enum RequestsMetricLabels {
   STATUS_CODE = 'status_code',
   REQUEST_HANDLER = 'handler',
+  ACCOUNT_NAME = 'account_name',
 }
 
 export interface OtelRequestInstruments {
