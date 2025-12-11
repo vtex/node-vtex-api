@@ -123,7 +123,7 @@ export interface InstanceOptions {
    * @memberof InstanceOptions
    */
   params?: Record<string, string>
-  middlewares?: Array<Middleware<MiddlewareContext>>
+  middlewares?: Middleware<MiddlewareContext>[]
   verbose?: boolean
   name?: string
   serverTimings?: Record<string, string>

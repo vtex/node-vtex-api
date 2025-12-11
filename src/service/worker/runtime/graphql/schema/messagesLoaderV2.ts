@@ -10,13 +10,13 @@ import { IOClients } from './../../../../../clients/IOClients'
 
 type Indexed<X> = [number, X]
 
-const sortByContentAndFrom = (indexedMessages: Array<Indexed<Message>>) => sortBy(
+const sortByContentAndFrom = (indexedMessages: Indexed<Message>[]) => sortBy(
   ([_, {content, from}]) => `__from:${from}__content:${content}`,
   indexedMessages
 )
 
 // O(n) counting sort implementation
-const sortByIndex = (indexedTranslations: Array<Indexed<string>>) => indexedTranslations.reduce(
+const sortByIndex = (indexedTranslations: Indexed<string>[]) => indexedTranslations.reduce(
   (acc, [index, data]) => {
     acc[index] = data
     return acc
@@ -47,7 +47,7 @@ const indexMessagesByFrom = (messages:  Message[]) => messages.reduce(
 
 const toPairs = <T>(x: T[]) => x.map((xx, it) => [it, xx] as Indexed<T>)
 
-const splitIndex = <T>(indexed: Array<Indexed<T>>) => indexed.reduce(
+const splitIndex = <T>(indexed: Indexed<T>[]) => indexed.reduce(
   (acc, [index, data]) => {
     acc[0].push(index)
     acc[1].push(data)
@@ -56,7 +56,7 @@ const splitIndex = <T>(indexed: Array<Indexed<T>>) => indexed.reduce(
   [[] as number[], [] as T[]] as [number[], T[]]
 )
 
-const filterFromEqualsTo = (indexedMessages: Array<Indexed<Message>>, to: string) => indexedMessages.reduce(
+const filterFromEqualsTo = (indexedMessages: Indexed<Message>[], to: string) => indexedMessages.reduce(
   (acc, indexed) => {
     const [index, { content, from }] = indexed
     if (to === from.toLowerCase() || !content) {
@@ -67,8 +67,8 @@ const filterFromEqualsTo = (indexedMessages: Array<Indexed<Message>>, to: string
     return acc
   },
   {
-    original: [] as Array<Indexed<string>>,
-    toTranslate: [] as Array<Indexed<Message>>,
+    original: [] as Indexed<string>[],
+    toTranslate: [] as Indexed<Message>[],
   }
 )
 

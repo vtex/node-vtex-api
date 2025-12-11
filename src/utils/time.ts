@@ -49,7 +49,7 @@ export const parseTimingName = (timing: string | undefined) => {
   }
 }
 
-export const reduceTimings = (timingsObj: Record<string, string>) => compose<Record<string, string>, Array<[string, string]>, string>(
+export const reduceTimings = (timingsObj: Record<string, string>) => compose<Record<string, string>, [string, string][], string>(
   reduce((acc, [key, dur]) => `${key};dur=${dur}, ${acc}`, ''),
   toPairs
 )(timingsObj)

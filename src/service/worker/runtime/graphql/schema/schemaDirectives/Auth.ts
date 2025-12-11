@@ -69,7 +69,7 @@ async function auth (ctx: ServiceContext, authArgs: AuthDirectiveArgs): Promise<
 }
 
 function parseArgs (authArgs: AuthDirectiveArgs): AuthDirectiveArgs {
-  if (authArgs.scope == 'PUBLIC') {
+  if (authArgs.scope === 'PUBLIC') {
     return authArgs
   }
 
@@ -84,7 +84,7 @@ export class Auth extends SchemaDirectiveVisitor {
     const {resolve = defaultFieldResolver} = field
     field.resolve = async (root, args, ctx, info) => {
       const authArgs = parseArgs(this.args as AuthDirectiveArgs)
-      if (!authArgs.scope || authArgs.scope == 'PRIVATE') {
+      if (!authArgs.scope || authArgs.scope === 'PRIVATE') {
         await auth(ctx, authArgs)
       }
       return resolve(root, args, ctx, info)

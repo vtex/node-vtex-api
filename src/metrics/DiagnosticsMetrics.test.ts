@@ -17,9 +17,9 @@ import { getMetricClient } from '../service/metrics/client'
 describe('DiagnosticsMetrics', () => {
   let diagnosticsMetrics: DiagnosticsMetrics
   let mockMetricsClient: Types.MetricClient
-  let recordedHistogramCalls: Array<{ value: number; attributes?: any }>
-  let recordedCounterCalls: Map<string, Array<{ value: number; attributes?: any }>>
-  let recordedGaugeCalls: Map<string, Array<{ value: number; attributes?: any }>>
+  let recordedHistogramCalls: { value: number; attributes?: any }[]
+  let recordedCounterCalls: Map<string, { value: number; attributes?: any }[]>
+  let recordedGaugeCalls: Map<string, { value: number; attributes?: any }[]>
 
   beforeEach(() => {
     // Reset call tracking
@@ -102,7 +102,7 @@ describe('DiagnosticsMetrics', () => {
      *   - Instance was created successfully (no exception thrown)
      *   - Error was logged to console (operational visibility)
      *   - metricsClient remains undefined (all record methods will no-op)
-     * */
+     */
     it('should handle initialization errors gracefully', async () => {
       
       // Mock the getMetricClient (which is a Jest mock) to return an error

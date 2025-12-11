@@ -17,7 +17,7 @@ export const addOtelRequestMetricsMiddleware = () => {
             () => reject(new Error('Timeout waiting for OpenTelemetry instruments initialization')),
             INSTRUMENTS_INITIALIZATION_TIMEOUT
           )
-        )
+        ),
       ])
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
