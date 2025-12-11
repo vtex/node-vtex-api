@@ -1,7 +1,7 @@
 import { APP, LOG_CLIENT_INIT_TIMEOUT_MS, AttributeKeys } from '../../constants'
 import { cleanError } from '../../utils/error'
 import { cleanLog } from '../../utils/log'
-import { Types } from '@vtex/diagnostics-nodejs';
+import { Types } from '@vtex/diagnostics-nodejs'
 import { LoggerContext, LogLevel, TracingState } from './loggerTypes'
 import { getLogClient } from './client'
 
@@ -32,33 +32,33 @@ export class Logger {
       }
     }
 
-    this.initLogClient();
+    this.initLogClient()
   }
 
   private initLogClient(): Promise<Types.LogClient | undefined> {
     if (this.clientInitPromise) {
-      return this.clientInitPromise;
+      return this.clientInitPromise
     }
 
     this.clientInitPromise = (async () => {
       try {
         const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error('Log client initialization timeout')), LOG_CLIENT_INIT_TIMEOUT_MS);
-        });
+          setTimeout(() => reject(new Error('Log client initialization timeout')), LOG_CLIENT_INIT_TIMEOUT_MS)
+        })
 
         this.logClient = await Promise.race([
           getLogClient(),
-          timeoutPromise
-        ]);
+          timeoutPromise,
+        ])
 
-        return this.logClient;
+        return this.logClient
       } catch (error) {
-        console.error('Failed to initialize log client:', error);
-        return undefined;
+        console.error('Failed to initialize log client:', error)
+        return undefined
       }
-    })();
+    })()
 
-    return this.clientInitPromise;
+    return this.clientInitPromise
   }
 
   public debug = (message: any) =>
@@ -101,7 +101,7 @@ export class Logger {
       Object.assign(inflatedLog, {
         '__SKIDDER_TOPIC_1': `skidder.vendor.${APP.VENDOR}`,
         '__SKIDDER_TOPIC_2': `skidder.app.${APP.VENDOR}.${APP.NAME}`,
-      });
+      })
     }
 
     console.log(JSON.stringify(inflatedLog))
@@ -117,25 +117,25 @@ export class Logger {
 
     if (this.logClient) {
       try {
-        let logMessage = typeof data === 'string' ? data : JSON.stringify(data)
+        const logMessage = typeof data === 'string' ? data : JSON.stringify(data)
         switch (level) {
           case LogLevel.Debug:
-            this.logClient.debug(logMessage, diagnosticsLog);
-            break;
+            this.logClient.debug(logMessage, diagnosticsLog)
+            break
           case LogLevel.Info:
-            this.logClient.info(logMessage, diagnosticsLog);
-            break;
+            this.logClient.info(logMessage, diagnosticsLog)
+            break
           case LogLevel.Warn:
-            this.logClient.warn(logMessage, diagnosticsLog);
-            break;
+            this.logClient.warn(logMessage, diagnosticsLog)
+            break
           case LogLevel.Error:
-            this.logClient.error(logMessage, diagnosticsLog);
-            break;
+            this.logClient.error(logMessage, diagnosticsLog)
+            break
           default:
-            this.logClient.info(logMessage, diagnosticsLog);
+            this.logClient.info(logMessage, diagnosticsLog)
         }
       } catch (e) {
-        console.error('Error using diagnostics client for logging:', e);
+        console.error('Error using diagnostics client for logging:', e)
       }
     }
 

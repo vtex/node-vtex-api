@@ -26,7 +26,7 @@ import { vary } from './middlewares/vary'
 
 export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderState, V extends ParamsContext>(
   clientsConfig: ClientsConfig<T>,
-  serviceHandler: RouteHandler<T, U, V> | Array<RouteHandler<T, U, V>>,
+  serviceHandler: RouteHandler<T, U, V> | RouteHandler<T, U, V>[],
   serviceRoute: ServiceRoute,
   routeId: string,
   globalLimiter: TokenBucket | undefined
@@ -53,7 +53,7 @@ export const createPrivateHttpRoute = <T extends IOClients, U extends RecorderSt
 
 export const createPublicHttpRoute = <T extends IOClients, U extends RecorderState, V extends ParamsContext>(
   clientsConfig: ClientsConfig<T>,
-  serviceHandler: RouteHandler<T, U, V> | Array<RouteHandler<T, U, V>>,
+  serviceHandler: RouteHandler<T, U, V> | RouteHandler<T, U, V>[],
   serviceRoute: ServiceRoute,
   routeId: string,
   globalLimiter: TokenBucket | undefined

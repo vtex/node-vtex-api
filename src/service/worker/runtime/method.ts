@@ -29,7 +29,7 @@ type MethodOptions<
   Record<
     HTTPMethods,
     | RouteHandler<ClientsT, StateT, CustomT>
-    | Array<RouteHandler<ClientsT, StateT, CustomT>>
+    | RouteHandler<ClientsT, StateT, CustomT>[]
   >
 >
 
@@ -54,7 +54,7 @@ export function method<
     options as Record<
       string,
       | RouteHandler<T, U, V>
-      | Array<RouteHandler<T, U, V>>
+      | RouteHandler<T, U, V>[]
     >
   )
 

@@ -10,7 +10,7 @@ jest.mock('../../../HttpClient/agents', () => ({
 }))
 
 describe('HttpAgentSingleton', () => {
-  let recordedGaugeCalls: Map<string, Array<{ value: number; attributes?: any }>>
+  let recordedGaugeCalls: Map<string, { value: number; attributes?: any }[]>
 
   beforeEach(() => {
     // Reset call tracking

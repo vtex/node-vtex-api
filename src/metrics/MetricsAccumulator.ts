@@ -58,7 +58,7 @@ export class MetricsAccumulator {
   // Tracked cache instances
   private cacheMap: Record<string, GetStats>
 
-  private onFlushMetrics: Array<() => Metric | Metric[]>
+  private onFlushMetrics: (() => Metric | Metric[])[]
 
   constructor() {
     this.metricsMillis = {}

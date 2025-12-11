@@ -5,7 +5,7 @@ import { IOContext } from '../../service/worker/runtime/typings'
 import { AppGraphQLClient } from './AppGraphQLClient'
 
 export interface IndexedByFrom {
-  messages: Array<Omit<Message, 'from'>>
+  messages: Omit<Message, 'from'>[]
   from: string
 }
 
@@ -82,9 +82,9 @@ export class MessagesGraphQL extends AppGraphQLClient {
   public translateV2 (args: TranslateInput, tracingConfig?: RequestTracingConfig) {
     const { indexedByFrom, ...rest } = args
 
-    const allMessages: Array<{from: string, message: Omit<Message, 'from'>}> = indexedByFrom.reduce((acc, {from, messages}) => {
+    const allMessages: {from: string, message: Omit<Message, 'from'>}[] = indexedByFrom.reduce((acc, {from, messages}) => {
       return acc.concat(messages.map(message => ({from, message})))
-    }, [] as Array<{from: string, message: Omit<Message, 'from'>}>)
+    }, [] as {from: string, message: Omit<Message, 'from'>}[])
 
     const batchedMessages = splitEvery(MAX_BATCH_SIZE, allMessages)
     const metric = 'messages-translate-v2'

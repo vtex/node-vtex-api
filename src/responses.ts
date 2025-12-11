@@ -72,7 +72,7 @@ export interface HouseKeeperState {
   infra: string[]
   edition: string[]
  runtimes: string[]
-  apps: Array<{id: string, source: string}>
+  apps: {id: string, source: string}[]
 }
 
 export interface HouseKeeperUpdates extends HouseKeeperState {
