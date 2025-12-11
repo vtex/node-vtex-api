@@ -1,5 +1,6 @@
 import { compose, forEach, path, reduce, replace, split } from 'ramda'
 
+import { AttributeKeys, HeaderKeys } from '../../constants'
 import { RequestCancelledError } from '../../errors/RequestCancelledError'
 import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
 import {
@@ -14,6 +15,8 @@ import { TIMEOUT_CODE } from '../../utils/retry'
 import { statusLabel } from '../../utils/status'
 import { MiddlewareContext } from '../typings'
 import { Attributes } from '@opentelemetry/api'
+
+const DEFAULT_ACCOUNT = 'unknown_account'
 
 interface MetricsOpts {
   metrics?: MetricsAccumulator
@@ -114,7 +117,10 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
         if (global.diagnosticsMetrics) {
           const elapsed = process.hrtime(start)
           const rawStatusCode = ctx.response?.status || errorStatus
+          // Extract account from request headers, fallback to default
+          const account = (ctx.config.headers?.[HeaderKeys.ACCOUNT] as string) || DEFAULT_ACCOUNT
           const baseAttributes: Attributes = {
+            [AttributeKeys.VTEX_ACCOUNT_NAME]: account,
             component: 'http-client',
             client_metric: ctx.config.metric,
             status_code: rawStatusCode,
