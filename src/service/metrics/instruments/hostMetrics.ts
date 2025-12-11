@@ -1,6 +1,14 @@
 import { InstrumentationBase, InstrumentationConfig } from "@opentelemetry/instrumentation";
 import { MeterProvider } from '@opentelemetry/api';
-import { HostMetrics } from "@opentelemetry/host-metrics";
+
+// Optional dependency - may not be available in all environments
+let HostMetrics: any;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  HostMetrics = require("@opentelemetry/host-metrics").HostMetrics;
+} catch {
+  // Module not available - will be handled in enable()
+}
 
 interface HostMetricsInstrumentationConfig extends InstrumentationConfig {
   name?: string;
@@ -8,7 +16,7 @@ interface HostMetricsInstrumentationConfig extends InstrumentationConfig {
 }
 
 export class HostMetricsInstrumentation extends InstrumentationBase<HostMetricsInstrumentationConfig> {
-  private hostMetrics?: HostMetrics;
+  private hostMetrics?: any;
 
   constructor(config: HostMetricsInstrumentationConfig = {}) {
     const instrumentation_name = config.name || 'host-metrics-instrumentation';
@@ -19,6 +27,11 @@ export class HostMetricsInstrumentation extends InstrumentationBase<HostMetricsI
   init(): void {}
 
   enable(): void {
+    if (!HostMetrics) {
+      console.debug('HostMetricsInstrumentation: @opentelemetry/host-metrics not available, skipping');
+      return;
+    }
+
     if (!this._config.meterProvider) {
       throw new Error('MeterProvider is required for HostMetricsInstrumentation');
     }
