@@ -53,7 +53,7 @@
     "@opentelemetry/instrumentation-koa": "0.47.1",
     "@types/koa": "^2.11.0",
     "@types/koa-compose": "^3.2.3",
-    "@vtex/diagnostics-nodejs": "0.1.0-io-beta.23",
+    "@vtex/diagnostics-nodejs": "0.1.0-io-beta.24",
     "@vtex/diagnostics-semconv": "^1.1.2",
     "@vtex/node-error-report": "^0.0.3",
     "@wry/equality": "^0.1.9",
