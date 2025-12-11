@@ -88,7 +88,7 @@
     "ramda": "^0.26.0",
     "rwlock": "^5.0.0",
     "semver": "^5.5.1",
-    "stats-lite": "vtex/node-stats-lite#dist",
+    "stats-lite": "vtex/node-stats-lite#v2.2.1",
     "tar-fs": "^2.0.0",
     "tokenbucket": "^0.3.2",
     "uuid": "^3.3.3",

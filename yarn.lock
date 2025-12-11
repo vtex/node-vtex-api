@@ -5110,9 +5110,9 @@ static-extend@^0.1.1:
     define-property "^0.2.5"
     object-copy "^0.1.0"
 
-stats-lite@vtex/node-stats-lite#dist:
-  version "2.2.0"
-  resolved "https://codeload.github.com/vtex/node-stats-lite/tar.gz/1b0d39cc41ef7aaecfd541191f877887a2044797"
+stats-lite@vtex/node-stats-lite#v2.2.1:
+  version "2.2.1"
+  resolved "https://codeload.github.com/vtex/node-stats-lite/tar.gz/a0b5ee91861f31b6ec845146b4906faf5172c430"
   dependencies:
     isnumber "~1.0.0"
 
