@@ -1278,19 +1278,19 @@
     "@opentelemetry/sdk-trace-base" "^1.30.1"
     "@opentelemetry/sdk-trace-node" "^1.30.1"
     "@opentelemetry/semantic-conventions" "^1.30.0"
-    "@vtex/diagnostics-semconv" "workspace:*"
+    "@vtex/diagnostics-semconv" "0.1.0-beta.11"
     tslib "^2.8.1"
     uuid "^11.1.0"
 
-"@vtex/diagnostics-semconv@^1.1.2":
+"@vtex/diagnostics-semconv@1.1.2":
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@vtex/diagnostics-semconv/-/diagnostics-semconv-1.1.2.tgz#ed58b4c0f403cf5d9ff5e3d487e959ff9c1802e2"
   integrity sha512-CUz58FTeYHC6z5n0qJKcHesJK00ykwDAFKXUaBKjzI166lm/LqMkdPJA8KE2h4RWGDdSaPDIUDdkueSD76oUfw==
 
-"@vtex/diagnostics-semconv@workspace:*":
-  version "5.1.1"
-  resolved "https://registry.yarnpkg.com/@vtex/diagnostics-semconv/-/diagnostics-semconv-5.1.1.tgz#3b83ace753c1e9ff358d1308d37f114018f10adb"
-  integrity sha512-qkGFvmAbRlsYS+MoXLJchKsVc5PK+wZT9i3Eel7XvfVLZDYo6jmZ8k0ew0cQlwqhPpEXE53NJ82cLoTPxIG9lg==
+"@vtex/diagnostics-semconv@0.1.0-beta.11":
+  version "0.1.0-beta.11"
+  resolved "https://registry.yarnpkg.com/@vtex/diagnostics-semconv/-/diagnostics-semconv-0.1.0-beta.11.tgz#2ddfff7dffdc1c052d23b335f914de91653d9659"
+  integrity sha512-H3KM5fYAFmcxhlA4wT5iPgWJtgKsumFqGkkxjcA/BSwC5tgSWezN82sZDKvBsVo24EoZxVGgLlsjNw1tsp9U3Q==
 
 "@vtex/node-error-report@^0.0.3":
   version "0.0.3"

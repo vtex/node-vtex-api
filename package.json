@@ -54,7 +54,7 @@
     "@types/koa": "^2.11.0",
     "@types/koa-compose": "^3.2.3",
     "@vtex/diagnostics-nodejs": "0.1.0-io-beta.26",
-    "@vtex/diagnostics-semconv": "^1.1.2",
+    "@vtex/diagnostics-semconv": "1.1.2",
     "@vtex/node-error-report": "^0.0.3",
     "@wry/equality": "^0.1.9",
     "agentkeepalive": "^4.0.2",
