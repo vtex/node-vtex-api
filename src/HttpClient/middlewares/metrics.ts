@@ -16,7 +16,7 @@ import { statusLabel } from '../../utils/status'
 import { MiddlewareContext } from '../typings'
 import { Attributes } from '@opentelemetry/api'
 
-const DEFAULT_ACCOUNT = 'unknown_account'
+const DEFAULT_ACCOUNT = 'unknown'
 
 interface MetricsOpts {
   metrics?: MetricsAccumulator
