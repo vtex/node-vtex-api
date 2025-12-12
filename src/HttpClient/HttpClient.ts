@@ -38,6 +38,7 @@ export class HttpClient {
 
   public constructor(opts: ClientOptions) {
     const {
+      account,
       baseURL,
       authToken,
       authType,
@@ -82,6 +83,7 @@ export class HttpClient {
       ...defaultHeaders,
       'Accept-Encoding': 'gzip',
       'User-Agent': userAgent,
+      ...account ? { [HeaderKeys.ACCOUNT]: account } : null,
       ...host ? { [HeaderKeys.FORWARDED_HOST]: host } : null,
       ...tenant ? { [HeaderKeys.TENANT]: formatTenantHeaderValue(tenant) } : null,
       ...binding ? { [HeaderKeys.BINDING]: formatBindingHeaderValue(binding) } : null,

@@ -2,7 +2,7 @@ import chalk from 'chalk'
 import { Attributes } from '@opentelemetry/api'
 
 import { IOClients } from '../../../../../clients/IOClients'
-import { APP, LINKED, PID } from '../../../../../constants'
+import { APP, AttributeKeys, LINKED, PID } from '../../../../../constants'
 import { statusLabel } from '../../../../../utils/status'
 import {
   formatTimingName,
@@ -78,6 +78,7 @@ export async function timings <
   // New diagnostics metrics with stable names and attributes
   if (global.diagnosticsMetrics) {
     const attributes: Attributes = {
+      [AttributeKeys.VTEX_ACCOUNT_NAME]: vtex.account,
       component: 'http-handler',
       route_id: id,
       route_type: type,

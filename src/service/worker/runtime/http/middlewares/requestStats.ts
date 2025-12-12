@@ -1,4 +1,5 @@
 import { IOClients } from '../../../../../clients/IOClients'
+import { AttributeKeys } from '../../../../../constants'
 import { ParamsContext, RecorderState, ServiceContext } from '../../typings'
 
 export const cancelMessage = 'Request cancelled'
@@ -33,10 +34,11 @@ const requestClosed = <
   incomingRequestStats.closed++
   
   // Report to diagnostics metrics (cumulative counter)
-  const { status: statusCode, vtex: { route: { id, type } } } = ctx
+  const { status: statusCode, vtex: { account, route: { id, type } } } = ctx
 
   if (global.diagnosticsMetrics) {
     global.diagnosticsMetrics.incrementCounter('http_server_requests_closed_total', 1, {
+      [AttributeKeys.VTEX_ACCOUNT_NAME]: account,
       route_id: id,
       route_type: type,
       status_code: statusCode,
@@ -53,10 +55,11 @@ const requestAborted = <
   incomingRequestStats.aborted++
 
   // Report to diagnostics metrics (cumulative counter)
-  const { status: statusCode, vtex: { route: { id, type } } } = ctx
+  const { status: statusCode, vtex: { account, route: { id, type } } } = ctx
 
   if (global.diagnosticsMetrics) {
     global.diagnosticsMetrics.incrementCounter('http_server_requests_aborted_total', 1, {
+      [AttributeKeys.VTEX_ACCOUNT_NAME]: account,
       route_id: id,
       route_type: type,
       status_code: statusCode,
@@ -81,9 +84,10 @@ export async function trackIncomingRequestStats <
   incomingRequestStats.total++
   
   // Report total requests to diagnostics metrics (cumulative counter)
-  const { status: statusCode, vtex: { route: { id, type } } } = ctx
+  const { status: statusCode, vtex: { account, route: { id, type } } } = ctx
   if (global.diagnosticsMetrics) {
     global.diagnosticsMetrics.incrementCounter('http_server_requests_total', 1, {
+      [AttributeKeys.VTEX_ACCOUNT_NAME]: account,
       route_id: id,
       route_type: type,
       status_code: statusCode,

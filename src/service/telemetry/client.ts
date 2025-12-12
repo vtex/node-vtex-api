@@ -72,7 +72,7 @@ class TelemetryClientSingleton {
             'vendor': APP.VENDOR,
             'version': APP.VERSION || '',
             [AttributeKeys.VTEX_IO_WORKSPACE_NAME]: WORKSPACE,
-            [AttributeKeys.VTEX_IO_WORKSPACE_TYPE]: PRODUCTION.toString(),
+            [AttributeKeys.VTEX_IO_WORKSPACE_TYPE]: PRODUCTION ? 'production' : 'development',
           },
         }
       );
