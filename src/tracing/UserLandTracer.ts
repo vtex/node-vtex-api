@@ -8,6 +8,8 @@ export interface IUserLandTracer {
   startSpan: Tracer['startSpan']
   inject: Tracer['inject']
   fallbackSpanContext: () => SpanContext | undefined
+  setFallbackSpanTag: (key: string, value: any) => void
+  setFallbackSpanOperationName: (name: string) => void
 }
 
 export const createTracingContextFromCarrier = (
@@ -80,5 +82,21 @@ export class UserLandTracer implements IUserLandTracer {
 
   public fallbackSpanContext(): SpanContext | undefined {
     return this.fallbackSpan?.context()
+  }
+
+  /**
+   * Sets a tag on the fallback span (the main request span).
+   * This allows middlewares to add tags to the request span.
+   */
+  public setFallbackSpanTag(key: string, value: any): void {
+    this.fallbackSpan?.setTag(key, value)
+  }
+
+  /**
+   * Updates the operation name of the fallback span.
+   * This allows middlewares to add context to the span name.
+   */
+  public setFallbackSpanOperationName(name: string): void {
+    this.fallbackSpan?.setOperationName(name)
   }
 }
