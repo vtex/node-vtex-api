@@ -47,5 +47,5 @@ export interface Product {
   supplierId?: string
   showWithoutStock: boolean
   score?: number
-  salesChannel?: Array<{ id: string }>
+  salesChannel?: { id: string }[]
 }

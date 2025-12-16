@@ -278,7 +278,7 @@ describe('constants', () => {
         { vendor: 'vtex', expected: false },
         { vendor: 'gocommerce', expected: false },
         { vendor: 'other', expected: true },
-        { vendor: undefined, expected: true }
+        { vendor: undefined, expected: true },
       ]
 
       testCases.forEach(({ vendor, expected }) => {
@@ -286,7 +286,7 @@ describe('constants', () => {
           VENDOR: vendor,
           IS_THIRD_PARTY() {
             return 'vtex' !== this.VENDOR && 'gocommerce' !== this.VENDOR
-          }
+          },
         }
         expect(mockApp.IS_THIRD_PARTY()).toBe(expected)
       })
@@ -371,7 +371,7 @@ describe('constants', () => {
         PRODUCTION,
         INSPECT_DEBUGGER_PORT,
         cancellableMethods,
-        LOG_CLIENT_INIT_TIMEOUT_MS
+        LOG_CLIENT_INIT_TIMEOUT_MS,
       }
 
       // Environment-based constants that can be undefined in test environment
@@ -439,7 +439,7 @@ describe('constants', () => {
       const requiredAttributes = [
         'VTEX_ACCOUNT_NAME',
         'VTEX_IO_WORKSPACE_NAME', 'VTEX_IO_WORKSPACE_TYPE',
-        'VTEX_IO_APP_ID', 'VTEX_IO_APP_AUTHOR_TYPE'
+        'VTEX_IO_APP_ID', 'VTEX_IO_APP_AUTHOR_TYPE',
       ]
 
       requiredAttributes.forEach(attr => {
@@ -545,7 +545,7 @@ describe('constants', () => {
           [SEGMENT_HEADER]: 'segment-token',
           [SESSION_HEADER]: 'session-token',
           [ACCOUNT_HEADER]: 'account-name',
-          [WORKSPACE_HEADER]: 'master'
+          [WORKSPACE_HEADER]: 'master',
         }
 
         expect(headers['x-vtex-tenant']).toBe('example-value')
@@ -568,7 +568,7 @@ describe('constants', () => {
           TENANT_HEADER: tenant,
           BINDING_HEADER: binding,
           LOCALE_HEADER: locale,
-          SEGMENT_HEADER: segment
+          SEGMENT_HEADER: segment,
         } = constants
 
         expect(tenant).toBeDefined()
@@ -602,7 +602,7 @@ describe('constants', () => {
           HeaderKeys.SEGMENT,
           HeaderKeys.SESSION,
           HeaderKeys.PRODUCT,
-          HeaderKeys.LOCALE
+          HeaderKeys.LOCALE,
         ]
 
         expect(varyHeaderValues).toEqual(expectedVaryHeaders)
@@ -629,7 +629,7 @@ describe('constants', () => {
           [SEGMENT_HEADER]: mockSegmentToken,
           [SESSION_HEADER]: mockSessionToken,
           [ACCOUNT_HEADER]: 'vtexstore',
-          [WORKSPACE_HEADER]: 'master'
+          [WORKSPACE_HEADER]: 'master',
         }
 
         expect(requestHeaders['x-vtex-binding']).toBe(JSON.stringify(mockBinding))
@@ -655,7 +655,7 @@ describe('constants', () => {
         const incomingHeaders: Record<string, string> = {
           'x-vtex-tenant': 'es-AR',
           'x-vtex-binding': '{"locale":"es-AR"}',
-          'x-vtex-account': 'mystore'
+          'x-vtex-account': 'mystore',
         }
 
         expect(incomingHeaders[TENANT_HEADER]).toBe('es-AR')

@@ -103,7 +103,7 @@ export class DiagnosticsMetrics {
 
         this.metricsClient = await Promise.race([
           getMetricClient(),
-          timeoutPromise
+          timeoutPromise,
         ])
 
         // Create the single latency histogram after client is ready

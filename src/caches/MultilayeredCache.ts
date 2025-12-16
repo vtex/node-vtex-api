@@ -7,7 +7,7 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
   private hits = 0
   private total = 0
 
-  constructor (private caches: Array<CacheLayer<K, V>>) {}
+  constructor (private caches: CacheLayer<K, V>[]) {}
 
   public get = async (key: K, fetcher?: () => Promise<FetchResult<V>>): Promise<V | void> => {
     let value: V | void = undefined

@@ -20,7 +20,7 @@ const createOtelConcurrentRequestsInstrument = async (): Promise<Types.Gauge> =>
   const metricsClient = await getMetricClient()
   return metricsClient.createGauge('io_http_requests_current', {
     description: 'The current number of requests in course.',
-    unit: '1'
+    unit: '1',
   })
 }
 
@@ -28,7 +28,7 @@ const createOtelRequestsTimingsInstrument = async (): Promise<Types.Histogram> =
   const metricsClient = await getMetricClient()
   return metricsClient.createHistogram('runtime_http_requests_duration_milliseconds', {
     description: 'The incoming http requests total duration.',
-    unit: 'ms'
+    unit: 'ms',
   })
 }
 
@@ -36,7 +36,7 @@ const createOtelTotalRequestsInstrument = async (): Promise<Types.Counter> => {
   const metricsClient = await getMetricClient()
   return metricsClient.createCounter('runtime_http_requests_total', {
     description: 'The total number of HTTP requests.',
-    unit: '1'
+    unit: '1',
   })
 }
 
@@ -44,7 +44,7 @@ const createOtelRequestsResponseSizesInstrument = async (): Promise<Types.Histog
   const metricsClient = await getMetricClient()
   return metricsClient.createHistogram('runtime_http_response_size_bytes', {
     description: 'The outgoing response sizes (only applicable when the response isn\'t a stream).',
-    unit: 'bytes'
+    unit: 'bytes',
   })
 }
 
@@ -52,44 +52,44 @@ const createOtelTotalAbortedRequestsInstrument = async (): Promise<Types.Counter
   const metricsClient = await getMetricClient()
   return metricsClient.createCounter('runtime_http_aborted_requests_total', {
     description: 'The total number of HTTP requests aborted.',
-    unit: '1'
+    unit: '1',
   })
 }
 
 class OtelInstrumentsSingleton {
-  private static instance: OtelInstrumentsSingleton | undefined;
-  private instruments: OtelRequestInstruments | undefined;
-  private initializingPromise: Promise<OtelRequestInstruments> | undefined;
+  private static instance: OtelInstrumentsSingleton | undefined
+  private instruments: OtelRequestInstruments | undefined
+  private initializingPromise: Promise<OtelRequestInstruments> | undefined
 
   private constructor() {}
 
   public static getInstance(): OtelInstrumentsSingleton {
     if (!OtelInstrumentsSingleton.instance) {
-      OtelInstrumentsSingleton.instance = new OtelInstrumentsSingleton();
+      OtelInstrumentsSingleton.instance = new OtelInstrumentsSingleton()
     }
-    return OtelInstrumentsSingleton.instance;
+    return OtelInstrumentsSingleton.instance
   }
 
   public async getInstruments(): Promise<OtelRequestInstruments> {
     if (this.instruments) {
-      return this.instruments;
+      return this.instruments
     }
 
     if (this.initializingPromise) {
-      return this.initializingPromise;
+      return this.initializingPromise
     }
 
-    this.initializingPromise = this.initializeInstruments();
+    this.initializingPromise = this.initializeInstruments()
 
     try {
-      this.instruments = await this.initializingPromise;
-      return this.instruments;
+      this.instruments = await this.initializingPromise
+      return this.instruments
     } catch (error) {
-      console.error('Failed to initialize OTel instruments:', error);
-      this.initializingPromise = undefined;
-      throw error;
+      console.error('Failed to initialize OTel instruments:', error)
+      this.initializingPromise = undefined
+      throw error
     } finally {
-      this.initializingPromise = undefined;
+      this.initializingPromise = undefined
     }
   }
 
@@ -99,13 +99,13 @@ class OtelInstrumentsSingleton {
       requestTimings,
       totalRequests,
       responseSizes,
-      abortedRequests
+      abortedRequests,
     ] = await Promise.all([
       createOtelConcurrentRequestsInstrument(),
       createOtelRequestsTimingsInstrument(),
       createOtelTotalRequestsInstrument(),
       createOtelRequestsResponseSizesInstrument(),
-      createOtelTotalAbortedRequestsInstrument()
+      createOtelTotalAbortedRequestsInstrument(),
     ])
 
     return {
@@ -113,9 +113,9 @@ class OtelInstrumentsSingleton {
       requestTimings,
       totalRequests,
       responseSizes,
-      abortedRequests
+      abortedRequests,
     }
   }
 }
 
-export const getOtelInstruments = () => OtelInstrumentsSingleton.getInstance().getInstruments();
+export const getOtelInstruments = () => OtelInstrumentsSingleton.getInstance().getInstruments()

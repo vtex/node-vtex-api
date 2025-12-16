@@ -155,7 +155,7 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
       if (cachedEtag && validateStatus(response.status as number)) {
         ctx.config.headers = {
           ...ctx.config.headers,
-          'if-none-match': cachedEtag
+          'if-none-match': cachedEtag,
         }
         ctx.config.validateStatus = validateStatus
       }

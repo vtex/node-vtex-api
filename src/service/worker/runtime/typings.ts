@@ -104,9 +104,9 @@ export interface GraphQLOptions<ClientsT extends IOClients = IOClients, StateT e
 
 export interface ServiceConfig<ClientsT extends IOClients = IOClients, StateT extends RecorderState = RecorderState, CustomT extends ParamsContext = ParamsContext> {
   clients?: ClientsConfig<ClientsT>
-  events?: Record<string, EventHandler<ClientsT, StateT> | Array<EventHandler<ClientsT, StateT>>>,
+  events?: Record<string, EventHandler<ClientsT, StateT> | EventHandler<ClientsT, StateT>[]>,
   graphql?: GraphQLOptions<ClientsT, StateT, CustomT>,
-  routes?: Record<string, RouteHandler<ClientsT, StateT, CustomT> | Array<RouteHandler<ClientsT, StateT, CustomT>>>
+  routes?: Record<string, RouteHandler<ClientsT, StateT, CustomT> | RouteHandler<ClientsT, StateT, CustomT>[]>
 }
 
 export interface Cancellation {

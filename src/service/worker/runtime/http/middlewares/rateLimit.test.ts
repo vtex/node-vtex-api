@@ -27,7 +27,7 @@ function getRequestsArray(
   requestsAmount: number,
   middleware: Middleware,
   customNext?: () => Promise<void>
-): { mutexArr: Semaphore[], promisesArr: Array<Promise<void>> } {
+): { mutexArr: Semaphore[], promisesArr: Promise<void>[] } {
   const results = new Array(requestsAmount).fill(null).map(_ => startRequest(middleware, customNext))
   return { 
     mutexArr: results.map(result => result.mutex), 
