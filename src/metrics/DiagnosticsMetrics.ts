@@ -7,7 +7,7 @@ import { METRIC_CLIENT_INIT_TIMEOUT_MS, LINKED } from '../constants'
  * Maximum number of attributes allowed per metric to control cardinality.
  * This limit applies to external usage (VTEX IO Apps) to prevent unbounded metric dimensions.
  */
-const MAX_ATTRIBUTES = 5
+const MAX_ATTRIBUTES = 7
 
 /**
  * Converts an hrtime tuple [seconds, nanoseconds] to milliseconds.

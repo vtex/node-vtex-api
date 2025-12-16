@@ -1,10 +1,12 @@
 import { Types } from '@vtex/diagnostics-nodejs'
 import { getMetricClient } from './client'
+import { AttributeKeys } from '../../constants'
 
-export const enum RequestsMetricLabels {
-  STATUS_CODE = 'status_code',
-  REQUEST_HANDLER = 'handler',
-}
+export const RequestsMetricLabels = {
+  STATUS_CODE: 'status_code',
+  REQUEST_HANDLER: 'handler',
+  ACCOUNT_NAME: AttributeKeys.VTEX_ACCOUNT_NAME,
+} as const
 
 export interface OtelRequestInstruments {
   concurrentRequests: Types.Gauge

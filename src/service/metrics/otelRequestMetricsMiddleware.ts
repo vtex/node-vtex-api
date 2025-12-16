@@ -55,6 +55,7 @@ export const addOtelRequestMetricsMiddleware = () => {
           {
             [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
             [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
+            [RequestsMetricLabels.ACCOUNT_NAME]: ctx.vtex?.account || 'unknown',
           }
         )
       }
@@ -65,6 +66,7 @@ export const addOtelRequestMetricsMiddleware = () => {
           {
             [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
             [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
+            [RequestsMetricLabels.ACCOUNT_NAME]: ctx.vtex?.account || 'unknown',
           }
         )
       }
@@ -76,6 +78,7 @@ export const addOtelRequestMetricsMiddleware = () => {
             {
               [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
               [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
+              [RequestsMetricLabels.ACCOUNT_NAME]: ctx.vtex?.account || 'unknown',
             }
           )
 

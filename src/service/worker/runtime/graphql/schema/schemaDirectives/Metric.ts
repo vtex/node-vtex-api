@@ -1,7 +1,7 @@
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 import { Attributes } from '@opentelemetry/api'
-import { APP } from '../../../../../..'
+import { APP, AttributeKeys } from '../../../../../..'
 import { GraphQLServiceContext } from '../../typings'
 
 interface Args {
@@ -40,6 +40,7 @@ export class Metric extends SchemaDirectiveVisitor {
       // New diagnostics metrics with stable names and attributes
       if (global.diagnosticsMetrics) {
         const attributes: Attributes = {
+          [AttributeKeys.VTEX_ACCOUNT_NAME]: ctx.vtex.account,
           component: 'graphql',
           field_name: name,
           status,
