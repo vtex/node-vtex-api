@@ -1,7 +1,7 @@
 import { Attributes } from '@opentelemetry/api'
 import { Types } from '@vtex/diagnostics-nodejs'
 import { getMetricClient } from '../service/metrics/client'
-import { METRIC_CLIENT_INIT_TIMEOUT_MS, LINKED } from '../constants'
+import { METRIC_CLIENT_INIT_TIMEOUT_MS, LINKED, APP, WORKSPACE, PRODUCTION, AttributeKeys } from '../constants'
 
 /**
  * Maximum number of attributes allowed per metric to control cardinality.
@@ -14,6 +14,45 @@ const MAX_ATTRIBUTES = 7
  */
 function hrtimeToMillis(hrtime: [number, number]): number {
   return (hrtime[0] * 1e3) + (hrtime[1] / 1e6)
+}
+
+/**
+ * Returns global attributes that should be included in all metric recordings.
+ * These attributes identify the app, workspace, and environment context.
+ * 
+ * @returns Global attributes object
+ */
+function getGlobalAttributes(): Attributes {
+  return {
+    [AttributeKeys.VTEX_IO_APP_ID]: APP.ID || 'unknown',
+    vendor: APP.VENDOR || 'unknown',
+    version: APP.VERSION || '',
+    [AttributeKeys.VTEX_IO_WORKSPACE_NAME]: WORKSPACE || 'unknown',
+    [AttributeKeys.VTEX_IO_WORKSPACE_TYPE]: PRODUCTION ? 'production' : 'development',
+  }
+}
+
+/**
+ * Merges user-provided attributes with global attributes.
+ * Global attributes take precedence and cannot be overwritten by user attributes.
+ * This ensures critical identification attributes are always present and correct.
+ * 
+ * @param userAttributes Optional user-provided attributes
+ * @returns Merged attributes with global attributes taking precedence
+ */
+function mergeWithGlobalAttributes(userAttributes?: Attributes): Attributes {
+  const globalAttrs = getGlobalAttributes()
+  
+  if (!userAttributes) {
+    return globalAttrs
+  }
+  
+  // User attributes first, then global attributes override
+  // This ensures global attrs cannot be overwritten by user attrs
+  return {
+    ...userAttributes,
+    ...globalAttrs,
+  }
 }
 
 /**
@@ -161,8 +200,11 @@ export class DiagnosticsMetrics {
     // Convert hrtime to milliseconds if needed
     const milliseconds = Array.isArray(value) ? hrtimeToMillis(value) : value
 
+    // Merge with global attributes (global attrs take precedence)
+    const mergedAttributes = mergeWithGlobalAttributes(attributes)
+
     // Limit attributes to prevent high cardinality
-    const limitedAttributes = limitAttributes(attributes)
+    const limitedAttributes = limitAttributes(mergedAttributes)
 
     // Record to the single shared histogram with attributes
     this.latencyHistogram.record(milliseconds, limitedAttributes)
@@ -196,8 +238,11 @@ export class DiagnosticsMetrics {
       this.counters.set(name, counter)
     }
 
+    // Merge with global attributes (global attrs take precedence)
+    const mergedAttributes = mergeWithGlobalAttributes(attributes)
+
     // Limit attributes to prevent high cardinality
-    const limitedAttributes = limitAttributes(attributes)
+    const limitedAttributes = limitAttributes(mergedAttributes)
 
     // Increment the counter
     this.counters.get(name)!.add(value, limitedAttributes)
@@ -231,8 +276,11 @@ export class DiagnosticsMetrics {
       this.gauges.set(name, gauge)
     }
 
+    // Merge with global attributes (global attrs take precedence)
+    const mergedAttributes = mergeWithGlobalAttributes(attributes)
+
     // Limit attributes to prevent high cardinality
-    const limitedAttributes = limitAttributes(attributes)
+    const limitedAttributes = limitAttributes(mergedAttributes)
 
     // Set the gauge value
     this.gauges.get(name)!.set(value, limitedAttributes)

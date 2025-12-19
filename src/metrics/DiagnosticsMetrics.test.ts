@@ -6,10 +6,20 @@ jest.mock('../service/metrics/client', () => ({
   getMetricClient: jest.fn(),
 }))
 
-// Mock constants to control LINKED value
+// Mock constants to control LINKED value and APP/WORKSPACE values for testing
 jest.mock('../constants', () => ({
   ...jest.requireActual('../constants'),
   LINKED: false, // Default to false, will override in specific tests
+  APP: {
+    ID: 'test-app-id',
+    VENDOR: 'test-vendor',
+    VERSION: '1.0.0',
+    NAME: 'test-app',
+    MAJOR: '1',
+    IS_THIRD_PARTY: () => false,
+  },
+  WORKSPACE: 'test-workspace',
+  PRODUCTION: false,
 }))
 
 import { getMetricClient } from '../service/metrics/client'
@@ -138,7 +148,12 @@ describe('DiagnosticsMetrics', () => {
       diagnosticsMetrics.recordLatency(hrtimeDiff, attributes)
 
       expect(recordedHistogramCalls).toHaveLength(1)
-      expect(recordedHistogramCalls[0]).toEqual({ value: 1500, attributes })
+      expect(recordedHistogramCalls[0].value).toBe(1500)
+      // User attributes should be included
+      expect(recordedHistogramCalls[0].attributes.operation).toBe('api-call')
+      expect(recordedHistogramCalls[0].attributes.status).toBe('2xx')
+      // Global attributes should also be present
+      expect(recordedHistogramCalls[0].attributes['vtex_io.app.id']).toBe('test-app-id')
     })
 
     it('should record latency from milliseconds number to single shared histogram', () => {
@@ -148,16 +163,24 @@ describe('DiagnosticsMetrics', () => {
       diagnosticsMetrics.recordLatency(milliseconds, attributes)
 
       expect(recordedHistogramCalls).toHaveLength(1)
-      expect(recordedHistogramCalls[0]).toEqual({ value: milliseconds, attributes })
+      expect(recordedHistogramCalls[0].value).toBe(milliseconds)
+      // User attributes should be included
+      expect(recordedHistogramCalls[0].attributes.operation).toBe('db-query')
+      expect(recordedHistogramCalls[0].attributes.status).toBe('success')
+      // Global attributes should also be present
+      expect(recordedHistogramCalls[0].attributes['vtex_io.app.id']).toBe('test-app-id')
     })
 
-    it('should record latency without attributes', () => {
+    it('should record latency without user attributes (global attributes still present)', () => {
       const milliseconds = 100
 
       diagnosticsMetrics.recordLatency(milliseconds)
 
       expect(recordedHistogramCalls).toHaveLength(1)
-      expect(recordedHistogramCalls[0]).toEqual({ value: milliseconds, attributes: undefined })
+      expect(recordedHistogramCalls[0].value).toBe(milliseconds)
+      // Global attributes should still be present even without user attributes
+      expect(recordedHistogramCalls[0].attributes['vtex_io.app.id']).toBe('test-app-id')
+      expect(recordedHistogramCalls[0].attributes.vendor).toBe('test-vendor')
     })
 
     it('should use the same histogram for all latency measurements', () => {
@@ -196,15 +219,23 @@ describe('DiagnosticsMetrics', () => {
 
       const calls = recordedCounterCalls.get('http_requests_total')
       expect(calls).toHaveLength(1)
-      expect(calls![0]).toEqual({ value: 1, attributes })
+      expect(calls![0].value).toBe(1)
+      // User attributes should be included
+      expect(calls![0].attributes.method).toBe('GET')
+      expect(calls![0].attributes.status).toBe('2xx')
+      // Global attributes should also be present
+      expect(calls![0].attributes['vtex_io.app.id']).toBe('test-app-id')
     })
 
-    it('should increment counter without attributes', () => {
+    it('should increment counter without user attributes (global attributes still present)', () => {
       diagnosticsMetrics.incrementCounter('requests', 5)
 
       const calls = recordedCounterCalls.get('requests')
       expect(calls).toHaveLength(1)
-      expect(calls![0]).toEqual({ value: 5, attributes: undefined })
+      expect(calls![0].value).toBe(5)
+      // Global attributes should still be present even without user attributes
+      expect(calls![0].attributes['vtex_io.app.id']).toBe('test-app-id')
+      expect(calls![0].attributes.vendor).toBe('test-vendor')
     })
 
     it('should reuse existing counter for same metric name', () => {
@@ -252,15 +283,22 @@ describe('DiagnosticsMetrics', () => {
 
       const calls = recordedGaugeCalls.get('cache_items_current')
       expect(calls).toHaveLength(1)
-      expect(calls![0]).toEqual({ value: 1024, attributes })
+      expect(calls![0].value).toBe(1024)
+      // User attributes should be included
+      expect(calls![0].attributes.cache).toBe('pages')
+      // Global attributes should also be present
+      expect(calls![0].attributes['vtex_io.app.id']).toBe('test-app-id')
     })
 
-    it('should set gauge without attributes', () => {
+    it('should set gauge without user attributes (global attributes still present)', () => {
       diagnosticsMetrics.setGauge('memory_usage', 512)
 
       const calls = recordedGaugeCalls.get('memory_usage')
       expect(calls).toHaveLength(1)
-      expect(calls![0]).toEqual({ value: 512, attributes: undefined })
+      expect(calls![0].value).toBe(512)
+      // Global attributes should still be present even without user attributes
+      expect(calls![0].attributes['vtex_io.app.id']).toBe('test-app-id')
+      expect(calls![0].attributes.vendor).toBe('test-vendor')
     })
 
     it('should reuse existing gauge for same metric name', () => {
@@ -317,22 +355,24 @@ describe('DiagnosticsMetrics', () => {
       })
     })
 
-    it('should allow up to 7 attributes without warning', async () => {
+    // Note: With global attributes (5 total), users can add up to 2 more to stay under the limit of 7
+    it('should allow up to 7 total attributes without warning (including global)', async () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
       
+      // 2 user attributes + 5 global attributes = 7 total
       const attributes = {
         attr1: 'value1',
         attr2: 'value2',
-        attr3: 'value3',
-        attr4: 'value4',
-        attr5: 'value5',
-        attr6: 'value6',
-        attr7: 'value7',
       }
 
       diagnosticsMetrics.recordLatency([0, 1000000], attributes)
 
-      expect(recordedHistogramCalls[0].attributes).toEqual(attributes)
+      const recorded = recordedHistogramCalls[0].attributes
+      // User attributes should be present
+      expect(recorded.attr1).toBe('value1')
+      expect(recorded.attr2).toBe('value2')
+      // Global attributes should also be present
+      expect(recorded['vtex_io.app.id']).toBe('test-app-id')
       expect(warnSpy).not.toHaveBeenCalled()
 
       warnSpy.mockRestore()
@@ -341,15 +381,11 @@ describe('DiagnosticsMetrics', () => {
     it('should limit attributes to 7 and warn when exceeded (recordLatency)', async () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
       
+      // 3 user attributes + 5 global attributes = 8 total (exceeds limit)
       const attributes = {
         attr1: 'value1',
         attr2: 'value2',
         attr3: 'value3',
-        attr4: 'value4',
-        attr5: 'value5',
-        attr6: 'value6',
-        attr7: 'value7',
-        attr8: 'value8',
       }
 
       diagnosticsMetrics.recordLatency([0, 1000000], attributes)
@@ -357,15 +393,6 @@ describe('DiagnosticsMetrics', () => {
       // Should only include first 7 attributes
       const recorded = recordedHistogramCalls[0].attributes
       expect(Object.keys(recorded)).toHaveLength(7)
-      expect(recorded).toEqual({
-        attr1: 'value1',
-        attr2: 'value2',
-        attr3: 'value3',
-        attr4: 'value4',
-        attr5: 'value5',
-        attr6: 'value6',
-        attr7: 'value7',
-      })
 
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Attribute limit exceeded: 8 attributes provided, using only the first 7')
@@ -377,15 +404,11 @@ describe('DiagnosticsMetrics', () => {
     it('should limit attributes to 7 and warn when exceeded (incrementCounter)', async () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
       
+      // 3 user attributes + 5 global attributes = 8 total (exceeds limit)
       const attributes = {
         attr1: 'value1',
         attr2: 'value2',
         attr3: 'value3',
-        attr4: 'value4',
-        attr5: 'value5',
-        attr6: 'value6',
-        attr7: 'value7',
-        attr8: 'value8',
       }
 
       diagnosticsMetrics.incrementCounter('test_counter', 1, attributes)
@@ -393,15 +416,6 @@ describe('DiagnosticsMetrics', () => {
       // Should only include first 7 attributes
       const recorded = recordedCounterCalls.get('test_counter')![0].attributes
       expect(Object.keys(recorded)).toHaveLength(7)
-      expect(recorded).toEqual({
-        attr1: 'value1',
-        attr2: 'value2',
-        attr3: 'value3',
-        attr4: 'value4',
-        attr5: 'value5',
-        attr6: 'value6',
-        attr7: 'value7',
-      })
 
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Attribute limit exceeded: 8 attributes provided, using only the first 7')
@@ -413,15 +427,11 @@ describe('DiagnosticsMetrics', () => {
     it('should limit attributes to 7 and warn when exceeded (setGauge)', async () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
       
+      // 3 user attributes + 5 global attributes = 8 total (exceeds limit)
       const attributes = {
         attr1: 'value1',
         attr2: 'value2',
         attr3: 'value3',
-        attr4: 'value4',
-        attr5: 'value5',
-        attr6: 'value6',
-        attr7: 'value7',
-        attr8: 'value8',
       }
 
       diagnosticsMetrics.setGauge('test_gauge', 100, attributes)
@@ -429,21 +439,109 @@ describe('DiagnosticsMetrics', () => {
       // Should only include first 7 attributes
       const recorded = recordedGaugeCalls.get('test_gauge')![0].attributes
       expect(Object.keys(recorded)).toHaveLength(7)
-      expect(recorded).toEqual({
-        attr1: 'value1',
-        attr2: 'value2',
-        attr3: 'value3',
-        attr4: 'value4',
-        attr5: 'value5',
-        attr6: 'value6',
-        attr7: 'value7',
-      })
 
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining('Attribute limit exceeded: 8 attributes provided, using only the first 7')
       )
 
       warnSpy.mockRestore()
+    })
+  })
+
+  describe('Global Attributes', () => {
+    beforeEach(async () => {
+      await new Promise(resolve => setTimeout(resolve, 10))
+    })
+
+    it('should include global attributes in recordLatency when no user attributes provided', () => {
+      diagnosticsMetrics.recordLatency(100)
+
+      const recorded = recordedHistogramCalls[0].attributes
+      // Global attributes use the actual key names from @vtex/diagnostics-semconv
+      expect(recorded['vtex_io.app.id']).toBe('test-app-id')
+      expect(recorded.vendor).toBe('test-vendor')
+      expect(recorded.version).toBe('1.0.0')
+      expect(recorded['vtex_io.workspace.name']).toBe('test-workspace')
+      expect(recorded['vtex_io.workspace.type']).toBe('development')
+    })
+
+    it('should include global attributes in recordLatency alongside user attributes', () => {
+      diagnosticsMetrics.recordLatency(100, { operation: 'test-op', status: 'success' })
+
+      const recorded = recordedHistogramCalls[0].attributes
+      // User attributes should be present
+      expect(recorded.operation).toBe('test-op')
+      expect(recorded.status).toBe('success')
+      // Global attributes should also be present
+      expect(recorded['vtex_io.app.id']).toBe('test-app-id')
+      expect(recorded.vendor).toBe('test-vendor')
+      expect(recorded.version).toBe('1.0.0')
+      expect(recorded['vtex_io.workspace.name']).toBe('test-workspace')
+      expect(recorded['vtex_io.workspace.type']).toBe('development')
+    })
+
+    it('should prevent user attributes from overwriting global attributes in recordLatency', () => {
+      // User tries to overwrite global attributes using the same key names
+      diagnosticsMetrics.recordLatency(100, {
+        'vtex_io.app.id': 'malicious-app-id',
+        vendor: 'malicious-vendor',
+        operation: 'test-op',
+      })
+
+      const recorded = recordedHistogramCalls[0].attributes
+      // Global attributes should take precedence (not overwritten)
+      expect(recorded['vtex_io.app.id']).toBe('test-app-id')
+      expect(recorded.vendor).toBe('test-vendor')
+      // User attributes that don't conflict should still be present
+      expect(recorded.operation).toBe('test-op')
+    })
+
+    it('should include global attributes in incrementCounter', () => {
+      diagnosticsMetrics.incrementCounter('test_counter', 1, { method: 'GET' })
+
+      const recorded = recordedCounterCalls.get('test_counter')![0].attributes
+      // User attributes should be present
+      expect(recorded.method).toBe('GET')
+      // Global attributes should also be present
+      expect(recorded['vtex_io.app.id']).toBe('test-app-id')
+      expect(recorded.vendor).toBe('test-vendor')
+    })
+
+    it('should prevent user attributes from overwriting global attributes in incrementCounter', () => {
+      diagnosticsMetrics.incrementCounter('test_counter', 1, {
+        'vtex_io.app.id': 'malicious-app-id',
+        method: 'GET',
+      })
+
+      const recorded = recordedCounterCalls.get('test_counter')![0].attributes
+      // Global attributes should take precedence
+      expect(recorded['vtex_io.app.id']).toBe('test-app-id')
+      // User attributes that don't conflict should still be present
+      expect(recorded.method).toBe('GET')
+    })
+
+    it('should include global attributes in setGauge', () => {
+      diagnosticsMetrics.setGauge('test_gauge', 100, { cache: 'pages' })
+
+      const recorded = recordedGaugeCalls.get('test_gauge')![0].attributes
+      // User attributes should be present
+      expect(recorded.cache).toBe('pages')
+      // Global attributes should also be present
+      expect(recorded['vtex_io.app.id']).toBe('test-app-id')
+      expect(recorded.vendor).toBe('test-vendor')
+    })
+
+    it('should prevent user attributes from overwriting global attributes in setGauge', () => {
+      diagnosticsMetrics.setGauge('test_gauge', 100, {
+        'vtex_io.app.id': 'malicious-app-id',
+        cache: 'pages',
+      })
+
+      const recorded = recordedGaugeCalls.get('test_gauge')![0].attributes
+      // Global attributes should take precedence
+      expect(recorded['vtex_io.app.id']).toBe('test-app-id')
+      // User attributes that don't conflict should still be present
+      expect(recorded.cache).toBe('pages')
     })
   })
 })
