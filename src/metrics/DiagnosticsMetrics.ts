@@ -10,7 +10,7 @@ import { METRIC_CLIENT_INIT_TIMEOUT_MS, LINKED } from '../constants'
  * 
  * Total attributes sent = base attributes + custom attributes (up to MAX_CUSTOM_ATTRIBUTES)
  */
-const MAX_CUSTOM_ATTRIBUTES = 5
+const MAX_CUSTOM_ATTRIBUTES = 7
 
 /**
  * Context key for storing base attributes in OpenTelemetry context.
