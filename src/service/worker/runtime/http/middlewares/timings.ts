@@ -114,6 +114,7 @@ export async function timings <
   if (global.diagnosticsMetrics) {
     await global.diagnosticsMetrics.runWithBaseAttributes(baseAttributes, executeWithBaseAttributes)
   } else {
+    console.warn('DiagnosticsMetrics not available. HTTP handler metrics not reported.')
     await executeWithBaseAttributes()
   }
 }
