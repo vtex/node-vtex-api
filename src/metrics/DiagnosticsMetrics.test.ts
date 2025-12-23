@@ -324,7 +324,7 @@ describe('DiagnosticsMetrics', () => {
       })
     })
 
-    it('should allow up to 5 custom attributes without warning', async () => {
+    it('should allow up to 7 custom attributes without warning', async () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
       
       const attributes = {
@@ -333,6 +333,8 @@ describe('DiagnosticsMetrics', () => {
         attr3: 'value3',
         attr4: 'value4',
         attr5: 'value5',
+        attr6: 'value6',
+        attr7: 'value7',
       }
 
       diagnosticsMetrics.recordLatency([0, 1000000], attributes)
@@ -343,7 +345,7 @@ describe('DiagnosticsMetrics', () => {
       warnSpy.mockRestore()
     })
 
-    it('should limit custom attributes to 5 and warn when exceeded (recordLatency)', async () => {
+    it('should limit custom attributes to 7 and warn when exceeded (recordLatency)', async () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
       
       const attributes = {
@@ -353,29 +355,33 @@ describe('DiagnosticsMetrics', () => {
         attr4: 'value4',
         attr5: 'value5',
         attr6: 'value6',
+        attr7: 'value7',
+        attr8: 'value8',
       }
 
       diagnosticsMetrics.recordLatency([0, 1000000], attributes)
 
-      // Should only include first 5 custom attributes
+      // Should only include first 7 custom attributes
       const recorded = recordedHistogramCalls[0].attributes
-      expect(Object.keys(recorded)).toHaveLength(5)
+      expect(Object.keys(recorded)).toHaveLength(7)
       expect(recorded).toEqual({
         attr1: 'value1',
         attr2: 'value2',
         attr3: 'value3',
         attr4: 'value4',
         attr5: 'value5',
+        attr6: 'value6',
+        attr7: 'value7',
       })
 
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Custom attribute limit exceeded: 6 custom attributes provided, using only the first 5')
+        expect.stringContaining('Custom attribute limit exceeded: 8 custom attributes provided, using only the first 7')
       )
 
       warnSpy.mockRestore()
     })
 
-    it('should limit custom attributes to 5 and warn when exceeded (incrementCounter)', async () => {
+    it('should limit custom attributes to 7 and warn when exceeded (incrementCounter)', async () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
       
       const attributes = {
@@ -385,29 +391,33 @@ describe('DiagnosticsMetrics', () => {
         attr4: 'value4',
         attr5: 'value5',
         attr6: 'value6',
+        attr7: 'value7',
+        attr8: 'value8',
       }
 
       diagnosticsMetrics.incrementCounter('test_counter', 1, attributes)
 
-      // Should only include first 5 custom attributes
+      // Should only include first 7 custom attributes
       const recorded = recordedCounterCalls.get('test_counter')![0].attributes
-      expect(Object.keys(recorded)).toHaveLength(5)
+      expect(Object.keys(recorded)).toHaveLength(7)
       expect(recorded).toEqual({
         attr1: 'value1',
         attr2: 'value2',
         attr3: 'value3',
         attr4: 'value4',
         attr5: 'value5',
+        attr6: 'value6',
+        attr7: 'value7',
       })
 
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Custom attribute limit exceeded: 6 custom attributes provided, using only the first 5')
+        expect.stringContaining('Custom attribute limit exceeded: 8 custom attributes provided, using only the first 7')
       )
 
       warnSpy.mockRestore()
     })
 
-    it('should limit custom attributes to 5 and warn when exceeded (setGauge)', async () => {
+    it('should limit custom attributes to 7 and warn when exceeded (setGauge)', async () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
       
       const attributes = {
@@ -417,23 +427,27 @@ describe('DiagnosticsMetrics', () => {
         attr4: 'value4',
         attr5: 'value5',
         attr6: 'value6',
+        attr7: 'value7',
+        attr8: 'value8',
       }
 
       diagnosticsMetrics.setGauge('test_gauge', 100, attributes)
 
-      // Should only include first 5 custom attributes
+      // Should only include first 7 custom attributes
       const recorded = recordedGaugeCalls.get('test_gauge')![0].attributes
-      expect(Object.keys(recorded)).toHaveLength(5)
+      expect(Object.keys(recorded)).toHaveLength(7)
       expect(recorded).toEqual({
         attr1: 'value1',
         attr2: 'value2',
         attr3: 'value3',
         attr4: 'value4',
         attr5: 'value5',
+        attr6: 'value6',
+        attr7: 'value7',
       })
 
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Custom attribute limit exceeded: 6 custom attributes provided, using only the first 5')
+        expect.stringContaining('Custom attribute limit exceeded: 8 custom attributes provided, using only the first 7')
       )
 
       warnSpy.mockRestore()
@@ -685,7 +699,7 @@ describe('DiagnosticsMetrics', () => {
         })
       })
 
-      it('should limit only custom attributes to 5, not base attributes', () => {
+      it('should limit only custom attributes to 7, not base attributes', () => {
         const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
         
         const baseAttributes = {
@@ -700,16 +714,18 @@ describe('DiagnosticsMetrics', () => {
           custom3: 'value3',
           custom4: 'value4',
           custom5: 'value5',
-          custom6: 'value6', // This should be dropped
+          custom6: 'value6',
+          custom7: 'value7',
+          custom8: 'value8', // This should be dropped
         }
 
         diagnosticsMetrics.runWithBaseAttributes(baseAttributes, () => {
           diagnosticsMetrics.recordLatency(100, customAttributes)
         })
 
-        // 4 base attributes + 5 custom attributes (6th custom dropped) = 9 total
+        // 4 base attributes + 7 custom attributes (8th custom dropped) = 11 total
         const recorded = recordedHistogramCalls[0].attributes
-        expect(Object.keys(recorded)).toHaveLength(9)
+        expect(Object.keys(recorded)).toHaveLength(11)
         
         // Verify all base attributes are present
         expect(recorded.base1).toBe('value1')
@@ -717,16 +733,18 @@ describe('DiagnosticsMetrics', () => {
         expect(recorded.base3).toBe('value3')
         expect(recorded.base4).toBe('value4')
         
-        // Verify only first 5 custom attributes are present
+        // Verify only first 7 custom attributes are present
         expect(recorded.custom1).toBe('value1')
         expect(recorded.custom2).toBe('value2')
         expect(recorded.custom3).toBe('value3')
         expect(recorded.custom4).toBe('value4')
         expect(recorded.custom5).toBe('value5')
-        expect(recorded.custom6).toBeUndefined() // 6th custom attribute should be dropped
+        expect(recorded.custom6).toBe('value6')
+        expect(recorded.custom7).toBe('value7')
+        expect(recorded.custom8).toBeUndefined() // 8th custom attribute should be dropped
 
         expect(warnSpy).toHaveBeenCalledWith(
-          expect.stringContaining('Custom attribute limit exceeded: 6 custom attributes provided, using only the first 5')
+          expect.stringContaining('Custom attribute limit exceeded: 8 custom attributes provided, using only the first 7')
         )
 
         warnSpy.mockRestore()
