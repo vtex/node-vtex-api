@@ -61,37 +61,60 @@ export async function timings <
   U extends RecorderState,
   V extends ParamsContext
 > (ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
-  // Errors will be caught by the next middleware so we don't have to catch.
-  await next()
+  const { vtex: { route: { id, type } }, vtex } = ctx
 
-  const { status: statusCode, vtex: { route: { id, type } }, timings: {total}, vtex } = ctx
-  const totalMillis = hrToMillis(total)
-  console.log(log(ctx, totalMillis))
-  console.log(logBillingInfo(vtex, totalMillis))
+  // Set base attributes for all metrics recorded during this request.
+  // This includes metrics recorded by VTEX IO apps during handler execution.
+  // These attributes will be automatically merged with custom attributes.
+  const baseAttributes: Attributes = {
+    [AttributeKeys.VTEX_ACCOUNT_NAME]: vtex.account,
+    component: 'http-handler',
+    route_id: id,
+    route_type: type,
+  }
 
-  const status = statusLabel(statusCode)
-  
-  // Legacy metrics (backward compatibility)
-  // Only batch successful responses so metrics don't consider errors
-  metrics.batch(`http-handler-${id}`, status === 'success' ? total : undefined, { [status]: 1 })
+  // Wrap the request handling with base attributes context.
+  // All metrics recorded during next() will automatically include these attributes.
+  const executeWithBaseAttributes = async () => {
+    // Errors will be caught by the next middleware so we don't have to catch.
+    await next()
 
-  // New diagnostics metrics with stable names and attributes
-  if (global.diagnosticsMetrics) {
-    const attributes: Attributes = {
-      [AttributeKeys.VTEX_ACCOUNT_NAME]: vtex.account,
-      component: 'http-handler',
-      route_id: id,
-      route_type: type,
-      status_code: statusCode,
-      status,
+    const { status: statusCode, timings: {total} } = ctx
+    const totalMillis = hrToMillis(total)
+    console.log(log(ctx, totalMillis))
+    console.log(logBillingInfo(vtex, totalMillis))
+
+    const status = statusLabel(statusCode)
+    
+    // Legacy metrics (backward compatibility)
+    // Only batch successful responses so metrics don't consider errors
+    metrics.batch(`http-handler-${id}`, status === 'success' ? total : undefined, { [status]: 1 })
+
+    // New diagnostics metrics with stable names and attributes
+    // Note: base attributes (account, route_id, route_type) are automatically merged
+    // We only need to provide the response-specific attributes here
+    if (global.diagnosticsMetrics) {
+      const responseAttributes: Attributes = {
+        status_code: statusCode,
+        status,
+      }
+
+      // Record latency histogram (record all requests, not just successful ones)
+      global.diagnosticsMetrics.recordLatency(total, responseAttributes)
+
+      // Increment counter (status is an attribute, not in metric name)
+      global.diagnosticsMetrics.incrementCounter('http_handler_requests_total', 1, responseAttributes)
+    } else {
+      console.warn('DiagnosticsMetrics not available. HTTP handler metrics not reported.')
     }
+  }
 
-    // Record latency histogram (record all requests, not just successful ones)
-    global.diagnosticsMetrics.recordLatency(total, attributes)
-
-    // Increment counter (status is an attribute, not in metric name)
-    global.diagnosticsMetrics.incrementCounter('http_handler_requests_total', 1, attributes)
+  // If diagnosticsMetrics is available, run with base attributes context
+  // Otherwise, run without context (fallback for graceful degradation)
+  if (global.diagnosticsMetrics) {
+    await global.diagnosticsMetrics.runWithBaseAttributes(baseAttributes, executeWithBaseAttributes)
   } else {
     console.warn('DiagnosticsMetrics not available. HTTP handler metrics not reported.')
+    await executeWithBaseAttributes()
   }
 }
