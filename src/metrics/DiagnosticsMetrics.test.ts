@@ -1,4 +1,6 @@
 import { Types } from '@vtex/diagnostics-nodejs'
+import { context } from '@opentelemetry/api'
+import { AsyncHooksContextManager } from '@opentelemetry/context-async-hooks'
 import { DiagnosticsMetrics } from './DiagnosticsMetrics'
 
 // Mock only the external I/O boundary (getMetricClient)
@@ -13,6 +15,11 @@ jest.mock('../constants', () => ({
 }))
 
 import { getMetricClient } from '../service/metrics/client'
+
+// Set up OpenTelemetry context manager for async context propagation
+const contextManager = new AsyncHooksContextManager()
+contextManager.enable()
+context.setGlobalContextManager(contextManager)
 
 describe('DiagnosticsMetrics', () => {
   let diagnosticsMetrics: DiagnosticsMetrics
@@ -317,7 +324,7 @@ describe('DiagnosticsMetrics', () => {
       })
     })
 
-    it('should allow up to 7 attributes without warning', async () => {
+    it('should allow up to 7 custom attributes without warning', async () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
       
       const attributes = {
@@ -338,7 +345,7 @@ describe('DiagnosticsMetrics', () => {
       warnSpy.mockRestore()
     })
 
-    it('should limit attributes to 7 and warn when exceeded (recordLatency)', async () => {
+    it('should limit custom attributes to 7 and warn when exceeded (recordLatency)', async () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
       
       const attributes = {
@@ -354,7 +361,7 @@ describe('DiagnosticsMetrics', () => {
 
       diagnosticsMetrics.recordLatency([0, 1000000], attributes)
 
-      // Should only include first 7 attributes
+      // Should only include first 7 custom attributes
       const recorded = recordedHistogramCalls[0].attributes
       expect(Object.keys(recorded)).toHaveLength(7)
       expect(recorded).toEqual({
@@ -368,13 +375,13 @@ describe('DiagnosticsMetrics', () => {
       })
 
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Attribute limit exceeded: 8 attributes provided, using only the first 7')
+        expect.stringContaining('Custom attribute limit exceeded: 8 custom attributes provided, using only the first 7')
       )
 
       warnSpy.mockRestore()
     })
 
-    it('should limit attributes to 7 and warn when exceeded (incrementCounter)', async () => {
+    it('should limit custom attributes to 7 and warn when exceeded (incrementCounter)', async () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
       
       const attributes = {
@@ -390,7 +397,7 @@ describe('DiagnosticsMetrics', () => {
 
       diagnosticsMetrics.incrementCounter('test_counter', 1, attributes)
 
-      // Should only include first 7 attributes
+      // Should only include first 7 custom attributes
       const recorded = recordedCounterCalls.get('test_counter')![0].attributes
       expect(Object.keys(recorded)).toHaveLength(7)
       expect(recorded).toEqual({
@@ -404,13 +411,13 @@ describe('DiagnosticsMetrics', () => {
       })
 
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Attribute limit exceeded: 8 attributes provided, using only the first 7')
+        expect.stringContaining('Custom attribute limit exceeded: 8 custom attributes provided, using only the first 7')
       )
 
       warnSpy.mockRestore()
     })
 
-    it('should limit attributes to 7 and warn when exceeded (setGauge)', async () => {
+    it('should limit custom attributes to 7 and warn when exceeded (setGauge)', async () => {
       const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
       
       const attributes = {
@@ -426,7 +433,7 @@ describe('DiagnosticsMetrics', () => {
 
       diagnosticsMetrics.setGauge('test_gauge', 100, attributes)
 
-      // Should only include first 7 attributes
+      // Should only include first 7 custom attributes
       const recorded = recordedGaugeCalls.get('test_gauge')![0].attributes
       expect(Object.keys(recorded)).toHaveLength(7)
       expect(recorded).toEqual({
@@ -440,10 +447,308 @@ describe('DiagnosticsMetrics', () => {
       })
 
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Attribute limit exceeded: 8 attributes provided, using only the first 7')
+        expect.stringContaining('Custom attribute limit exceeded: 8 custom attributes provided, using only the first 7')
       )
 
       warnSpy.mockRestore()
+    })
+  })
+
+  describe('Base Attributes Merging (runWithBaseAttributes)', () => {
+    beforeEach(async () => {
+      // Wait for initialization
+      await new Promise(resolve => setTimeout(resolve, 10))
+    })
+
+    describe('recordLatency', () => {
+      it('should merge base attributes with custom attributes', () => {
+        const baseAttributes = { account: 'testaccount', route_id: 'test-route' }
+        const customAttributes = { operation: 'custom-op', status: 'success' }
+
+        diagnosticsMetrics.runWithBaseAttributes(baseAttributes, () => {
+          diagnosticsMetrics.recordLatency(100, customAttributes)
+        })
+
+        expect(recordedHistogramCalls).toHaveLength(1)
+        expect(recordedHistogramCalls[0].attributes).toEqual({
+          account: 'testaccount',
+          route_id: 'test-route',
+          operation: 'custom-op',
+          status: 'success',
+        })
+      })
+
+      it('should give base attributes precedence over custom attributes on conflicts', () => {
+        const baseAttributes = { status: 'base-status', account: 'base-account' }
+        const customAttributes = { status: 'custom-status', operation: 'test-op' }
+
+        diagnosticsMetrics.runWithBaseAttributes(baseAttributes, () => {
+          diagnosticsMetrics.recordLatency(100, customAttributes)
+        })
+
+        expect(recordedHistogramCalls).toHaveLength(1)
+        expect(recordedHistogramCalls[0].attributes).toEqual({
+          account: 'base-account',
+          status: 'base-status', // Base takes precedence, custom 'status' is dropped
+          operation: 'test-op', // Non-conflicting custom attribute is kept
+        })
+      })
+
+      it('should silently drop conflicting custom attributes without warnings', () => {
+        const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
+        
+        const baseAttributes = { 
+          account: 'base-account',
+          route_id: 'base-route',
+          component: 'base-component',
+        }
+        const customAttributes = { 
+          account: 'custom-account', // Conflicts - should be dropped
+          route_id: 'custom-route', // Conflicts - should be dropped
+          operation: 'custom-op', // No conflict - should be kept
+          status: 'success', // No conflict - should be kept
+        }
+
+        diagnosticsMetrics.runWithBaseAttributes(baseAttributes, () => {
+          diagnosticsMetrics.recordLatency(100, customAttributes)
+        })
+
+        // Verify no warnings were logged for conflicting attributes
+        expect(warnSpy).not.toHaveBeenCalled()
+
+        // Verify base attributes are preserved, conflicting custom attributes dropped
+        expect(recordedHistogramCalls[0].attributes).toEqual({
+          account: 'base-account', // Base preserved
+          route_id: 'base-route', // Base preserved
+          component: 'base-component', // Base preserved
+          operation: 'custom-op', // Non-conflicting custom kept
+          status: 'success', // Non-conflicting custom kept
+        })
+
+        warnSpy.mockRestore()
+      })
+
+      it('should use only base attributes when no custom attributes provided', () => {
+        const baseAttributes = { account: 'testaccount', route_id: 'test-route' }
+
+        diagnosticsMetrics.runWithBaseAttributes(baseAttributes, () => {
+          diagnosticsMetrics.recordLatency(100)
+        })
+
+        expect(recordedHistogramCalls).toHaveLength(1)
+        expect(recordedHistogramCalls[0].attributes).toEqual(baseAttributes)
+      })
+
+      it('should use only custom attributes when outside base attributes context', () => {
+        const customAttributes = { operation: 'custom-op' }
+
+        diagnosticsMetrics.recordLatency(100, customAttributes)
+
+        expect(recordedHistogramCalls).toHaveLength(1)
+        expect(recordedHistogramCalls[0].attributes).toEqual(customAttributes)
+      })
+
+      it('should work with nested runWithBaseAttributes calls (inner takes precedence)', () => {
+        const outerBase = { account: 'outer-account', level: 'outer' }
+        const innerBase = { account: 'inner-account', level: 'inner' }
+        const customAttributes = { operation: 'test' }
+
+        diagnosticsMetrics.runWithBaseAttributes(outerBase, () => {
+          diagnosticsMetrics.runWithBaseAttributes(innerBase, () => {
+            diagnosticsMetrics.recordLatency(100, customAttributes)
+          })
+        })
+
+        expect(recordedHistogramCalls).toHaveLength(1)
+        expect(recordedHistogramCalls[0].attributes).toEqual({
+          account: 'inner-account',
+          level: 'inner',
+          operation: 'test',
+        })
+      })
+    })
+
+    describe('incrementCounter', () => {
+      it('should merge base attributes with custom attributes', () => {
+        const baseAttributes = { account: 'testaccount' }
+        const customAttributes = { method: 'GET' }
+
+        diagnosticsMetrics.runWithBaseAttributes(baseAttributes, () => {
+          diagnosticsMetrics.incrementCounter('http_requests_total', 1, customAttributes)
+        })
+
+        const calls = recordedCounterCalls.get('http_requests_total')
+        expect(calls).toHaveLength(1)
+        expect(calls![0].attributes).toEqual({
+          account: 'testaccount',
+          method: 'GET',
+        })
+      })
+
+      it('should give base attributes precedence over custom attributes on conflicts', () => {
+        const baseAttributes = { status: 'base', account: 'base-account' }
+        const customAttributes = { status: 'custom', method: 'GET' }
+
+        diagnosticsMetrics.runWithBaseAttributes(baseAttributes, () => {
+          diagnosticsMetrics.incrementCounter('test_counter', 1, customAttributes)
+        })
+
+        const calls = recordedCounterCalls.get('test_counter')
+        expect(calls![0].attributes).toEqual({ 
+          status: 'base', // Base takes precedence
+          account: 'base-account',
+          method: 'GET', // Non-conflicting custom attribute is kept
+        })
+      })
+    })
+
+    describe('setGauge', () => {
+      it('should merge base attributes with custom attributes', () => {
+        const baseAttributes = { environment: 'production' }
+        const customAttributes = { cache: 'pages' }
+
+        diagnosticsMetrics.runWithBaseAttributes(baseAttributes, () => {
+          diagnosticsMetrics.setGauge('cache_items_current', 1024, customAttributes)
+        })
+
+        const calls = recordedGaugeCalls.get('cache_items_current')
+        expect(calls).toHaveLength(1)
+        expect(calls![0].attributes).toEqual({
+          environment: 'production',
+          cache: 'pages',
+        })
+      })
+
+      it('should give base attributes precedence over custom attributes on conflicts', () => {
+        const baseAttributes = { type: 'base', environment: 'prod' }
+        const customAttributes = { type: 'custom', cache: 'pages' }
+
+        diagnosticsMetrics.runWithBaseAttributes(baseAttributes, () => {
+          diagnosticsMetrics.setGauge('test_gauge', 100, customAttributes)
+        })
+
+        const calls = recordedGaugeCalls.get('test_gauge')
+        expect(calls![0].attributes).toEqual({ 
+          type: 'base', // Base takes precedence
+          environment: 'prod',
+          cache: 'pages', // Non-conflicting custom attribute is kept
+        })
+      })
+    })
+
+    describe('async operations', () => {
+      it('should maintain base attributes context through async operations', async () => {
+        const baseAttributes = { account: 'async-account' }
+        const customAttributes = { operation: 'async-op' }
+
+        await diagnosticsMetrics.runWithBaseAttributes(baseAttributes, async () => {
+          // Simulate async operation
+          await new Promise(resolve => setTimeout(resolve, 5))
+          diagnosticsMetrics.recordLatency(100, customAttributes)
+        })
+
+        expect(recordedHistogramCalls).toHaveLength(1)
+        expect(recordedHistogramCalls[0].attributes).toEqual({
+          account: 'async-account',
+          operation: 'async-op',
+        })
+      })
+
+      it('should isolate context between concurrent async operations', async () => {
+        const baseAttrs1 = { account: 'account1' }
+        const baseAttrs2 = { account: 'account2' }
+
+        await Promise.all([
+          diagnosticsMetrics.runWithBaseAttributes(baseAttrs1, async () => {
+            await new Promise(resolve => setTimeout(resolve, 10))
+            diagnosticsMetrics.recordLatency(100, { op: 'op1' })
+          }),
+          diagnosticsMetrics.runWithBaseAttributes(baseAttrs2, async () => {
+            await new Promise(resolve => setTimeout(resolve, 5))
+            diagnosticsMetrics.recordLatency(200, { op: 'op2' })
+          }),
+        ])
+
+        expect(recordedHistogramCalls).toHaveLength(2)
+        
+        // Order might vary due to timing, so check both are present
+        const attrs = recordedHistogramCalls.map(c => c.attributes)
+        expect(attrs).toContainEqual({ account: 'account1', op: 'op1' })
+        expect(attrs).toContainEqual({ account: 'account2', op: 'op2' })
+      })
+    })
+
+    describe('attribute limiting with base attributes', () => {
+      beforeEach(() => {
+        // Enable LINKED for these tests so warnings are triggered
+        const constants = require('../constants')
+        Object.defineProperty(constants, 'LINKED', {
+          value: true,
+          writable: true,
+          configurable: true,
+        })
+      })
+
+      afterEach(() => {
+        // Reset LINKED back to false
+        const constants = require('../constants')
+        Object.defineProperty(constants, 'LINKED', {
+          value: false,
+          writable: true,
+          configurable: true,
+        })
+      })
+
+      it('should limit only custom attributes to 7, not base attributes', () => {
+        const warnSpy = jest.spyOn(console, 'warn').mockImplementation()
+        
+        const baseAttributes = {
+          base1: 'value1',
+          base2: 'value2',
+          base3: 'value3',
+          base4: 'value4',
+        }
+        const customAttributes = {
+          custom1: 'value1',
+          custom2: 'value2',
+          custom3: 'value3',
+          custom4: 'value4',
+          custom5: 'value5',
+          custom6: 'value6',
+          custom7: 'value7',
+          custom8: 'value8', // This should be dropped
+        }
+
+        diagnosticsMetrics.runWithBaseAttributes(baseAttributes, () => {
+          diagnosticsMetrics.recordLatency(100, customAttributes)
+        })
+
+        // 4 base attributes + 7 custom attributes (8th custom dropped) = 11 total
+        const recorded = recordedHistogramCalls[0].attributes
+        expect(Object.keys(recorded)).toHaveLength(11)
+        
+        // Verify all base attributes are present
+        expect(recorded.base1).toBe('value1')
+        expect(recorded.base2).toBe('value2')
+        expect(recorded.base3).toBe('value3')
+        expect(recorded.base4).toBe('value4')
+        
+        // Verify only first 7 custom attributes are present
+        expect(recorded.custom1).toBe('value1')
+        expect(recorded.custom2).toBe('value2')
+        expect(recorded.custom3).toBe('value3')
+        expect(recorded.custom4).toBe('value4')
+        expect(recorded.custom5).toBe('value5')
+        expect(recorded.custom6).toBe('value6')
+        expect(recorded.custom7).toBe('value7')
+        expect(recorded.custom8).toBeUndefined() // 8th custom attribute should be dropped
+
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.stringContaining('Custom attribute limit exceeded: 8 custom attributes provided, using only the first 7')
+        )
+
+        warnSpy.mockRestore()
+      })
     })
   })
 })
