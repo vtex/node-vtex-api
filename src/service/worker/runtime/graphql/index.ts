@@ -5,6 +5,7 @@ import { createPrivateHttpRoute } from '../http'
 import { ClientsConfig, GraphQLOptions, ParamsContext, RecorderState, ServiceRoute } from '../typings'
 import { injectGraphqlContext } from './middlewares/context'
 import { graphqlError } from './middlewares/error'
+import { graphqlSpanTags } from './middlewares/graphqlSpanTags'
 import { extractQuery } from './middlewares/query'
 import { response } from './middlewares/response'
 import { run } from './middlewares/run'
@@ -31,6 +32,7 @@ export const createGraphQLRoute = <T extends IOClients, U extends RecorderState,
     graphqlError,
     upload,
     extractQuery(executableSchema),
+    graphqlSpanTags(),  // Add GraphQL operation info to span after query is extracted
     run(executableSchema),
   ]
   return createPrivateHttpRoute<T, U, V & GraphQLContext>(clientsConfig, pipeline, serviceRoute, routeId, globalLimiter)
