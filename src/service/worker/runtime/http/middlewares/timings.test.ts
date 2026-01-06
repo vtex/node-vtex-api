@@ -19,11 +19,12 @@ describe('timings middleware', () => {
   let consoleLogSpy: jest.SpyInstance
 
   beforeEach(() => {
-    // Mock DiagnosticsMetrics
+    // Mock DiagnosticsMetrics with runWithBaseAttributes that executes the function
     mockDiagnosticsMetrics = {
       recordLatency: jest.fn(),
       incrementCounter: jest.fn(),
       setGauge: jest.fn(),
+      runWithBaseAttributes: jest.fn((baseAttributes, fn) => fn()),
     } as any
 
     // Set up global
@@ -71,13 +72,22 @@ describe('timings middleware', () => {
     it('should record metrics for successful request', async () => {
       await timings(mockCtx, mockNext)
 
-      // Diagnostics metrics
-      expect(mockDiagnosticsMetrics.recordLatency).toHaveBeenCalledWith(
-        [1, 500000000],
+      // Verify runWithBaseAttributes is called with base attributes
+      expect(mockDiagnosticsMetrics.runWithBaseAttributes).toHaveBeenCalledWith(
         expect.objectContaining({
+          'vtex.account.name': 'testaccount',
           component: 'http-handler',
           route_id: 'test-route',
           route_type: 'public',
+        }),
+        expect.any(Function)
+      )
+
+      // Diagnostics metrics - now only receive completion-specific attributes
+      // Base attributes (account, route_id, etc.) are merged internally by DiagnosticsMetrics
+      expect(mockDiagnosticsMetrics.recordLatency).toHaveBeenCalledWith(
+        [1, 500000000],
+        expect.objectContaining({
           status_code: 200,
           status: 'success',
         })
@@ -87,9 +97,6 @@ describe('timings middleware', () => {
         'http_handler_requests_total',
         1,
         expect.objectContaining({
-          component: 'http-handler',
-          route_id: 'test-route',
-          route_type: 'public',
           status_code: 200,
           status: 'success',
         })
@@ -138,17 +145,15 @@ describe('timings middleware', () => {
 
       const latencyCall = mockDiagnosticsMetrics.recordLatency.mock.calls[0]
       expect(latencyCall[1]).toMatchObject({
+        status_code: 404,
         status: '4xx',
       })
 
-      // Counter with status as attribute
+      // Counter with status as attribute (base attributes merged internally)
       expect(mockDiagnosticsMetrics.incrementCounter).toHaveBeenCalledWith(
         'http_handler_requests_total',
         1,
         expect.objectContaining({
-          component: 'http-handler',
-          route_id: 'test-route',
-          route_type: 'public',
           status_code: 404,
           status: '4xx',
         })
@@ -163,6 +168,7 @@ describe('timings middleware', () => {
       expect(mockDiagnosticsMetrics.recordLatency).toHaveBeenCalledWith(
         expect.any(Array),
         expect.objectContaining({
+          status_code: 500,
           status: 'error',
         })
       )
