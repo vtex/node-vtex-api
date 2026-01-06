@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [7.3.1] - 2026-01-06
+
+### Added
+- OpenTelemetry context-based base attributes to DiagnosticsMetrics
+
+### Fixed
+- Merge request context attributes with custom metrics - custom metrics now automatically include request-scoped base attributes (account, route_id, status_code, etc.) using OpenTelemetry Context API
+
+## [7.3.0] - 2025-12-16
+### Changed
+- Update temporality to delta in metrics client
+- New deploy pipeline with npm publish flow
+
+### Fixed
+- Fix account attribute to diagnostics metrics
+
 ## [7.2.9-beta.1] - 2025-12-12
 ### Changed
 - Increase maximum attributes limit for diagnostics metrics
