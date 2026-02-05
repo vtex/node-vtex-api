@@ -12,6 +12,7 @@ metadata:
     github.com/project-slug: vtex/node-vtex-api
     backstage.io/techdocs-ref: dir:../
     vtex.com/application-id: SHSTJA2W
+    vtex.com/platform-flow-id: CommDev#1
 spec:
   lifecycle: stable
   owner: te-0029
