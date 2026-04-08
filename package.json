@@ -19,7 +19,7 @@
     "format-lint": "yarn format && yarn lint",
     "prepublishOnly": "bash ./scripts/publishLock.sh",
     "ci:build": "yarn build && yarn gen",
-    "ci:test": "yarn test --ci",
+    "ci:test": "yarn test --ci --coverage",
     "ci:prettier-check": "prettier --check --config ./.prettierrc \"src/**/*.ts\" \"src/**/*.js\""
   },
   "jest": {

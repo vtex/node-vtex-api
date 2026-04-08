@@ -8,10 +8,13 @@
           nodeVersion: "22-bookworm"
           packageManager: yarn
           skipInstall: false
+          sonarProjectName: node-vtex-api
           nodeCommands:
             - lint
             - ci:test
         when:
+          - event: pull_request
+            source: branch
           - event: push
             source: branch
 
