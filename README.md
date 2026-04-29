@@ -63,3 +63,5 @@ export const example = async (ctx: Context, next: () => Promise<void>) => {
 Now, when you get a workspace up and running for your app with `vtex link`, you'll have this package linked as well.
 
 > When done developing, don't forget to unlink it from `<your-app>/node`: `yarn unlink @vtex/api`
+
+<!-- Test PR to validate SonarQube configuration -->
