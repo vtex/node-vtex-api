@@ -5,32 +5,50 @@ import {
   Logs,
   Metrics,
   Traces,
-} from '@vtex/diagnostics-nodejs';
-import { APP, OTEL_EXPORTER_OTLP_ENDPOINT, DK_APP_ID, DIAGNOSTICS_TELEMETRY_ENABLED, WORKSPACE, PRODUCTION, AttributeKeys } from '../../constants';
-import { TelemetryClient } from '@vtex/diagnostics-nodejs/dist/telemetry';
-import { KoaInstrumentation } from '@opentelemetry/instrumentation-koa';
-import { HostMetricsInstrumentation } from '../metrics/instruments/hostMetrics';
+} from '@vtex/diagnostics-nodejs'
+import { APP, OTEL_EXPORTER_OTLP_ENDPOINT, DK_APP_ID, DIAGNOSTICS_TELEMETRY_ENABLED, WORKSPACE, PRODUCTION, AttributeKeys } from '../../constants'
+import { TelemetryClient } from '@vtex/diagnostics-nodejs/dist/telemetry'
+import { KoaInstrumentation } from '@opentelemetry/instrumentation-koa'
+import { HostMetricsInstrumentation } from '../metrics/instruments/hostMetrics'
 
-const APPLICATION_ID = APP.ID || 'vtex-io-app';
+const APPLICATION_ID = APP.ID || 'vtex-io-app'
 
 interface TelemetryClients {
-  logsClient: Logs.LogClient;
-  metricsClient: Metrics.MetricsClient;
-  tracesClient: Traces.TraceClient;
+  logsClient: Logs.LogClient
+  metricsClient: Metrics.MetricsClient
+  tracesClient: Traces.TraceClient
 }
 
 class TelemetryClientSingleton {
-  private static instance: TelemetryClientSingleton;
-  private telemetryClients: TelemetryClients | undefined;
-  private initializationPromise: Promise<TelemetryClients> | undefined = undefined;
+  private static instance: TelemetryClientSingleton
+  private telemetryClients: TelemetryClients | undefined
+  private initializationPromise: Promise<TelemetryClients> | undefined = undefined
 
   private constructor() {}
 
   public static getInstance(): TelemetryClientSingleton {
     if (!TelemetryClientSingleton.instance) {
-      TelemetryClientSingleton.instance = new TelemetryClientSingleton();
+      TelemetryClientSingleton.instance = new TelemetryClientSingleton()
     }
-    return TelemetryClientSingleton.instance;
+    return TelemetryClientSingleton.instance
+  }
+
+  public async getTelemetryClients(): Promise<TelemetryClients> {
+    if (this.telemetryClients) {
+      return this.telemetryClients
+    }
+
+    if (this.initializationPromise) {
+      return this.initializationPromise
+    }
+
+    this.initializationPromise = this.initializeTelemetryClients()
+    return this.initializationPromise
+  }
+
+  public reset(): void {
+    this.telemetryClients = undefined
+    this.initializationPromise = undefined
   }
 
   private initializeTracesClient = async (telemetryClient: TelemetryClient) =>
@@ -38,7 +56,7 @@ class TelemetryClientSingleton {
       exporter: Exporters.CreateExporter(Exporters.CreateTracesExporterConfig({
         endpoint: OTEL_EXPORTER_OTLP_ENDPOINT,
       }), 'otlp'),
-    });
+    })
 
   private initializeMetricsClient = async (telemetryClient: TelemetryClient) =>
     await telemetryClient.newMetricsClient({
@@ -48,7 +66,7 @@ class TelemetryClientSingleton {
         timeoutSeconds: 60,
         temporality: 'delta',
       }), 'otlp'),
-    });
+    })
 
   private initializeLogsClient = async (telemetryClient: TelemetryClient) =>
     await telemetryClient.newLogsClient({
@@ -56,7 +74,7 @@ class TelemetryClientSingleton {
         endpoint: OTEL_EXPORTER_OTLP_ENDPOINT,
       }), 'otlp'),
       loggerName: `node-vtex-api-${APPLICATION_ID}`,
-    });
+    })
 
   private async initializeTelemetryClients(): Promise<TelemetryClients> {
 
@@ -66,8 +84,6 @@ class TelemetryClientSingleton {
         'node-vtex-api',
         APPLICATION_ID,
         {
-          // Use built-in no-op functionality when telemetry is disabled
-          noop: !DIAGNOSTICS_TELEMETRY_ENABLED,
           additionalAttrs: {
             [AttributeKeys.VTEX_IO_APP_ID]: APPLICATION_ID,
             'vendor': APP.VENDOR,
@@ -75,67 +91,51 @@ class TelemetryClientSingleton {
             [AttributeKeys.VTEX_IO_WORKSPACE_NAME]: WORKSPACE,
             [AttributeKeys.VTEX_IO_WORKSPACE_TYPE]: PRODUCTION ? 'production' : 'development',
           },
+          // Use built-in no-op functionality when telemetry is disabled
+          noop: !DIAGNOSTICS_TELEMETRY_ENABLED,
         }
-      );
+      )
 
       const [tracesClient, metricsClient, logsClient] = await Promise.all([
         this.initializeTracesClient(telemetryClient),
         this.initializeMetricsClient(telemetryClient),
         this.initializeLogsClient(telemetryClient),
-      ]);
+      ])
 
       if (DIAGNOSTICS_TELEMETRY_ENABLED) {
-        console.log(`Telemetry enabled for app: ${APP.ID} (vendor: ${APP.VENDOR})`);
-        
+        console.log(`Telemetry enabled for app: ${APP.ID} (vendor: ${APP.VENDOR})`)
+
         const instrumentations = [
           ...Instrumentation.CommonInstrumentations.minimal(),
           new KoaInstrumentation(),
           new HostMetricsInstrumentation({
-            name: 'host-metrics-instrumentation',
             meterProvider: metricsClient.provider(),
+            name: 'host-metrics-instrumentation',
           }),
-        ];
+        ]
 
-        telemetryClient.registerInstrumentations(instrumentations);
+        telemetryClient.registerInstrumentations(instrumentations)
       }
 
       const clients: TelemetryClients = {
         logsClient,
         metricsClient,
         tracesClient,
-      };
+      }
 
-      this.telemetryClients = clients;
-      return clients;
+      this.telemetryClients = clients
+      return clients
     } catch (error) {
-      console.error('Failed to initialize telemetry clients:', error);
-      throw error;
+      console.error('Failed to initialize telemetry clients:', error)
+      throw error
     } finally {
-      this.initializationPromise = undefined;
+      this.initializationPromise = undefined
     }
-  }
-
-  public async getTelemetryClients(): Promise<TelemetryClients> {
-    if (this.telemetryClients) {
-      return this.telemetryClients;
-    }
-
-    if (this.initializationPromise) {
-      return this.initializationPromise;
-    }
-
-    this.initializationPromise = this.initializeTelemetryClients();
-    return this.initializationPromise;
-  }
-
-  public reset(): void {
-    this.telemetryClients = undefined;
-    this.initializationPromise = undefined;
   }
 }
 
 export async function initializeTelemetry(): Promise<TelemetryClients> {
-  return TelemetryClientSingleton.getInstance().getTelemetryClients();
+  return TelemetryClientSingleton.getInstance().getTelemetryClients()
 }
 
 export function resetTelemetry(): void {

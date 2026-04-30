@@ -46,6 +46,9 @@ describe('timings middleware', () => {
       method: 'GET',
       path: '/test',
       status: 200,
+      timings: {
+        total: [1, 500000000], // 1.5 seconds
+      },
       vtex: {
         account: 'testaccount',
         production: true,
@@ -54,9 +57,6 @@ describe('timings middleware', () => {
           type: 'public',
         },
         workspace: 'master',
-      },
-      timings: {
-        total: [1, 500000000], // 1.5 seconds
       },
     }
   })
