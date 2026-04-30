@@ -1,4 +1,4 @@
-import { Instrumentation } from '@vtex/diagnostics-nodejs';
+import { Instrumentation } from '@vtex/diagnostics-nodejs'
 import { request } from 'http'
 import Koa from 'koa'
 import compress from 'koa-compress'
