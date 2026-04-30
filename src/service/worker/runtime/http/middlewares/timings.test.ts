@@ -1,8 +1,8 @@
 // Mock @vtex/diagnostics-nodejs before any imports
 jest.mock('@vtex/diagnostics-nodejs', () => ({
   Types: {},
-  getMetricClient: jest.fn(),
   getLogger: jest.fn(),
+  getMetricClient: jest.fn(),
 }))
 
 jest.mock('../../../../../service/metrics/client', () => ({
@@ -21,10 +21,10 @@ describe('timings middleware', () => {
   beforeEach(() => {
     // Mock DiagnosticsMetrics with runWithBaseAttributes that executes the function
     mockDiagnosticsMetrics = {
-      recordLatency: jest.fn(),
       incrementCounter: jest.fn(),
-      setGauge: jest.fn(),
+      recordLatency: jest.fn(),
       runWithBaseAttributes: jest.fn((baseAttributes, fn) => fn()),
+      setGauge: jest.fn(),
     } as any
 
     // Set up global
@@ -43,9 +43,9 @@ describe('timings middleware', () => {
 
     // Mock context
     mockCtx = {
-      status: 200,
       method: 'GET',
       path: '/test',
+      status: 200,
       vtex: {
         account: 'testaccount',
         production: true,
@@ -75,10 +75,10 @@ describe('timings middleware', () => {
       // Verify runWithBaseAttributes is called with base attributes
       expect(mockDiagnosticsMetrics.runWithBaseAttributes).toHaveBeenCalledWith(
         expect.objectContaining({
-          'vtex.account.name': 'testaccount',
           component: 'http-handler',
           route_id: 'test-route',
           route_type: 'public',
+          'vtex.account.name': 'testaccount',
         }),
         expect.any(Function)
       )
@@ -145,8 +145,8 @@ describe('timings middleware', () => {
 
       const latencyCall = mockDiagnosticsMetrics.recordLatency.mock.calls[0]
       expect(latencyCall[1]).toMatchObject({
-        status_code: 404,
         status: '4xx',
+        status_code: 404,
       })
 
       // Counter with status as attribute (base attributes merged internally)

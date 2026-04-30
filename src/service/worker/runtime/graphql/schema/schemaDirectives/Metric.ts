@@ -1,6 +1,6 @@
+import { Attributes } from '@opentelemetry/api'
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
-import { Attributes } from '@opentelemetry/api'
 import { APP, AttributeKeys } from '../../../../../..'
 import { GraphQLServiceContext } from '../../typings'
 

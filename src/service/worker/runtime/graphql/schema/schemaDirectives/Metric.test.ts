@@ -14,8 +14,8 @@ describe('Metric Schema Directive', () => {
       batch: jest.fn(),
     }
     mockDiagnosticsMetrics = {
-      recordLatency: jest.fn(),
       incrementCounter: jest.fn(),
+      recordLatency: jest.fn(),
     }
     ;(global as any).metrics = mockMetricsAccumulator
     ;(global as any).diagnosticsMetrics = mockDiagnosticsMetrics
@@ -42,15 +42,15 @@ describe('Metric Schema Directive', () => {
     // Simulate what the Metric directive does
     const wrappedResolver = async (root: any, args: any, ctx: any, info: any) => {
       let failedToResolve = false
-      let result: any = null
+      let resolverResult: any = null
       let ellapsed: [number, number] = [0, 0]
 
       try {
         const start = process.hrtime()
-        result = await mockResolver(root, args, ctx, info)
+        resolverResult = await mockResolver(root, args, ctx, info)
         ellapsed = process.hrtime(start)
       } catch (error) {
-        result = error
+        resolverResult = error
         failedToResolve = true
       }
 
@@ -78,10 +78,10 @@ describe('Metric Schema Directive', () => {
       }
 
       if (failedToResolve) {
-        throw result
+        throw resolverResult
       }
 
-      return result
+      return resolverResult
     }
 
     // Execute the wrapped resolver

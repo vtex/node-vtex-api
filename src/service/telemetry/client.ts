@@ -139,5 +139,5 @@ export async function initializeTelemetry(): Promise<TelemetryClients> {
 }
 
 export function resetTelemetry(): void {
-  TelemetryClientSingleton.getInstance().reset();
+  TelemetryClientSingleton.getInstance().reset()
 }
