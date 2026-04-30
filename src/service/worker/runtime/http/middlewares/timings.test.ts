@@ -48,12 +48,12 @@ describe('timings middleware', () => {
       path: '/test',
       vtex: {
         account: 'testaccount',
-        workspace: 'master',
         production: true,
         route: {
           id: 'test-route',
           type: 'public',
         },
+        workspace: 'master',
       },
       timings: {
         total: [1, 500000000], // 1.5 seconds
@@ -88,8 +88,8 @@ describe('timings middleware', () => {
       expect(mockDiagnosticsMetrics.recordLatency).toHaveBeenCalledWith(
         [1, 500000000],
         expect.objectContaining({
-          status_code: 200,
           status: 'success',
+          status_code: 200,
         })
       )
 
@@ -97,8 +97,8 @@ describe('timings middleware', () => {
         'http_handler_requests_total',
         1,
         expect.objectContaining({
-          status_code: 200,
           status: 'success',
+          status_code: 200,
         })
       )
     })
@@ -154,8 +154,8 @@ describe('timings middleware', () => {
         'http_handler_requests_total',
         1,
         expect.objectContaining({
-          status_code: 404,
           status: '4xx',
+          status_code: 404,
         })
       )
     })
@@ -168,8 +168,8 @@ describe('timings middleware', () => {
       expect(mockDiagnosticsMetrics.recordLatency).toHaveBeenCalledWith(
         expect.any(Array),
         expect.objectContaining({
-          status_code: 500,
           status: 'error',
+          status_code: 500,
         })
       )
 

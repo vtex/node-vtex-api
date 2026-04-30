@@ -1,5 +1,5 @@
-import chalk from 'chalk'
 import { Attributes } from '@opentelemetry/api'
+import chalk from 'chalk'
 
 import { IOClients } from '../../../../../clients/IOClients'
 import { APP, AttributeKeys, LINKED, PID } from '../../../../../constants'
@@ -95,8 +95,8 @@ export async function timings <
     // We only need to provide the response-specific attributes here
     if (global.diagnosticsMetrics) {
       const responseAttributes: Attributes = {
-        status_code: statusCode,
         status,
+        status_code: statusCode,
       }
 
       // Record latency histogram (record all requests, not just successful ones)
