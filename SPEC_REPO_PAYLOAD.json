@@ -1,0 +1,6 @@
+{
+  "source_repo": "vtex/node-vtex-api",
+  "target_path": "out/spec-repo/node-vtex-api/constitution.md",
+  "default_branch": "master",
+  "family": "node-library"
+}
