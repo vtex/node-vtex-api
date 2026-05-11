@@ -43,3 +43,7 @@ yarn-error.log
 
 # AI IDE
 .cursor/
+
+# Specify
+.specify/*
+!.specify/memory/
