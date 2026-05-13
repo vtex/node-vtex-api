@@ -16,8 +16,8 @@ interface VtexIdParsedToken {
   account: string
 }
 
-async function parseIdToken(authToken: string, vtexIdToken: string): Promise<VtexIdParsedToken | void> {
-  const url = `vtexid.vtex.com.br/api/vtexid/pub/authenticated/user?authToken=${vtexIdToken}`
+async function parseIdToken(authToken: string, vtexIdToken: string, account: string): Promise<VtexIdParsedToken | void> {
+  const url = `vtexid.vtex.com.br/api/vtexid/pub/authenticated/user?authToken=${encodeURIComponent(vtexIdToken)}&an=${encodeURIComponent(account)}`
   const req = await axios.request({
     headers: {
       'Accept': 'application/json',
@@ -51,7 +51,7 @@ async function auth (ctx: ServiceContext, authArgs: AuthDirectiveArgs): Promise<
     throw new AuthenticationError('VtexIdclientAutCookie not found.')
   }
 
-  const parsedToken = await parseIdToken(ctx.vtex.authToken, vtexIdToken)
+  const parsedToken = await parseIdToken(ctx.vtex.authToken, vtexIdToken, ctx.vtex.account)
   if (!parsedToken || parsedToken.account !== ctx.vtex.account) {
     throw new AuthenticationError('Could not find user specified by VtexIdclientAutCookie.')
   }
@@ -69,7 +69,7 @@ async function auth (ctx: ServiceContext, authArgs: AuthDirectiveArgs): Promise<
 }
 
 function parseArgs (authArgs: AuthDirectiveArgs): AuthDirectiveArgs {
-  if (authArgs.scope == 'PUBLIC') {
+  if (authArgs.scope === 'PUBLIC') {
     return authArgs
   }
 
@@ -84,7 +84,7 @@ export class Auth extends SchemaDirectiveVisitor {
     const {resolve = defaultFieldResolver} = field
     field.resolve = async (root, args, ctx, info) => {
       const authArgs = parseArgs(this.args as AuthDirectiveArgs)
-      if (!authArgs.scope || authArgs.scope == 'PRIVATE') {
+      if (!authArgs.scope || authArgs.scope === 'PRIVATE') {
         await auth(ctx, authArgs)
       }
       return resolve(root, args, ctx, info)
