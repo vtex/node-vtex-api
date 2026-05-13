@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Security
+- Scope VTEX ID calls to the requesting account via `{{account}}.vtexcommercestable.com.br`, matching the rewriter credential validation flow and avoiding cross-account token validation through the global VTEX ID host.
+
 ## [7.3.1] - 2026-01-06
 
 ### Added

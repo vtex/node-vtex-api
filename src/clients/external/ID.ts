@@ -9,17 +9,23 @@ const routes = {
   VALIDATE_CLASSIC: '/classic/validate',
 }
 
-const VTEXID_ENDPOINTS: Record<string, string> = {
-  STABLE: 'https://vtexid.vtex.com.br/api/vtexid/pub/authentication',
+const getVtexIdBaseUrl = (account: string) => {
+  return `http://${account}.vtexcommercestable.com.br/api/vtexid/pub/authentication`
 }
 
-const endpoint = (env: string) => {
-  return VTEXID_ENDPOINTS[env] || env
+const getProxyTo = (account: string) => {
+  return `https://${account}.vtexcommercestable.com.br`
 }
 
 export class ID extends ExternalClient {
   constructor (context: IOContext, opts?: InstanceOptions) {
-    super(endpoint(VTEXID_ENDPOINTS.STABLE), context, opts)
+    super(getVtexIdBaseUrl(context.account), context, {
+      ...opts,
+      headers: {
+        ...opts?.headers,
+        'X-VTEX-Proxy-To': getProxyTo(context.account),
+      },
+    })
   }
 
   public getTemporaryToken = (tracingConfig?: RequestTracingConfig) => {
