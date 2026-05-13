@@ -1,14 +1,14 @@
+import { KoaInstrumentation } from '@opentelemetry/instrumentation-koa'
 import {
-  NewTelemetryClient,
-  Instrumentation,
   Exporters,
+  Instrumentation,
   Logs,
   Metrics,
+  NewTelemetryClient,
   Traces,
 } from '@vtex/diagnostics-nodejs'
-import { APP, OTEL_EXPORTER_OTLP_ENDPOINT, DK_APP_ID, DIAGNOSTICS_TELEMETRY_ENABLED, WORKSPACE, PRODUCTION, AttributeKeys } from '../../constants'
 import { TelemetryClient } from '@vtex/diagnostics-nodejs/dist/telemetry'
-import { KoaInstrumentation } from '@opentelemetry/instrumentation-koa'
+import { APP, AttributeKeys, DIAGNOSTICS_TELEMETRY_ENABLED, DK_APP_ID, OTEL_EXPORTER_OTLP_ENDPOINT, PRODUCTION, WORKSPACE } from '../../constants'
 import { HostMetricsInstrumentation } from '../metrics/instruments/hostMetrics'
 
 const APPLICATION_ID = APP.ID || 'vtex-io-app'
@@ -20,18 +20,18 @@ interface TelemetryClients {
 }
 
 class TelemetryClientSingleton {
-  private static instance: TelemetryClientSingleton
-  private telemetryClients: TelemetryClients | undefined
-  private initializationPromise: Promise<TelemetryClients> | undefined = undefined
-
-  private constructor() {}
-
   public static getInstance(): TelemetryClientSingleton {
     if (!TelemetryClientSingleton.instance) {
       TelemetryClientSingleton.instance = new TelemetryClientSingleton()
     }
     return TelemetryClientSingleton.instance
   }
+
+  private static instance: TelemetryClientSingleton
+  private telemetryClients: TelemetryClients | undefined
+  private initializationPromise: Promise<TelemetryClients> | undefined = undefined
+
+  private constructor() {}
 
   public async getTelemetryClients(): Promise<TelemetryClients> {
     if (this.telemetryClients) {
@@ -63,8 +63,8 @@ class TelemetryClientSingleton {
       exporter: Exporters.CreateExporter(Exporters.CreateMetricsExporterConfig({
         endpoint: OTEL_EXPORTER_OTLP_ENDPOINT,
         interval: 60,
-        timeoutSeconds: 60,
         temporality: 'delta',
+        timeoutSeconds: 60,
       }), 'otlp'),
     })
 
