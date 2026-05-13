@@ -1,5 +1,6 @@
 # VTEX IO API Client for Node
 
+
 This library enables developers to quickly integrate with the VTEX IO APIs and create full fledged node services using VTEX IO.
 
 [![Build Status](https://travis-ci.org/vtex/node-vtex-api.svg?branch=master)](https://travis-ci.org/vtex/node-vtex-api)
