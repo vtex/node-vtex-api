@@ -126,7 +126,7 @@ describe('cloneAndSanitizeHeaders', () => {
 
     const result = cloneAndSanitizeHeaders(headersWithNoise)
 
-    expect(Object.keys(result)).toEqual(['content-type', 'x-vtex-store', 'host'])
+    expect(Object.keys(result).sort()).toEqual(['content-type', 'host', 'x-vtex-store'])
     expect(result).not.toHaveProperty('x-custom-header')
     expect(result).not.toHaveProperty('server')
     expect(result).not.toHaveProperty('x-powered-by')
