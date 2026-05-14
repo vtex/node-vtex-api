@@ -4,10 +4,12 @@ jest.mock('./ExternalClient', () => ({
   ExternalClient: class {
     protected context: any
     protected http: any
+    protected options: any
 
-    constructor (baseURL: string, context: any) {
+    constructor (baseURL: string, context: any, options: any) {
       this.context = context
       this.http = { get: jest.fn() }
+      this.options = options
     }
   },
 }))
@@ -27,15 +29,34 @@ describe('ID client', () => {
     return { client, get }
   }
 
-  test('sends account on temporary token requests', async () => {
+  test('sets the account as a default query parameter', () => {
+    const client = new ID(context)
+
+    expect((client as any).options.params).toEqual({
+      an: context.account,
+    })
+  })
+
+  test('preserves custom default query parameters', () => {
+    const client = new ID(context, {
+      params: {
+        locale: 'en-US',
+      },
+    })
+
+    expect((client as any).options.params).toEqual({
+      an: context.account,
+      locale: 'en-US',
+    })
+  })
+
+  test('requests temporary tokens without overriding default account params', async () => {
     const { client, get } = createClientWithMockedGet()
 
     await client.getTemporaryToken()
 
-    expect(get).toHaveBeenCalledWith('/start', expect.objectContaining({
-      params: {
-        an: context.account,
-      },
+    expect(get).toHaveBeenCalledWith('/start', expect.not.objectContaining({
+      params: expect.anything(),
     }))
   })
 
@@ -46,7 +67,6 @@ describe('ID client', () => {
 
     expect(get).toHaveBeenCalledWith('/accesskey/send', expect.objectContaining({
       params: {
-        an: context.account,
         authenticationToken: 'authentication-token',
         email: 'user@example.com',
       },
@@ -61,7 +81,6 @@ describe('ID client', () => {
     expect(get).toHaveBeenCalledWith('/accesskey/validate', expect.objectContaining({
       params: {
         accesskey: '123456',
-        an: context.account,
         authenticationToken: 'authentication-token',
         login: 'user@example.com',
       },
@@ -75,7 +94,6 @@ describe('ID client', () => {
 
     expect(get).toHaveBeenCalledWith('/classic/validate', expect.objectContaining({
       params: {
-        an: context.account,
         authenticationToken: 'authentication-token',
         login: 'user@example.com',
         password: 'password',

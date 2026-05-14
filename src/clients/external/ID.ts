@@ -19,20 +19,25 @@ const endpoint = (env: string) => {
 
 export class ID extends ExternalClient {
   constructor (context: IOContext, opts?: InstanceOptions) {
-    super(endpoint(VTEXID_ENDPOINTS.STABLE), context, opts)
+    super(endpoint(VTEXID_ENDPOINTS.STABLE), context, {
+      ...opts,
+      params: {
+        an: context.account,
+        ...opts?.params,
+      },
+    })
   }
 
   public getTemporaryToken = (tracingConfig?: RequestTracingConfig) => {
     const metric = 'vtexid-temp-token'
-    const params = this.accountParams()
-    return this.http.get<TemporaryToken>(routes.START, {metric, params, tracing: {
+    return this.http.get<TemporaryToken>(routes.START, {metric, tracing: {
       requestSpanNameSuffix: metric,
       ...tracingConfig?.tracing,
     }}).then(({authenticationToken}) => authenticationToken)
   }
 
   public sendCodeToEmail = (token: string, email: string, tracingConfig?: RequestTracingConfig) => {
-    const params = this.accountParams({authenticationToken: token, email})
+    const params = {authenticationToken: token, email}
     const metric = 'vtexid-send-code'
     return this.http.get(routes.SEND, {metric, params, tracing: {
       requestSpanNameSuffix: metric,
@@ -41,11 +46,11 @@ export class ID extends ExternalClient {
   }
 
   public getEmailCodeAuthenticationToken = (token: string, email: string, code: string, tracingConfig?: RequestTracingConfig) => {
-    const params = this.accountParams({
+    const params = {
       accesskey: code,
       authenticationToken: token,
       login: email,
-    })
+    }
     const metric = 'vtexid-email-token'
     return this.http.get<AuthenticationResponse>(routes.VALIDATE, {metric, params, tracing: {
       requestSpanNameSuffix: metric,
@@ -54,11 +59,11 @@ export class ID extends ExternalClient {
   }
 
   public getPasswordAuthenticationToken = (token: string, email: string, password: string, tracingConfig?: RequestTracingConfig) => {
-    const params = this.accountParams({
+    const params = {
       authenticationToken: token,
       login: email,
       password,
-    })
+    }
     const metric = 'vtexid-pass-token'
     return this.http.get<AuthenticationResponse>(routes.VALIDATE_CLASSIC, {metric, params, tracing: {
       requestSpanNameSuffix: metric,
@@ -66,10 +71,6 @@ export class ID extends ExternalClient {
     }})
   }
 
-  private accountParams = (params: Record<string, string> = {}) => ({
-    ...params,
-    an: this.context.account,
-  })
 }
 
 interface TemporaryToken {
