@@ -13,6 +13,8 @@ metadata:
     backstage.io/techdocs-ref: dir:../
     vtex.com/application-id: SHSTJA2W
     vtex.com/platform-flow-id: CommDev#1
+    vtex.com/sdd-check-skip: 'true'
+    vtex.com/sdd-check-skip-reason: Public repo
 spec:
   lifecycle: stable
   owner: te-0029
