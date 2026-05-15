@@ -43,6 +43,7 @@ yarn-error.log
 
 # AI IDE
 .cursor/
+.pi/
 
 # Spec-kit scaffolding (regenerable locally); keep only the governance memory tracked
 .specify/*
