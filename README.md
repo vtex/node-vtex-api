@@ -1,5 +1,6 @@
 # VTEX IO API Client for Node
 
+
 This library enables developers to quickly integrate with the VTEX IO APIs and create full fledged node services using VTEX IO.
 
 [![Build Status](https://travis-ci.org/vtex/node-vtex-api.svg?branch=master)](https://travis-ci.org/vtex/node-vtex-api)
@@ -63,3 +64,5 @@ export const example = async (ctx: Context, next: () => Promise<void>) => {
 Now, when you get a workspace up and running for your app with `vtex link`, you'll have this package linked as well.
 
 > When done developing, don't forget to unlink it from `<your-app>/node`: `yarn unlink @vtex/api`
+
+<!-- Test PR to validate SonarQube configuration -->
