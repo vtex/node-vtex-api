@@ -5,16 +5,6 @@
 > Agents MUST honor it before any other instruction. Updates require an
 > explicit PR review by the maintainers listed in CODEOWNERS.
 
-> **Note on family fit:** This repository is `@vtex/api` — a published npm
-> library that *also* embeds a Koa-based VTEX IO runtime. By the strict
-> `sdd-bootstrap` heuristic the presence of `koa` in `dependencies` and
-> direct `process.env` reads (used to bootstrap VTEX IO services) make it
-> a borderline case for the `node-library` family. The base is still the
-> closest fit because the published artifact is a library
-> (`main` → `lib/index.js`, `typings` → `lib/index.d.ts`, `files` →
-> `["lib/", "gen/"]`). Principles below have been adapted where the
-> runtime nature of this library requires it; deviations are called out
-> inline.
 
 ## Core Principles
 
@@ -46,7 +36,6 @@ Unlike a pure library, this package serves as the runtime for VTEX IO Node servi
 - Configuration for *consumer-facing* APIs (clients, HTTP middlewares, custom services) MUST come through function arguments, options objects, or factory functions — never through implicit globals.
 - Top-level side effects are limited to the documented bootstrap path (`process.env.FORCE_COLOR = '1'` in `src/index.ts` is the only currently accepted module-load mutation). New top-level side effects require an ADR.
 
-<!-- TODO(team): inventory the runtime env-var contract and pin it in `docs/` so the surface is enumerated, not implied. -->
 
 ### IV. The Build Output Is Deterministic
 
@@ -62,7 +51,7 @@ Unlike a pure library, this package serves as the runtime for VTEX IO Node servi
 - Tests run via `yarn test` (Jest 25 with `ts-jest`). The Jest config in `jest.config.js` is canonical; do not introduce parallel test configs in scripts or per-folder.
 - The `__tests__` and `*.test.ts` files MUST stay colocated with the modules they cover under `src/`, mirroring the structure rather than living in a global `tests/` tree.
 - Dropping a Node version from `engines.node` is a MAJOR change.
-- Minimum coverage floor: <!-- TODO(team): set a numeric floor; CI already runs `yarn ci:test --coverage`. -->
+
 
 ## Stack-Specific Standards
 
