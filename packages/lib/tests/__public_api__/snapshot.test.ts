@@ -33,8 +33,7 @@ describe('@vtex/api public-API snapshot', () => {
   beforeAll(() => {
     if (!fs.existsSync(COMPILED_PATH)) {
       throw new Error(
-        `Compiled lib not found at ${COMPILED_PATH}. ` +
-          `Run 'yarn build' in packages/lib before running this test.`
+        `Compiled lib not found at ${COMPILED_PATH}. ` + `Run 'yarn build' in packages/lib before running this test.`
       )
     }
     snapshotLines = parseExportLines(fs.readFileSync(SNAPSHOT_PATH, 'utf8'))
