@@ -1,26 +1,23 @@
 {
-  "name": "@vtex/api",
-  "version": "7.3.1",
-  "description": "VTEX I/O API client",
-  "main": "lib/index.js",
-  "typings": "lib/index.d.ts",
-  "files": [
-    "lib/",
-    "gen/"
+  "name": "node-vtex-api-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Monorepo root for @vtex/api (lib) and @vtex/api-runtime (runtime). Not published.",
+  "workspaces": [
+    "packages/*"
   ],
   "scripts": {
-    "clean": "rimraf lib/",
-    "watch": "yarn clean && tsc --watch",
-    "build": "yarn clean && tsc",
-    "gen": "typescript-json-schema src/responses.ts PublicAppManifest > gen/manifest.schema",
-    "test": "jest",
-    "lint": "tslint -c tslint.json './src/**/*.ts'",
-    "format": "prettier --config ./.prettierrc --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "clean": "yarn workspaces run clean",
+    "build": "yarn workspaces run build",
+    "watch": "yarn workspaces run watch",
+    "gen": "yarn workspaces run gen",
+    "test": "yarn workspaces run test",
+    "lint": "yarn workspaces run lint",
+    "format": "yarn workspaces run format",
     "format-lint": "yarn format && yarn lint",
-    "prepublishOnly": "bash ./scripts/publishLock.sh",
-    "ci:build": "yarn build && yarn gen",
-    "ci:test": "yarn test --ci --coverage",
-    "ci:prettier-check": "prettier --check --config ./.prettierrc \"src/**/*.ts\" \"src/**/*.js\""
+    "ci:build": "yarn workspaces run ci:build",
+    "ci:test": "yarn workspaces run ci:test",
+    "ci:prettier-check": "yarn workspaces run ci:prettier-check"
   },
   "jest": {
     "transform": {
