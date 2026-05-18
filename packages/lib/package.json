@@ -1,0 +1,35 @@
+{
+  "name": "@vtex/api",
+  "version": "8.0.0-0",
+  "description": "VTEX IO API client — public consumer-facing library.",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": [
+    "lib/",
+    "gen/"
+  ],
+  "engines": {
+    "node": ">=8"
+  },
+  "scripts": {
+    "clean": "rimraf lib/",
+    "build": "yarn clean && tsc",
+    "watch": "yarn clean && tsc --watch",
+    "gen": "echo 'gen: no source yet (Phase 2 will move src/ and restore typescript-json-schema)'",
+    "test": "jest --passWithNoTests",
+    "lint": "tslint -c ../../tslint.json './src/**/*.ts'",
+    "format": "prettier --config ../../.prettierrc --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "ci:build": "yarn build && yarn gen",
+    "ci:test": "yarn test --ci --coverage --passWithNoTests",
+    "ci:prettier-check": "prettier --check --config ../../.prettierrc \"src/**/*.ts\" \"src/**/*.js\"",
+    "prepublishOnly": "bash ../../scripts/publishLock.sh"
+  },
+  "keywords": [
+    "vtex"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:vtex/node-vtex-api.git"
+  },
+  "license": "MIT"
+}
