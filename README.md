@@ -4,6 +4,13 @@ This library enables developers to quickly integrate with the VTEX IO APIs and c
 
 [![Build Status](https://travis-ci.org/vtex/node-vtex-api.svg?branch=master)](https://travis-ci.org/vtex/node-vtex-api)
 
+> **This repository is being split into two packages** (in progress):
+>
+> - [`@vtex/api`](./packages/lib) — the public, consumer-facing library (this is what your app imports).
+> - [`@vtex/api-runtime`](./packages/runtime) — the internal runtime, shipped only inside the `service-runtime-node` Docker image.
+>
+> The split is mechanical and preserves the existing public API surface; consumer apps using only documented exports do not need source-code changes. See [`CONTEXT.md`](./CONTEXT.md), [`docs/adr/`](./docs/adr/), and the active feature spec at [`specs/001-split-node-vtex-api-library/`](./specs/001-split-node-vtex-api-library/) for the architectural baseline.
+
 ## Getting started
 
 For a complete example on using `@vtex/api`, check out this app: https://github.com/vtex-apps/service-example
