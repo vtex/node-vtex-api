@@ -19,19 +19,6 @@
     "ci:test": "yarn workspaces run ci:test",
     "ci:prettier-check": "yarn workspaces run ci:prettier-check"
   },
-  "jest": {
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
-    "testMatch": [
-      "**/__tests__/**/*.(js|ts)?(x)",
-      "**/?(*.)+(spec|test).(js|ts)?(x)"
-    ],
-    "moduleFileExtensions": [
-      "ts",
-      "js"
-    ]
-  },
   "engines": {
     "node": ">=8"
   },
@@ -43,54 +30,6 @@
     "url": "git@github.com:vtex/node-vtex-api.git"
   },
   "license": "MIT",
-  "dependencies": {
-    "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/host-metrics": "0.35.5",
-    "@opentelemetry/instrumentation": "0.57.2",
-    "@opentelemetry/instrumentation-koa": "0.47.1",
-    "@types/koa": "^2.11.0",
-    "@types/koa-compose": "^3.2.3",
-    "@vtex/diagnostics-nodejs": "0.1.8-io",
-    "@vtex/diagnostics-semconv": "^1.1.2",
-    "@vtex/node-error-report": "^0.0.3",
-    "@wry/equality": "^0.1.9",
-    "agentkeepalive": "^4.0.2",
-    "apollo-server-errors": "^2.2.1",
-    "archiver": "^3.0.0",
-    "axios": "^1.8.4",
-    "axios-retry": "^3.1.2",
-    "bluebird": "^3.5.4",
-    "chalk": "^2.4.2",
-    "co-body": "^6.0.0",
-    "cookie": "^0.3.1",
-    "dataloader": "^1.4.0",
-    "fast-json-stable-stringify": "^2.0.0",
-    "fs-extra": "^7.0.0",
-    "graphql": "^14.5.8",
-    "graphql-tools": "^4.0.6",
-    "graphql-upload": "^13.0.0",
-    "jaeger-client": "^3.18.0",
-    "js-base64": "^2.5.1",
-    "koa": "^2.11.0",
-    "koa-compose": "^4.1.0",
-    "koa-compress": "^3.0.0",
-    "koa-router": "^7.4.0",
-    "lru-cache": "^5.1.1",
-    "mime-types": "^2.1.12",
-    "opentracing": "^0.14.4",
-    "p-limit": "^2.2.0",
-    "prom-client": "^14.2.0",
-    "qs": "^6.5.1",
-    "querystring": "^0.2.0",
-    "ramda": "^0.26.0",
-    "rwlock": "^5.0.0",
-    "semver": "^5.5.1",
-    "stats-lite": "vtex/node-stats-lite#v2.2.1",
-    "tar-fs": "^2.0.0",
-    "tokenbucket": "^0.3.2",
-    "uuid": "^3.3.3",
-    "xss": "^1.0.6"
-  },
   "devDependencies": {
     "@tiagonapoli/opentracing-alternate-mock": "^0.0.3",
     "@types/archiver": "^2.0.1",

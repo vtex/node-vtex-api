@@ -23,7 +23,7 @@ This documentation will approach details on the native instrumentation provided.
 ## Span Tags
 
 All Tags exported for your manual instrumentation or used by the native instrumentation are
-available and documented in [this file](../src/tracing/Tags.ts).
+available and documented in [this file](../packages/lib/src/tracing/Tags.ts).
 
 Note that the tags specified in the
 [OpenTracing Semantic Convention](https://github.com/opentracing/specification/blob/master/semantic_conventions.md)
@@ -39,7 +39,7 @@ span will start when the request is processed by Koa and will finish when the re
 has finished streaming.
 
 The entrypoint span has tags assigned related to the incoming request (more details on the meaning
-of each tag on [Tags.ts](../src/tracing/Tags.ts) and
+of each tag on [Tags.ts](../packages/lib/src/tracing/Tags.ts) and
 [OpenTracing Semantic Convention](https://github.com/opentracing/specification/blob/master/semantic_conventions.md):
 
 - span.kind
@@ -66,7 +66,7 @@ The additional process tags created by the native instrumentation are:
 - app.workspace
 - app.node_env
 
-All are documented on [Tags.ts](../src/tracing/Tags.ts).
+All are documented on [Tags.ts](../packages/lib/src/tracing/Tags.ts).
 
 ### Client HTTP(S) calls
 
@@ -137,7 +137,7 @@ Every `http-request` span logs the outgoing request headers and incoming respons
 These spans (`http-request` or `request`) may have an error associated with them, so they can have
 additional error tags and logs.
 
-For more information on each tag check [Tags.ts](../src/tracing/Tags.ts).
+For more information on each tag check [Tags.ts](../packages/lib/src/tracing/Tags.ts).
 
 ### Splunk logs integration
 
@@ -157,7 +157,7 @@ instrumentation for distributed tracing.
 
 All route and event handlers for your app will have a `tracer` field on the `IOContext` provided,
 with which you can create spans for your manual instrumentation. The `tracer` object is a wrapper for
-the `OpenTracing` tracer, and it's implemented [here](../src/tracing/UserLandTracer.ts), by the
+the `OpenTracing` tracer, and it's implemented [here](../packages/lib/src/tracing/UserLandTracer.ts), by the
 `UserLandTracer` class.
 
 For a detailed tutorial on how to instrument your app read the docs on

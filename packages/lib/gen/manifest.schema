@@ -110,6 +110,9 @@
                 "email": {
                     "type": "string"
                 },
+                "phone": {
+                    "type": "string"
+                },
                 "url": {
                     "type": "string"
                 }
@@ -169,8 +172,7 @@
             },
             "type": "array"
         },
-        "settingsSchema": {
-        },
+        "settingsSchema": {},
         "title": {
             "type": "string"
         },
