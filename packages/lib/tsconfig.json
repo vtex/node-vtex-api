@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "lib",
+    "baseUrl": "./",
+    "paths": {
+      "axios": ["src/axios.d.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["**/__tests__", "**/*.test.ts"]
+}
