@@ -3,14 +3,9 @@ import { join } from 'path'
 
 import { IOClients } from '@vtex/api'
 import { LINKED, MAX_WORKERS } from '../constants'
-import { Service } from '@vtex/api'
-import {
-  ClientsConfig,
-  ParamsContext,
-  RawServiceJSON,
-  RecorderState,
-  ServiceJSON,
-} from '@vtex/api'
+import type { Service } from '@vtex/api'
+import { ClientsConfig, RawServiceJSON, ServiceJSON } from '@vtex/api'
+import type { ParamsContext, RecorderState } from '@vtex/api'
 
 export const appPath = join(process.cwd(), './service/src/node/')
 export const bundlePath = join(appPath, 'index')

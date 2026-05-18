@@ -1,5 +1,5 @@
-import { IOClients } from '@vtex/api'
-import { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
+import type { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
 
 const JANUS_ENV_COOKIE_KEY = 'vtex-commerce-env'
 const VTEX_ID_COOKIE_KEY = 'VtexIdclientAutCookie'

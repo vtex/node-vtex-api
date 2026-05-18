@@ -1,8 +1,8 @@
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
-import { Apps } from '@vtex/api'
+import type { Apps } from '@vtex/api'
 import { getDependenciesSettings } from '../../../http/middlewares/settings'
-import { RouteSettingsType } from '@vtex/api'
+import type { RouteSettingsType } from '@vtex/api'
 
 const addSettings = async (settings: RouteSettingsType, ctx: any) => {
   if (settings === 'pure') { return ctx }

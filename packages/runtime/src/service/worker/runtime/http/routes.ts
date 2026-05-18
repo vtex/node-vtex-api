@@ -4,7 +4,7 @@ import {
   PUBLIC_ENDPOINT,
   WORKSPACE,
 } from '../../../../constants'
-import { ServiceJSON, ServiceRoute } from '@vtex/api'
+import type { ServiceJSON, ServiceRoute } from '@vtex/api'
 
 interface PrivateRouteInfo {
   protocol?: 'http' | 'https'

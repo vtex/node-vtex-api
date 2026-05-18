@@ -1,7 +1,7 @@
 import { finished as onStreamFinished } from 'stream'
 import { hrToMillisFloat } from '@vtex/api'
 import { getOtelInstruments, RequestsMetricLabels, OtelRequestInstruments } from './metrics'
-import { ServiceContext } from '@vtex/api'
+import type { ServiceContext } from '@vtex/api'
 
 const INSTRUMENTS_INITIALIZATION_TIMEOUT = 500
 

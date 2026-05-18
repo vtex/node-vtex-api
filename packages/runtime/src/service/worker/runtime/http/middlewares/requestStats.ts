@@ -1,6 +1,6 @@
-import { IOClients } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
 import { AttributeKeys } from '../../../../../constants'
-import { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
+import type { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
 
 export const cancelMessage = 'Request cancelled'
 

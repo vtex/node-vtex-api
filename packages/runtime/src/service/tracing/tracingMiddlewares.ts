@@ -5,10 +5,10 @@ import { ErrorReport, getTraceInfo } from '@vtex/api'
 import { RuntimeLogEvents } from '@vtex/api'
 import { RuntimeLogFields } from '@vtex/api'
 import { CustomHttpTags, OpentracingTags, VTEXIncomingRequestTags } from '@vtex/api'
-import { UserLandTracer } from '@vtex/api'
+import type { UserLandTracer } from '@vtex/api'
 import { cloneAndSanitizeHeaders } from '@vtex/api'
 import { hrToMillis } from '@vtex/api'
-import { ServiceContext } from '@vtex/api'
+import type { ServiceContext } from '@vtex/api'
 
 const PATHS_BLACKLISTED_FOR_TRACING = ['/_status', '/healthcheck']
 

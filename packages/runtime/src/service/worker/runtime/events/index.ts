@@ -1,18 +1,11 @@
 import TokenBucket from 'tokenbucket'
-import { IOClients } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
 import { nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
 import { clients } from '../http/middlewares/clients'
 import { concurrentRateLimiter, perMinuteRateLimiter } from '../http/middlewares/rateLimit'
 import { getServiceSettings } from '../http/middlewares/settings'
 import { timings } from '../http/middlewares/timings'
-import {
-  ClientsConfig,
-  EventHandler,
-  ParamsContext,
-  RecorderState,
-  ServiceContext,
-  ServiceEvent,
-} from '@vtex/api'
+import type { ClientsConfig, EventHandler, ParamsContext, RecorderState, ServiceContext, ServiceEvent } from '@vtex/api'
 import { compose, composeForEvents } from '../utils/compose'
 import { toArray } from '../utils/toArray'
 import { parseBodyMiddleware } from './middlewares/body'

@@ -1,8 +1,8 @@
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
-import { Behavior } from '@vtex/api'
+import type { Behavior } from '@vtex/api'
 
-import { ServiceContext } from '@vtex/api'
+import type { ServiceContext } from '@vtex/api'
 import { handleSingleString } from '../../utils/translations'
 import { createMessagesLoader } from '../messagesLoaderV2'
 

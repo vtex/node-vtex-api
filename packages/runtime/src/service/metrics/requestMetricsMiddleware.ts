@@ -8,7 +8,7 @@ import {
   createTotalRequestsInstrument,
   RequestsMetricLabels,
 } from '../tracing/metrics/instruments'
-import { ServiceContext } from '@vtex/api'
+import type { ServiceContext } from '@vtex/api'
 
 
 export const addRequestMetricsMiddleware = () => {

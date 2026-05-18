@@ -1,7 +1,8 @@
 import { DocumentNode, execute, GraphQLSchema } from 'graphql'
 
-import { IOClients } from '@vtex/api'
-import { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
+import { ServiceContext } from '@vtex/api'
+import type { ParamsContext, RecorderState } from '@vtex/api'
 
 export interface Query {
   variables?: Record<string, any>

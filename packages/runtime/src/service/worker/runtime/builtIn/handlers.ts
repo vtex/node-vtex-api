@@ -1,4 +1,4 @@
-import { ServiceContext, ServiceJSON } from '@vtex/api'
+import type { ServiceContext, ServiceJSON } from '@vtex/api'
 
 export const whoAmIHandler = ({
   events,

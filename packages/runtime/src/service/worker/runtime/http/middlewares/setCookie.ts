@@ -1,7 +1,7 @@
 import { compose, find, head, isEmpty, map, reduce, split } from 'ramda'
 
-import { IOClients } from '@vtex/api'
-import { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
+import type { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
 
 const BLACKLISTED_COOKIES = new Set<string>(['checkout.vtex.com'])
 

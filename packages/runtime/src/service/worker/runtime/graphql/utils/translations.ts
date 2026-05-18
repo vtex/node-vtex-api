@@ -1,5 +1,5 @@
-import { Behavior } from '@vtex/api'
-import { IOContext } from '@vtex/api'
+import type { Behavior } from '@vtex/api'
+import type { IOContext } from '@vtex/api'
 import { MessagesLoaderV2 } from '../schema/messagesLoaderV2'
 
 export const CONTEXT_REGEX = /\(\(\((?<context>(.)*)\)\)\)/

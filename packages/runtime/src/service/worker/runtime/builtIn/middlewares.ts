@@ -2,7 +2,7 @@ import { collectDefaultMetrics, register } from 'prom-client'
 import { HeaderKeys } from '../../../../constants'
 import { MetricsLogger } from '@vtex/api'
 import { EventLoopLagMeasurer } from '../../../tracing/metrics/measurers/EventLoopLagMeasurer'
-import { ServiceContext } from '@vtex/api'
+import type { ServiceContext } from '@vtex/api'
 import { Recorder } from '@vtex/api'
 
 export async function recorderMiddleware(ctx: ServiceContext, next: () => Promise<void>) {

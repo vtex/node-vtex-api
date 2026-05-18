@@ -3,7 +3,8 @@ import { makeExecutableSchema } from 'graphql-tools'
 import { keys, map, zipObj } from 'ramda'
 
 import { IOClients } from '@vtex/api'
-import { GraphQLOptions, ParamsContext, RecorderState } from '@vtex/api'
+import { ParamsContext, RecorderState } from '@vtex/api'
+import type { GraphQLOptions } from '@vtex/api'
 import { nativeSchemaDirectives, nativeSchemaDirectivesTypeDefs } from './schemaDirectives'
 import { nativeResolvers, nativeTypeDefs } from './typeDefs'
 

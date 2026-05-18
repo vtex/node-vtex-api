@@ -2,7 +2,7 @@ import cluster from 'cluster'
 
 import { ACCOUNT, APP, LINKED, PRODUCTION, WORKSPACE } from '../../../constants'
 import { HttpAgentSingleton } from '@vtex/api'
-import { ServiceContext } from '@vtex/api'
+import type { ServiceContext } from '@vtex/api'
 
 export type StatusTrack = () => EnvMetric[]
 

@@ -3,7 +3,7 @@ import axios from 'axios'
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
 
-import { ServiceContext } from '@vtex/api'
+import type { ServiceContext } from '@vtex/api'
 
 interface AuthDirectiveArgs {
   readonly productCode: string

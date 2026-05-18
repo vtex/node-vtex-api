@@ -1,17 +1,14 @@
 import { createHash } from 'crypto'
 import { join, pluck } from 'ramda'
 
-import { AppMetaInfo, Apps } from '@vtex/api'
-import { IOClients } from '@vtex/api'
+import { AppMetaInfo } from '@vtex/api'
+import type { Apps } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
 import { APP } from '../../../../../constants'
-import { RequestTracingConfig } from '@vtex/api'
-import { Assets } from '@vtex/api'
+import type { RequestTracingConfig } from '@vtex/api'
+import type { Assets } from '@vtex/api'
 import { appIdToAppAtMajor } from '@vtex/api'
-import {
-  ParamsContext,
-  RecorderState,
-  ServiceContext,
-} from '@vtex/api'
+import type { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
 
 const joinIds = join('')
 

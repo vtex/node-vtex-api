@@ -5,7 +5,7 @@ import { INSPECT_DEBUGGER_PORT, LINKED, UP_SIGNAL } from '../constants'
 import { isLog, logOnceToDevConsole } from '@vtex/api'
 import { logger } from './worker/listeners'
 import { broadcastStatusTrack, isStatusTrackBroadcast, trackStatus } from './worker/runtime/statusTrack'
-import { ServiceJSON } from '@vtex/api'
+import type { ServiceJSON } from '@vtex/api'
 
 let handledSignal: NodeJS.Signals | undefined
 

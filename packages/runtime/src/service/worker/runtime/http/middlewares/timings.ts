@@ -1,21 +1,12 @@
 import chalk from 'chalk'
 import { Attributes } from '@opentelemetry/api'
 
-import { IOClients } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
 import { APP, AttributeKeys, LINKED, PID } from '../../../../../constants'
 import { statusLabel } from '@vtex/api'
-import {
-  formatTimingName,
-  hrToMillis,
-  reduceTimings,
-  shrinkTimings,
-} from '@vtex/api'
-import {
-  IOContext,
-  ParamsContext,
-  RecorderState,
-  ServiceContext,
-} from '@vtex/api'
+import { formatTimingName, hrToMillis, shrinkTimings } from '@vtex/api'
+import type { reduceTimings } from '@vtex/api'
+import type { IOContext, ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
 
 const APP_ELAPSED_TIME_LOCATOR = shrinkTimings(formatTimingName({
   hopNumber: 0,

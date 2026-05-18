@@ -1,8 +1,8 @@
-import { IOClients } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
 import {
   HeaderKeys,
 } from '../../../../../constants'
-import { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
+import type { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
 import { prepareHandlerCtx } from '../../utils/context'
 
 export async function eventContextMiddleware <T extends IOClients, U extends RecorderState, V extends ParamsContext>(ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {

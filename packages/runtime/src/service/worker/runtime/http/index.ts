@@ -1,13 +1,7 @@
 import TokenBucket from 'tokenbucket'
-import { IOClients } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
 import { nameSpanOperationMiddleware, traceUserLandRemainingPipelineMiddleware } from '../../../tracing/tracingMiddlewares'
-import {
-  ClientsConfig,
-  ParamsContext,
-  RecorderState,
-  RouteHandler,
-  ServiceRoute,
-} from '@vtex/api'
+import type { ClientsConfig, ParamsContext, RecorderState, RouteHandler, ServiceRoute } from '@vtex/api'
 import { compose } from '../utils/compose'
 import { toArray } from '../utils/toArray'
 import { authTokens } from './middlewares/authTokens'

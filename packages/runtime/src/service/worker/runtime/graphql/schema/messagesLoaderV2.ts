@@ -6,7 +6,7 @@ import {
   Message,
 } from '@vtex/api'
 import { AppMetaInfo } from '@vtex/api'
-import { IOClients } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
 
 type Indexed<X> = [number, X]
 

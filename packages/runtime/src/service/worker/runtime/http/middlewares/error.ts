@@ -1,4 +1,4 @@
-import { IOClients } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
 import { LINKED } from '../../../../../constants'
 import {
   cancelledRequestStatus,
@@ -10,11 +10,7 @@ import {
 } from '@vtex/api'
 import { cleanError, SENSITIVE_EXCEPTION_FIELDS } from '@vtex/api'
 import { LogLevel } from '@vtex/api'
-import {
-  ParamsContext,
-  RecorderState,
-  ServiceContext,
-} from '@vtex/api'
+import type { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
 const META_HEADER = 'x-vtex-meta'

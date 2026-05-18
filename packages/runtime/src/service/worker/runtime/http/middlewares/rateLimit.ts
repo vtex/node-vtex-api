@@ -1,6 +1,6 @@
 import TokenBucket from 'tokenbucket'
 import { TooManyRequestsError } from '@vtex/api'
-import { ServiceContext } from '@vtex/api'
+import type { ServiceContext } from '@vtex/api'
 import { createTokenBucket } from '../../utils/tokenBucket'
 
 const responseMessageConcurrent = 'Rate Exceeded: Too many requests in execution'

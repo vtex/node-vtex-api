@@ -6,10 +6,10 @@ import Router from 'koa-router'
 import { mergeDeepRight } from 'ramda'
 
 import TokenBucket from 'tokenbucket'
-import { IOClients } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
 import { UP_SIGNAL } from '../../constants'
-import { InstanceOptions } from '@vtex/api'
-import { MetricsAccumulator } from '@vtex/api'
+import type { InstanceOptions } from '@vtex/api'
+import type { MetricsAccumulator } from '@vtex/api'
 import { getService } from '../loaders'
 import { logOnceToDevConsole } from '@vtex/api'
 import { LogLevel } from '@vtex/api'
@@ -36,19 +36,13 @@ import { error } from './runtime/http/middlewares/error'
 import { concurrentRateLimiter } from './runtime/http/middlewares/rateLimit'
 import { routerFromPublicHttpHandlers } from './runtime/http/router'
 import { logAvailableRoutes } from './runtime/http/routes'
-import { Service } from '@vtex/api'
+import type { Service } from '@vtex/api'
 import {
   isStatusTrack,
   statusTrackHandler,
   trackStatus,
 } from './runtime/statusTrack'
-import {
-  HttpRoute,
-  ParamsContext,
-  RecorderState,
-  RouteHandler,
-  ServiceJSON,
-} from '@vtex/api'
+import type { HttpRoute, ParamsContext, RecorderState, RouteHandler, ServiceJSON } from '@vtex/api'
 import { createTokenBucket } from './runtime/utils/tokenBucket'
 
 const upSignal = () => {

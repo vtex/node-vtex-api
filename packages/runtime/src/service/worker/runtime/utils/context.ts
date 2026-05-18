@@ -7,7 +7,7 @@ import {
 import { UserLandTracer } from '@vtex/api'
 import { parseTenantHeaderValue } from '@vtex/api'
 import { Logger } from '@vtex/api'
-import { IOContext, TracingContext } from '@vtex/api'
+import type { IOContext, TracingContext } from '@vtex/api'
 import { parseBindingHeaderValue } from '@vtex/api'
 
 type HandlerContext = Omit<IOContext, 'route'>

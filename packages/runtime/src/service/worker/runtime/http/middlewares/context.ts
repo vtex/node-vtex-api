@@ -1,14 +1,9 @@
 import { parse as qsParse } from 'querystring'
 
-import { IOClients } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
 import { HeaderKeys } from '../../../../../constants'
 import { prepareHandlerCtx } from '../../utils/context'
-import {
-  ParamsContext,
-  RecorderState,
-  ServiceContext,
-  ServiceRoute,
-} from '@vtex/api'
+import type { ParamsContext, RecorderState, ServiceContext, ServiceRoute } from '@vtex/api'
 
 export const createPvtContextMiddleware = (
   routeId: string,

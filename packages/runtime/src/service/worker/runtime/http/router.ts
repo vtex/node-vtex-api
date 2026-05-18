@@ -1,6 +1,6 @@
 import { HeaderKeys } from '../../../../constants'
 import { LogLevel } from '@vtex/api'
-import { HttpRoute, ServiceContext } from '@vtex/api'
+import type { HttpRoute, ServiceContext } from '@vtex/api'
 import { logOnceToDevConsole } from '@vtex/api'
 
 export const routerFromPublicHttpHandlers = (routes: Record<string, HttpRoute>) => {

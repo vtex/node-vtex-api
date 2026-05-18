@@ -1,8 +1,8 @@
 import axios from 'axios'
 
-import { IOClients } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
 import { cancellableMethods } from '../../../../../constants'
-import { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
+import type { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
 
 export async function cancellationToken<
   T extends IOClients,

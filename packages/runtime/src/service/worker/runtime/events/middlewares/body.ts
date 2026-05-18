@@ -1,9 +1,9 @@
 import bodyParse from 'co-body'
 
-import { IOClients } from '@vtex/api'
+import type { IOClients } from '@vtex/api'
 import { LogLevel } from '@vtex/api'
 import { logOnceToDevConsole } from '@vtex/api'
-import { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
+import type { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
 
 export async function parseBodyMiddleware <T extends IOClients, U extends RecorderState, V extends ParamsContext>(ctx: ServiceContext<T, U, V>, next: () => Promise<void>) {
   try {

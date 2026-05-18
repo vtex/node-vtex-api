@@ -1,8 +1,8 @@
 import {
   HeaderKeys,
 } from '../../../../../constants'
-import { Maybe } from '@vtex/api'
-import { Recorder } from '@vtex/api'
+import type { Maybe } from '@vtex/api'
+import type { Recorder } from '@vtex/api'
 import { GraphQLCacheControl, GraphQLServiceContext } from '../typings'
 import { cacheControlHTTP } from '../utils/cacheControl'
 

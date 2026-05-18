@@ -1,6 +1,6 @@
 import { HeaderKeys } from '../../../../constants'
 import { LogLevel } from '@vtex/api'
-import { RouteHandler, ServiceContext } from '@vtex/api'
+import type { RouteHandler, ServiceContext } from '@vtex/api'
 import { logOnceToDevConsole } from '@vtex/api'
 
 export const routerFromEventHandlers = (events: Record<string, RouteHandler> | null) => {

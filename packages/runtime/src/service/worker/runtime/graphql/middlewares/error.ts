@@ -7,7 +7,7 @@ import {
   cancelledRequestStatus,
 } from '@vtex/api'
 import { LogLevel } from '@vtex/api'
-import { IOContext } from '@vtex/api'
+import type { IOContext } from '@vtex/api'
 import { GraphQLServiceContext } from '../typings'
 import { createFormatError } from '../utils/error'
 import { generatePathName } from '../utils/pathname'

@@ -1,9 +1,6 @@
-import {
-  ClientsImplementation,
-  IOClients,
-} from '@vtex/api'
-import { InstanceOptions } from '@vtex/api'
-import { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
+import type { ClientsImplementation, IOClients } from '@vtex/api'
+import type { InstanceOptions } from '@vtex/api'
+import type { ParamsContext, RecorderState, ServiceContext } from '@vtex/api'
 
 export function clients<
   T extends IOClients,
