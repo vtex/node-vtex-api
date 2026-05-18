@@ -36,7 +36,9 @@ docs/_book/
 npm-debug.log
 yarn-error.log
 .build/
-lib/
+/lib/
+packages/*/lib/
+packages/*/coverage/
 
 package-lock.json
 yarn-error.log
