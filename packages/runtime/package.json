@@ -1,0 +1,34 @@
+{
+  "name": "@vtex/api-runtime",
+  "version": "1.0.0-0",
+  "description": "Internal VTEX IO runtime. Shipped only inside service-runtime-node. Not for direct consumer-app use.",
+  "main": "lib/index.js",
+  "typings": "lib/index.d.ts",
+  "files": [
+    "lib/"
+  ],
+  "engines": {
+    "node": ">=8"
+  },
+  "scripts": {
+    "clean": "rimraf lib/",
+    "build": "yarn clean && tsc",
+    "watch": "yarn clean && tsc --watch",
+    "gen": "echo 'gen: runtime has no schema to generate'",
+    "test": "jest --passWithNoTests",
+    "lint": "tslint -c ../../tslint.json './src/**/*.ts'",
+    "format": "prettier --config ../../.prettierrc --write \"src/**/*.ts\" \"src/**/*.js\"",
+    "ci:build": "yarn build",
+    "ci:test": "yarn test --ci --coverage --passWithNoTests",
+    "ci:prettier-check": "prettier --check --config ../../.prettierrc \"src/**/*.ts\" \"src/**/*.js\"",
+    "prepublishOnly": "bash ../../scripts/publishLock.sh"
+  },
+  "devDependencies": {
+    "@vtex/api": "*"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:vtex/node-vtex-api.git"
+  },
+  "license": "UNLICENSED"
+}
