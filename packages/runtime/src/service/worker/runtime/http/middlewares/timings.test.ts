@@ -9,7 +9,7 @@ jest.mock('../../../../../service/metrics/client', () => ({
   getMetricClient: jest.fn(),
 }))
 
-import { DiagnosticsMetrics } from '../../../../../metrics/DiagnosticsMetrics'
+import { DiagnosticsMetrics } from '@vtex/api'
 import { timings } from './timings'
 
 describe('timings middleware', () => {

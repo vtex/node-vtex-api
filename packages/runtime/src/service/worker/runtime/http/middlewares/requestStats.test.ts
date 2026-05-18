@@ -1,5 +1,5 @@
 import { EventEmitter } from 'events'
-import { DiagnosticsMetrics } from '../../../../../metrics/DiagnosticsMetrics'
+import { DiagnosticsMetrics } from '@vtex/api'
 import { incomingRequestStats, trackIncomingRequestStats } from './requestStats'
 
 describe('requestStats', () => {

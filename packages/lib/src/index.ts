@@ -50,7 +50,11 @@ export * from './service/worker/runtime/typings'
 export * from './service/worker/runtime/graphql/schema/schemaDirectives'
 export * from './service/worker/runtime/graphql/schema/messagesLoaderV2'
 export * from './service/worker/runtime/utils/recorder'
-export * from './service'
+// T024: ./service barrel (formerly exported startApp, appPath, the Router
+// alias, and runtime constants HTTP_SERVER_PORT/MAX_WORKERS/UP_SIGNAL/PID/
+// INSPECT_DEBUGGER_PORT) was removed when service/index.ts moved to
+// @vtex/api-runtime. Consumer apps that need these symbols depend on
+// service-runtime-node, which boots them.
 export * from './service/logger'
 export * from './utils'
 export * from './constants'

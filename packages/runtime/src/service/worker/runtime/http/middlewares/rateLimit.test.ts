@@ -1,7 +1,7 @@
 import Semaphore from 'semaphore-async-await'
 import TokenBucket from 'tokenbucket'
-import { ForbiddenError, TooManyRequestsError } from '../../../../../errors'
-import { ServiceContext } from '../../typings'
+import { ForbiddenError, TooManyRequestsError } from '@vtex/api'
+import { ServiceContext } from '@vtex/api'
 import { createTokenBucket } from '../../utils/tokenBucket'
 import { concurrentRateLimiter, perMinuteRateLimiter } from './rateLimit'
 

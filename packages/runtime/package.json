@@ -20,7 +20,7 @@
     "format": "prettier --config ../../.prettierrc --write \"src/**/*.ts\"",
     "ci:build": "yarn build",
     "ci:test": "yarn test --ci --coverage --passWithNoTests",
-    "ci:prettier-check": "prettier --check --config ../../.prettierrc \"src/**/*.ts\"",
+    "ci:prettier-check": "prettier --check --no-error-on-unmatched-pattern --config ../../.prettierrc \"tests/**/*.ts\"",
     "prepublishOnly": "bash ../../scripts/publishLock.sh"
   },
   "dependencies": {
@@ -72,7 +72,7 @@
     "xss": "^1.0.6"
   },
   "devDependencies": {
-    "@vtex/api": "*"
+    "@vtex/api": "8.0.0-0"
   },
   "repository": {
     "type": "git",

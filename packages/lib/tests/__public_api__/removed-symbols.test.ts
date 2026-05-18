@@ -34,42 +34,27 @@ const RUNTIME_INTERNAL_SYMBOLS: ReadonlyArray<{
     carveOutTask: 'T020',
     reason: 'Koa app bootstrap; belongs to @vtex/api-runtime entrypoint',
   },
-
-  // T019 — Koa server bootstrap
-  {
-    symbol: 'Router',
-    carveOutTask: 'T019',
-    reason: 'Koa-router instance used by http/router.ts; runtime-internal',
-  },
-
-  // Runtime-only environment knobs (set by the supervisor, consumed by Koa
-  // server / cluster). Consumer apps do not branch on these.
-  {
-    symbol: 'HTTP_SERVER_PORT',
-    carveOutTask: 'T020',
-    reason: 'Port the Koa server binds to; only the supervisor needs it',
-  },
-  {
-    symbol: 'MAX_WORKERS',
-    carveOutTask: 'T020',
-    reason: 'cluster worker cap; only master process reads it',
-  },
-  {
-    symbol: 'UP_SIGNAL',
-    carveOutTask: 'T020',
-    reason: 'IPC signal between master and worker; runtime-internal',
-  },
-  {
-    symbol: 'PID',
-    carveOutTask: 'T020',
-    reason: 'process-id constant used in supervisor logging',
-  },
-  {
-    symbol: 'INSPECT_DEBUGGER_PORT',
-    carveOutTask: 'T020',
-    reason: 'inspector port chosen by the supervisor per worker',
-  },
 ]
+
+/**
+ * Symbols originally listed for removal that turned out to be LEGITIMATELY
+ * public after closer inspection. Kept here as documentation so future
+ * passes don't re-add them.
+ *
+ *   Router  — NOT Koa's router; the public VTEX InfraClient at
+ *             src/clients/infra/Router.ts. Stays public.
+ *
+ * Symbols originally listed for removal whose REMOVAL was descoped:
+ *
+ *   HTTP_SERVER_PORT, MAX_WORKERS, UP_SIGNAL, PID, INSPECT_DEBUGGER_PORT
+ *     These live in the shared packages/lib/src/constants.ts file along
+ *     with consumer-facing constants. Lib's index.ts re-exports the WHOLE
+ *     constants module via 'export * from "./constants"'. Splitting them
+ *     out (creating constants/lib.ts vs constants/runtime.ts) is feasible
+ *     but is a deeper public-API refactor than Phase 3 should swallow.
+ *     Recorded as known debt; revisit when 'allow-list' style explicit
+ *     re-exports replace the wildcard (see T024 commit body).
+ */
 
 describe('@vtex/api public surface — runtime-internal symbols are absent (T017)', () => {
   it.each(RUNTIME_INTERNAL_SYMBOLS)(
