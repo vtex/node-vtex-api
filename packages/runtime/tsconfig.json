@@ -15,7 +15,8 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": "./",
     "paths": {
-      "@vtex/api": ["../lib/src"]
+      "@vtex/api": ["../lib/src"],
+      "axios": ["../lib/src/axios.d.ts"]
     }
   },
   "include": ["src/**/*.ts"],
