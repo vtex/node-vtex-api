@@ -1,7 +1,18 @@
 {
-  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    "esModuleInterop": true,
+    "types": ["node", "jest"],
+    "target": "es2019",
+    "lib": [
+      "es2019",
+      "esnext.asynciterable"
+    ],
+    "module": "commonjs",
+    "strict": true,
+    "declaration": true,
     "outDir": "lib",
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "baseUrl": "./",
     "paths": {
       "@vtex/api": ["../lib/src"]
