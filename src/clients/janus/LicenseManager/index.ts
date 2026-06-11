@@ -2,6 +2,9 @@ import { RequestTracingConfig, RequestConfig, inflightUrlWithQuery } from '../..
 import { JanusClient } from '../JanusClient'
 import { APIBindingRes } from './types'
 
+export * from './types'
+export * from './utils'
+
 const TWO_MINUTES_S = 2 * 60
 
 const BASE_URL = '/api/license-manager'
