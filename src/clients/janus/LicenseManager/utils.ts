@@ -1,41 +1,41 @@
 import { APIBindingRes } from './types'
 
-const getPath = (basePath: string, localizationPath: string): string => {
+const buildAddressPath = (basePath: string, localizationKey: string): string => {
   if (basePath === '') {
-    return `/${localizationPath}`
+    return `/${localizationKey}`
   }
 
-  if (localizationPath === '') {
+  if (localizationKey === '') {
     return `/${basePath}`
   }
 
-  return `/${basePath}/${localizationPath}`
+  return `/${basePath}/${localizationKey}`
 }
 
 export const getCanonicalAndAlternateAddresses = (
-  binding: APIBindingRes
+  lmBinding: APIBindingRes
 ): { canonicalBaseAddress: string; alternateBaseAddresses: string[] } => {
   let canonicalBaseAddress = ''
   const alternateBaseAddresses: string[] = []
 
-  for (const address of binding.Addresses) {
-    const localizationPaths = Object.keys(address.Localization)
+  for (const addressEntry of lmBinding.Addresses) {
+    const localizationKeys = Object.keys(addressEntry.Localization)
 
-    for (const localizationPath of localizationPaths) {
-      alternateBaseAddresses.push(address.Host + getPath(address.BasePath, localizationPath))
+    for (const localizationKey of localizationKeys) {
+      alternateBaseAddresses.push(addressEntry.Host + buildAddressPath(addressEntry.BasePath, localizationKey))
     }
 
-    if (address.IsCanonical) {
+    if (addressEntry.IsCanonical) {
       // The canonical address is built from the shortest localization key.
-      const [shortestPath = ''] = [...localizationPaths].sort((a, b) => a.length - b.length)
-      canonicalBaseAddress = address.Host + getPath(address.BasePath, shortestPath)
+      const [shortestLocalizationKey = ''] = [...localizationKeys].sort((a, b) => a.length - b.length)
+      canonicalBaseAddress = addressEntry.Host + buildAddressPath(addressEntry.BasePath, shortestLocalizationKey)
     }
   }
 
-  // The canonical address must not also be listed as an alternate.
-  const canonicalIndex = alternateBaseAddresses.indexOf(canonicalBaseAddress)
-  if (canonicalIndex !== -1) {
-    alternateBaseAddresses.splice(canonicalIndex, 1)
+  // The canonical address must not also appear in the alternates list.
+  const canonicalIndexInAlternates = alternateBaseAddresses.indexOf(canonicalBaseAddress)
+  if (canonicalIndexInAlternates !== -1) {
+    alternateBaseAddresses.splice(canonicalIndexInAlternates, 1)
   }
 
   return { canonicalBaseAddress, alternateBaseAddresses }
