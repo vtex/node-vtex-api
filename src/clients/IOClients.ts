@@ -93,8 +93,8 @@ export class IOClients {
     return this.getOrSet('catalogGraphQL', CatalogGraphQL)
   }
 
-  public get catalogSystem() {
-    return this.getOrSet('catalogSystem', Catalog)
+  public get janusCatalogSystem() {
+    return this.getOrSet('janusCatalogSystem', Catalog)
   }
 
   public get paymentProvider() {
