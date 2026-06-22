@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [7.4.0] - 2026-06-22
+### Changed
+- Renamed the base `IOClients` Janus Catalog getter from `catalogSystem` to
+  `janusCatalogSystem` to avoid a name collision with apps that already define
+  their own `catalogSystem` client (e.g. vtex-apps/promotion-cloner).
+### Added
+- Base `IOClients` getter `janusCatalogSystem` (Janus Catalog) and
+  `licenseManager.listBindings`, plus binding-mapping helpers
+  (getCanonicalAndAlternateAddresses, inferTargetProduct) used by the
+  Tenant API migration.
+
 ## [7.3.1] - 2026-01-06
 
 ### Added
