@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [7.3.0] - 2026-06-22
+## [7.4.0] - 2026-06-22
 ### Changed
 - Renamed the base `IOClients` Janus Catalog getter from `catalogSystem` to
   `janusCatalogSystem` to avoid a name collision with apps that already define
@@ -17,6 +17,42 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   `licenseManager.listBindings`, plus binding-mapping helpers
   (getCanonicalAndAlternateAddresses, inferTargetProduct) used by the
   Tenant API migration.
+
+## [7.3.1] - 2026-01-06
+
+### Added
+- OpenTelemetry context-based base attributes to DiagnosticsMetrics
+
+### Fixed
+- Merge request context attributes with custom metrics - custom metrics now automatically include request-scoped base attributes (account, route_id, status_code, etc.) using OpenTelemetry Context API
+
+## [7.3.0] - 2025-12-16
+### Changed
+- Update temporality to delta in metrics client
+- New deploy pipeline with npm publish flow
+
+### Fixed
+- Fix account attribute to diagnostics metrics
+
+## [7.2.9-beta.1] - 2025-12-12
+### Changed
+- Increase maximum attributes limit for diagnostics metrics
+
+## [7.2.9-beta.0] - 2025-12-11
+### Fix
+- Add account attribute to diagnostics metrics for improved observability
+
+## [7.2.8-beta.4] - 2025-12-08
+### Changed
+- New deploy pipeline. No functional changes in the code
+
+## [7.2.7] - 2025-12-04
+### Changed
+- Increased metrics client interval from 5s to 60s and timeout from 5s to 60s
+
+## [7.2.6] - 2025-11-05
+### Changed
+- Enhance the translation utilities by introducing a new state marker for translatable message strings, updating the parsing and formatting logic to handle this marker and ensuring that already translated messages are bypassed further processing
 
 ## [7.2.5] - 2025-10-28
 ### Changed

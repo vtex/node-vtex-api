@@ -3,12 +3,12 @@ import { cloneAndSanitizeHeaders, INTERESTING_HEADERS } from './utils'
 
 describe('cloneAndSanitizeHeaders', () => {
   const headers = {
-    'content-type': 'application/json',
     'authorization': 'Bearer secret-token',
+    'content-type': 'application/json',
+    'cookie': 'sessionId=abc123',
+    'random-header': 'should-be-filtered',
     'x-request-id': '12345',
     'x-vtex-custom': 'vtex-value',
-    'random-header': 'should-be-filtered',
-    'cookie': 'sessionId=abc123',
   }
 
   test('Original object is not modified', () => {
@@ -61,10 +61,10 @@ describe('cloneAndSanitizeHeaders', () => {
 
   test('Handles case-insensitive header matching', () => {
     const mixedCaseHeaders = {
+      'AUTHORIZATION': 'Bearer token',
       'Content-Type': 'application/json',
       'X-REQUEST-ID': '67890',
       'X-VTEX-Store': 'mystore',
-      'AUTHORIZATION': 'Bearer token',
     }
 
     const result = cloneAndSanitizeHeaders(mixedCaseHeaders)
@@ -83,6 +83,7 @@ describe('cloneAndSanitizeHeaders', () => {
 
   test('Handles axios header object structure', () => {
     const axiosHeaders = {
+      'authorization': 'Bearer token',
       common: {
         Accept: 'application/json, text/plain, */*',
       },
@@ -92,9 +93,8 @@ describe('cloneAndSanitizeHeaders', () => {
       post: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      'authorization': 'Bearer token',
-      'x-vtex-account': 'testaccount',
       'user-agent': 'axios/1.0.0',
+      'x-vtex-account': 'testaccount',
     }
 
     const result = cloneAndSanitizeHeaders(axiosHeaders)
@@ -117,16 +117,16 @@ describe('cloneAndSanitizeHeaders', () => {
   test('Filters out non-whitelisted headers completely', () => {
     const headersWithNoise = {
       'content-type': 'application/json',  // whitelisted
-      'x-vtex-store': 'mystore',          // x-vtex-* allowed
-      'x-custom-header': 'custom',        // not whitelisted, not x-vtex-*
-      'server': 'nginx',                  // not whitelisted
-      'x-powered-by': 'Express',          // not whitelisted
       'host': 'api.vtex.com',             // whitelisted
+      'server': 'nginx',                  // not whitelisted
+      'x-custom-header': 'custom',        // not whitelisted, not x-vtex-*
+      'x-powered-by': 'Express',          // not whitelisted
+      'x-vtex-store': 'mystore',          // x-vtex-* allowed
     }
 
     const result = cloneAndSanitizeHeaders(headersWithNoise)
 
-    expect(Object.keys(result)).toEqual(['content-type', 'x-vtex-store', 'host'])
+    expect(Object.keys(result).sort()).toEqual(['content-type', 'host', 'x-vtex-store'])
     expect(result).not.toHaveProperty('x-custom-header')
     expect(result).not.toHaveProperty('server')
     expect(result).not.toHaveProperty('x-powered-by')

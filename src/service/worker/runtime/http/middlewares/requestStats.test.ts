@@ -8,9 +8,9 @@ describe('requestStats', () => {
   beforeEach(() => {
     // Create mock DiagnosticsMetrics instance
     mockDiagnosticsMetrics = {
-      setGauge: jest.fn(),
       incrementCounter: jest.fn(),
       recordLatency: jest.fn(),
+      setGauge: jest.fn(),
     } as any
 
     // Set global.diagnosticsMetrics for the tests
@@ -58,9 +58,9 @@ describe('requestStats', () => {
 
       const stats = incomingRequestStats.get()
       expect(stats).toEqual({
-        total: 0,
         aborted: 0,
         closed: 0,
+        total: 0,
       })
     })
   })
@@ -77,14 +77,14 @@ describe('requestStats', () => {
         req: mockRequest,
         status: 200,
         vtex: {
+          cancellation: {
+            cancelable: true,
+            cancelled: false,
+            source: { cancel: jest.fn() },
+          },
           route: {
             id: 'test-route',
             type: 'public',
-          },
-          cancellation: {
-            cancelable: true,
-            source: { cancel: jest.fn() },
-            cancelled: false,
           },
         },
       }

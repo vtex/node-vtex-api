@@ -37,6 +37,10 @@ npm-debug.log
 yarn-error.log
 .build/
 lib/
+coverage/
 
 package-lock.json
 yarn-error.log
+
+# AI IDE
+.cursor/

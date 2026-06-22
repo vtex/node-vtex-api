@@ -1,7 +1,7 @@
 import { finished as onStreamFinished } from 'stream'
 import { hrToMillisFloat } from '../../utils'
-import { getOtelInstruments, RequestsMetricLabels, OtelRequestInstruments } from './metrics'
 import { ServiceContext } from '../worker/runtime/typings'
+import { getOtelInstruments, OtelRequestInstruments, RequestsMetricLabels } from './metrics'
 
 const INSTRUMENTS_INITIALIZATION_TIMEOUT = 500
 
@@ -17,7 +17,7 @@ export const addOtelRequestMetricsMiddleware = () => {
             () => reject(new Error('Timeout waiting for OpenTelemetry instruments initialization')),
             INSTRUMENTS_INITIALIZATION_TIMEOUT
           )
-        )
+        ),
       ])
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
@@ -55,6 +55,7 @@ export const addOtelRequestMetricsMiddleware = () => {
           {
             [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
             [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
+            [RequestsMetricLabels.ACCOUNT_NAME]: ctx.vtex?.account || 'unknown',
           }
         )
       }
@@ -65,6 +66,7 @@ export const addOtelRequestMetricsMiddleware = () => {
           {
             [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
             [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
+            [RequestsMetricLabels.ACCOUNT_NAME]: ctx.vtex?.account || 'unknown',
           }
         )
       }
@@ -76,6 +78,7 @@ export const addOtelRequestMetricsMiddleware = () => {
             {
               [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
               [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
+              [RequestsMetricLabels.ACCOUNT_NAME]: ctx.vtex?.account || 'unknown',
             }
           )
 

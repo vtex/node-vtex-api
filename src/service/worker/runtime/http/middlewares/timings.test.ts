@@ -1,8 +1,8 @@
 // Mock @vtex/diagnostics-nodejs before any imports
 jest.mock('@vtex/diagnostics-nodejs', () => ({
   Types: {},
-  getMetricClient: jest.fn(),
   getLogger: jest.fn(),
+  getMetricClient: jest.fn(),
 }))
 
 jest.mock('../../../../../service/metrics/client', () => ({
@@ -19,10 +19,11 @@ describe('timings middleware', () => {
   let consoleLogSpy: jest.SpyInstance
 
   beforeEach(() => {
-    // Mock DiagnosticsMetrics
+    // Mock DiagnosticsMetrics with runWithBaseAttributes that executes the function
     mockDiagnosticsMetrics = {
-      recordLatency: jest.fn(),
       incrementCounter: jest.fn(),
+      recordLatency: jest.fn(),
+      runWithBaseAttributes: jest.fn((baseAttributes, fn) => fn()),
       setGauge: jest.fn(),
     } as any
 
@@ -42,20 +43,20 @@ describe('timings middleware', () => {
 
     // Mock context
     mockCtx = {
-      status: 200,
       method: 'GET',
       path: '/test',
+      status: 200,
+      timings: {
+        total: [1, 500000000], // 1.5 seconds
+      },
       vtex: {
         account: 'testaccount',
-        workspace: 'master',
         production: true,
         route: {
           id: 'test-route',
           type: 'public',
         },
-      },
-      timings: {
-        total: [1, 500000000], // 1.5 seconds
+        workspace: 'master',
       },
     }
   })
@@ -71,15 +72,24 @@ describe('timings middleware', () => {
     it('should record metrics for successful request', async () => {
       await timings(mockCtx, mockNext)
 
-      // Diagnostics metrics
-      expect(mockDiagnosticsMetrics.recordLatency).toHaveBeenCalledWith(
-        [1, 500000000],
+      // Verify runWithBaseAttributes is called with base attributes
+      expect(mockDiagnosticsMetrics.runWithBaseAttributes).toHaveBeenCalledWith(
         expect.objectContaining({
           component: 'http-handler',
           route_id: 'test-route',
           route_type: 'public',
-          status_code: 200,
+          'vtex.account.name': 'testaccount',
+        }),
+        expect.any(Function)
+      )
+
+      // Diagnostics metrics - now only receive completion-specific attributes
+      // Base attributes (account, route_id, etc.) are merged internally by DiagnosticsMetrics
+      expect(mockDiagnosticsMetrics.recordLatency).toHaveBeenCalledWith(
+        [1, 500000000],
+        expect.objectContaining({
           status: 'success',
+          status_code: 200,
         })
       )
 
@@ -87,11 +97,8 @@ describe('timings middleware', () => {
         'http_handler_requests_total',
         1,
         expect.objectContaining({
-          component: 'http-handler',
-          route_id: 'test-route',
-          route_type: 'public',
-          status_code: 200,
           status: 'success',
+          status_code: 200,
         })
       )
     })
@@ -139,18 +146,16 @@ describe('timings middleware', () => {
       const latencyCall = mockDiagnosticsMetrics.recordLatency.mock.calls[0]
       expect(latencyCall[1]).toMatchObject({
         status: '4xx',
+        status_code: 404,
       })
 
-      // Counter with status as attribute
+      // Counter with status as attribute (base attributes merged internally)
       expect(mockDiagnosticsMetrics.incrementCounter).toHaveBeenCalledWith(
         'http_handler_requests_total',
         1,
         expect.objectContaining({
-          component: 'http-handler',
-          route_id: 'test-route',
-          route_type: 'public',
-          status_code: 404,
           status: '4xx',
+          status_code: 404,
         })
       )
     })
@@ -164,6 +169,7 @@ describe('timings middleware', () => {
         expect.any(Array),
         expect.objectContaining({
           status: 'error',
+          status_code: 500,
         })
       )
 
