@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.51.0] - 2026-06-23
+### Added
+- Base `IOClients` getter `janusCatalogSystem` (Janus Catalog) and
+  `licenseManager.listBindings`, plus binding-mapping helpers
+  (getCanonicalAndAlternateAddresses, inferTargetProduct) used by the
+  Tenant API migration. Backport of #617 to the 6.x line.
+
 ## [6.50.1] - 2025-09-10
 ### Fixed
 - Axios vuln GHSA-jr5f-v2jv-69x6 by using axios@^0.30.1
