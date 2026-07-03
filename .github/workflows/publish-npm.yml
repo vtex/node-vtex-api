@@ -25,12 +25,12 @@ on:
 
 permissions:
   contents: read
-  id-token: write   # required for Trusted Publishing
+  id-token: write # required for Trusted Publishing
 
 env:
   CODEARTIFACT_DOMAIN: main
   CODEARTIFACT_REPOSITORY: internal-npm
-  NPM_PACKAGE_NAME: "@vtex/api"
+  NPM_PACKAGE_NAME: '@vtex/api'
   AWS_REGION: us-east-1
 
 jobs:
@@ -97,7 +97,7 @@ jobs:
             if [ "${MAJOR}" -ge 7 ]; then
               TAG="latest"
             else
-              TAG="v${MAJOR}-latest"
+              TAG="${MAJOR}-latest"
             fi
           fi
 
