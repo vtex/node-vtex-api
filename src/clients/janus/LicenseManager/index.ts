@@ -1,0 +1,85 @@
+import { inflightUrlWithQuery, RequestConfig, RequestTracingConfig } from '../../../HttpClient'
+import { JanusClient } from '../JanusClient'
+import { APIBindingRes } from './types'
+
+export * from './types'
+export * from './utils'
+
+const TWO_MINUTES_S = 2 * 60
+
+const BASE_URL = '/api/license-manager'
+
+const routes = {
+  accountData: () => `${BASE_URL}/account`,
+  listBindings: (tenant: string) => `${BASE_URL}/binding/site/${encodeURIComponent(tenant)}`,
+  resourceAccess: (resourceKey: string) => `${BASE_URL}/resources/${encodeURIComponent(resourceKey)}/access`,
+  topbarData: () => `${BASE_URL}/site/pvt/newtopbar`,
+}
+
+export class LicenseManager extends JanusClient {
+  public getAccountData(VtexIdclientAutCookie: string, tracingConfig?: RequestTracingConfig) {
+    const metric = 'lm-account-data'
+    return this.http.get(routes.accountData(), {
+      forceMaxAge: TWO_MINUTES_S,
+      headers: {
+        VtexIdclientAutCookie,
+      },
+      inflightKey: inflightUrlWithQuery,
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
+  }
+
+  public getTopbarData(VtexIdclientAutCookie: string, tracingConfig?: RequestTracingConfig) {
+    const metric = 'lm-topbar-data'
+    return this.http.get(routes.topbarData(), {
+      headers: {
+        VtexIdclientAutCookie,
+      },
+      metric,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...tracingConfig?.tracing,
+      },
+    })
+  }
+
+  public canAccessResource(VtexIdclientAutCookie: string, resourceKey: string, tracingConfig?: RequestTracingConfig) {
+    const metric = 'lm-resource-access'
+    return this.http
+      .get(routes.resourceAccess(resourceKey), {
+        headers: {
+          VtexIdclientAutCookie,
+        },
+        metric,
+        tracing: {
+          requestSpanNameSuffix: metric,
+          ...tracingConfig?.tracing,
+        },
+      })
+      .then(
+        () => true,
+        () => false
+      )
+  }
+
+  public listBindings(tenant: string, config?: RequestConfig) {
+    const metric = 'lm-list-bindings'
+    return this.http.get<APIBindingRes[]>(routes.listBindings(tenant), {
+      headers: {
+        VtexIdclientAutCookie: this.context.authToken,
+      },
+      inflightKey: inflightUrlWithQuery,
+      memoizeable: true,
+      metric,
+      ...config,
+      tracing: {
+        requestSpanNameSuffix: metric,
+        ...config?.tracing,
+      },
+    })
+  }
+}
