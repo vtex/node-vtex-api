@@ -3,6 +3,12 @@ import { constants } from 'os'
 
 import { INSPECT_DEBUGGER_PORT, LINKED, UP_SIGNAL } from '../constants'
 import { isLog, logOnceToDevConsole } from './logger'
+import {
+  handleWorkerMetricsRequest,
+  initMasterAggregatorRegistry,
+  isAggMetricsRequest,
+  isPromClientMessage,
+} from './metrics/clusterMetricsAggregator'
 import { logger } from './worker/listeners'
 import { broadcastStatusTrack, isStatusTrackBroadcast, trackStatus } from './worker/runtime/statusTrack'
 import { ServiceJSON } from './worker/runtime/typings'
@@ -15,6 +21,10 @@ const onMessage = (worker: Worker, message: any) => {
   } else if (isStatusTrackBroadcast(message)) {
     trackStatus()
     broadcastStatusTrack()
+  } else if (isAggMetricsRequest(message)) {
+    handleWorkerMetricsRequest(worker, message)
+  } else if (isPromClientMessage(message)) {
+    // Handled by prom-client's own cluster listener; ignore here.
   } else {
     logger.warn({
       content: message,
@@ -75,6 +85,12 @@ export const startMaster = (service: ServiceJSON) => {
 
   if (service.deterministicVary) {
     process.env.DETERMINISTIC_VARY = 'true'
+  }
+
+  // Set up the master-side Prometheus aggregator so workers can request a
+  // merged, monotonic /metrics view across the whole cluster over IPC.
+  if (numWorkers > 1) {
+    initMasterAggregatorRegistry()
   }
 
   // Setup dubugger
