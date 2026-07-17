@@ -61,6 +61,66 @@ gauges exposed through the diagnostics pipeline.
 - Diagnostics metrics (`http_agent_*` gauges and everything else via
   `global.diagnosticsMetrics`).
 
+## Decisions (reviewer feedback resolution)
+
+### Is the `trackStatus()` / IPC flow used only for logging? — No; keep it.
+
+> Reviewer (silvadenisaraujo, `specs/...md:69`): "it is not clear if we will
+> remove only the console.log. If we use all this process and IPC communication
+> for only logging the status I want you to remove it as well; if it is used by
+> other processes we must keep it."
+
+We traced the flow end-to-end. **The IPC path is shared infrastructure, not a
+logging-only channel**, so we remove **only** the `console.log` export
+(`logStatus`) and keep the entire route → IPC → flush/gauge machinery.
+
+Full flow (each hop verified in source):
+
+1. `/_status` route → `statusTrackHandler` (worker,
+   `src/service/worker/runtime/statusTrack.ts:27`): on a non-linked worker it
+   sends `broadcastStatusTrack` to the master and returns an empty body.
+2. master `onMessage` (`src/service/master.ts:15-17`): on `broadcastStatusTrack`
+   it calls `trackStatus()` **in the master process** and then
+   `broadcastStatusTrack()` to fan a `statusTrack` message out to every worker.
+3. each worker `onMessage` (`src/service/worker/index.ts:79-80`): on
+   `statusTrack` it calls `trackStatus()` **in that worker process**.
+
+`trackStatus()` has two side effects, **both of which are used by systems other
+than logging and therefore must be preserved**:
+
+- **`HttpAgentSingleton.updateHttpAgentMetrics()`** — refreshes the diagnostics
+  `http_agent_*` gauges (OpenTelemetry / `global.diagnosticsMetrics`). This is an
+  observability side effect, unrelated to the legacy log.
+- **`global.metrics.statusTrack()` → `MetricsAccumulator.flushMetrics()`**
+  (`src/metrics/MetricsAccumulator.ts:116` and `:143`) — this **drains**
+  `metricsMillis`/`extensions` (so batched metrics do not grow unbounded in
+  worker memory) **and runs every registered `onFlushMetrics` callback**
+  (`addOnFlushMetric`, `:108`). These are real state-mutating side effects that
+  exist regardless of whether the return value is logged.
+
+**Conclusion:** removing the whole `trackStatus()` / IPC path would (a) stop the
+diagnostics HTTP-agent gauge refresh and (b) let the accumulator's batched
+metrics and `onFlushMetrics` state accumulate unbounded — both explicitly
+disallowed. So the process/IPC communication is **kept**, and only the
+console.log export is deleted. This is exactly the scope of this task.
+
+### Sonar quality gate on the spec PR (#668)
+
+The failing gate (315 new issues, 30.10% coverage on new code, 0% security
+hotspots reviewed) is measured against a spec-only diff and does not reflect the
+implementation:
+
+- **This phase commits only the spec `.md` file** — no production code or tests
+  change here, so "coverage on new code" is not meaningful for a docs-only diff.
+  It is resolved in the implementation phase.
+- The implementation is a **net removal** (delete `logStatus` and its
+  now-orphaned imports; make `trackStatus()` call `statusTrack()` and discard
+  the result). Removing code introduces no new branches/paths, so it should add
+  no new issues, and the focused `statusTrack.test.ts` (below) exercises the
+  changed lines to keep coverage on the changed code high.
+- No secrets or security-sensitive code are added, so there are **no new
+  security hotspots** to review.
+
 ## Proposed approach
 
 Remove **only** the console-log export from `trackStatus()` while preserving
@@ -157,14 +217,18 @@ setup, billing logs.
   aggregation) is removed, and it can be re-added if needed.
 
 - **Assumption — discarding the `statusTrack()` return is enough to keep memory
-  bounded.** `flushMetrics()` drains internal state regardless of whether the
-  return value is consumed, so calling and ignoring it is equivalent, memory-wise,
-  to the previous iterate-and-log behavior.
+  bounded.** `flushMetrics()` drains internal state (`metricsMillis`,
+  `extensions`) and runs the `onFlushMetrics` callbacks regardless of whether the
+  return value is consumed, so calling and ignoring it is equivalent, memory-wise
+  and side-effect-wise, to the previous iterate-and-log behavior.
 
-- **Alternative — remove the entire `trackStatus()`/IPC path.** Rejected:
-  it would stop the diagnostics HTTP-agent gauge refresh and let legacy metric
-  batches accumulate unbounded in worker memory (explicitly disallowed by the
-  task notes).
+- **Alternative — remove the entire `trackStatus()`/IPC path.** Rejected — see
+  *Decisions → Is the `trackStatus()` / IPC flow used only for logging?* above.
+  The path is not logging-only: it also refreshes diagnostics HTTP-agent gauges
+  and drains the `MetricsAccumulator` (which additionally runs registered
+  `onFlushMetrics` callbacks). Removing it would stop the gauge refresh and let
+  legacy metric batches accumulate unbounded in worker memory (explicitly
+  disallowed by the task notes and by the maintainer feedback).
 
 - **Alternative — gate the log behind an env flag.** Rejected as unnecessary
   scope; the stream is unused, so an outright removal is simpler and the flush
