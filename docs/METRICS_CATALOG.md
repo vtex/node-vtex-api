@@ -18,7 +18,7 @@ This document provides a comprehensive catalog of all metrics available in the `
 The `@vtex/api` library has two coexisting metrics systems during the migration period:
 
 1. **Diagnostics-Based Metrics** (New) - Uses `@vtex/diagnostics-nodejs` with OpenTelemetry
-2. **Legacy Metrics** (Existing) - Uses `prom-client`, `MetricsAccumulator`, and console.log exports
+2. **Legacy Metrics** (Existing) - Uses `prom-client`, in-memory `MetricsAccumulator`, and `__VTEX_IO_BILLING` console.log exports
 
 Both systems operate independently and can coexist. The goal is to gradually migrate to diagnostics-based metrics while maintaining backward compatibility.
 
@@ -123,7 +123,7 @@ All Metrics in node-vtex-api
     │       ├── process_resident_memory_bytes (Gauge)
     │       └── process_start_time_seconds (Gauge)
     │
-    ├── 📝 MetricsAccumulator (console.log exports via trackStatus)
+    ├── 📝 MetricsAccumulator (in-memory; flushed & discarded on each /_status tick via trackStatus)
     │   │
     │   ├── HTTP Handler Metrics (worker/runtime/http/middlewares/timings.ts)
     │   │   └── http-handler-{route_id}
@@ -287,7 +287,11 @@ Via `collectDefaultMetrics()` from `prom-client`:
 
 ### MetricsAccumulator
 
-Exported via `console.log` as JSON and collected by Splunk.
+Accumulated in worker memory. On each cluster-wide `/_status` tick, `trackStatus()`
+flushes the accumulated batches (via `global.metrics.statusTrack()`) and discards
+the result. These values are **no longer exported via `console.log`** (the legacy
+`type: metric/status` `__VTEX_IO_LOG` stream has been removed); the flush is kept
+only to prevent batched metrics from growing unbounded in memory.
 
 **Source:** `metrics/MetricsAccumulator.ts`
 
