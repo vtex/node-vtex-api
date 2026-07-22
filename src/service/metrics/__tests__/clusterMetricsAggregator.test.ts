@@ -5,8 +5,10 @@ import {
   AGG_METRICS_REQ,
   AGG_METRICS_RES,
   AggMetricsResMessage,
+  ensureWorkerAggregatorRegistry,
   handleMasterMetricsResponse,
   handleWorkerMetricsRequest,
+  initMasterAggregatorRegistry,
   isAggMetricsRequest,
   isAggMetricsResponse,
   isPromClientMessage,
@@ -56,6 +58,22 @@ describe('clusterMetricsAggregator', () => {
     __resetForTests()
     jest.useRealTimers()
     delete (process as any).send
+  })
+
+  describe('registry lifecycle', () => {
+    it('creates the master aggregator registry once (idempotent)', () => {
+      const first = initMasterAggregatorRegistry()
+      const second = initMasterAggregatorRegistry()
+      expect(first).toBeInstanceOf(AggregatorRegistry)
+      expect(second).toBe(first)
+    })
+
+    it('creates the worker aggregator registry once (idempotent)', () => {
+      const first = ensureWorkerAggregatorRegistry()
+      const second = ensureWorkerAggregatorRegistry()
+      expect(first).toBeInstanceOf(AggregatorRegistry)
+      expect(second).toBe(first)
+    })
   })
 
   describe('message guards', () => {
@@ -182,6 +200,14 @@ describe('clusterMetricsAggregator', () => {
       const body = await requestAggregatedMetrics()
       expect(typeof body).toBe('string')
     })
+
+    it('falls back to the local registry when process.send throws', async () => {
+      ;(process as any).send = () => {
+        throw new Error('ipc channel closed')
+      }
+      const body = await requestAggregatedMetrics()
+      expect(typeof body).toBe('string')
+    })
   })
 
   describe('master request handler', () => {
@@ -194,6 +220,24 @@ describe('clusterMetricsAggregator', () => {
       expect(reply.id).toBe(7)
       // No cluster workers in the test process → prom-client aggregates to ''.
       expect(typeof reply.body).toBe('string')
+    })
+
+    it('replies with an error when the cluster aggregation fails', async () => {
+      const clusterMetricsSpy = jest
+        .spyOn(AggregatorRegistry.prototype, 'clusterMetrics')
+        .mockRejectedValue(new Error('collection failed'))
+      const worker: any = { send: jest.fn() }
+
+      await handleWorkerMetricsRequest(worker, { id: 3, type: AGG_METRICS_REQ })
+
+      expect(clusterMetricsSpy).toHaveBeenCalledTimes(1)
+      const reply = worker.send.mock.calls[0][0]
+      expect(reply.type).toBe(AGG_METRICS_RES)
+      expect(reply.id).toBe(3)
+      expect(reply.error).toBe('collection failed')
+      expect(reply.body).toBeUndefined()
+
+      clusterMetricsSpy.mockRestore()
     })
   })
 })

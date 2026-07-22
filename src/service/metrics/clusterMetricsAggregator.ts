@@ -44,10 +44,10 @@ export interface AggMetricsResMessage {
 }
 
 export const isAggMetricsRequest = (message: any): message is AggMetricsReqMessage =>
-  message != null && message.type === AGG_METRICS_REQ && typeof message.id === 'number'
+  message?.type === AGG_METRICS_REQ && typeof message?.id === 'number'
 
 export const isAggMetricsResponse = (message: any): message is AggMetricsResMessage =>
-  message != null && message.type === AGG_METRICS_RES && typeof message.id === 'number'
+  message?.type === AGG_METRICS_RES && typeof message?.id === 'number'
 
 /**
  * prom-client's cluster protocol emits its own tagged IPC messages
@@ -56,7 +56,7 @@ export const isAggMetricsResponse = (message: any): message is AggMetricsResMess
  * ignore them instead of warning about "unknown" messages.
  */
 export const isPromClientMessage = (message: any): boolean =>
-  message != null && typeof message.type === 'string' && message.type.startsWith('prom-client:')
+  typeof message?.type === 'string' && message.type.startsWith('prom-client:')
 
 // ---------------------------------------------------------------------------
 // Master side

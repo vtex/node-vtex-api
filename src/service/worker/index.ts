@@ -78,7 +78,7 @@ const upSignal = () => {
 
 const isUpSignal = (message: any): message is typeof UP_SIGNAL => message === UP_SIGNAL
 
-const onMessage = (service: ServiceJSON) => (message: any) => {
+export const onMessage = (service: ServiceJSON) => (message: any) => {
   if (isUpSignal(message)) {
     upSignal()
     logAvailableRoutes(service)
@@ -268,7 +268,7 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
   ]
   .filter(x => x != null)
   // TODO: Fix ramda typings. Apparently there was an update that broke things
-  .reduce(mergeDeepRight as any)
+  .reduce<any>((acc, handler) => mergeDeepRight(acc, handler!), {})
 
   if (httpHandlers?.pub) {
     const publicHandlersRouter = routerFromPublicHttpHandlers(httpHandlers.pub)

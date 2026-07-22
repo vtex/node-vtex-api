@@ -15,7 +15,7 @@ import { ServiceJSON } from './worker/runtime/typings'
 
 let handledSignal: NodeJS.Signals | undefined
 
-const onMessage = (worker: Worker, message: any) => {
+export const onMessage = (worker: Worker, message: any) => {
   if (isLog(message)) {
     logOnceToDevConsole(message.message, message.level)
   } else if (isStatusTrackBroadcast(message)) {

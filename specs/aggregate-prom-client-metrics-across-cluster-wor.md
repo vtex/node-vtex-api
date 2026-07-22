@@ -1,10 +1,7 @@
 # Spec: Aggregate prom-client metrics across cluster workers for `/metrics`
 
-Internal task id: task-58ee1acb (bean)
-Branch: `night/aggregate-prom-client-metrics-across-cluster-wor`
-
-> **Status: specification only.** This document describes the planned change. No
-> implementation is included in this PR yet.
+> **Status: accepted.** This document describes the change, which is implemented
+> in this PR.
 
 ---
 
