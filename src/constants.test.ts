@@ -5,6 +5,7 @@ import {
   PID,
   HeaderKeys,
   AttributeKeys,
+  DiagnosticsAttributeKeys,
   BODY_HASH,
   UP_SIGNAL,
   MAX_AGE,
@@ -12,6 +13,8 @@ import {
   MAX_WORKERS,
   LINKED,
   REGION,
+  CLUSTER_ID,
+  CLUSTER_ROLE,
   PUBLIC_ENDPOINT,
   APP,
   NODE_ENV,
@@ -159,6 +162,13 @@ describe('constants', () => {
     })
   })
 
+  describe('DiagnosticsAttributeKeys', () => {
+    test('should contain reserved cluster resource attribute names', () => {
+      expect(DiagnosticsAttributeKeys.CLUSTER_ID).toBe('cluster_id')
+      expect(DiagnosticsAttributeKeys.CLUSTER_ROLE).toBe('cluster_role')
+    })
+  })
+
   describe('Cache constants', () => {
     test('MAX_AGE should be an object with numeric properties', () => {
       expect(typeof MAX_AGE).toBe('object')
@@ -218,6 +228,8 @@ describe('constants', () => {
 
     test('string environment constants should match their env vars', () => {
       expect(REGION).toBe(process.env.VTEX_REGION as string)
+      expect(CLUSTER_ID).toBe(process.env.VTEX_CLUSTER_ID as string)
+      expect(CLUSTER_ROLE).toBe(process.env.VTEX_CLUSTER_ROLE as string)
       expect(NODE_ENV).toBe(process.env.NODE_ENV as string)
       expect(ACCOUNT).toBe(process.env.VTEX_ACCOUNT as string)
       expect(WORKSPACE).toBe(process.env.VTEX_WORKSPACE as string)

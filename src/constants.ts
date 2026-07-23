@@ -64,6 +64,15 @@ export const AttributeKeys = {
   VTEX_IO_APP_AUTHOR_TYPE: ATTR_VTEX_IO_APP_AUTHOR_TYPE,
 }
 
+/**
+ * Reserved resource attributes populated by the platform runtime.
+ * Application-provided telemetry must not override these values.
+ */
+export const DiagnosticsAttributeKeys = {
+  CLUSTER_ID: 'cluster_id',
+  CLUSTER_ROLE: 'cluster_role',
+} as const
+
 /** @deprecated Use HeaderKeys.CACHE_CONTROL instead */
 export const CACHE_CONTROL_HEADER = HeaderKeys.CACHE_CONTROL
 
@@ -165,6 +174,8 @@ export const MAX_WORKERS = 4
 
 export const LINKED = !!process.env.VTEX_APP_LINK
 export const REGION = process.env.VTEX_REGION as string
+export const CLUSTER_ID = process.env.VTEX_CLUSTER_ID as string
+export const CLUSTER_ROLE = process.env.VTEX_CLUSTER_ROLE as string
 export const PUBLIC_ENDPOINT = process.env.VTEX_PUBLIC_ENDPOINT || 'myvtex.com'
 export const APP = {
   ID: process.env.VTEX_APP_ID as string,
