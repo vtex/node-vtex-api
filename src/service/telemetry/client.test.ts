@@ -30,9 +30,11 @@ jest.mock('../../constants', () => ({
     VTEX_IO_APP_ID: 'vtex_io.app.id',
     VTEX_IO_WORKSPACE_NAME: 'vtex_io.workspace.name',
     VTEX_IO_WORKSPACE_TYPE: 'vtex_io.workspace.type',
+    VTEX_IO_CLUSTER_ID: 'vtex_io.cluster.id',
+    VTEX_IO_CLUSTER_ROLE: 'vtex_io.cluster.role',
   },
   CLUSTER_ID: 'cluster-a',
-  CLUSTER_ROLE: 'primary',
+  CLUSTER_ROLE: 'store',
   DIAGNOSTICS_TELEMETRY_ENABLED: false,
   DK_APP_ID: 'apps-team',
   OTEL_EXPORTER_OTLP_ENDPOINT: 'http://collector',
@@ -77,21 +79,21 @@ describe('diagnostics telemetry resource attributes', () => {
 
   it('shares configured cluster resource attributes across metrics and logs', async () => {
     mockGetClusterResourceAttributes.mockReturnValue({
-      cluster_id: 'cluster-a',
-      cluster_role: 'primary',
+      'vtex_io.cluster.id': 'cluster-a',
+      'vtex_io.cluster.role': 'store',
     })
 
     const clients = await initializeTelemetry()
 
-    expect(mockGetClusterResourceAttributes).toHaveBeenCalledWith('cluster-a', 'primary')
+    expect(mockGetClusterResourceAttributes).toHaveBeenCalledWith('cluster-a', 'store')
     expect(mockNewTelemetryClient).toHaveBeenCalledWith(
       'apps-team',
       'node-vtex-api',
       'vtex.test-app@1.0.0',
       expect.objectContaining({
         additionalAttrs: expect.objectContaining({
-          cluster_id: 'cluster-a',
-          cluster_role: 'primary',
+          'vtex_io.cluster.id': 'cluster-a',
+          'vtex_io.cluster.role': 'store',
         }),
       })
     )
@@ -108,8 +110,8 @@ describe('diagnostics telemetry resource attributes', () => {
     await initializeTelemetry()
 
     const options = mockNewTelemetryClient.mock.calls[0][3]
-    expect(options.additionalAttrs).not.toHaveProperty('cluster_id')
-    expect(options.additionalAttrs).not.toHaveProperty('cluster_role')
+    expect(options.additionalAttrs).not.toHaveProperty('vtex_io.cluster.id')
+    expect(options.additionalAttrs).not.toHaveProperty('vtex_io.cluster.role')
     expect(telemetryClient.newMetricsClient).toHaveBeenCalledTimes(1)
     expect(telemetryClient.newLogsClient).toHaveBeenCalledTimes(1)
   })

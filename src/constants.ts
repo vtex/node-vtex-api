@@ -4,7 +4,9 @@ import {
   ATTR_VTEX_IO_WORKSPACE_NAME,
   ATTR_VTEX_IO_WORKSPACE_TYPE,
   ATTR_VTEX_IO_APP_ID,
-  ATTR_VTEX_IO_APP_AUTHOR_TYPE
+  ATTR_VTEX_IO_APP_AUTHOR_TYPE,
+  ATTR_VTEX_IO_CLUSTER_ID,
+  ATTR_VTEX_IO_CLUSTER_ROLE,
 } from '@vtex/diagnostics-semconv'
 
 // tslint:disable-next-line
@@ -62,16 +64,9 @@ export const AttributeKeys = {
   VTEX_IO_WORKSPACE_TYPE: ATTR_VTEX_IO_WORKSPACE_TYPE,
   VTEX_IO_APP_ID: ATTR_VTEX_IO_APP_ID,
   VTEX_IO_APP_AUTHOR_TYPE: ATTR_VTEX_IO_APP_AUTHOR_TYPE,
+  VTEX_IO_CLUSTER_ID: ATTR_VTEX_IO_CLUSTER_ID,
+  VTEX_IO_CLUSTER_ROLE: ATTR_VTEX_IO_CLUSTER_ROLE,
 }
-
-/**
- * Reserved resource attributes populated by the platform runtime.
- * Application-provided telemetry must not override these values.
- */
-export const DiagnosticsAttributeKeys = {
-  CLUSTER_ID: 'cluster_id',
-  CLUSTER_ROLE: 'cluster_role',
-} as const
 
 /** @deprecated Use HeaderKeys.CACHE_CONTROL instead */
 export const CACHE_CONTROL_HEADER = HeaderKeys.CACHE_CONTROL

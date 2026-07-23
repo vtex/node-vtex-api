@@ -8,8 +8,8 @@ Cluster metadata is deployment-level rather than request-level. Adding it indepe
 
 **Goals:**
 
-- Export the authoritative Kubernetes cluster identifier/name as `cluster_id`.
-- Export the cluster's platform role as `cluster_role`.
+- Export the authoritative Kubernetes cluster identifier/name as `vtex_io.cluster.id`.
+- Export the cluster's platform role as `vtex_io.cluster.role`.
 - Make both dimensions available on every diagnostics metric and log, including automatically instrumented telemetry.
 - Preserve current behavior when either metadata value is unavailable.
 - Keep cluster metadata low-cardinality and constant for the process lifetime.
@@ -25,7 +25,7 @@ Cluster metadata is deployment-level rather than request-level. Adding it indepe
 
 ### Add cluster metadata as telemetry resource attributes
 
-The implementation will extend the `additionalAttrs` passed to `NewTelemetryClient` with non-empty `cluster_id` and `cluster_role` values. This is the single initialization point shared by diagnostics metrics and logs and covers direct instruments, the `DiagnosticsMetrics` wrapper, host metrics, and logger calls.
+The implementation will extend the `additionalAttrs` passed to `NewTelemetryClient` with non-empty `vtex_io.cluster.id` and `vtex_io.cluster.role` values. This is the single initialization point shared by diagnostics metrics and logs and covers direct instruments, the `DiagnosticsMetrics` wrapper, host metrics, and logger calls.
 
 Per-call instrumentation was rejected because the repository has several independent metric paths and automatic instrumentation. Updating every call site would be error-prone and would count the values against the seven custom attributes accepted by `DiagnosticsMetrics`.
 
@@ -37,9 +37,11 @@ The cluster identifier/name will be read from `process.env.VTEX_CLUSTER_ID`, and
 
 Fallback strings such as `unknown` were rejected because they create an artificial cluster that combines unrelated local or misconfigured workloads.
 
-### Keep the exported dimension names stable
+### Use generated VTEX IO semantic-convention keys
 
-The diagnostics attribute keys will be exactly `cluster_id` and `cluster_role`, matching the requested query dimensions. Constants will centralize both runtime configuration access and exported keys to prevent spelling drift.
+`AttributeKeys.VTEX_IO_CLUSTER_ID` and `AttributeKeys.VTEX_IO_CLUSTER_ROLE` will reference `ATTR_VTEX_IO_CLUSTER_ID` and `ATTR_VTEX_IO_CLUSTER_ROLE` from `@vtex/diagnostics-semconv`, following the existing workspace and app attribute pattern. These generated constants resolve to the stable `vtex_io.cluster.id` and `vtex_io.cluster.role` keys introduced by `vtex/diagnostics#174`.
+
+Hard-coded local attribute names were rejected because they would duplicate the semantic-convention package and could drift from the cross-language contract.
 
 ## Risks / Trade-offs
 
@@ -47,11 +49,13 @@ The diagnostics attribute keys will be exactly `cluster_id` and `cluster_role`, 
 - **Resource attributes also appear on traces** → Accept this because the telemetry client shares a resource and consistent deployment identity is useful across signals.
 - **Additional dimensions increase metric series count** → Cluster identity and role are bounded deployment metadata; do not add pod- or request-level values.
 - **A deployment omits one value** → Emit the available dimension independently and omit only the missing one.
-- **A caller emits a data-point attribute with the same key** → Document `cluster_id` and `cluster_role` as reserved platform dimensions and test the diagnostics payload shape at initialization.
+- **The semantic-convention release is not yet published** → Keep the dependency version unchanged for now and accept temporary build/type-check failures until a release containing `ATTR_VTEX_IO_CLUSTER_ID` and `ATTR_VTEX_IO_CLUSTER_ROLE` is available.
+- **A caller emits a data-point attribute with the same key** → Treat `vtex_io.cluster.id` and `vtex_io.cluster.role` as platform resource dimensions and test the diagnostics payload shape at initialization.
 
 ## Migration Plan
 
-1. Add constants for `VTEX_CLUSTER_ID` and `VTEX_CLUSTER_ROLE` and conditionally include their normalized values in diagnostics resource attributes.
-2. Deploy without changing existing metric names or log schemas beyond the two optional dimensions.
-3. Verify emitted metrics and logs in one development cluster before broad rollout.
-4. Roll back by reverting the resource attributes; no stored-data migration is required.
+1. Reference the generated cluster constants from `@vtex/diagnostics-semconv` while retaining the current dependency version until the upstream change is released.
+2. Update the dependency to the first published version containing both constants and restore passing build/type-check validation.
+3. Deploy without changing existing metric names or log schemas beyond the two optional dimensions.
+4. Verify emitted metrics and logs in one development cluster before broad rollout.
+5. Roll back by reverting the resource attributes; no stored-data migration is required.

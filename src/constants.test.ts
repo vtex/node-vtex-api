@@ -5,7 +5,6 @@ import {
   PID,
   HeaderKeys,
   AttributeKeys,
-  DiagnosticsAttributeKeys,
   BODY_HASH,
   UP_SIGNAL,
   MAX_AGE,
@@ -133,11 +132,15 @@ describe('constants', () => {
       expect(AttributeKeys).toHaveProperty('VTEX_IO_WORKSPACE_TYPE')
       expect(AttributeKeys).toHaveProperty('VTEX_IO_APP_ID')
       expect(AttributeKeys).toHaveProperty('VTEX_IO_APP_AUTHOR_TYPE')
+      expect(AttributeKeys).toHaveProperty('VTEX_IO_CLUSTER_ID')
+      expect(AttributeKeys).toHaveProperty('VTEX_IO_CLUSTER_ROLE')
 
       expect(typeof AttributeKeys.VTEX_IO_WORKSPACE_NAME).toBe('string')
       expect(typeof AttributeKeys.VTEX_IO_WORKSPACE_TYPE).toBe('string')
       expect(typeof AttributeKeys.VTEX_IO_APP_ID).toBe('string')
       expect(typeof AttributeKeys.VTEX_IO_APP_AUTHOR_TYPE).toBe('string')
+      expect(AttributeKeys.VTEX_IO_CLUSTER_ID).toBe('vtex_io.cluster.id')
+      expect(AttributeKeys.VTEX_IO_CLUSTER_ROLE).toBe('vtex_io.cluster.role')
     })
 
     test('should have non-empty string values', () => {
@@ -159,13 +162,6 @@ describe('constants', () => {
       Object.values(AttributeKeys).forEach(value => {
         expect(value).toBeTruthy()
       })
-    })
-  })
-
-  describe('DiagnosticsAttributeKeys', () => {
-    test('should contain reserved cluster resource attribute names', () => {
-      expect(DiagnosticsAttributeKeys.CLUSTER_ID).toBe('cluster_id')
-      expect(DiagnosticsAttributeKeys.CLUSTER_ROLE).toBe('cluster_role')
     })
   })
 

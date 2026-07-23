@@ -1,4 +1,4 @@
-import { DiagnosticsAttributeKeys } from '../../constants'
+import { AttributeKeys } from '../../constants'
 
 const normalizeAttribute = (value?: string): string | undefined => {
   const normalized = value && value.trim()
@@ -14,11 +14,11 @@ export const getClusterResourceAttributes = (
   const normalizedClusterRole = normalizeAttribute(clusterRole)
 
   if (normalizedClusterId) {
-    attributes[DiagnosticsAttributeKeys.CLUSTER_ID] = normalizedClusterId
+    attributes[AttributeKeys.VTEX_IO_CLUSTER_ID] = normalizedClusterId
   }
 
   if (normalizedClusterRole) {
-    attributes[DiagnosticsAttributeKeys.CLUSTER_ROLE] = normalizedClusterRole
+    attributes[AttributeKeys.VTEX_IO_CLUSTER_ROLE] = normalizedClusterRole
   }
 
   return attributes
