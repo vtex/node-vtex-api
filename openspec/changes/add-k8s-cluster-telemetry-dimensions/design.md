@@ -49,13 +49,13 @@ Hard-coded local attribute names were rejected because they would duplicate the 
 - **Resource attributes also appear on traces** → Accept this because the telemetry client shares a resource and consistent deployment identity is useful across signals.
 - **Additional dimensions increase metric series count** → Cluster identity and role are bounded deployment metadata; do not add pod- or request-level values.
 - **A deployment omits one value** → Emit the available dimension independently and omit only the missing one.
-- **The semantic-convention release is not yet published** → Keep the dependency version unchanged for now and accept temporary build/type-check failures until a release containing `ATTR_VTEX_IO_CLUSTER_ID` and `ATTR_VTEX_IO_CLUSTER_ROLE` is available.
+- **The semantic-convention upgrade introduces a major-version change** → Pin version `5.5.2` and validate the full build, lint, and test suites.
 - **A caller emits a data-point attribute with the same key** → Treat `vtex_io.cluster.id` and `vtex_io.cluster.role` as platform resource dimensions and test the diagnostics payload shape at initialization.
 
 ## Migration Plan
 
-1. Reference the generated cluster constants from `@vtex/diagnostics-semconv` while retaining the current dependency version until the upstream change is released.
-2. Update the dependency to the first published version containing both constants and restore passing build/type-check validation.
+1. Update `@vtex/diagnostics-semconv` to `5.5.2`, the first public version adopted here that contains both cluster constants.
+2. Validate that build, lint, and tests pass with the published package.
 3. Deploy without changing existing metric names or log schemas beyond the two optional dimensions.
 4. Verify emitted metrics and logs in one development cluster before broad rollout.
 5. Roll back by reverting the resource attributes; no stored-data migration is required.

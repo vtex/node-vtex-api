@@ -3,9 +3,9 @@ import { getClusterResourceAttributes } from './resourceAttributes'
 
 describe('getClusterResourceAttributes', () => {
   it('maps both cluster values to reserved resource attributes', () => {
-    expect(getClusterResourceAttributes('cluster-a', 'store')).toEqual({
+    expect(getClusterResourceAttributes('cluster-a', 'stores')).toEqual({
       [AttributeKeys.VTEX_IO_CLUSTER_ID]: 'cluster-a',
-      [AttributeKeys.VTEX_IO_CLUSTER_ROLE]: 'store',
+      [AttributeKeys.VTEX_IO_CLUSTER_ROLE]: 'stores',
     })
   })
 
@@ -16,8 +16,8 @@ describe('getClusterResourceAttributes', () => {
   })
 
   it('includes only the cluster role when identifier is missing', () => {
-    expect(getClusterResourceAttributes(undefined, 'store')).toEqual({
-      [AttributeKeys.VTEX_IO_CLUSTER_ROLE]: 'store',
+    expect(getClusterResourceAttributes(undefined, 'stores')).toEqual({
+      [AttributeKeys.VTEX_IO_CLUSTER_ROLE]: 'stores',
     })
   })
 
@@ -29,8 +29,8 @@ describe('getClusterResourceAttributes', () => {
     expect(getClusterResourceAttributes('  cluster-a  ', '   ')).toEqual({
       [AttributeKeys.VTEX_IO_CLUSTER_ID]: 'cluster-a',
     })
-    expect(getClusterResourceAttributes('   ', '  store  ')).toEqual({
-      [AttributeKeys.VTEX_IO_CLUSTER_ROLE]: 'store',
+    expect(getClusterResourceAttributes('   ', '  stores  ')).toEqual({
+      [AttributeKeys.VTEX_IO_CLUSTER_ROLE]: 'stores',
     })
   })
 })

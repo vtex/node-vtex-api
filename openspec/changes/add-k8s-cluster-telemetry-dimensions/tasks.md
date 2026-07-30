@@ -17,5 +17,5 @@
 
 ## 4. Validation
 
-- [x] 4.1 Confirm current build and focused-test failures are limited to the unpublished `ATTR_VTEX_IO_CLUSTER_ID` and `ATTR_VTEX_IO_CLUSTER_ROLE` exports
-- [ ] 4.2 After the upstream semantic-convention release, update `@vtex/diagnostics-semconv` and run repository linting, type checking, and the broader test suite
+- [x] 4.1 Confirm the previous build and focused-test failures were limited to the then-unpublished `ATTR_VTEX_IO_CLUSTER_ID` and `ATTR_VTEX_IO_CLUSTER_ROLE` exports
+- [x] 4.2 Update `@vtex/diagnostics-semconv` to `5.5.2` and run repository linting, type checking, and the broader test suite

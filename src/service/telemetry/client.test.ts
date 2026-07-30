@@ -34,7 +34,7 @@ jest.mock('../../constants', () => ({
     VTEX_IO_CLUSTER_ROLE: 'vtex_io.cluster.role',
   },
   CLUSTER_ID: 'cluster-a',
-  CLUSTER_ROLE: 'store',
+  CLUSTER_ROLE: 'stores',
   DIAGNOSTICS_TELEMETRY_ENABLED: false,
   DK_APP_ID: 'apps-team',
   OTEL_EXPORTER_OTLP_ENDPOINT: 'http://collector',
@@ -80,12 +80,12 @@ describe('diagnostics telemetry resource attributes', () => {
   it('shares configured cluster resource attributes across metrics and logs', async () => {
     mockGetClusterResourceAttributes.mockReturnValue({
       'vtex_io.cluster.id': 'cluster-a',
-      'vtex_io.cluster.role': 'store',
+      'vtex_io.cluster.role': 'stores',
     })
 
     const clients = await initializeTelemetry()
 
-    expect(mockGetClusterResourceAttributes).toHaveBeenCalledWith('cluster-a', 'store')
+    expect(mockGetClusterResourceAttributes).toHaveBeenCalledWith('cluster-a', 'stores')
     expect(mockNewTelemetryClient).toHaveBeenCalledWith(
       'apps-team',
       'node-vtex-api',
@@ -93,7 +93,7 @@ describe('diagnostics telemetry resource attributes', () => {
       expect.objectContaining({
         additionalAttrs: expect.objectContaining({
           'vtex_io.cluster.id': 'cluster-a',
-          'vtex_io.cluster.role': 'store',
+          'vtex_io.cluster.role': 'stores',
         }),
       })
     )
