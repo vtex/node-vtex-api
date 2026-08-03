@@ -23,9 +23,9 @@ export const onMessage = (worker: Worker, message: any) => {
     broadcastStatusTrack()
   } else if (isAggMetricsRequest(message)) {
     handleWorkerMetricsRequest(worker, message)
-  } else if (isPromClientMessage(message)) {
-    // Handled by prom-client's own cluster listener; ignore here.
-  } else {
+  } else if (!isPromClientMessage(message)) {
+    // prom-client's own cluster messages are handled by its cluster listener;
+    // anything else that reaches here is genuinely unexpected.
     logger.warn({
       content: message,
       message: 'Worker sent message',

@@ -86,9 +86,9 @@ export const onMessage = (service: ServiceJSON) => (message: any) => {
     trackStatus()
   } else if (isAggMetricsResponse(message)) {
     handleMasterMetricsResponse(message)
-  } else if (isPromClientMessage(message)) {
-    // Handled by prom-client's own worker listener; ignore here.
-  } else {
+  } else if (!isPromClientMessage(message)) {
+    // prom-client's own cluster messages are handled by its worker listener;
+    // anything else that reaches here is genuinely unexpected.
     logger.warn({
       content: message,
       message: 'Master sent message',
