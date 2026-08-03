@@ -85,11 +85,27 @@ export const initMasterAggregatorRegistry = (): AggregatorRegistry => {
  */
 export const handleWorkerMetricsRequest = async (worker: Worker, message: AggMetricsReqMessage): Promise<void> => {
   const aggregator = initMasterAggregatorRegistry()
+  let response: AggMetricsResMessage
   try {
     const body = await aggregator.clusterMetrics()
-    worker.send({ type: AGG_METRICS_RES, id: message.id, body })
+    response = { type: AGG_METRICS_RES, id: message.id, body }
   } catch (err) {
-    worker.send({ type: AGG_METRICS_RES, id: message.id, error: (err as Error)?.message ?? String(err) })
+    response = { type: AGG_METRICS_RES, id: message.id, error: (err as Error)?.message ?? String(err) }
+  }
+
+  // `worker.send` can throw (e.g. the worker disconnected between the request
+  // and the reply). This handler is invoked without `await` from the master's
+  // message listener, so a thrown send would surface as an unhandled rejection
+  // in the master process. Swallow and log it instead.
+  try {
+    worker.send(response)
+  } catch (err) {
+    logger.warn({
+      content: (err as Error)?.message ?? String(err),
+      message: 'Failed to send aggregated cluster metrics to worker',
+      pid: process.pid,
+      workerId: worker.id,
+    })
   }
 }
 
