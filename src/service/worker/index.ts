@@ -266,7 +266,7 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
     appGraphQLHandlers,
     runtimeHttpHandlers,
   ]
-  .filter(x => x != null)
+  .filter((x): x is HttpHandlerByScope => x != null)
   .reduce<any>((acc, handler) => mergeDeepRight(acc, handler), {})
 
   if (httpHandlers?.pub) {
