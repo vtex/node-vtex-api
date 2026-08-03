@@ -24,7 +24,10 @@ export const isStatusTrackBroadcast = (message: any): message is typeof BROADCAS
   message === BROADCAST_STATUS_TRACK
 
 export const statusTrackHandler = async (ctx: ServiceContext) => {
-  ctx.tracing?.currentSpan?.setOperationName('builtin:status-track')
+  // Parity with the other builtin handlers: name the request so its samples don't
+  // land in the catch-all `handler="undefined"` bucket.
+  ctx.requestHandlerName = 'builtin:status-track'
+  ctx.tracing?.currentSpan?.setOperationName(ctx.requestHandlerName)
   if (!LINKED) {
     process.send?.(BROADCAST_STATUS_TRACK)
   }

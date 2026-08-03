@@ -12,6 +12,12 @@ import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
 import { getService } from '../loaders'
 import { logOnceToDevConsole } from '../logger/console'
 import { LogLevel } from '../logger/loggerTypes'
+import {
+  ensureWorkerAggregatorRegistry,
+  handleMasterMetricsResponse,
+  isAggMetricsResponse,
+  isPromClientMessage,
+} from '../metrics/clusterMetricsAggregator'
 import { addRequestMetricsMiddleware } from '../metrics/requestMetricsMiddleware'
 import { TracerSingleton } from '../tracing/TracerSingleton'
 import { addTracingMiddleware } from '../tracing/tracingMiddlewares'
@@ -70,13 +76,17 @@ const upSignal = () => {
 
 const isUpSignal = (message: any): message is typeof UP_SIGNAL => message === UP_SIGNAL
 
-const onMessage = (service: ServiceJSON) => (message: any) => {
+export const onMessage = (service: ServiceJSON) => (message: any) => {
   if (isUpSignal(message)) {
     upSignal()
     logAvailableRoutes(service)
   } else if (isStatusTrack(message)) {
     trackStatus()
-  } else {
+  } else if (isAggMetricsResponse(message)) {
+    handleMasterMetricsResponse(message)
+  } else if (!isPromClientMessage(message)) {
+    // prom-client's own cluster messages are handled by its worker listener;
+    // anything else that reaches here is genuinely unexpected.
     logger.warn({
       content: message,
       message: 'Master sent message',
@@ -216,11 +226,18 @@ export const startWorker = (serviceJSON: ServiceJSON) => {
   addProcessListeners()
 
   const tracer = TracerSingleton.getTracer()
+
+  // In multi-worker mode install prom-client's worker-side cluster responder so
+  // the master can collect this worker's registry for the aggregated /metrics.
+  if (serviceJSON.workers > 1) {
+    ensureWorkerAggregatorRegistry()
+  }
+
   const app = new Koa()
   app.proxy = true
   app
     .use(error)
-    .use(prometheusLoggerMiddleware())
+    .use(prometheusLoggerMiddleware(serviceJSON.workers))
     .use(addTracingMiddleware(tracer))
     .use(addRequestMetricsMiddleware())
     .use(addMetricsLoggerMiddleware())
