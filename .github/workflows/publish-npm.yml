@@ -87,9 +87,23 @@ jobs:
           set -euo pipefail
 
           TARBALL=$(ls -1 *.tgz | head -n 1)
-          TAG_FLAG=""
-          if [ "${{ github.event.inputs.environment }}" = "beta" ]; then
-            TAG_FLAG="--tag beta"
+          VERSION="${{ github.event.inputs.version }}"
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+
+          if [ "${ENVIRONMENT}" = "beta" ]; then
+            TAG="beta"
+          else
+            # The version input carries the git tag name, so it may be prefixed with "v".
+            MAJOR="${VERSION%%.*}"
+            MAJOR="${MAJOR#v}"
+            # npm refuses to implicitly move "latest" backwards, so majors below the
+            # current one publish under their own dist-tag instead.
+            if [ "${MAJOR}" -ge 7 ]; then
+              TAG="latest"
+            else
+              TAG="v${MAJOR}-latest"
+            fi
           fi
-          echo "Publishing ${TARBALL} to npmjs..."
-          npm publish "${TARBALL}" --provenance --access public ${TAG_FLAG}
+
+          echo "Publishing ${TARBALL} to npmjs with tag ${TAG}..."
+          npm publish "${TARBALL}" --provenance --access public --tag "${TAG}"
