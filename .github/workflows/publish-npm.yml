@@ -25,12 +25,12 @@ on:
 
 permissions:
   contents: read
-  id-token: write   # required for Trusted Publishing
+  id-token: write # required for Trusted Publishing
 
 env:
   CODEARTIFACT_DOMAIN: main
   CODEARTIFACT_REPOSITORY: internal-npm
-  NPM_PACKAGE_NAME: "@vtex/api"
+  NPM_PACKAGE_NAME: '@vtex/api'
   AWS_REGION: us-east-1
 
 jobs:
@@ -87,9 +87,19 @@ jobs:
           set -euo pipefail
 
           TARBALL=$(ls -1 *.tgz | head -n 1)
-          TAG_FLAG=""
-          if [ "${{ github.event.inputs.environment }}" = "beta" ]; then
-            TAG_FLAG="--tag beta"
+          VERSION="${{ github.event.inputs.version }}"
+          ENVIRONMENT="${{ github.event.inputs.environment }}"
+
+          if [ "${ENVIRONMENT}" = "beta" ]; then
+            TAG="beta"
+          else
+            MAJOR="${VERSION%%.*}"
+            if [ "${MAJOR}" -ge 7 ]; then
+              TAG="latest"
+            else
+              TAG="${MAJOR}-latest"
+            fi
           fi
-          echo "Publishing ${TARBALL} to npmjs..."
-          npm publish "${TARBALL}" --provenance --access public ${TAG_FLAG}
+
+          echo "Publishing ${TARBALL} to npmjs with tag ${TAG}..."
+          npm publish "${TARBALL}" --provenance --access public --tag "${TAG}"
