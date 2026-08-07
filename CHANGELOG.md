@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- GraphQL: restore lenient variable coercion for the built-in `Int`, `Float`, and
+  `String` scalars. graphql-js 14.5+ (bundled since `@vtex/api@6`) made variable
+  coercion strict, breaking apps that migrated from `node@4.x` (`@vtex/api@^3`,
+  graphql 0.13). Incoming variables are now pre-coerced before `execute()` so that
+  string numbers map to `Int`/`Float` and primitive values map to `String`,
+  matching the pre-14.5 behavior. Disable with
+  `VTEX_API_DISABLE_LENIENT_VARIABLE_COERCION=true`.
 
 ## [7.4.0] - 2026-06-22
 ### Changed
