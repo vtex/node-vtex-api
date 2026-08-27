@@ -4,7 +4,9 @@ import {
   ATTR_VTEX_IO_WORKSPACE_NAME,
   ATTR_VTEX_IO_WORKSPACE_TYPE,
   ATTR_VTEX_IO_APP_ID,
-  ATTR_VTEX_IO_APP_AUTHOR_TYPE
+  ATTR_VTEX_IO_APP_AUTHOR_TYPE,
+  ATTR_VTEX_IO_CLUSTER_ID,
+  ATTR_VTEX_IO_CLUSTER_ROLE,
 } from '@vtex/diagnostics-semconv'
 
 // tslint:disable-next-line
@@ -62,6 +64,8 @@ export const AttributeKeys = {
   VTEX_IO_WORKSPACE_TYPE: ATTR_VTEX_IO_WORKSPACE_TYPE,
   VTEX_IO_APP_ID: ATTR_VTEX_IO_APP_ID,
   VTEX_IO_APP_AUTHOR_TYPE: ATTR_VTEX_IO_APP_AUTHOR_TYPE,
+  VTEX_IO_CLUSTER_ID: ATTR_VTEX_IO_CLUSTER_ID,
+  VTEX_IO_CLUSTER_ROLE: ATTR_VTEX_IO_CLUSTER_ROLE,
 }
 
 /** @deprecated Use HeaderKeys.CACHE_CONTROL instead */
@@ -165,6 +169,8 @@ export const MAX_WORKERS = 4
 
 export const LINKED = !!process.env.VTEX_APP_LINK
 export const REGION = process.env.VTEX_REGION as string
+export const CLUSTER_ID = process.env.VTEX_CLUSTER_ID as string
+export const CLUSTER_ROLE = process.env.VTEX_CLUSTER_ROLE as string
 export const PUBLIC_ENDPOINT = process.env.VTEX_PUBLIC_ENDPOINT || 'myvtex.com'
 export const APP = {
   ID: process.env.VTEX_APP_ID as string,
