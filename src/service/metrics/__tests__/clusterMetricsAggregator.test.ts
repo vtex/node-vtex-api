@@ -47,8 +47,14 @@ const parseSeries = (text: string, metric: string): Record<string, number> => {
   return out
 }
 
+// Node's cluster IPC serializes messages as JSON, so worker registries reach the
+// master through a JSON round-trip. Reproducing it here keeps these tests honest
+// about what the master actually merges (notably: JSON drops `undefined` label
+// values, which used to strip the `handler` label from the aggregated output).
+const overClusterIpc = <T>(payload: T): T => JSON.parse(JSON.stringify(payload))
+
 const aggregateRegistries = async (registries: Array<Registry>): Promise<string> => {
-  const jsons = await Promise.all(registries.map((r) => r.getMetricsAsJSON()))
+  const jsons = await Promise.all(registries.map(async (r) => overClusterIpc(await r.getMetricsAsJSON())))
   const merged = AggregatorRegistry.aggregate(jsons)
   return merged.metrics()
 }

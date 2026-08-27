@@ -5,7 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [7.5.0]
+
+### Added
+
+- Kubernetes cluster identity and role (`VTEX_CLUSTER_ID` → `cluster_id`,
+  `VTEX_CLUSTER_ROLE` → `cluster_role`) as shared diagnostics resource
+  attributes, applied centrally to diagnostics metrics and logs. Values are
+  trimmed and omitted independently when empty, enabling cross-cluster
+  dashboards and incident isolation without consuming per-call custom
+  attribute limits.
+
+### Fixed
+
+- `runtime_http_*` metrics no longer emit samples without a `handler` label. Requests
+  that never reach a named handler (unmatched paths, replica-level rate limit
+  rejections, errors before the route pipeline) were counted with
+  `handler: undefined`; Node's cluster IPC serializes worker registries as JSON, which
+  drops `undefined` values, so the aggregated `/metrics` exposed a second, unnamed
+  series that Prometheus reads as `handler=""`. Those requests are now labelled
+  `handler="undefined"` — the same value prom-client rendered locally before cluster
+  aggregation — keeping dashboards and alerts that filter on it working.
+- `/_status` requests are now reported as `handler="builtin:status-track"`, matching
+  the other builtin handlers, instead of falling into the unnamed bucket.
 
 ## [7.4.0] - 2026-06-22
 ### Changed
