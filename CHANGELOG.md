@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.52.0]
+### Added
+- Cluster-wide Prometheus `/metrics` aggregation. Each cluster worker keeps its own
+  prom-client registry, so serving `/metrics` from a single round-robin selected
+  worker exposed only that worker's counters; Prometheus read the per-scrape braid
+  of independent monotonic counters as counter resets and inflated `rate()` /
+  `increase()` on `runtime_http_*` counters by orders of magnitude. In multi-worker
+  mode the worker answering a scrape now asks the master for a merged, monotonic
+  view built from every worker's registry over the existing cluster IPC (via
+  prom-client's `AggregatorRegistry`), with a bounded timeout and a local-registry
+  fallback. Single-worker mode (`workers === 1`, includes `LINKED`) is unchanged.
+  Backport of #667 to the 6.x line.
+### Fixed
+- `runtime_http_*` metrics no longer emit samples without a `handler` label. Requests
+  that never reach a named handler (unmatched paths, replica-level rate limit
+  rejections, errors before the route pipeline) were counted with
+  `handler: undefined`; Node's cluster IPC serializes worker registries as JSON, which
+  drops `undefined` values, so the aggregated `/metrics` exposed a second, unnamed
+  series that Prometheus reads as `handler=""`. Those requests are now labelled
+  `handler="undefined"` — the same value prom-client rendered locally before cluster
+  aggregation — keeping dashboards and alerts that filter on it working. Backport of
+  #673 to the 6.x line.
+- `/_status` requests are now reported as `handler="builtin:status-track"`, matching
+  the other builtin handlers, instead of falling into the unnamed bucket.
+
 ## [6.51.0] - 2026-06-23
 ### Added
 - Base `IOClients` getter `janusCatalogSystem` (Janus Catalog) and
