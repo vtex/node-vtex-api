@@ -1,7 +1,7 @@
 import { AttributeKeys } from '../../constants'
 
 const normalizeAttribute = (value?: string): string | undefined => {
-  const normalized = value && value.trim()
+  const normalized = value?.trim()
   return normalized || undefined
 }
 
