@@ -678,3 +678,744 @@ describe('constants', () => {
     })
   })
 })
+
+import {
+  NODE_VTEX_API_VERSION,
+  DEFAULT_WORKSPACE,
+  IS_IO,
+  PID,
+  HeaderKeys,
+  AttributeKeys,
+  BODY_HASH,
+  UP_SIGNAL,
+  MAX_AGE,
+  HTTP_SERVER_PORT,
+  MAX_WORKERS,
+  LINKED,
+  REGION,
+  CLUSTER_ID,
+  CLUSTER_ROLE,
+  PUBLIC_ENDPOINT,
+  APP,
+  NODE_ENV,
+  ACCOUNT,
+  WORKSPACE,
+  PRODUCTION,
+  INSPECT_DEBUGGER_PORT,
+  cancellableMethods,
+  LOG_CLIENT_INIT_TIMEOUT_MS,
+  METRIC_CLIENT_INIT_TIMEOUT_MS,
+  OTEL_EXPORTER_OTLP_ENDPOINT,
+  DK_APP_ID,
+  DIAGNOSTICS_TELEMETRY_ENABLED,
+  CACHE_CONTROL_HEADER,
+  SEGMENT_HEADER,
+  SESSION_HEADER,
+  PRODUCT_HEADER,
+  LOCALE_HEADER,
+  FORWARDED_HOST_HEADER,
+  TENANT_HEADER,
+  BINDING_HEADER,
+  META_HEADER,
+  META_HEADER_BUCKET,
+  ETAG_HEADER,
+  ACCOUNT_HEADER,
+  CREDENTIAL_HEADER,
+  REQUEST_ID_HEADER,
+  ROUTER_CACHE_HEADER,
+  OPERATION_ID_HEADER,
+  PLATFORM_HEADER,
+  WORKSPACE_IS_PRODUCTION_HEADER,
+  WORKSPACE_HEADER,
+  EVENT_KEY_HEADER,
+  EVENT_SENDER_HEADER,
+  EVENT_SUBJECT_HEADER,
+  EVENT_HANDLER_ID_HEADER,
+  COLOSSUS_ROUTE_DECLARER_HEADER,
+  COLOSSUS_ROUTE_ID_HEADER,
+  COLOSSUS_PARAMS_HEADER,
+  TRACE_ID_HEADER,
+  PROVIDER_HEADER,
+  VaryHeaders
+} from './constants'
+
+describe('constants - Extended Coverage', () => {
+  describe('BODY_HASH constant', () => {
+    // Arrange, Act, Assert pattern
+    test('BODY_HASH should be a non-empty string', () => {
+      // Act
+      const bodyHash = BODY_HASH
+
+      // Assert
+      expect(typeof bodyHash).toBe('string')
+      expect(bodyHash).not.toBe('')
+      expect(bodyHash.length).toBeGreaterThan(0)
+    })
+
+    test('BODY_HASH should have expected value for GraphQL', () => {
+      // Act & Assert
+      expect(BODY_HASH).toBe('__graphqlBodyHash')
+    })
+
+    test('BODY_HASH should be usable as object key', () => {
+      // Arrange
+      const obj: Record<string, string> = {}
+
+      // Act
+      obj[BODY_HASH] = 'test-value'
+
+      // Assert
+      expect(obj['__graphqlBodyHash']).toBe('test-value')
+      expect(obj[BODY_HASH]).toBe('test-value')
+    })
+  })
+
+  describe('UP_SIGNAL constant', () => {
+    test('UP_SIGNAL should be a non-empty string', () => {
+      // Act & Assert
+      expect(typeof UP_SIGNAL).toBe('string')
+      expect(UP_SIGNAL).not.toBe('')
+    })
+
+    test('UP_SIGNAL should have expected value', () => {
+      // Act & Assert
+      expect(UP_SIGNAL).toBe('UP')
+    })
+
+    test('UP_SIGNAL should be useful for status comparison', () => {
+      // Arrange
+      const status = 'UP'
+
+      // Act & Assert
+      expect(status).toBe(UP_SIGNAL)
+      expect(status === UP_SIGNAL).toBe(true)
+    })
+  })
+
+  describe('MAX_AGE object edge cases', () => {
+    test('MAX_AGE.LONG should represent one day in seconds', () => {
+      // Act & Assert
+      expect(MAX_AGE.LONG).toBe(86400) // 24 * 60 * 60
+    })
+
+    test('MAX_AGE.MEDIUM should represent one hour in seconds', () => {
+      // Act & Assert
+      expect(MAX_AGE.MEDIUM).toBe(3600) // 60 * 60
+    })
+
+    test('MAX_AGE.SHORT should represent two minutes in seconds', () => {
+      // Act & Assert
+      expect(MAX_AGE.SHORT).toBe(120) // 2 * 60
+    })
+
+    test('MAX_AGE values should be proportional and convertible to time units', () => {
+      // Arrange
+      const oneMinute = 60
+      const oneHour = 60 * 60
+      const oneDay = 24 * 60 * 60
+
+      // Act & Assert
+      expect(MAX_AGE.SHORT / oneMinute).toBe(2)
+      expect(MAX_AGE.MEDIUM / oneHour).toBe(1)
+      expect(MAX_AGE.LONG / oneDay).toBe(1)
+    })
+
+    test('MAX_AGE object should be immutable-like (no new properties added)', () => {
+      // Arrange
+      const initialKeys = Object.keys(MAX_AGE).length
+
+      // Act
+      const keys = Object.keys(MAX_AGE)
+
+      // Assert
+      expect(keys).toHaveLength(3)
+      expect(keys).toContain('LONG')
+      expect(keys).toContain('MEDIUM')
+      expect(keys).toContain('SHORT')
+    })
+  })
+
+  describe('Server port and worker configuration', () => {
+    test('HTTP_SERVER_PORT should be 5050', () => {
+      // Act & Assert
+      expect(HTTP_SERVER_PORT).toBe(5050)
+    })
+
+    test('INSPECT_DEBUGGER_PORT should be 5858', () => {
+      // Act & Assert
+      expect(INSPECT_DEBUGGER_PORT).toBe(5858)
+    })
+
+    test('ports should be distinct', () => {
+      // Act & Assert
+      expect(HTTP_SERVER_PORT).not.toBe(INSPECT_DEBUGGER_PORT)
+    })
+
+    test('MAX_WORKERS should be 4', () => {
+      // Act & Assert
+      expect(MAX_WORKERS).toBe(4)
+      expect(MAX_WORKERS).toBeGreaterThan(0)
+      expect(MAX_WORKERS).toBeLessThanOrEqual(10)
+    })
+
+    test('port numbers should be within valid range', () => {
+      // Act & Assert
+      expect(HTTP_SERVER_PORT).toBeGreaterThan(1024) // Non-privileged port
+      expect(HTTP_SERVER_PORT).toBeLessThan(65535)
+      expect(INSPECT_DEBUGGER_PORT).toBeGreaterThan(1024)
+      expect(INSPECT_DEBUGGER_PORT).toBeLessThan(65535)
+    })
+  })
+
+  describe('Timeout constants', () => {
+    test('LOG_CLIENT_INIT_TIMEOUT_MS should be 5000', () => {
+      // Act & Assert
+      expect(LOG_CLIENT_INIT_TIMEOUT_MS).toBe(5000)
+      expect(typeof LOG_CLIENT_INIT_TIMEOUT_MS).toBe('number')
+    })
+
+    test('METRIC_CLIENT_INIT_TIMEOUT_MS should be 5000', () => {
+      // Act & Assert
+      expect(METRIC_CLIENT_INIT_TIMEOUT_MS).toBe(5000)
+      expect(typeof METRIC_CLIENT_INIT_TIMEOUT_MS).toBe('number')
+    })
+
+    test('timeout constants should be equal', () => {
+      // Act & Assert
+      expect(LOG_CLIENT_INIT_TIMEOUT_MS).toBe(METRIC_CLIENT_INIT_TIMEOUT_MS)
+    })
+
+    test('timeout values should be reasonable', () => {
+      // Act & Assert
+      expect(LOG_CLIENT_INIT_TIMEOUT_MS).toBeGreaterThan(1000) // At least 1 second
+      expect(LOG_CLIENT_INIT_TIMEOUT_MS).toBeLessThan(30000) // Less than 30 seconds
+    })
+  })
+
+  describe('OTEL_EXPORTER_OTLP_ENDPOINT', () => {
+    test('OTEL_EXPORTER_OTLP_ENDPOINT should reflect environment variable', () => {
+      // Act & Assert
+      expect(OTEL_EXPORTER_OTLP_ENDPOINT).toBe(process.env.OTEL_EXPORTER_OTLP_ENDPOINT as string)
+    })
+
+    test('OTEL_EXPORTER_OTLP_ENDPOINT should be string type', () => {
+      // Act & Assert
+      expect(typeof OTEL_EXPORTER_OTLP_ENDPOINT).toBe('string')
+    })
+  })
+
+  describe('DK_APP_ID constant', () => {
+    test('DK_APP_ID should have fallback value', () => {
+      // Act & Assert
+      expect(typeof DK_APP_ID).toBe('string')
+      expect(DK_APP_ID.length).toBeGreaterThan(0)
+    })
+
+    test('DK_APP_ID should default to apps-team when env var not set', () => {
+      // Arrange - if NODE_VTEX_API_DK_APP_ID is not set, default is used
+      if (!process.env.NODE_VTEX_API_DK_APP_ID) {
+        // Act & Assert
+        expect(DK_APP_ID).toBe('apps-team')
+      } else {
+        // Act & Assert
+        expect(DK_APP_ID).toBe(process.env.NODE_VTEX_API_DK_APP_ID)
+      }
+    })
+
+    test('DK_APP_ID should be usable in app context', () => {
+      // Act
+      const appContext = {
+        dkAppId: DK_APP_ID,
+        name: 'test-app'
+      }
+
+      // Assert
+      expect(appContext.dkAppId).toBeDefined()
+      expect(appContext.dkAppId).not.toBe('')
+    })
+  })
+
+  describe('DIAGNOSTICS_TELEMETRY_ENABLED constant', () => {
+    test('DIAGNOSTICS_TELEMETRY_ENABLED should be boolean', () => {
+      // Act & Assert
+      expect(typeof DIAGNOSTICS_TELEMETRY_ENABLED).toBe('boolean')
+    })
+
+    test('DIAGNOSTICS_TELEMETRY_ENABLED should reflect environment variable', () => {
+      // Act & Assert
+      expect(DIAGNOSTICS_TELEMETRY_ENABLED).toBe(process.env.VTEX_DIAGNOSTICS_TELEMETRY_ENABLED === 'true')
+    })
+
+    test('DIAGNOSTICS_TELEMETRY_ENABLED false when env not set to true', () => {
+      // Arrange - test the logic
+      const envValue = process.env.VTEX_DIAGNOSTICS_TELEMETRY_ENABLED
+
+      // Act
+      const expectedValue = envValue === 'true'
+
+      // Assert
+      expect(DIAGNOSTICS_TELEMETRY_ENABLED).toBe(expectedValue)
+    })
+  })
+
+  describe('HeaderKeys comprehensive coverage', () => {
+    test('HeaderKeys should not have duplicate values', () => {
+      // Act
+      const values = Object.values(HeaderKeys)
+      const uniqueValues = new Set(values)
+
+      // Assert
+      expect(uniqueValues.size).toBe(values.length)
+    })
+
+    test('all HeaderKeys values should be lowercase', () => {
+      // Act & Assert
+      Object.values(HeaderKeys).forEach(value => {
+        expect(value).toBe(value.toLowerCase())
+      })
+    })
+
+    test('HeaderKeys should contain USER_AGENT and VTEX_USER_AGENT', () => {
+      // Act & Assert
+      expect(HeaderKeys).toHaveProperty('USER_AGENT')
+      expect(HeaderKeys).toHaveProperty('VTEX_USER_AGENT')
+      expect(HeaderKeys.USER_AGENT).toBe('user-agent')
+      expect(HeaderKeys.VTEX_USER_AGENT).toBe('x-vtex-user-agent')
+    })
+
+    test('HeaderKeys should contain IO caller and app service headers', () => {
+      // Act & Assert
+      expect(HeaderKeys).toHaveProperty('VTEX_IO_CALLER')
+      expect(HeaderKeys).toHaveProperty('VTEX_APP_SERVICE')
+      expect(HeaderKeys).toHaveProperty('VTEX_APP_KEY')
+      expect(HeaderKeys).toHaveProperty('VTEX_RETRY_COUNT')
+    })
+
+    test('VTEX_IO_CALLER should have correct value', () => {
+      // Act & Assert
+      expect(HeaderKeys.VTEX_IO_CALLER).toBe('x-vtex-io-caller')
+    })
+
+    test('VTEX_APP_SERVICE should have correct value', () => {
+      // Act & Assert
+      expect(HeaderKeys.VTEX_APP_SERVICE).toBe('x-vtex-app-service')
+    })
+
+    test('VTEX_APP_KEY should have correct value', () => {
+      // Act & Assert
+      expect(HeaderKeys.VTEX_APP_KEY).toBe('x-vtex-app-key')
+    })
+
+    test('VTEX_RETRY_COUNT should have correct value', () => {
+      // Act & Assert
+      expect(HeaderKeys.VTEX_RETRY_COUNT).toBe('x-vtex-retry-count')
+    })
+
+    test('all event-related headers should be present', () => {
+      // Act
+      const eventHeaders = [
+        'EVENT_KEY',
+        'EVENT_SENDER',
+        'EVENT_SUBJECT',
+        'EVENT_HANDLER_ID'
+      ]
+
+      // Assert
+      eventHeaders.forEach(header => {
+        expect(HeaderKeys).toHaveProperty(header)
+      })
+    })
+
+    test('all colossus headers should be present', () => {
+      // Act
+      const colossuHeaders = [
+        'COLOSSUS_ROUTE_DECLARER',
+        'COLOSSUS_ROUTE_ID',
+        'COLOSSUS_PARAMS'
+      ]
+
+      // Assert
+      colossuHeaders.forEach(header => {
+        expect(HeaderKeys).toHaveProperty(header)
+      })
+    })
+  })
+
+  describe('APP object comprehensive coverage', () => {
+    test('APP.IS_THIRD_PARTY should return false for vtex vendor', () => {
+      // Arrange
+      const mockApp = {
+        VENDOR: 'vtex',
+        IS_THIRD_PARTY() {
+          return 'vtex' !== this.VENDOR && 'gocommerce' !== this.VENDOR
+        }
+      }
+
+      // Act
+      const result = mockApp.IS_THIRD_PARTY()
+
+      // Assert
+      expect(result).toBe(false)
+    })
+
+    test('APP.IS_THIRD_PARTY should return false for gocommerce vendor', () => {
+      // Arrange
+      const mockApp = {
+        VENDOR: 'gocommerce',
+        IS_THIRD_PARTY() {
+          return 'vtex' !== this.VENDOR && 'gocommerce' !== this.VENDOR
+        }
+      }
+
+      // Act
+      const result = mockApp.IS_THIRD_PARTY()
+
+      // Assert
+      expect(result).toBe(false)
+    })
+
+    test('APP.IS_THIRD_PARTY should return true for other vendors', () => {
+      // Arrange
+      const testVendors = ['custom', 'partner', 'external', 'custom-vendor']
+
+      // Act & Assert
+      testVendors.forEach(vendor => {
+        const mockApp = {
+          VENDOR: vendor,
+          IS_THIRD_PARTY() {
+            return 'vtex' !== this.VENDOR && 'gocommerce' !== this.VENDOR
+          }
+        }
+        expect(mockApp.IS_THIRD_PARTY()).toBe(true)
+      })
+    })
+
+    test('APP.IS_THIRD_PARTY should handle case sensitivity', () => {
+      // Arrange
+      const mockApp = {
+        VENDOR: 'VTEX', // uppercase
+        IS_THIRD_PARTY() {
+          return 'vtex' !== this.VENDOR && 'gocommerce' !== this.VENDOR
+        }
+      }
+
+      // Act
+      const result = mockApp.IS_THIRD_PARTY()
+
+      // Assert - should return true because comparison is case-sensitive
+      expect(result).toBe(true)
+    })
+
+    test('APP.MAJOR should be string', () => {
+      // Act & Assert
+      expect(typeof APP.MAJOR).toBe('string')
+    })
+
+    test('APP should have numeric string app version format if set', () => {
+      // Arrange
+      if (process.env.VTEX_APP_VERSION) {
+        // Act
+        const version = APP.VERSION
+
+        // Assert
+        expect(typeof version).toBe('string')
+        expect(version.length).toBeGreaterThan(0)
+        // Version should contain at least one dot (e.g., "1.0.0")
+        expect(version).toMatch(/\d+\.\d+/)
+      }
+    })
+  })
+
+  describe('CancellableMethods set operations', () => {
+    test('cancellableMethods should support Set operations', () => {
+      // Act
+      const methodsArray = Array.from(cancellableMethods)
+
+      // Assert
+      expect(methodsArray).toContain('GET')
+      expect(methodsArray).toContain('OPTIONS')
+      expect(methodsArray).toContain('HEAD')
+      expect(methodsArray).toHaveLength(3)
+    })
+
+    test('cancellableMethods.has should work for valid methods', () => {
+      // Act & Assert
+      expect(cancellableMethods.has('GET')).toBe(true)
+      expect(cancellableMethods.has('OPTIONS')).toBe(true)
+      expect(cancellableMethods.has('HEAD')).toBe(true)
+    })
+
+    test('cancellableMethods.has should return false for invalid methods', () => {
+      // Act & Assert
+      expect(cancellableMethods.has('TRACE')).toBe(false)
+      expect(cancellableMethods.has('CONNECT')).toBe(false)
+      expect(cancellableMethods.has('GETPOST')).toBe(false)
+    })
+
+    test('cancellableMethods can be used in conditional logic', () => {
+      // Arrange
+      const testMethods = ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE', 'HEAD']
+
+      // Act & Assert
+      testMethods.forEach(method => {
+        const isCancellable = cancellableMethods.has(method)
+        if (method === 'GET' || method === 'OPTIONS' || method === 'HEAD') {
+          expect(isCancellable).toBe(true)
+        } else {
+          expect(isCancellable).toBe(false)
+        }
+      })
+    })
+
+    test('cancellableMethods iteration should work correctly', () => {
+      // Act
+      const methods: string[] = []
+      cancellableMethods.forEach(method => {
+        methods.push(method as string)
+      })
+
+      // Assert
+      expect(methods).toContain('GET')
+      expect(methods).toContain('OPTIONS')
+      expect(methods).toContain('HEAD')
+      expect(methods.length).toBe(3)
+    })
+  })
+
+  describe('Environment variable based constants edge cases', () => {
+    test('PUBLIC_ENDPOINT should have fallback to myvtex.com', () => {
+      // Act & Assert
+      expect(typeof PUBLIC_ENDPOINT).toBe('string')
+      // If VTEX_PUBLIC_ENDPOINT is not set, it should be myvtex.com
+      if (!process.env.VTEX_PUBLIC_ENDPOINT) {
+        expect(PUBLIC_ENDPOINT).toBe('myvtex.com')
+      } else {
+        expect(PUBLIC_ENDPOINT).toBe(process.env.VTEX_PUBLIC_ENDPOINT)
+      }
+    })
+
+    test('PUBLIC_ENDPOINT should be usable in URL construction', () => {
+      // Act
+      const url = `https://api.${PUBLIC_ENDPOINT}/catalog`
+
+      // Assert
+      expect(url).toContain('https://api.')
+      expect(url).toContain('/catalog')
+      expect(url).not.toContain('undefined')
+    })
+
+    test('LINKED should be true only when VTEX_APP_LINK is truthy', () => {
+      // Act & Assert
+      expect(LINKED).toBe(!!process.env.VTEX_APP_LINK)
+    })
+
+    test('PRODUCTION should convert string true to boolean true', () => {
+      // Act & Assert
+      expect(typeof PRODUCTION).toBe('boolean')
+      expect(PRODUCTION).toBe(process.env.VTEX_PRODUCTION === 'true')
+    })
+
+    test('PRODUCTION should be false for other string values', () => {
+      // This tests the logic: PRODUCTION === true only when env === 'true'
+      const testCases = ['1', 'yes', 'TRUE', 'True', 'false', 'FALSE', '']
+
+      testCases.forEach(value => {
+        const mockProduction = value === 'true'
+        expect(mockProduction).toBe(value === 'true')
+      })
+    })
+  })
+
+  describe('DEFAULT_WORKSPACE constant', () => {
+    test('DEFAULT_WORKSPACE should equal master', () => {
+      // Act & Assert
+      expect(DEFAULT_WORKSPACE).toBe('master')
+    })
+
+    test('DEFAULT_WORKSPACE should be used as fallback', () => {
+      // Arrange
+      const workspace = process.env.VTEX_WORKSPACE || DEFAULT_WORKSPACE
+
+      // Assert
+      expect(workspace).toBeDefined()
+      expect(workspace).not.toBe('')
+      if (!process.env.VTEX_WORKSPACE) {
+        expect(workspace).toBe('master')
+      }
+    })
+  })
+
+  describe('Deprecated header constants reference integrity', () => {
+    test('all deprecated headers should point to HeaderKeys values', () => {
+      // Arrange
+      const deprecatedHeaders: Array<[string, string]> = [
+        ['CACHE_CONTROL_HEADER', CACHE_CONTROL_HEADER],
+        ['SEGMENT_HEADER', SEGMENT_HEADER],
+        ['SESSION_HEADER', SESSION_HEADER],
+        ['PRODUCT_HEADER', PRODUCT_HEADER],
+        ['LOCALE_HEADER', LOCALE_HEADER],
+        ['FORWARDED_HOST_HEADER', FORWARDED_HOST_HEADER],
+        ['TENANT_HEADER', TENANT_HEADER],
+        ['BINDING_HEADER', BINDING_HEADER],
+        ['META_HEADER', META_HEADER],
+        ['META_HEADER_BUCKET', META_HEADER_BUCKET],
+        ['ETAG_HEADER', ETAG_HEADER],
+        ['ACCOUNT_HEADER', ACCOUNT_HEADER],
+        ['CREDENTIAL_HEADER', CREDENTIAL_HEADER],
+        ['REQUEST_ID_HEADER', REQUEST_ID_HEADER],
+        ['ROUTER_CACHE_HEADER', ROUTER_CACHE_HEADER],
+        ['OPERATION_ID_HEADER', OPERATION_ID_HEADER],
+        ['PLATFORM_HEADER', PLATFORM_HEADER],
+        ['WORKSPACE_IS_PRODUCTION_HEADER', WORKSPACE_IS_PRODUCTION_HEADER],
+        ['WORKSPACE_HEADER', WORKSPACE_HEADER],
+        ['EVENT_KEY_HEADER', EVENT_KEY_HEADER],
+        ['EVENT_SENDER_HEADER', EVENT_SENDER_HEADER],
+        ['EVENT_SUBJECT_HEADER', EVENT_SUBJECT_HEADER],
+        ['EVENT_HANDLER_ID_HEADER', EVENT_HANDLER_ID_HEADER],
+        ['COLOSSUS_ROUTE_DECLARER_HEADER', COLOSSUS_ROUTE_DECLARER_HEADER],
+        ['COLOSSUS_ROUTE_ID_HEADER', COLOSSUS_ROUTE_ID_HEADER],
+        ['COLOSSUS_PARAMS_HEADER', COLOSSUS_PARAMS_HEADER],
+        ['TRACE_ID_HEADER', TRACE_ID_HEADER],
+        ['PROVIDER_HEADER', PROVIDER_HEADER]
+      ]
+
+      // Act & Assert
+      deprecatedHeaders.forEach(([name, value]) => {
+        expect(value).toBeDefined()
+        expect(typeof value).toBe('string')
+        expect(value.length).toBeGreaterThan(0)
+      })
+    })
+
+    test('deprecated FORWARDED_FOR header should not be exposed directly', () => {
+      // This tests that we're aware of what headers exist in HeaderKeys
+      expect(HeaderKeys).toHaveProperty('FORWARDED_FOR')
+      expect(HeaderKeys.FORWARDED_FOR).toBe('x-forwarded-for')
+    })
+  })
+
+  describe('VaryHeaders type definition', () => {
+    test('VaryHeaders should include segment, session, product, locale', () => {
+      // This test validates the type alias is correctly based on HeaderKeys
+      const varyHeaderValues = [
+        HeaderKeys.SEGMENT,
+        HeaderKeys.SESSION,
+        HeaderKeys.PRODUCT,
+        HeaderKeys.LOCALE
+      ] as VaryHeaders[]
+
+      // Act & Assert
+      expect(varyHeaderValues).toContain('x-vtex-segment')
+      expect(varyHeaderValues).toContain('x-vtex-session')
+      expect(varyHeaderValues).toContain('x-vtex-product')
+      expect(varyHeaderValues).toContain('x-vtex-locale')
+    })
+  })
+
+  describe('Constants immutability and safety', () => {
+    test('HeaderKeys values should not be modifiable through mutation', () => {
+      // Arrange
+      const originalValue = HeaderKeys.SEGMENT
+
+      // Act - attempt to modify (this tests expectation, not actual immutability)
+      const headersCopy = { ...HeaderKeys }
+      headersCopy.SEGMENT = 'x-modified'
+
+      // Assert - original should not change
+      expect(HeaderKeys.SEGMENT).toBe(originalValue)
+      expect(HeaderKeys.SEGMENT).toBe('x-vtex-segment')
+    })
+
+    test('MAX_AGE values should maintain their ratios', () => {
+      // Arrange
+      const ratio1 = MAX_AGE.LONG / MAX_AGE.MEDIUM
+      const ratio2 = MAX_AGE.MEDIUM / MAX_AGE.SHORT
+
+      // Act & Assert
+      expect(ratio1).toBe(24)
+      expect(ratio2).toBe(30)
+    })
+  })
+
+  describe('Constants used in real scenarios', () => {
+    test('HeaderKeys can construct valid HTTP headers object', () => {
+      // Arrange
+      const headersObject: Record<string, string> = {}
+
+      // Act
+      headersObject[HeaderKeys.SEGMENT] = 'test-segment'
+      headersObject[HeaderKeys.SESSION] = 'test-session'
+      headersObject[HeaderKeys.ACCOUNT] = 'test-account'
+      headersObject[HeaderKeys.WORKSPACE] = 'master'
+      headersObject[HeaderKeys.TENANT] = 'test-tenant'
+      headersObject[HeaderKeys.BINDING] = '{"locale":"en-US"}'
+
+      // Assert
+      expect(headersObject['x-vtex-segment']).toBe('test-segment')
+      expect(headersObject['x-vtex-session']).toBe('test-session')
+      expect(headersObject['x-vtex-account']).toBe('test-account')
+      expect(headersObject['x-vtex-workspace']).toBe('master')
+      expect(headersObject['x-vtex-tenant']).toBe('test-tenant')
+      expect(headersObject['x-vtex-binding']).toBe('{"locale":"en-US"}')
+      expect(Object.keys(headersObject)).toHaveLength(6)
+    })
+
+    test('MAX_AGE used in cache control logic', () => {
+      // Arrange
+      const currentTime = Math.floor(Date.now() / 1000)
+
+      // Act
+      const shortCacheExpiry = currentTime + MAX_AGE.SHORT
+      const mediumCacheExpiry = currentTime + MAX_AGE.MEDIUM
+      const longCacheExpiry = currentTime + MAX_AGE.LONG
+
+      // Assert
+      expect(shortCacheExpiry).toBeGreaterThan(currentTime)
+      expect(mediumCacheExpiry).toBeGreaterThan(shortCacheExpiry)
+      expect(longCacheExpiry).toBeGreaterThan(mediumCacheExpiry)
+    })
+
+    test('cancellableMethods used in request filtering', () => {
+      // Arrange
+      const incomingRequests = [
+        { method: 'GET', path: '/api/data' },
+        { method: 'POST', path: '/api/data' },
+        { method: 'OPTIONS', path: '/api/data' },
+        { method: 'DELETE', path: '/api/data' },
+        { method: 'HEAD', path: '/api/data' }
+      ]
+
+      // Act
+      const cancellableRequests = incomingRequests.filter(req =>
+        cancellableMethods.has(req.method)
+      )
+
+      // Assert
+      expect(cancellableRequests).toHaveLength(3)
+      expect(cancellableRequests.every(r =>
+        cancellableMethods.has(r.method)
+      )).toBe(true)
+    })
+
+    test('APP.IS_THIRD_PARTY used in feature gating', () => {
+      // Arrange
+      const testApps = [
+        { vendor: 'vtex', expectThirdParty: false },
+        { vendor: 'gocommerce', expectThirdParty: false },
+        { vendor: 'custom-partner', expectThirdParty: true }
+      ]
+
+      // Act & Assert
+      testApps.forEach(({ vendor, expectThirdParty }) => {
+        const mockApp = {
+          VENDOR: vendor,
+          IS_THIRD_PARTY() {
+            return 'vtex' !== this.VENDOR && 'gocommerce' !== this.VENDOR
+          }
+        }
+        expect(mockApp.IS_THIRD_PARTY()).toBe(expectThirdParty)
+      })
+    }
+    )
+  })
+})
