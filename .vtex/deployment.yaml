@@ -9,6 +9,7 @@
           packageManager: yarn
           skipInstall: false
           sonarProjectName: node-vtex-api
+          gitBaseBranchName: "master"
           nodeCommands:
             - lint
             - ci:test
