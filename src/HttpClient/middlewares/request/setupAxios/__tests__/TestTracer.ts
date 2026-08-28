@@ -30,4 +30,8 @@ export class TestTracer implements IUserLandTracer {
   public fallbackSpanContext() {
     return this.fallbackSpan.context()
   }
+
+  public setFallbackSpanTag(key: string, value: unknown): void {
+    this.fallbackSpan.setTag(key, value)
+  }
 }

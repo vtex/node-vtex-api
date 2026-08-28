@@ -8,6 +8,7 @@ export interface IUserLandTracer {
   startSpan: Tracer['startSpan']
   inject: Tracer['inject']
   fallbackSpanContext: () => SpanContext | undefined
+  setFallbackSpanTag: (key: string, value: unknown) => void
 }
 
 export const createTracingContextFromCarrier = (
@@ -80,5 +81,9 @@ export class UserLandTracer implements IUserLandTracer {
 
   public fallbackSpanContext(): SpanContext | undefined {
     return this.fallbackSpan?.context()
+  }
+
+  public setFallbackSpanTag(key: string, value: unknown): void {
+    this.fallbackSpan?.setTag(key, value)
   }
 }

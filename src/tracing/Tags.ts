@@ -74,6 +74,11 @@ export const enum CustomHttpTags {
   HTTP_RETRY_COUNT = 'http.retry.count',
 }
 
+export const enum GraphQLTags {
+  GRAPHQL_OPERATION_NAME = 'graphql.operation.name',
+  GRAPHQL_OPERATION_TYPE = 'graphql.operation.type',
+}
+
 export const UserlandTags = {
   ...OpentracingTags,
 }

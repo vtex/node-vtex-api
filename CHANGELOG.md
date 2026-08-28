@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `/_status` requests are now reported as `handler="builtin:status-track"`, matching
   the other builtin handlers, instead of falling into the unnamed bucket.
 
+## [7.5.0] - 2026-07-28
+### Added
+- Add a generic `IUserLandTracer.setFallbackSpanTag` API and exported GraphQL operation tag constants.
+
 ## [7.4.0] - 2026-06-22
 ### Changed
 - Renamed the base `IOClients` Janus Catalog getter from `catalogSystem` to
