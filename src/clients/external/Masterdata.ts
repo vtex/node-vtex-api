@@ -217,7 +217,7 @@ export class MasterData extends ExternalClient {
   ) {
     const metric = 'masterdata-scrollDocuments'
     return this.http
-      .getRaw<ScrollResponse<T>>(routes.scroll(dataEntity), {
+      .getRaw<T>(routes.scroll(dataEntity), {
         cacheable: CacheType.None,
         metric,
         params: {
@@ -335,9 +335,4 @@ interface ScrollInput {
 interface DeleteInput {
   dataEntity: string
   id: string
-}
-
-interface ScrollResponse<T> {
-  data: T[]
-  mdToken: string
 }
