@@ -167,16 +167,16 @@ export class DiagnosticsMetrics {
 
   private latencyHistogram: Types.Histogram | undefined
   // Counters and gauges keyed by name
-  private counters: Map<string, Types.Counter>
-  private gauges: Map<string, Types.Gauge>
+  private readonly counters: Map<string, Types.Counter>
+  private readonly gauges: Map<string, Types.Gauge>
 
   // What apps registered, and what's actually attached to an OTel instrument
   // (empty until the client is ready — see syncObservables), keyed by name.
-  private observableRegistrations: Record<ObservableKind, Map<string, ObservableRegistration>>
-  private observableInstruments: Record<ObservableKind, Map<string, AttachedObservable>>
+  private readonly observableRegistrations: Record<ObservableKind, Map<string, ObservableRegistration>>
+  private readonly observableInstruments: Record<ObservableKind, Map<string, AttachedObservable>>
 
   // trackCache() state: registered caches and the shared instruments.
-  private cacheRegistry: Map<string, TrackedCache>
+  private readonly cacheRegistry: Map<string, TrackedCache>
   private cacheInstruments: {
     operations: ObservableCounter
     items: ObservableGauge
