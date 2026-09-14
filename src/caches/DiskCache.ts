@@ -1,5 +1,5 @@
 import { CacheLayer } from './CacheLayer'
-import { DiskStats } from './typings'
+import { CumulativeStats, DiskStats } from './typings'
 
 import { outputJSON, pathExistsSync, readJSON } from 'fs-extra'
 import { join } from 'path'
@@ -10,6 +10,7 @@ export class DiskCache<V> implements CacheLayer<string, V>{
   private hits = 0
   private total = 0
   private lock: ReadWriteLock
+  private reported = { hits: 0, total: 0 }
 
   constructor(private cachePath: string, private readFile=readJSON, private writeFile=outputJSON) {
     this.lock = new ReadWriteLock()
@@ -22,14 +23,18 @@ export class DiskCache<V> implements CacheLayer<string, V>{
 
   public getStats = (name='disk-cache'): DiskStats => {
     const stats = {
-      hits: this.hits,
+      hits: this.hits - this.reported.hits,
       name,
-      total: this.total,
+      total: this.total - this.reported.total,
     }
-    this.hits = 0
-    this.total = 0
+    this.reported = { hits: this.hits, total: this.total }
     return stats
   }
+
+  public getCumulativeStats = (): CumulativeStats => ({
+    hits: this.hits,
+    total: this.total,
+  })
 
   public get = async (key: string): Promise<V | void>  => {
     const pathKey = this.getPathKey(key)
