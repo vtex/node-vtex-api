@@ -2,6 +2,7 @@ import { finished as onStreamFinished } from 'stream'
 import { hrToMillisFloat } from '../../utils'
 import { ServiceContext } from '../worker/runtime/typings'
 import { getOtelInstruments, OtelRequestInstruments, RequestsMetricLabels } from './metrics'
+import { requestHandlerLabel } from './requestHandlerLabel'
 
 const INSTRUMENTS_INITIALIZATION_TIMEOUT = 500
 
@@ -38,7 +39,9 @@ export const addOtelRequestMetricsMiddleware = () => {
 
     ctx.req.once('aborted', () => {
       if (instruments) {
-        instruments.abortedRequests.add(1, { [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName })
+        instruments.abortedRequests.add(1, {
+          [RequestsMetricLabels.REQUEST_HANDLER]: requestHandlerLabel(ctx.requestHandlerName),
+        })
       }
     })
 
@@ -53,7 +56,7 @@ export const addOtelRequestMetricsMiddleware = () => {
         instruments.responseSizes.record(
           responseLength,
           {
-            [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
+            [RequestsMetricLabels.REQUEST_HANDLER]: requestHandlerLabel(ctx.requestHandlerName),
             [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
             [RequestsMetricLabels.ACCOUNT_NAME]: ctx.vtex?.account || 'unknown',
           }
@@ -64,7 +67,7 @@ export const addOtelRequestMetricsMiddleware = () => {
         instruments.totalRequests.add(
           1,
           {
-            [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
+            [RequestsMetricLabels.REQUEST_HANDLER]: requestHandlerLabel(ctx.requestHandlerName),
             [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
             [RequestsMetricLabels.ACCOUNT_NAME]: ctx.vtex?.account || 'unknown',
           }
@@ -76,7 +79,7 @@ export const addOtelRequestMetricsMiddleware = () => {
           instruments.requestTimings.record(
             hrToMillisFloat(process.hrtime(start)),
             {
-              [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
+              [RequestsMetricLabels.REQUEST_HANDLER]: requestHandlerLabel(ctx.requestHandlerName),
               [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
               [RequestsMetricLabels.ACCOUNT_NAME]: ctx.vtex?.account || 'unknown',
             }

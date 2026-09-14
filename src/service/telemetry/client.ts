@@ -8,8 +8,19 @@ import {
   Traces,
 } from '@vtex/diagnostics-nodejs'
 import { TelemetryClient } from '@vtex/diagnostics-nodejs/dist/telemetry'
-import { APP, AttributeKeys, DIAGNOSTICS_TELEMETRY_ENABLED, DK_APP_ID, OTEL_EXPORTER_OTLP_ENDPOINT, PRODUCTION, WORKSPACE } from '../../constants'
+import {
+  APP,
+  AttributeKeys,
+  CLUSTER_ID,
+  CLUSTER_ROLE,
+  DIAGNOSTICS_TELEMETRY_ENABLED,
+  DK_APP_ID,
+  OTEL_EXPORTER_OTLP_ENDPOINT,
+  PRODUCTION,
+  WORKSPACE,
+} from '../../constants'
 import { HostMetricsInstrumentation } from '../metrics/instruments/hostMetrics'
+import { getClusterResourceAttributes } from './resourceAttributes'
 
 const APPLICATION_ID = APP.ID || 'vtex-io-app'
 
@@ -90,6 +101,7 @@ class TelemetryClientSingleton {
             'version': APP.VERSION || '',
             [AttributeKeys.VTEX_IO_WORKSPACE_NAME]: WORKSPACE,
             [AttributeKeys.VTEX_IO_WORKSPACE_TYPE]: PRODUCTION ? 'production' : 'development',
+            ...getClusterResourceAttributes(CLUSTER_ID, CLUSTER_ROLE),
           },
           // Use built-in no-op functionality when telemetry is disabled
           noop: !DIAGNOSTICS_TELEMETRY_ENABLED,

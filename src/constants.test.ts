@@ -12,6 +12,8 @@ import {
   MAX_WORKERS,
   LINKED,
   REGION,
+  CLUSTER_ID,
+  CLUSTER_ROLE,
   PUBLIC_ENDPOINT,
   APP,
   NODE_ENV,
@@ -130,11 +132,15 @@ describe('constants', () => {
       expect(AttributeKeys).toHaveProperty('VTEX_IO_WORKSPACE_TYPE')
       expect(AttributeKeys).toHaveProperty('VTEX_IO_APP_ID')
       expect(AttributeKeys).toHaveProperty('VTEX_IO_APP_AUTHOR_TYPE')
+      expect(AttributeKeys).toHaveProperty('VTEX_IO_CLUSTER_ID')
+      expect(AttributeKeys).toHaveProperty('VTEX_IO_CLUSTER_ROLE')
 
       expect(typeof AttributeKeys.VTEX_IO_WORKSPACE_NAME).toBe('string')
       expect(typeof AttributeKeys.VTEX_IO_WORKSPACE_TYPE).toBe('string')
       expect(typeof AttributeKeys.VTEX_IO_APP_ID).toBe('string')
       expect(typeof AttributeKeys.VTEX_IO_APP_AUTHOR_TYPE).toBe('string')
+      expect(AttributeKeys.VTEX_IO_CLUSTER_ID).toBe('vtex_io.cluster.id')
+      expect(AttributeKeys.VTEX_IO_CLUSTER_ROLE).toBe('vtex_io.cluster.role')
     })
 
     test('should have non-empty string values', () => {
@@ -218,6 +224,8 @@ describe('constants', () => {
 
     test('string environment constants should match their env vars', () => {
       expect(REGION).toBe(process.env.VTEX_REGION as string)
+      expect(CLUSTER_ID).toBe(process.env.VTEX_CLUSTER_ID as string)
+      expect(CLUSTER_ROLE).toBe(process.env.VTEX_CLUSTER_ROLE as string)
       expect(NODE_ENV).toBe(process.env.NODE_ENV as string)
       expect(ACCOUNT).toBe(process.env.VTEX_ACCOUNT as string)
       expect(WORKSPACE).toBe(process.env.VTEX_WORKSPACE as string)
