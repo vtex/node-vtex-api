@@ -189,19 +189,61 @@ metrics.trackCache('pages', pagesCacheStorage)
 const dispose = global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)
 ```
 
-This is a direct replacement, not a manual re-implementation with `incrementCounter`/`setGauge` (Pattern 4's approach) — `trackCache()` reads `getStats()` exactly once per collection cycle no matter how many metrics it produces from that one cache, which matters because `hits`/`total`/`disposedItems` reset on every read: reading the same cache from two places (e.g. the legacy `trackCache` and a hand-rolled `incrementCounter` call) would split its counts between them. Migrate a cache by **replacing** the legacy `metrics.trackCache(...)` call, not by adding this alongside it.
+This is a direct replacement, not a manual re-implementation with `incrementCounter`/`setGauge` (Pattern 4's approach) — `trackCache()` reads the cache exactly once per collection cycle no matter how many metrics it produces from it.
+
+**You can leave the legacy call in place while you validate.** The legacy `getStats()` reports a per-flush window and consumes it on read; `getCumulativeStats()` reports the process-lifetime total and has no side effects. The two readers don't steal counts from each other, so running them side by side and comparing is the recommended way to migrate:
+
+```typescript
+metrics.trackCache('pages', pagesCacheStorage)                      // keep during validation
+global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)   // add, compare, then drop the line above
+```
 
 Emits `io_app_cache_operations_total`, `io_app_cache_items_current`, `io_app_cache_capacity` and `io_app_cache_disposed_total` — see [METRICS_CATALOG.md](./METRICS_CATALOG.md#cache-metrics-observable) for the full attribute reference. `hitRate` is not republished; derive it from `io_app_cache_operations_total` instead.
 
-If you have a periodic value to report that isn't a cache — a queue depth, a connection pool size, anything read on a schedule rather than pushed per-request — use the lower-level `registerObservableGauge`/`registerObservableCounter` that `trackCache` is built on:
+### Pattern 6: Metrics Computed at Flush Time (`addOnFlushMetric`)
 
+`metrics.addOnFlushMetric(fn)` registers a function that `MetricsAccumulator` calls on every flush, returning an object that is published as a log line. The replacement is `registerObservableGauge`/`registerObservableCounter` — same idea (a callback read on a schedule), with the OTel collection cycle in place of the legacy flush.
+
+The translation is not mechanical: a flush metric returns **one object with arbitrarily many fields**, while an observable instrument reports **one numeric value** per observation. So decide, per field, whether it becomes its own instrument or an attribute on a shared one.
+
+**Before:**
 ```typescript
-const dispose = global.diagnosticsMetrics?.registerObservableGauge(
-  'queue_depth_current',
-  (result) => result.observe(queue.length),
+metrics.addOnFlushMetric(() => ({
+  name: 'my-queue',
+  size: queue.size,
+  oldestAgeMs: queue.oldestAgeMs(),
+}))
+```
+
+**After** — two distinct measurements, so two instruments:
+```typescript
+global.diagnosticsMetrics?.registerObservableGauge(
+  'my_queue_size_current',
+  result => result.observe(queue.size),
   { description: 'Items currently queued', unit: '1' }
 )
+
+global.diagnosticsMetrics?.registerObservableGauge(
+  'my_queue_oldest_age_milliseconds',
+  result => result.observe(queue.oldestAgeMs()),
+  { description: 'Age of the oldest queued item', unit: 'ms' }
+)
 ```
+
+When the fields are the *same* measurement split by category, use one instrument and an attribute instead:
+```typescript
+global.diagnosticsMetrics?.registerObservableGauge('my_queue_size_current', result => {
+  result.observe(queue.pending, { state: 'pending' })
+  result.observe(queue.running, { state: 'running' })
+})
+```
+
+Notes that apply to both register methods:
+
+- Use `registerObservableCounter` only for values that **never decrease** and report the cumulative total — the SDK derives the per-cycle delta itself. Anything that can go down is a gauge.
+- Re-registering the same name replaces the previous callback. A name already taken by the other kind is refused with an error log, since two same-named streams of different types break the collector.
+- Attributes reported by the callback are subject to the same limit as the push methods; base attributes are not merged, because the callback runs outside any request.
+- Both return a disposer. Call it when the thing you're observing goes away.
 
 ---
 
