@@ -1,7 +1,7 @@
 import LRU from 'lru-cache'
 import { CacheLayer } from './CacheLayer'
 import { MultilayeredCache } from './MultilayeredCache'
-import { FetchResult, LRUStats } from './typings'
+import { CumulativeStats, FetchResult, LRUStats } from './typings'
 
 export class LRUCache <K, V> implements CacheLayer<K, V>{
   private multilayer: MultilayeredCache<K, V>
@@ -9,11 +9,13 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
   private hits: number
   private total: number
   private disposed: number
+  private reported: { hits: number, total: number, disposed: number }
 
   constructor (options: LRU.Options<K, V>) {
     this.hits = 0
     this.total = 0
     this.disposed = 0
+    this.reported = { disposed: 0, hits: 0, total: 0 }
     this.storage = new LRU({
       ...options,
       dispose: () => this.disposed += 1,
@@ -38,19 +40,28 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
   public has = (key: K): boolean => this.storage.has(key)
 
   public getStats = (name='lru-cache'): LRUStats => {
+    const hits = this.hits - this.reported.hits
+    const total = this.total - this.reported.total
     const stats = {
-      disposedItems: this.disposed,
-      hitRate: this.total > 0 ? this.hits / this.total : undefined,
-      hits: this.hits,
+      disposedItems: this.disposed - this.reported.disposed,
+      hitRate: total > 0 ? hits / total : undefined,
+      hits,
       itemCount: this.storage.itemCount,
       length: this.storage.length,
       max: this.storage.max,
       name,
-      total: this.total,
+      total,
     }
-    this.hits = 0
-    this.total = 0
-    this.disposed = 0
+    this.reported = { disposed: this.disposed, hits: this.hits, total: this.total }
     return stats
   }
+
+  public getCumulativeStats = (): CumulativeStats => ({
+    disposedItems: this.disposed,
+    hits: this.hits,
+    itemCount: this.storage.itemCount,
+    length: this.storage.length,
+    max: this.storage.max,
+    total: this.total,
+  })
 }

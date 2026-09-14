@@ -24,6 +24,16 @@ export type LRUStats = {
 }
 
 // tslint:disable-next-line:interface-over-type-literal
+export type CumulativeStats = {
+  hits: number,
+  total: number,
+  disposedItems?: number,
+  itemCount?: number,
+  length?: number,
+  max?: number,
+}
+
+// tslint:disable-next-line:interface-over-type-literal
 export type MultilayerStats = {
   hitRate: number | undefined,
   hits: number,

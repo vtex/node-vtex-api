@@ -172,6 +172,81 @@ global.diagnosticsMetrics.setGauge('cache_items_current', stats.size, {
 
 > 📌 **Production Example:** The [render-to-string's `recordCacheMetric()` function](https://github.com/vtex/render-to-string/blob/master/node/utils/metrics.ts) uses `incrementCounter('cache_operations_total', 1, { cache, cache_state })` for unified cache tracking.
 
+**Note:** Pattern 4 above is for *push*-based tracking — you call `incrementCounter`/`setGauge` yourself, at the point in your code where a cache is read. If instead your code uses `metrics.trackCache(name, cache)` — registering a cache instance once, with `MetricsAccumulator` reading its `getStats()` on every flush — that's a different idiom with its own replacement. See Pattern 5.
+
+### Pattern 5: Registering a Cache for Periodic Observation (`trackCache`)
+
+**Before:**
+```typescript
+// Registers the cache once; MetricsAccumulator calls cache.getStats() on every flush
+metrics.trackCache('pages', pagesCacheStorage)
+```
+
+**After:**
+```typescript
+// Same registration call, same cache instance — DiagnosticsMetrics reads getStats()
+// on the OTel SDK's own collection schedule instead of on every legacy flush.
+const dispose = global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)
+```
+
+This is a direct replacement, not a manual re-implementation with `incrementCounter`/`setGauge` (Pattern 4's approach) — `trackCache()` reads the cache exactly once per collection cycle no matter how many metrics it produces from it.
+
+**Leaving the legacy call in place is harmless.** The legacy `getStats()` reports a per-flush window and consumes it on read; `getCumulativeStats()` reports the process-lifetime total and has no side effects, so the two readers don't steal counts from each other:
+
+```typescript
+metrics.trackCache('pages', pagesCacheStorage)                      // harmless to keep
+global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)   // add; drop the line above when convenient
+```
+
+This is about safety, not about comparing the two. Since #676 (v7.4.2) nothing consumes what the legacy flush returns — `statusTrack()` keeps running only because flushing also resets the metric accumulators, the CPU baseline and the request stats. So there is no legacy cache metric to compare against; what you get is that a half-migrated app still reports correct numbers. That matters when 23 call sites across three apps are migrated by different people in different PRs: under a read that consumed the counters, registering a cache in both places would have leaked an arbitrary fraction of its counts into a flush that discards them — a plausible-looking, permanently wrong number, with no second metric anywhere to reveal the discrepancy.
+
+Emits `io_app_cache_operations_total`, `io_app_cache_items_current`, `io_app_cache_capacity` and `io_app_cache_disposed_total` — see [METRICS_CATALOG.md](./METRICS_CATALOG.md#cache-metrics-observable) for the full attribute reference. `hitRate` is not republished; derive it from `io_app_cache_operations_total` instead.
+
+### Pattern 6: Metrics Computed at Flush Time (`addOnFlushMetric`)
+
+`metrics.addOnFlushMetric(fn)` registers a function that `MetricsAccumulator` calls on every flush, returning an object that is published as a log line. The replacement is `registerObservableGauge`/`registerObservableCounter` — same idea (a callback read on a schedule), with the OTel collection cycle in place of the legacy flush.
+
+The translation is not mechanical: a flush metric returns **one object with arbitrarily many fields**, while an observable instrument reports **one numeric value** per observation. So decide, per field, whether it becomes its own instrument or an attribute on a shared one.
+
+**Before:**
+```typescript
+metrics.addOnFlushMetric(() => ({
+  name: 'my-queue',
+  size: queue.size,
+  oldestAgeMs: queue.oldestAgeMs(),
+}))
+```
+
+**After** — two distinct measurements, so two instruments:
+```typescript
+global.diagnosticsMetrics?.registerObservableGauge(
+  'my_queue_size_current',
+  result => result.observe(queue.size),
+  { description: 'Items currently queued', unit: '1' }
+)
+
+global.diagnosticsMetrics?.registerObservableGauge(
+  'my_queue_oldest_age_milliseconds',
+  result => result.observe(queue.oldestAgeMs()),
+  { description: 'Age of the oldest queued item', unit: 'ms' }
+)
+```
+
+When the fields are the *same* measurement split by category, use one instrument and an attribute instead:
+```typescript
+global.diagnosticsMetrics?.registerObservableGauge('my_queue_size_current', result => {
+  result.observe(queue.pending, { state: 'pending' })
+  result.observe(queue.running, { state: 'running' })
+})
+```
+
+Notes that apply to both register methods:
+
+- Use `registerObservableCounter` only for values that **never decrease** and report the cumulative total — the SDK derives the per-cycle delta itself. Anything that can go down is a gauge.
+- Re-registering the same name replaces the previous callback. A name already taken by the other kind is refused with an error log, since two same-named streams of different types break the collector.
+- Attributes reported by the callback are subject to the same limit as the push methods; base attributes are not merged, because the callback runs outside any request.
+- Both return a disposer. Call it when the thing you're observing goes away.
+
 ---
 
 ## What Doesn't Need Migration
