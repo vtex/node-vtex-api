@@ -27,7 +27,7 @@ interface Aggregate {
 
 type AggregateMetric = EnvMetric & Aggregate
 
-export interface GetStats {
+interface GetStats {
   getStats(): {
     [key: string]: number | boolean | string | undefined,
   }
