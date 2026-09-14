@@ -1,7 +1,8 @@
 import { Types } from '@vtex/diagnostics-nodejs'
 import { context } from '@opentelemetry/api'
 import { AsyncHooksContextManager } from '@opentelemetry/context-async-hooks'
-import { DiagnosticsMetrics } from './DiagnosticsMetrics'
+import { AggregationTemporality, InMemoryMetricExporter, MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics'
+import { DiagnosticsMetrics, TrackedCache } from './DiagnosticsMetrics'
 
 // Mock only the external I/O boundary (getMetricClient)
 jest.mock('../service/metrics/client', () => ({
@@ -749,6 +750,340 @@ describe('DiagnosticsMetrics', () => {
 
         warnSpy.mockRestore()
       })
+    })
+  })
+
+  describe('registerObservableGauge / registerObservableCounter', () => {
+    // These two methods reach the OTel SDK through metricsClient.getProvider().getMeter(...),
+    // one level below the createCounter/createGauge/createHistogram wrapper the rest of this
+    // file mocks. So this block mocks the Meter itself instead — tracking addCallback/
+    // removeCallback calls per instrument name, the same way the outer mock tracks
+    // add()/set()/record() calls per counter/gauge/histogram name.
+    let observableGaugeInstruments: Map<string, { addCallback: jest.Mock; removeCallback: jest.Mock }>
+    let observableCounterInstruments: Map<string, { addCallback: jest.Mock; removeCallback: jest.Mock }>
+    let observableMeter: {
+      createObservableGauge: jest.Mock
+      createObservableCounter: jest.Mock
+      addBatchObservableCallback: jest.Mock
+    }
+    let observableMetricsClient: Types.MetricClient
+    let observableDiagnostics: DiagnosticsMetrics
+
+    beforeEach(async () => {
+      observableGaugeInstruments = new Map()
+      observableCounterInstruments = new Map()
+
+      observableMeter = {
+        createObservableGauge: jest.fn((name: string) => {
+          if (!observableGaugeInstruments.has(name)) {
+            observableGaugeInstruments.set(name, { addCallback: jest.fn(), removeCallback: jest.fn() })
+          }
+          return observableGaugeInstruments.get(name)
+        }),
+        createObservableCounter: jest.fn((name: string) => {
+          if (!observableCounterInstruments.has(name)) {
+            observableCounterInstruments.set(name, { addCallback: jest.fn(), removeCallback: jest.fn() })
+          }
+          return observableCounterInstruments.get(name)
+        }),
+        addBatchObservableCallback: jest.fn(),
+      }
+
+      observableMetricsClient = {
+        createHistogram: jest.fn(),
+        createCounter: jest.fn(),
+        createGauge: jest.fn(),
+        getProvider: () => ({ getMeter: () => observableMeter }),
+      } as any
+
+      ;(getMetricClient as jest.Mock).mockResolvedValue(observableMetricsClient)
+      observableDiagnostics = new DiagnosticsMetrics()
+      await new Promise(resolve => setTimeout(resolve, 10))
+    })
+
+    it('creates the instrument and attaches the callback', () => {
+      const observe = jest.fn()
+      observableDiagnostics.registerObservableGauge('queue_depth_current', observe)
+
+      expect(observableMeter.createObservableGauge).toHaveBeenCalledTimes(1)
+      expect(observableMeter.createObservableGauge).toHaveBeenCalledWith('queue_depth_current', undefined)
+      expect(observableGaugeInstruments.get('queue_depth_current')!.addCallback).toHaveBeenCalledWith(observe)
+    })
+
+    it('passes through instrument options (description, unit)', () => {
+      const observe = jest.fn()
+      const options = { description: 'Items currently queued', unit: '1' }
+      observableDiagnostics.registerObservableGauge('queue_depth_current', observe, options)
+
+      expect(observableMeter.createObservableGauge).toHaveBeenCalledWith('queue_depth_current', options)
+    })
+
+    it('reuses the instrument and replaces the previous callback on re-registration', () => {
+      const first = jest.fn()
+      const second = jest.fn()
+
+      observableDiagnostics.registerObservableGauge('queue_depth_current', first)
+      observableDiagnostics.registerObservableGauge('queue_depth_current', second)
+
+      const instrument = observableGaugeInstruments.get('queue_depth_current')!
+      expect(observableMeter.createObservableGauge).toHaveBeenCalledTimes(1)
+      expect(instrument.removeCallback).toHaveBeenCalledWith(first)
+      expect(instrument.addCallback).toHaveBeenCalledWith(second)
+    })
+
+    it('detaches the callback when the returned disposer is called', () => {
+      const observe = jest.fn()
+      const dispose = observableDiagnostics.registerObservableGauge('queue_depth_current', observe)
+
+      dispose()
+
+      expect(observableGaugeInstruments.get('queue_depth_current')!.removeCallback).toHaveBeenCalledWith(observe)
+    })
+
+    it('disposer is a no-op the second time it is called', () => {
+      const observe = jest.fn()
+      const dispose = observableDiagnostics.registerObservableGauge('queue_depth_current', observe)
+
+      dispose()
+      dispose()
+
+      expect(observableGaugeInstruments.get('queue_depth_current')!.removeCallback).toHaveBeenCalledTimes(1)
+    })
+
+    it('creates an observable counter and attaches the callback', () => {
+      const observe = jest.fn()
+      observableDiagnostics.registerObservableCounter('jobs_processed_total', observe)
+
+      expect(observableMeter.createObservableCounter).toHaveBeenCalledTimes(1)
+      expect(observableCounterInstruments.get('jobs_processed_total')!.addCallback).toHaveBeenCalledWith(observe)
+    })
+
+    it('reuses the counter instrument and replaces the previous callback on re-registration', () => {
+      const first = jest.fn()
+      const second = jest.fn()
+
+      observableDiagnostics.registerObservableCounter('jobs_processed_total', first)
+      observableDiagnostics.registerObservableCounter('jobs_processed_total', second)
+
+      const instrument = observableCounterInstruments.get('jobs_processed_total')!
+      expect(observableMeter.createObservableCounter).toHaveBeenCalledTimes(1)
+      expect(instrument.removeCallback).toHaveBeenCalledWith(first)
+      expect(instrument.addCallback).toHaveBeenCalledWith(second)
+    })
+
+    it('queues the registration when the client is not ready yet, and applies it once it is', async () => {
+      let resolveClient!: (client: Types.MetricClient) => void
+      ;(getMetricClient as jest.Mock).mockReturnValueOnce(
+        new Promise<Types.MetricClient>(resolve => { resolveClient = resolve })
+      )
+
+      const pendingInstance = new DiagnosticsMetrics()
+      const observe = jest.fn()
+      pendingInstance.registerObservableGauge('startup_queue_depth', observe)
+
+      // Not created yet: the client this new instance is waiting on hasn't resolved.
+      expect(observableMeter.createObservableGauge).not.toHaveBeenCalledWith('startup_queue_depth', undefined)
+
+      resolveClient(observableMetricsClient)
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      expect(observableMeter.createObservableGauge).toHaveBeenCalledWith('startup_queue_depth', undefined)
+      expect(observableGaugeInstruments.get('startup_queue_depth')!.addCallback).toHaveBeenCalledWith(observe)
+    })
+
+    it('disposing a still-pending registration prevents it from being applied once ready', async () => {
+      let resolveClient!: (client: Types.MetricClient) => void
+      ;(getMetricClient as jest.Mock).mockReturnValueOnce(
+        new Promise<Types.MetricClient>(resolve => { resolveClient = resolve })
+      )
+
+      const pendingInstance = new DiagnosticsMetrics()
+      const observe = jest.fn()
+      const dispose = pendingInstance.registerObservableGauge('cancelled_before_ready', observe)
+
+      dispose()
+
+      resolveClient(observableMetricsClient)
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      expect(observableMeter.createObservableGauge).not.toHaveBeenCalledWith('cancelled_before_ready', undefined)
+    })
+  })
+
+  describe('trackCache', () => {
+    // Unlike the rest of this file, trackCache is exercised against the real OTel SDK
+    // (a real MeterProvider + MetricReader), not a hand-rolled mock. The behavior worth
+    // trusting here — one read of getStats() per cycle feeding four instruments, and
+    // cumulative totals correctly accumulated from a delta-on-read source — is exactly
+    // the kind of thing a mock could get "passing" while still being wrong.
+    let provider: MeterProvider
+    let reader: PeriodicExportingMetricReader
+    let exporter: InMemoryMetricExporter
+    let cacheMetricsClient: Types.MetricClient
+    let cacheDiagnostics: DiagnosticsMetrics
+
+    interface CacheStatsFixture {
+      [key: string]: number | boolean | string | undefined
+    }
+    type CollectionResult = Awaited<ReturnType<PeriodicExportingMetricReader['collect']>>
+
+    function fakeCache(sequence: CacheStatsFixture[]): TrackedCache {
+      let call = 0
+      return {
+        getStats: () => sequence[Math.min(call++, sequence.length - 1)],
+      }
+    }
+
+    // `reader.collect()` returns the collected data directly — it does not go through
+    // the configured exporter (that only happens on the reader's own periodic timer,
+    // which this suite deliberately never lets fire). `InMemoryMetricExporter` is only
+    // here because PeriodicExportingMetricReader requires some exporter to construct;
+    // assertions read straight from collect()'s own return value instead.
+    function dataPointsIn(
+      result: CollectionResult,
+      metricName: string
+    ): Array<{ value: number; attributes: Record<string, unknown> }> {
+      const points: Array<{ value: number; attributes: Record<string, unknown> }> = []
+      for (const scopeMetrics of result.resourceMetrics.scopeMetrics) {
+        for (const metric of scopeMetrics.metrics) {
+          if (metric.descriptor.name === metricName) {
+            for (const dataPoint of (metric as any).dataPoints) {
+              points.push({ value: dataPoint.value as number, attributes: dataPoint.attributes })
+            }
+          }
+        }
+      }
+
+      return points
+    }
+
+    function allMetricNamesIn(result: CollectionResult): string[] {
+      return result.resourceMetrics.scopeMetrics.flatMap(sm => sm.metrics.map(m => m.descriptor.name))
+    }
+
+    beforeEach(async () => {
+      exporter = new InMemoryMetricExporter(AggregationTemporality.CUMULATIVE)
+      // Large interval: this suite only ever triggers collection manually via
+      // reader.collect(); the periodic timer itself must never fire during a test.
+      reader = new PeriodicExportingMetricReader({ exporter, exportIntervalMillis: 1000000 })
+      provider = new MeterProvider({ readers: [reader] })
+
+      cacheMetricsClient = {
+        createHistogram: jest.fn(),
+        createCounter: jest.fn(() => ({ add: jest.fn() })),
+        createGauge: jest.fn(() => ({ set: jest.fn() })),
+        getProvider: () => provider,
+      } as any
+
+      ;(getMetricClient as jest.Mock).mockResolvedValue(cacheMetricsClient)
+      cacheDiagnostics = new DiagnosticsMetrics()
+      await new Promise(resolve => setTimeout(resolve, 10))
+    })
+
+    afterEach(async () => {
+      await provider.shutdown()
+    })
+
+    it('reports hits and misses split by cache_state', async () => {
+      cacheDiagnostics.trackCache('pages', fakeCache([{ hits: 3, total: 5 }]))
+
+      const ops = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
+
+      expect(ops).toContainEqual({ value: 3, attributes: { cache: 'pages', cache_state: 'hit' } })
+      expect(ops).toContainEqual({ value: 2, attributes: { cache: 'pages', cache_state: 'miss' } })
+    })
+
+    it('accumulates across collection cycles instead of treating each delta as the total', async () => {
+      cacheDiagnostics.trackCache('pages', fakeCache([
+        { hits: 3, total: 5 },
+        { hits: 2, total: 2 },
+      ]))
+
+      await reader.collect()
+      const second = await reader.collect()
+
+      const ops = dataPointsIn(second, 'io_app_cache_operations_total')
+      // cumulative hits: 3 + 2 = 5; cumulative misses: (5-3) + (2-2) = 2 + 0 = 2
+      expect(ops).toContainEqual({ value: 5, attributes: { cache: 'pages', cache_state: 'hit' } })
+      expect(ops).toContainEqual({ value: 2, attributes: { cache: 'pages', cache_state: 'miss' } })
+    })
+
+    it('reads a cache exactly once per cycle no matter how many metrics it feeds', async () => {
+      const getStats = jest.fn().mockReturnValue({ hits: 1, total: 1, itemCount: 10, max: 100, disposedItems: 1 })
+      cacheDiagnostics.trackCache('pages', { getStats })
+
+      await reader.collect()
+
+      expect(getStats).toHaveBeenCalledTimes(1)
+    })
+
+    it('reports itemCount, max and disposedItems only for caches that expose them', async () => {
+      cacheDiagnostics.trackCache('pages', fakeCache([{ hits: 1, total: 1, itemCount: 10, max: 100, disposedItems: 2 }]))
+      cacheDiagnostics.trackCache('assets-disk', fakeCache([{ hits: 1, total: 1 }])) // DiskCache shape: no itemCount/max/disposedItems
+
+      const result = await reader.collect()
+
+      expect(dataPointsIn(result, 'io_app_cache_items_current')).toEqual([
+        { value: 10, attributes: { cache: 'pages' } },
+      ])
+      expect(dataPointsIn(result, 'io_app_cache_capacity')).toEqual([
+        { value: 100, attributes: { cache: 'pages' } },
+      ])
+      expect(dataPointsIn(result, 'io_app_cache_disposed_total')).toEqual([
+        { value: 2, attributes: { cache: 'pages' } },
+      ])
+    })
+
+    it('stops reporting a cache once its disposer is called', async () => {
+      const dispose = cacheDiagnostics.trackCache('pages', fakeCache([{ hits: 1, total: 1 }]))
+
+      dispose()
+      const result = await reader.collect()
+
+      expect(dataPointsIn(result, 'io_app_cache_operations_total')).toHaveLength(0)
+    })
+
+    it('does not publish hitRate', async () => {
+      cacheDiagnostics.trackCache('pages', fakeCache([{ hits: 3, total: 5, hitRate: 0.6 }]))
+
+      const result = await reader.collect()
+
+      expect(allMetricNamesIn(result)).not.toEqual(expect.arrayContaining([expect.stringMatching(/hit.?rate/i)]))
+    })
+
+    it('does not create the meter for apps that never call trackCache', () => {
+      const getProviderSpy = jest.spyOn(cacheMetricsClient, 'getProvider')
+
+      // A DiagnosticsMetrics instance that only ever uses the synchronous APIs.
+      cacheDiagnostics.incrementCounter('unrelated_total', 1)
+
+      expect(getProviderSpy).not.toHaveBeenCalled()
+    })
+
+    it('recovers from a cache whose getStats() throws, without dropping other caches', async () => {
+      const throwingCache: TrackedCache = {
+        getStats: () => {
+          throw new Error('boom')
+        },
+      }
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation()
+
+      const disposeBroken = cacheDiagnostics.trackCache('broken', throwingCache)
+      cacheDiagnostics.trackCache('pages', fakeCache([{ hits: 1, total: 1 }]))
+
+      const result = await reader.collect()
+
+      expect(dataPointsIn(result, 'io_app_cache_operations_total')).toContainEqual({
+        value: 1,
+        attributes: { cache: 'pages', cache_state: 'hit' },
+      })
+      expect(errorSpy).toHaveBeenCalled()
+
+      // Dispose the throwing cache before afterEach's provider.shutdown() triggers one
+      // more collection cycle — otherwise it throws again through the (by-then-restored)
+      // real console.error, which is harmless but noisy in the test output.
+      disposeBroken()
+      errorSpy.mockRestore()
     })
   })
 })

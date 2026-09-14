@@ -90,10 +90,16 @@ All Metrics in node-vtex-api
 │       │   ├── latency histogram (via recordLatency)
 │       │   └── graphql_field_requests_total (Counter)
 │       │
-│       └── HTTP Agent (HttpClient/middlewares/request/HttpAgentSingleton.ts)
-│           ├── http_agent_sockets_current (Gauge)
-│           ├── http_agent_free_sockets_current (Gauge)
-│           └── http_agent_pending_requests_current (Gauge)
+│       ├── HTTP Agent (HttpClient/middlewares/request/HttpAgentSingleton.ts)
+│       │   ├── http_agent_sockets_current (Gauge)
+│       │   ├── http_agent_free_sockets_current (Gauge)
+│       │   └── http_agent_pending_requests_current (Gauge)
+│       │
+│       └── Cache (metrics/DiagnosticsMetrics.ts, via trackCache — observable/pull, not per-request)
+│           ├── io_app_cache_operations_total (Observable Counter) - attrs: cache, cache_state
+│           ├── io_app_cache_items_current (Observable Gauge) - only if getStats() has itemCount
+│           ├── io_app_cache_capacity (Observable Gauge) - only if getStats() has max
+│           └── io_app_cache_disposed_total (Observable Counter) - only if getStats() has disposedItems
 │
 └── 🏛️ Legacy Metrics (Non-Diagnostics)
     │
@@ -149,7 +155,7 @@ All Metrics in node-vtex-api
     │   │   ├── httpAgent - sockets, freeSockets, pendingRequests
     │   │   └── incomingRequest - total, closed, aborted
     │   │
-    │   └── Cache Metrics (via trackCache)
+    │   └── Cache Metrics (via trackCache — replacement available, see Diagnostics Cache Metrics above)
     │       └── {cache_name}-cache
     │           ├── LRU: itemCount, length, disposedItems, hitRate, hits, max, total
     │           ├── Disk: hits, total
@@ -241,6 +247,25 @@ These are operation-specific metrics recorded in middleware components.
 | `http_agent_sockets_current` | Gauge | Active sockets |
 | `http_agent_free_sockets_current` | Gauge | Free sockets in pool |
 | `http_agent_pending_requests_current` | Gauge | Pending requests waiting for socket |
+
+#### Cache Metrics (Observable)
+
+**Source:** `metrics/DiagnosticsMetrics.ts` (`trackCache()`)
+
+The replacement for the legacy `MetricsAccumulator.trackCache()` (see [Legacy Metrics](#legacy-metrics-non-diagnostics) below). Unlike every other metric on this page, these are **observable (pull-based)**: the app registers a cache once, and the four instruments below are read by a callback on the OTel SDK's own collection schedule, not pushed per-request. See `registerObservableGauge`/`registerObservableCounter` on `DiagnosticsMetrics` if you need the same pull model for something other than a cache.
+
+| Metric Name | Type | Attributes | Reported when |
+|-------------|------|------------|----------------|
+| `io_app_cache_operations_total` | Observable Counter | `cache`, `cache_state` (`hit` \| `miss`) | Always |
+| `io_app_cache_items_current` | Observable Gauge | `cache` | Cache's `getStats()` returns `itemCount` |
+| `io_app_cache_capacity` | Observable Gauge | `cache` | Cache's `getStats()` returns `max` |
+| `io_app_cache_disposed_total` | Observable Counter | `cache` | Cache's `getStats()` returns `disposedItems` |
+
+`hitRate` is not republished — derive it from `io_app_cache_operations_total` (`hit / (hit + miss)`) so it aggregates correctly across instances instead of averaging pre-computed ratios.
+
+```typescript
+const dispose = global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)
+```
 
 ---
 

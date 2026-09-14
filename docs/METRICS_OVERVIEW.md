@@ -172,6 +172,37 @@ global.diagnosticsMetrics.setGauge('cache_items_current', stats.size, {
 
 > 📌 **Production Example:** The [render-to-string's `recordCacheMetric()` function](https://github.com/vtex/render-to-string/blob/master/node/utils/metrics.ts) uses `incrementCounter('cache_operations_total', 1, { cache, cache_state })` for unified cache tracking.
 
+**Note:** Pattern 4 above is for *push*-based tracking — you call `incrementCounter`/`setGauge` yourself, at the point in your code where a cache is read. If instead your code uses `metrics.trackCache(name, cache)` — registering a cache instance once, with `MetricsAccumulator` reading its `getStats()` on every flush — that's a different idiom with its own replacement. See Pattern 5.
+
+### Pattern 5: Registering a Cache for Periodic Observation (`trackCache`)
+
+**Before:**
+```typescript
+// Registers the cache once; MetricsAccumulator calls cache.getStats() on every flush
+metrics.trackCache('pages', pagesCacheStorage)
+```
+
+**After:**
+```typescript
+// Same registration call, same cache instance — DiagnosticsMetrics reads getStats()
+// on the OTel SDK's own collection schedule instead of on every legacy flush.
+const dispose = global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)
+```
+
+This is a direct replacement, not a manual re-implementation with `incrementCounter`/`setGauge` (Pattern 4's approach) — `trackCache()` reads `getStats()` exactly once per collection cycle no matter how many metrics it produces from that one cache, which matters because `hits`/`total`/`disposedItems` reset on every read: reading the same cache from two places (e.g. the legacy `trackCache` and a hand-rolled `incrementCounter` call) would split its counts between them. Migrate a cache by **replacing** the legacy `metrics.trackCache(...)` call, not by adding this alongside it.
+
+Emits `io_app_cache_operations_total`, `io_app_cache_items_current`, `io_app_cache_capacity` and `io_app_cache_disposed_total` — see [METRICS_CATALOG.md](./METRICS_CATALOG.md#cache-metrics-observable) for the full attribute reference. `hitRate` is not republished; derive it from `io_app_cache_operations_total` instead.
+
+If you have a periodic value to report that isn't a cache — a queue depth, a connection pool size, anything read on a schedule rather than pushed per-request — use the lower-level `registerObservableGauge`/`registerObservableCounter` that `trackCache` is built on:
+
+```typescript
+const dispose = global.diagnosticsMetrics?.registerObservableGauge(
+  'queue_depth_current',
+  (result) => result.observe(queue.length),
+  { description: 'Items currently queued', unit: '1' }
+)
+```
+
 ---
 
 ## What Doesn't Need Migration
