@@ -13,6 +13,7 @@ import {
 import { Types } from '@vtex/diagnostics-nodejs'
 import { getMetricClient } from '../service/metrics/client'
 import { METRIC_CLIENT_INIT_TIMEOUT_MS, LINKED } from '../constants'
+import { GetStats } from './MetricsAccumulator'
 
 /**
  * Maximum number of custom attributes allowed per metric call to control cardinality.
@@ -29,8 +30,6 @@ const MAX_CUSTOM_ATTRIBUTES = 7
  */
 const BASE_ATTRIBUTES_KEY = createContextKey('vtex.metrics.baseAttributes')
 
-// Meter for observable (pull-based) instruments — read by the SDK on its own
-// collection schedule, unlike the push-based ones above.
 const OBSERVABLE_METER_NAME = 'node-vtex-api'
 
 // trackCache() metric names — one shared instrument set, differentiated by `cache`.
@@ -39,19 +38,12 @@ const CACHE_ITEMS_METRIC = 'io_app_cache_items_current'
 const CACHE_CAPACITY_METRIC = 'io_app_cache_capacity'
 const CACHE_DISPOSED_METRIC = 'io_app_cache_disposed_total'
 
-/**
- * The stats shape trackCache() reads — matches LRUCache/DiskCache/LRUDiskCache/
- * MultilayeredCache's getStats() (see `../caches` and `GetStats` in
- * MetricsAccumulator.ts). `hits`/`total`/`disposedItems` reset on every read;
- * `itemCount`/`max` don't. Fields a cache doesn't have are just not reported.
- */
-export interface TrackedCache {
-  getStats(): { [key: string]: number | boolean | string | undefined }
-}
+// Same shape as MetricsAccumulator's cache instances (LRUCache, DiskCache, etc.),
+// so trackCache() accepts what apps already have.
+export type TrackedCache = GetStats
 
-// ObservableGauge and ObservableCounter are the same type in the OTel API
-// (Observable), so registerObservableGauge/Counter share one implementation below,
-// keyed by which kind of instrument to create.
+// ObservableGauge and ObservableCounter are both just Observable in the OTel API,
+// so registerObservableGauge/Counter share one implementation, keyed by kind.
 type ObservableKind = 'gauge' | 'counter'
 interface ObservableRegistration {
   observe: ObservableCallback
@@ -156,14 +148,12 @@ export class DiagnosticsMetrics {
   private counters: Map<string, Types.Counter>
   private gauges: Map<string, Types.Gauge>
 
-  // Observable (pull-based) instruments: what apps asked to register, and what's
-  // actually attached to an OTel instrument (empty until the client is ready — see
-  // syncObservables). Re-registering a name replaces its callback.
+  // What apps registered, and what's actually attached to an OTel instrument
+  // (empty until the client is ready — see syncObservables), keyed by name.
   private observableRegistrations: Record<ObservableKind, Map<string, ObservableRegistration>>
   private observableInstruments: Record<ObservableKind, Map<string, { instrument: Observable; callback: ObservableCallback }>>
 
-  // trackCache(): registered caches, their running cumulative totals (getStats()
-  // resets on read — see observeCaches), and the shared instruments, created once.
+  // trackCache() state: registered caches, running cumulative totals, shared instruments.
   private cacheRegistry: Map<string, TrackedCache>
   private cacheCumulative: Map<string, { hits: number; misses: number; disposed: number }>
   private cacheInstruments: {
@@ -449,38 +439,20 @@ export class DiagnosticsMetrics {
     this.gauges.get(name)!.set(value, mergedAttributes)
   }
 
-  /**
-   * Get the meter used for observable instruments, if the metrics client is ready.
-   * Reaches the OpenTelemetry MeterProvider through `getProvider()`, which is already
-   * part of the metrics client's public surface (the same access node-vtex-api uses
-   * for HostMetricsInstrumentation in service/telemetry/client.ts).
-   */
-  // Reaches the OTel MeterProvider via getProvider(), already part of the metrics
-  // client's type — the same access node-vtex-api uses for HostMetricsInstrumentation
-  // in service/telemetry/client.ts.
+  // getProvider() is already part of the metrics client's type.
   private getObservableMeter(): Meter | undefined {
     return this.metricsClient?.getProvider().getMeter(OBSERVABLE_METER_NAME)
   }
 
-  /**
-   * Register (or replace, if `name` is already registered) a pull-based gauge: OTel
-   * calls `observe` on its own collection schedule and expects `result.observe(value,
-   * attributes?)`. Unlike the push-based methods above, base attributes are not
-   * merged — there's no request in progress when this runs, so `observe` must supply
-   * whatever attributes it needs.
-   *
-   * @returns A disposer that detaches the callback. Safe to call more than once, and
-   * safe to call before the metrics client is ready.
-   */
+  // Registers (or replaces) a pull-based gauge: OTel calls `observe` on its own
+  // schedule, with `result.observe(value, attributes?)`. No base-attribute merging —
+  // there's no request in progress when this runs.
   public registerObservableGauge(name: string, observe: ObservableCallback, options?: MetricOptions): () => void {
     return this.registerObservable('gauge', name, observe, options)
   }
 
-  /**
-   * Same as `registerObservableGauge`, but for a monotonically increasing total:
-   * `observe` must report the current cumulative value (the SDK derives the delta),
-   * the same way `io_app_cache_operations_total` does below.
-   */
+  // Same as registerObservableGauge, but `observe` reports the cumulative total —
+  // the SDK derives the delta itself.
   public registerObservableCounter(name: string, observe: ObservableCallback, options?: MetricOptions): () => void {
     return this.registerObservable('counter', name, observe, options)
   }
@@ -502,17 +474,12 @@ export class DiagnosticsMetrics {
     }
   }
 
-  // Attaches every `kind` registration to its instrument. Safe to call anytime —
-  // a no-op if the client isn't ready yet, or if nothing changed since last call.
-  // This is what makes registering before the client is ready work: the caller
-  // gets its disposer immediately, and the actual OTel wiring happens here, once,
-  // whenever the meter becomes available (see flushPendingObservables).
+  // Attaches every `kind` registration to its instrument. A no-op if there's nothing
+  // registered or the client isn't ready — safe to call anytime, including from
+  // flushPendingObservables() once the client becomes ready.
   private syncObservables(kind: ObservableKind): void {
-    // Checked before getObservableMeter(): an app that never registers anything of
-    // this kind must never touch getProvider(), or the "inert unless used" guarantee
-    // breaks for it.
     if (this.observableRegistrations[kind].size === 0) {
-      return
+      return // skip getObservableMeter() entirely if this kind is unused
     }
 
     const meter = this.getObservableMeter()
@@ -538,8 +505,8 @@ export class DiagnosticsMetrics {
     }
   }
 
-  // Attaches whatever was registered before the client was ready. No-op for an app
-  // that never calls registerObservableGauge/Counter/trackCache.
+  // Runs once the client is ready. No-op for an app that never calls
+  // registerObservableGauge/Counter/trackCache.
   private flushPendingObservables(): void {
     this.syncObservables('gauge')
     this.syncObservables('counter')
@@ -549,21 +516,9 @@ export class DiagnosticsMetrics {
     }
   }
 
-  /**
-   * Replacement for the legacy `MetricsAccumulator.trackCache()`, taking the same
-   * cache instances (LRUCache, DiskCache, LRUDiskCache, MultilayeredCache — see
-   * `../caches`). Reads `getStats()` once per OTel collection cycle, not on any
-   * schedule of its own, and folds the delta into a running total (see
-   * `observeCaches`) since `hits`/`total`/`disposedItems` reset on every read.
-   *
-   * Migrate a cache by replacing the legacy `trackCache` call, not adding this one
-   * alongside it — reading the same cache from both would split its counts between
-   * them. Emits `io_app_cache_operations_total`, `_items_current`, `_capacity` and
-   * `_disposed_total` (see METRICS_CATALOG.md); `hitRate` is not republished, derive
-   * it from `_operations_total` instead.
-   *
-   * @returns A disposer that stops observing this cache. Safe to call more than once.
-   */
+  // Replacement for the legacy MetricsAccumulator.trackCache() — same cache instances,
+  // see METRICS_CATALOG.md for the metrics emitted. Replace the legacy call, don't
+  // add this alongside it: getStats() resets on read, so reading twice splits the count.
   public trackCache(name: string, cacheInstance: TrackedCache): () => void {
     this.cacheRegistry.set(name, cacheInstance)
     this.ensureCacheInstruments()
@@ -574,9 +529,6 @@ export class DiagnosticsMetrics {
     }
   }
 
-  // Lazily creates the shared cache instruments and the one batch callback that
-  // reads every registered cache per cycle. Idempotent — called from trackCache()
-  // and, in case the client wasn't ready yet, from flushPendingObservables().
   private ensureCacheInstruments(): void {
     if (this.cacheInstruments) {
       return
@@ -612,9 +564,8 @@ export class DiagnosticsMetrics {
     this.cacheInstruments = { operations, items, capacity, disposed }
   }
 
-  // The one callback backing every cache's instruments — reads each cache exactly
-  // once per cycle (never twice, never split across two callbacks) and turns its
-  // delta-on-read stats into a running cumulative total before observing it.
+  // Reads each cache once per cycle and turns its delta-on-read stats into a
+  // running cumulative total (an ObservableCounter must report the total, not a delta).
   private observeCaches(result: BatchObservableResult): void {
     if (!this.cacheInstruments) {
       return
