@@ -5,6 +5,7 @@ import {
   createContextKey,
   Meter,
   MetricOptions,
+  Observable,
   ObservableCallback,
   ObservableCounter,
   ObservableGauge,
@@ -28,38 +29,33 @@ const MAX_CUSTOM_ATTRIBUTES = 7
  */
 const BASE_ATTRIBUTES_KEY = createContextKey('vtex.metrics.baseAttributes')
 
-/**
- * Name of the meter used for observable (pull-based) instruments, i.e. instruments
- * whose value is read by a callback on the SDK's own collection schedule rather than
- * pushed by application code. Kept separate from per-app instrumentation names since
- * these instruments live at the node-vtex-api level.
- */
+// Meter for observable (pull-based) instruments — read by the SDK on its own
+// collection schedule, unlike the push-based ones above.
 const OBSERVABLE_METER_NAME = 'node-vtex-api'
 
-/**
- * Metric names for the trackCache() cache-visibility instruments. One shared set of
- * instruments differentiated by a `cache` attribute, following the same "single
- * instrument, many operations" pattern as the latency histogram.
- */
+// trackCache() metric names — one shared instrument set, differentiated by `cache`.
 const CACHE_OPERATIONS_METRIC = 'io_app_cache_operations_total'
 const CACHE_ITEMS_METRIC = 'io_app_cache_items_current'
 const CACHE_CAPACITY_METRIC = 'io_app_cache_capacity'
 const CACHE_DISPOSED_METRIC = 'io_app_cache_disposed_total'
 
 /**
- * The subset of a VTEX IO cache's stats surface that trackCache() understands.
- * Matches the shape already returned by the LRUCache, DiskCache, LRUDiskCache and
- * MultilayeredCache classes' `getStats()` — see `src/caches/*.ts` and the `GetStats`
- * interface in `MetricsAccumulator.ts`, which this mirrors so the same cache instance
- * can be passed to either API.
- *
- * `hits` and `total` are expected to be a delta since the last read (all four cache
- * classes reset them on every `getStats()` call); `itemCount`/`length`/`max` are read
- * as the current state and are not reset. Fields absent from a given cache type
- * (e.g. DiskCache has no `itemCount`) are simply not reported.
+ * The stats shape trackCache() reads — matches LRUCache/DiskCache/LRUDiskCache/
+ * MultilayeredCache's getStats() (see `../caches` and `GetStats` in
+ * MetricsAccumulator.ts). `hits`/`total`/`disposedItems` reset on every read;
+ * `itemCount`/`max` don't. Fields a cache doesn't have are just not reported.
  */
 export interface TrackedCache {
   getStats(): { [key: string]: number | boolean | string | undefined }
+}
+
+// ObservableGauge and ObservableCounter are the same type in the OTel API
+// (Observable), so registerObservableGauge/Counter share one implementation below,
+// keyed by which kind of instrument to create.
+type ObservableKind = 'gauge' | 'counter'
+interface ObservableRegistration {
+  observe: ObservableCallback
+  options?: MetricOptions
 }
 
 /**
@@ -160,25 +156,14 @@ export class DiagnosticsMetrics {
   private counters: Map<string, Types.Counter>
   private gauges: Map<string, Types.Gauge>
 
-  // Observable (pull-based) instruments, keyed by name. Each entry tracks the
-  // OTel instrument handle alongside the callback currently attached to it, so a
-  // second registration under the same name can detach the old callback before
-  // attaching the new one instead of accumulating callbacks on the same instrument.
-  private observableGauges: Map<string, { instrument: ObservableGauge; callback: ObservableCallback }>
-  private observableCounters: Map<string, { instrument: ObservableCounter; callback: ObservableCallback }>
+  // Observable (pull-based) instruments: what apps asked to register, and what's
+  // actually attached to an OTel instrument (empty until the client is ready — see
+  // syncObservables). Re-registering a name replaces its callback.
+  private observableRegistrations: Record<ObservableKind, Map<string, ObservableRegistration>>
+  private observableInstruments: Record<ObservableKind, Map<string, { instrument: Observable; callback: ObservableCallback }>>
 
-  // Observable registrations requested before the metrics client finished initializing.
-  // The metrics client initializes asynchronously (see initMetricClient), while apps
-  // typically call trackCache/registerObservableGauge/registerObservableCounter
-  // synchronously at module load time — often before that initialization completes.
-  // Without this, those early registrations would be silently dropped. Replayed by
-  // flushPendingObservables() once the client becomes available.
-  private pendingObservableGauges: Map<string, { observe: ObservableCallback; options?: MetricOptions }>
-  private pendingObservableCounters: Map<string, { observe: ObservableCallback; options?: MetricOptions }>
-
-  // trackCache() state: caches registered for observation, the running cumulative
-  // totals derived from their delta-on-read stats (see TrackedCache), and the shared
-  // instruments + batch callback created once on first use.
+  // trackCache(): registered caches, their running cumulative totals (getStats()
+  // resets on read — see observeCaches), and the shared instruments, created once.
   private cacheRegistry: Map<string, TrackedCache>
   private cacheCumulative: Map<string, { hits: number; misses: number; disposed: number }>
   private cacheInstruments: {
@@ -191,10 +176,8 @@ export class DiagnosticsMetrics {
   constructor() {
     this.counters = new Map()
     this.gauges = new Map()
-    this.observableGauges = new Map()
-    this.observableCounters = new Map()
-    this.pendingObservableGauges = new Map()
-    this.pendingObservableCounters = new Map()
+    this.observableRegistrations = { gauge: new Map(), counter: new Map() }
+    this.observableInstruments = { gauge: new Map(), counter: new Map() }
     this.cacheRegistry = new Map()
     this.cacheCumulative = new Map()
     this.initMetricClient()
@@ -223,9 +206,8 @@ export class DiagnosticsMetrics {
         // Create the single latency histogram after client is ready
         this.createLatencyHistogram()
 
-        // Replay any registerObservableGauge/registerObservableCounter/trackCache
-        // calls that arrived before the client was ready. No-op if none arrived —
-        // apps that never call these APIs are unaffected by this step.
+        // Attach any observable registrations made before the client was ready.
+        // No-op if there are none.
         this.flushPendingObservables()
 
         return this.metricsClient
@@ -473,191 +455,114 @@ export class DiagnosticsMetrics {
    * part of the metrics client's public surface (the same access node-vtex-api uses
    * for HostMetricsInstrumentation in service/telemetry/client.ts).
    */
+  // Reaches the OTel MeterProvider via getProvider(), already part of the metrics
+  // client's type — the same access node-vtex-api uses for HostMetricsInstrumentation
+  // in service/telemetry/client.ts.
   private getObservableMeter(): Meter | undefined {
     return this.metricsClient?.getProvider().getMeter(OBSERVABLE_METER_NAME)
   }
 
   /**
-   * Register (or replace) the callback for a named observable gauge instrument.
+   * Register (or replace, if `name` is already registered) a pull-based gauge: OTel
+   * calls `observe` on its own collection schedule and expects `result.observe(value,
+   * attributes?)`. Unlike the push-based methods above, base attributes are not
+   * merged — there's no request in progress when this runs, so `observe` must supply
+   * whatever attributes it needs.
    *
-   * Base attributes from `runWithBaseAttributes` are NOT merged here: observable
-   * callbacks run on the SDK's own collection schedule, not within a request, so
-   * there is no request-scoped context to merge in. The `observe` callback is
-   * responsible for supplying whatever attributes it needs directly.
-   *
-   * @param name Instrument name (e.g. 'queue_depth_current')
-   * @param observe Called by the OTel SDK on each collection cycle; use
-   *   `result.observe(value, attributes?)` to report the current value
-   * @param options Optional instrument metadata (description, unit)
-   * @returns A disposer that detaches this callback. Safe to call more than once.
-   *
-   * @example
-   * ```typescript
-   * const dispose = diagnosticsMetrics.registerObservableGauge(
-   *   'queue_depth_current',
-   *   (result) => result.observe(queue.length),
-   *   { description: 'Items currently queued', unit: '1' }
-   * )
-   * // later, if the queue goes away:
-   * dispose()
-   * ```
+   * @returns A disposer that detaches the callback. Safe to call more than once, and
+   * safe to call before the metrics client is ready.
    */
   public registerObservableGauge(name: string, observe: ObservableCallback, options?: MetricOptions): () => void {
-    if (!this.metricsClient) {
-      this.pendingObservableGauges.set(name, { observe, options })
-      return () => this.detachPendingOrActiveObservableGauge(name, observe)
-    }
-
-    return this.attachObservableGauge(name, observe, options)
+    return this.registerObservable('gauge', name, observe, options)
   }
 
   /**
-   * Register (or replace) the callback for a named observable counter instrument.
-   * Unlike `incrementCounter`, the callback must report the current cumulative total
-   * on each collection cycle (not a delta) — the SDK computes the delta itself.
-   *
-   * See `registerObservableGauge` for the base-attributes caveat and the "replace on
-   * re-registration" behavior.
-   *
-   * @param name Instrument name (e.g. 'jobs_processed_total')
-   * @param observe Called by the OTel SDK on each collection cycle; use
-   *   `result.observe(cumulativeValue, attributes?)`
-   * @param options Optional instrument metadata (description, unit)
-   * @returns A disposer that detaches this callback. Safe to call more than once.
+   * Same as `registerObservableGauge`, but for a monotonically increasing total:
+   * `observe` must report the current cumulative value (the SDK derives the delta),
+   * the same way `io_app_cache_operations_total` does below.
    */
   public registerObservableCounter(name: string, observe: ObservableCallback, options?: MetricOptions): () => void {
-    if (!this.metricsClient) {
-      this.pendingObservableCounters.set(name, { observe, options })
-      return () => this.detachPendingOrActiveObservableCounter(name, observe)
-    }
-
-    return this.attachObservableCounter(name, observe, options)
+    return this.registerObservable('counter', name, observe, options)
   }
 
-  private attachObservableGauge(name: string, observe: ObservableCallback, options?: MetricOptions): () => void {
+  private registerObservable(kind: ObservableKind, name: string, observe: ObservableCallback, options?: MetricOptions): () => void {
+    this.observableRegistrations[kind].set(name, { observe, options })
+    this.syncObservables(kind)
+
+    return () => {
+      if (this.observableRegistrations[kind].get(name)?.observe === observe) {
+        this.observableRegistrations[kind].delete(name)
+      }
+
+      const active = this.observableInstruments[kind].get(name)
+      if (active?.callback === observe) {
+        active.instrument.removeCallback(observe)
+        this.observableInstruments[kind].delete(name)
+      }
+    }
+  }
+
+  // Attaches every `kind` registration to its instrument. Safe to call anytime —
+  // a no-op if the client isn't ready yet, or if nothing changed since last call.
+  // This is what makes registering before the client is ready work: the caller
+  // gets its disposer immediately, and the actual OTel wiring happens here, once,
+  // whenever the meter becomes available (see flushPendingObservables).
+  private syncObservables(kind: ObservableKind): void {
+    // Checked before getObservableMeter(): an app that never registers anything of
+    // this kind must never touch getProvider(), or the "inert unless used" guarantee
+    // breaks for it.
+    if (this.observableRegistrations[kind].size === 0) {
+      return
+    }
+
     const meter = this.getObservableMeter()
     if (!meter) {
-      console.warn('DiagnosticsMetrics not initialized. Call initialize() first.')
-      return () => {}
+      return
     }
 
-    const existing = this.observableGauges.get(name)
-    const instrument = existing?.instrument ?? meter.createObservableGauge(name, options)
-    if (existing) {
-      existing.instrument.removeCallback(existing.callback)
-    }
+    for (const [name, { observe, options }] of this.observableRegistrations[kind]) {
+      const active = this.observableInstruments[kind].get(name)
+      if (active?.callback === observe) {
+        continue
+      }
 
-    instrument.addCallback(observe)
-    this.observableGauges.set(name, { instrument, callback: observe })
+      if (active) {
+        active.instrument.removeCallback(active.callback)
+      }
 
-    return () => this.detachPendingOrActiveObservableGauge(name, observe)
-  }
+      const instrument: Observable = active?.instrument ??
+        (kind === 'gauge' ? meter.createObservableGauge(name, options) : meter.createObservableCounter(name, options))
 
-  private attachObservableCounter(name: string, observe: ObservableCallback, options?: MetricOptions): () => void {
-    const meter = this.getObservableMeter()
-    if (!meter) {
-      console.warn('DiagnosticsMetrics not initialized. Call initialize() first.')
-      return () => {}
-    }
-
-    const existing = this.observableCounters.get(name)
-    const instrument = existing?.instrument ?? meter.createObservableCounter(name, options)
-    if (existing) {
-      existing.instrument.removeCallback(existing.callback)
-    }
-
-    instrument.addCallback(observe)
-    this.observableCounters.set(name, { instrument, callback: observe })
-
-    return () => this.detachPendingOrActiveObservableCounter(name, observe)
-  }
-
-  private detachPendingOrActiveObservableGauge(name: string, observe: ObservableCallback): void {
-    if (this.pendingObservableGauges.get(name)?.observe === observe) {
-      this.pendingObservableGauges.delete(name)
-    }
-
-    const active = this.observableGauges.get(name)
-    if (active?.callback === observe) {
-      active.instrument.removeCallback(observe)
-      this.observableGauges.delete(name)
+      instrument.addCallback(observe)
+      this.observableInstruments[kind].set(name, { instrument, callback: observe })
     }
   }
 
-  private detachPendingOrActiveObservableCounter(name: string, observe: ObservableCallback): void {
-    if (this.pendingObservableCounters.get(name)?.observe === observe) {
-      this.pendingObservableCounters.delete(name)
-    }
-
-    const active = this.observableCounters.get(name)
-    if (active?.callback === observe) {
-      active.instrument.removeCallback(observe)
-      this.observableCounters.delete(name)
-    }
-  }
-
-  /**
-   * Replay observable registrations that arrived before the metrics client was ready.
-   * Called once, right after the client finishes initializing. A no-op for any app
-   * that never calls registerObservableGauge/registerObservableCounter/trackCache.
-   */
+  // Attaches whatever was registered before the client was ready. No-op for an app
+  // that never calls registerObservableGauge/Counter/trackCache.
   private flushPendingObservables(): void {
-    for (const [name, { observe, options }] of this.pendingObservableGauges) {
-      this.attachObservableGauge(name, observe, options)
-    }
+    this.syncObservables('gauge')
+    this.syncObservables('counter')
 
-    this.pendingObservableGauges.clear()
-
-    for (const [name, { observe, options }] of this.pendingObservableCounters) {
-      this.attachObservableCounter(name, observe, options)
-    }
-
-    this.pendingObservableCounters.clear()
-
-    // Only touch the cache instruments if trackCache() actually registered something
-    // before the client was ready. Calling ensureCacheInstruments() unconditionally
-    // here would call getProvider() on every DiagnosticsMetrics instance, including
-    // apps that never call trackCache() — the opposite of the "inert unless used"
-    // guarantee this feature is meant to keep.
     if (this.cacheRegistry.size > 0) {
       this.ensureCacheInstruments()
     }
   }
 
   /**
-   * Register a cache for periodic, pull-based observation — the DiagnosticsMetrics
-   * replacement for the legacy MetricsAccumulator.trackCache(). Accepts the same
-   * cache instances already in use today (LRUCache, DiskCache, LRUDiskCache,
-   * MultilayeredCache from `../caches`).
+   * Replacement for the legacy `MetricsAccumulator.trackCache()`, taking the same
+   * cache instances (LRUCache, DiskCache, LRUDiskCache, MultilayeredCache — see
+   * `../caches`). Reads `getStats()` once per OTel collection cycle, not on any
+   * schedule of its own, and folds the delta into a running total (see
+   * `observeCaches`) since `hits`/`total`/`disposedItems` reset on every read.
    *
-   * Unlike the legacy trackCache, this does not read `cacheInstance.getStats()`
-   * immediately or on any fixed schedule of its own — it is read once per OTel
-   * collection cycle, from a single shared callback covering every registered cache,
-   * so that a cache's delta-on-read counters (`hits`, `total`, `disposedItems`) are
-   * never read twice in the same cycle and split between two callers.
+   * Migrate a cache by replacing the legacy `trackCache` call, not adding this one
+   * alongside it — reading the same cache from both would split its counts between
+   * them. Emits `io_app_cache_operations_total`, `_items_current`, `_capacity` and
+   * `_disposed_total` (see METRICS_CATALOG.md); `hitRate` is not republished, derive
+   * it from `_operations_total` instead.
    *
-   * There is deliberately no dual-write path with the legacy `trackCache`: reading
-   * the same cache from both would divide its hit/miss counts between them. Replace
-   * the legacy call with this one in the same change, not alongside it.
-   *
-   * Emits, per registered cache (attribute `cache` = the name passed here):
-   * - `io_app_cache_operations_total` (counter, attribute `cache_state`: 'hit' | 'miss')
-   * - `io_app_cache_items_current` (gauge) — only if the cache reports `itemCount`
-   * - `io_app_cache_capacity` (gauge) — only if the cache reports `max`
-   * - `io_app_cache_disposed_total` (counter) — only if the cache reports `disposedItems`
-   *
-   * `hitRate` is intentionally not republished — it is derivable from the operations
-   * counter, and publishing it directly would prevent correct aggregation across
-   * instances.
-   *
-   * @param name Cache name (e.g. 'pages') — becomes the `cache` attribute
-   * @param cacheInstance Any cache exposing `getStats()` in the legacy shape
    * @returns A disposer that stops observing this cache. Safe to call more than once.
-   *
-   * @example
-   * ```typescript
-   * const dispose = diagnosticsMetrics.trackCache('pages', pagesCacheStorage)
-   * ```
    */
   public trackCache(name: string, cacheInstance: TrackedCache): () => void {
     this.cacheRegistry.set(name, cacheInstance)
@@ -669,12 +574,9 @@ export class DiagnosticsMetrics {
     }
   }
 
-  /**
-   * Lazily create the shared cache instruments and the single batch callback that
-   * reads every registered cache once per collection cycle. Idempotent: safe to call
-   * from both `trackCache()` (in case the client is already ready) and
-   * `flushPendingObservables()` (in case it was not).
-   */
+  // Lazily creates the shared cache instruments and the one batch callback that
+  // reads every registered cache per cycle. Idempotent — called from trackCache()
+  // and, in case the client wasn't ready yet, from flushPendingObservables().
   private ensureCacheInstruments(): void {
     if (this.cacheInstruments) {
       return
@@ -682,8 +584,6 @@ export class DiagnosticsMetrics {
 
     const meter = this.getObservableMeter()
     if (!meter) {
-      // Not ready yet. trackCache() already recorded the cache in cacheRegistry;
-      // flushPendingObservables() will call this again once the client is ready.
       return
     }
 
@@ -712,12 +612,9 @@ export class DiagnosticsMetrics {
     this.cacheInstruments = { operations, items, capacity, disposed }
   }
 
-  /**
-   * The single callback backing every registered cache's instruments. Reads each
-   * cache's `getStats()` exactly once per collection cycle and folds the delta into
-   * a running cumulative total (see the class-level note on trackCache), since
-   * `hits`/`total`/`disposedItems` reset on every read.
-   */
+  // The one callback backing every cache's instruments — reads each cache exactly
+  // once per cycle (never twice, never split across two callbacks) and turns its
+  // delta-on-read stats into a running cumulative total before observing it.
   private observeCaches(result: BatchObservableResult): void {
     if (!this.cacheInstruments) {
       return
@@ -730,7 +627,7 @@ export class DiagnosticsMetrics {
       try {
         stats = cache.getStats()
       } catch (error) {
-        console.error(`DiagnosticsMetrics: failed to read stats for cache '${name}':`, error)
+        console.error('DiagnosticsMetrics: failed to read stats for cache', name, error)
         continue
       }
 

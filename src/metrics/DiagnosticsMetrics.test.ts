@@ -754,13 +754,10 @@ describe('DiagnosticsMetrics', () => {
   })
 
   describe('registerObservableGauge / registerObservableCounter', () => {
-    // These two methods reach the OTel SDK through metricsClient.getProvider().getMeter(...),
-    // one level below the createCounter/createGauge/createHistogram wrapper the rest of this
-    // file mocks. So this block mocks the Meter itself instead — tracking addCallback/
-    // removeCallback calls per instrument name, the same way the outer mock tracks
-    // add()/set()/record() calls per counter/gauge/histogram name.
-    let observableGaugeInstruments: Map<string, { addCallback: jest.Mock; removeCallback: jest.Mock }>
-    let observableCounterInstruments: Map<string, { addCallback: jest.Mock; removeCallback: jest.Mock }>
+    // These reach the SDK through metricsClient.getProvider().getMeter(...), so this
+    // block mocks the Meter directly instead of the createCounter/Gauge/Histogram wrapper.
+    let gaugeInstruments: Map<string, { addCallback: jest.Mock; removeCallback: jest.Mock }>
+    let counterInstruments: Map<string, { addCallback: jest.Mock; removeCallback: jest.Mock }>
     let observableMeter: {
       createObservableGauge: jest.Mock
       createObservableCounter: jest.Mock
@@ -769,26 +766,23 @@ describe('DiagnosticsMetrics', () => {
     let observableMetricsClient: Types.MetricClient
     let observableDiagnostics: DiagnosticsMetrics
 
-    beforeEach(async () => {
-      observableGaugeInstruments = new Map()
-      observableCounterInstruments = new Map()
+    function fakeInstrumentFactory(instruments: Map<string, { addCallback: jest.Mock; removeCallback: jest.Mock }>) {
+      return jest.fn((name: string) => {
+        if (!instruments.has(name)) {
+          instruments.set(name, { addCallback: jest.fn(), removeCallback: jest.fn() })
+        }
+        return instruments.get(name)
+      })
+    }
 
+    beforeEach(async () => {
+      gaugeInstruments = new Map()
+      counterInstruments = new Map()
       observableMeter = {
-        createObservableGauge: jest.fn((name: string) => {
-          if (!observableGaugeInstruments.has(name)) {
-            observableGaugeInstruments.set(name, { addCallback: jest.fn(), removeCallback: jest.fn() })
-          }
-          return observableGaugeInstruments.get(name)
-        }),
-        createObservableCounter: jest.fn((name: string) => {
-          if (!observableCounterInstruments.has(name)) {
-            observableCounterInstruments.set(name, { addCallback: jest.fn(), removeCallback: jest.fn() })
-          }
-          return observableCounterInstruments.get(name)
-        }),
+        createObservableGauge: fakeInstrumentFactory(gaugeInstruments),
+        createObservableCounter: fakeInstrumentFactory(counterInstruments),
         addBatchObservableCallback: jest.fn(),
       }
-
       observableMetricsClient = {
         createHistogram: jest.fn(),
         createCounter: jest.fn(),
@@ -801,21 +795,12 @@ describe('DiagnosticsMetrics', () => {
       await new Promise(resolve => setTimeout(resolve, 10))
     })
 
-    it('creates the instrument and attaches the callback', () => {
+    it('creates the instrument (passing options through) and attaches the callback', () => {
       const observe = jest.fn()
-      observableDiagnostics.registerObservableGauge('queue_depth_current', observe)
+      observableDiagnostics.registerObservableGauge('queue_depth_current', observe, { unit: '1' })
 
-      expect(observableMeter.createObservableGauge).toHaveBeenCalledTimes(1)
-      expect(observableMeter.createObservableGauge).toHaveBeenCalledWith('queue_depth_current', undefined)
-      expect(observableGaugeInstruments.get('queue_depth_current')!.addCallback).toHaveBeenCalledWith(observe)
-    })
-
-    it('passes through instrument options (description, unit)', () => {
-      const observe = jest.fn()
-      const options = { description: 'Items currently queued', unit: '1' }
-      observableDiagnostics.registerObservableGauge('queue_depth_current', observe, options)
-
-      expect(observableMeter.createObservableGauge).toHaveBeenCalledWith('queue_depth_current', options)
+      expect(observableMeter.createObservableGauge).toHaveBeenCalledWith('queue_depth_current', { unit: '1' })
+      expect(gaugeInstruments.get('queue_depth_current')!.addCallback).toHaveBeenCalledWith(observe)
     })
 
     it('reuses the instrument and replaces the previous callback on re-registration', () => {
@@ -825,50 +810,28 @@ describe('DiagnosticsMetrics', () => {
       observableDiagnostics.registerObservableGauge('queue_depth_current', first)
       observableDiagnostics.registerObservableGauge('queue_depth_current', second)
 
-      const instrument = observableGaugeInstruments.get('queue_depth_current')!
+      const instrument = gaugeInstruments.get('queue_depth_current')!
       expect(observableMeter.createObservableGauge).toHaveBeenCalledTimes(1)
       expect(instrument.removeCallback).toHaveBeenCalledWith(first)
       expect(instrument.addCallback).toHaveBeenCalledWith(second)
     })
 
-    it('detaches the callback when the returned disposer is called', () => {
-      const observe = jest.fn()
-      const dispose = observableDiagnostics.registerObservableGauge('queue_depth_current', observe)
-
-      dispose()
-
-      expect(observableGaugeInstruments.get('queue_depth_current')!.removeCallback).toHaveBeenCalledWith(observe)
-    })
-
-    it('disposer is a no-op the second time it is called', () => {
+    it('detaches on dispose; the disposer is a no-op if called again', () => {
       const observe = jest.fn()
       const dispose = observableDiagnostics.registerObservableGauge('queue_depth_current', observe)
 
       dispose()
       dispose()
 
-      expect(observableGaugeInstruments.get('queue_depth_current')!.removeCallback).toHaveBeenCalledTimes(1)
+      expect(gaugeInstruments.get('queue_depth_current')!.removeCallback).toHaveBeenCalledTimes(1)
     })
 
-    it('creates an observable counter and attaches the callback', () => {
+    it('registerObservableCounter creates a counter instrument (same code path as the gauge)', () => {
       const observe = jest.fn()
       observableDiagnostics.registerObservableCounter('jobs_processed_total', observe)
 
-      expect(observableMeter.createObservableCounter).toHaveBeenCalledTimes(1)
-      expect(observableCounterInstruments.get('jobs_processed_total')!.addCallback).toHaveBeenCalledWith(observe)
-    })
-
-    it('reuses the counter instrument and replaces the previous callback on re-registration', () => {
-      const first = jest.fn()
-      const second = jest.fn()
-
-      observableDiagnostics.registerObservableCounter('jobs_processed_total', first)
-      observableDiagnostics.registerObservableCounter('jobs_processed_total', second)
-
-      const instrument = observableCounterInstruments.get('jobs_processed_total')!
-      expect(observableMeter.createObservableCounter).toHaveBeenCalledTimes(1)
-      expect(instrument.removeCallback).toHaveBeenCalledWith(first)
-      expect(instrument.addCallback).toHaveBeenCalledWith(second)
+      expect(observableMeter.createObservableCounter).toHaveBeenCalledWith('jobs_processed_total', undefined)
+      expect(counterInstruments.get('jobs_processed_total')!.addCallback).toHaveBeenCalledWith(observe)
     })
 
     it('queues the registration when the client is not ready yet, and applies it once it is', async () => {
@@ -877,18 +840,16 @@ describe('DiagnosticsMetrics', () => {
         new Promise<Types.MetricClient>(resolve => { resolveClient = resolve })
       )
 
-      const pendingInstance = new DiagnosticsMetrics()
+      const pending = new DiagnosticsMetrics()
       const observe = jest.fn()
-      pendingInstance.registerObservableGauge('startup_queue_depth', observe)
+      pending.registerObservableGauge('startup_queue_depth', observe)
 
-      // Not created yet: the client this new instance is waiting on hasn't resolved.
       expect(observableMeter.createObservableGauge).not.toHaveBeenCalledWith('startup_queue_depth', undefined)
 
       resolveClient(observableMetricsClient)
       await new Promise(resolve => setTimeout(resolve, 10))
 
-      expect(observableMeter.createObservableGauge).toHaveBeenCalledWith('startup_queue_depth', undefined)
-      expect(observableGaugeInstruments.get('startup_queue_depth')!.addCallback).toHaveBeenCalledWith(observe)
+      expect(gaugeInstruments.get('startup_queue_depth')!.addCallback).toHaveBeenCalledWith(observe)
     })
 
     it('disposing a still-pending registration prevents it from being applied once ready', async () => {
@@ -897,12 +858,10 @@ describe('DiagnosticsMetrics', () => {
         new Promise<Types.MetricClient>(resolve => { resolveClient = resolve })
       )
 
-      const pendingInstance = new DiagnosticsMetrics()
-      const observe = jest.fn()
-      const dispose = pendingInstance.registerObservableGauge('cancelled_before_ready', observe)
+      const pending = new DiagnosticsMetrics()
+      const dispose = pending.registerObservableGauge('cancelled_before_ready', jest.fn())
 
       dispose()
-
       resolveClient(observableMetricsClient)
       await new Promise(resolve => setTimeout(resolve, 10))
 
@@ -911,11 +870,9 @@ describe('DiagnosticsMetrics', () => {
   })
 
   describe('trackCache', () => {
-    // Unlike the rest of this file, trackCache is exercised against the real OTel SDK
-    // (a real MeterProvider + MetricReader), not a hand-rolled mock. The behavior worth
-    // trusting here — one read of getStats() per cycle feeding four instruments, and
-    // cumulative totals correctly accumulated from a delta-on-read source — is exactly
-    // the kind of thing a mock could get "passing" while still being wrong.
+    // Exercised against a real MeterProvider + MetricReader instead of a mock: the
+    // single-read-per-cycle and delta-to-cumulative accounting are easy to get wrong
+    // in a way a mock would still pass.
     let provider: MeterProvider
     let reader: PeriodicExportingMetricReader
     let exporter: InMemoryMetricExporter
@@ -934,11 +891,8 @@ describe('DiagnosticsMetrics', () => {
       }
     }
 
-    // `reader.collect()` returns the collected data directly — it does not go through
-    // the configured exporter (that only happens on the reader's own periodic timer,
-    // which this suite deliberately never lets fire). `InMemoryMetricExporter` is only
-    // here because PeriodicExportingMetricReader requires some exporter to construct;
-    // assertions read straight from collect()'s own return value instead.
+    // reader.collect() returns the data directly; it doesn't go through the exporter
+    // (that only happens on the reader's own timer, which never fires in this suite).
     function dataPointsIn(
       result: CollectionResult,
       metricName: string
@@ -963,9 +917,7 @@ describe('DiagnosticsMetrics', () => {
 
     beforeEach(async () => {
       exporter = new InMemoryMetricExporter(AggregationTemporality.CUMULATIVE)
-      // Large interval: this suite only ever triggers collection manually via
-      // reader.collect(); the periodic timer itself must never fire during a test.
-      reader = new PeriodicExportingMetricReader({ exporter, exportIntervalMillis: 1000000 })
+      reader = new PeriodicExportingMetricReader({ exporter, exportIntervalMillis: 1000000 }) // never fires; collect() is manual
       provider = new MeterProvider({ readers: [reader] })
 
       cacheMetricsClient = {
@@ -1054,7 +1006,6 @@ describe('DiagnosticsMetrics', () => {
     it('does not create the meter for apps that never call trackCache', () => {
       const getProviderSpy = jest.spyOn(cacheMetricsClient, 'getProvider')
 
-      // A DiagnosticsMetrics instance that only ever uses the synchronous APIs.
       cacheDiagnostics.incrementCounter('unrelated_total', 1)
 
       expect(getProviderSpy).not.toHaveBeenCalled()
@@ -1079,10 +1030,7 @@ describe('DiagnosticsMetrics', () => {
       })
       expect(errorSpy).toHaveBeenCalled()
 
-      // Dispose the throwing cache before afterEach's provider.shutdown() triggers one
-      // more collection cycle — otherwise it throws again through the (by-then-restored)
-      // real console.error, which is harmless but noisy in the test output.
-      disposeBroken()
+      disposeBroken() // avoid a second throw during afterEach's shutdown-triggered collect
       errorSpy.mockRestore()
     })
   })
