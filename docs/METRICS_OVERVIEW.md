@@ -191,12 +191,14 @@ const dispose = global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage
 
 This is a direct replacement, not a manual re-implementation with `incrementCounter`/`setGauge` (Pattern 4's approach) — `trackCache()` reads the cache exactly once per collection cycle no matter how many metrics it produces from it.
 
-**You can leave the legacy call in place while you validate.** The legacy `getStats()` reports a per-flush window and consumes it on read; `getCumulativeStats()` reports the process-lifetime total and has no side effects. The two readers don't steal counts from each other, so running them side by side and comparing is the recommended way to migrate:
+**Leaving the legacy call in place is harmless.** The legacy `getStats()` reports a per-flush window and consumes it on read; `getCumulativeStats()` reports the process-lifetime total and has no side effects, so the two readers don't steal counts from each other:
 
 ```typescript
-metrics.trackCache('pages', pagesCacheStorage)                      // keep during validation
-global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)   // add, compare, then drop the line above
+metrics.trackCache('pages', pagesCacheStorage)                      // harmless to keep
+global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)   // add; drop the line above when convenient
 ```
+
+This is about safety, not about comparing the two. Since #676 (v7.4.2) nothing consumes what the legacy flush returns — `statusTrack()` keeps running only because flushing also resets the metric accumulators, the CPU baseline and the request stats. So there is no legacy cache metric to compare against; what you get is that a half-migrated app still reports correct numbers. That matters when 23 call sites across three apps are migrated by different people in different PRs: under a read that consumed the counters, registering a cache in both places would have leaked an arbitrary fraction of its counts into a flush that discards them — a plausible-looking, permanently wrong number, with no second metric anywhere to reveal the discrepancy.
 
 Emits `io_app_cache_operations_total`, `io_app_cache_items_current`, `io_app_cache_capacity` and `io_app_cache_disposed_total` — see [METRICS_CATALOG.md](./METRICS_CATALOG.md#cache-metrics-observable) for the full attribute reference. `hitRate` is not republished; derive it from `io_app_cache_operations_total` instead.
 

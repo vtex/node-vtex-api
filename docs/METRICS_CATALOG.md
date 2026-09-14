@@ -155,7 +155,7 @@ All Metrics in node-vtex-api
     │   │   ├── httpAgent - sockets, freeSockets, pendingRequests
     │   │   └── incomingRequest - total, closed, aborted
     │   │
-    │   └── Cache Metrics (via trackCache — replacement above; safe to run both while migrating)
+    │   └── Cache Metrics (via trackCache — output discarded since #676; replacement above)
     │       └── {cache_name}-cache
     │           ├── LRU: itemCount, length, disposedItems, hitRate, hits, max, total
     │           ├── Disk: hits, total
@@ -254,7 +254,7 @@ These are operation-specific metrics recorded in middleware components.
 
 The replacement for the legacy `MetricsAccumulator.trackCache()` (see [Legacy Metrics](#legacy-metrics-non-diagnostics) below). Unlike every other metric on this page, these are **observable (pull-based)**: the app registers a cache once, and the four instruments below are read by a callback on the OTel SDK's own collection schedule, not pushed per-request. See `registerObservableGauge`/`registerObservableCounter` on `DiagnosticsMetrics` if you need the same pull model for something other than a cache.
 
-Reads the cache's `getCumulativeStats()`, which has no side effects — so this can run alongside the legacy `metrics.trackCache()` during a migration without either reader consuming the other's counts.
+Reads the cache's `getCumulativeStats()`, which has no side effects — so this can run alongside the legacy `metrics.trackCache()` without either reader consuming the other's counts. A cache registered in both places reports correctly in both, which is what makes a partial migration safe.
 
 | Metric Name | Type | Attributes | Reported when |
 |-------------|------|------------|----------------|
