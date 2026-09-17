@@ -116,6 +116,12 @@ class TelemetryClientSingleton {
           },
           // Use built-in no-op functionality when telemetry is disabled
           noop: !DIAGNOSTICS_TELEMETRY_ENABLED,
+          // TEMPORARY: hardcoded on to diagnose why no telemetry from 6.x apps reaches
+          // ClickHouse in iotest-ju2 despite clean init logs. Turns on the underlying
+          // @opentelemetry/api diag console logger at DEBUG level, surfacing real
+          // export-attempt errors instead of them failing silently in the background.
+          // Revert once the root cause is found.
+          debug: true,
         }
       )
 

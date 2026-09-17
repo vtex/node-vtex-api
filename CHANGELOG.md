@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [6.53.0-beta.1]
+## [6.53.0-beta.2]
 ### Added
 - Diagnostics metrics observability, backported from the `master` (7.x) line: `DiagnosticsMetrics`
   (`recordLatency`, `incrementCounter`, `setGauge`, `runWithBaseAttributes`), a split
@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   HTTP client metrics, HTTP agent socket gauges, and the `@metric` GraphQL directive all emit
   through `DiagnosticsMetrics` at the same points `master` does. Disabled by default; opt in
   per app with `VTEX_DIAGNOSTICS_TELEMETRY_ENABLED=true`.
+### Debug
+- TEMPORARY: `debug: true` hardcoded in the `NewTelemetryClient` call, to diagnose why no
+  telemetry from `6.x` apps reaches ClickHouse despite clean initialization logs. Surfaces the
+  underlying OTel SDK's real export-attempt errors via the console. Revert once root-caused.
 
 ## [6.52.0]
 ### Added
