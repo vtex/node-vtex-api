@@ -27,12 +27,7 @@ async function initializeClient(account: string, workspace: string, appName: str
     const telemetryClient = await getTelemetryClient();
 
     const logsConfig = Exporters.CreateLogsExporterConfig({
-      endpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
-      path: process.env.OTEL_EXPORTER_OTLP_PATH || '/v1/logs',
-      protocol: 'http',
-      interval: 5,
-      timeoutSeconds: 5,
-      headers: { 'Content-Type': 'application/json' },
+      endpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT as string,
     });
 
     const logsExporter = Exporters.CreateExporter(logsConfig, 'otlp');

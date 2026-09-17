@@ -1,5 +1,6 @@
 import cluster from 'cluster'
 
+import { HttpAgentSingleton } from '../../../HttpClient/middlewares/request/HttpAgentSingleton'
 import { LINKED } from '../../../constants'
 import { ServiceContext } from './typings'
 
@@ -36,6 +37,9 @@ export const statusTrackHandler = async (ctx: ServiceContext) => {
 }
 
 export const trackStatus = () => {
+  // Update diagnostics metrics (gauges for HTTP agent stats)
+  HttpAgentSingleton.updateHttpAgentMetrics()
+
   // Flushing resets the metric accumulators, the CPU usage baseline and the
   // incoming request stats, so it must keep running even though nothing
   // consumes the returned metrics anymore.

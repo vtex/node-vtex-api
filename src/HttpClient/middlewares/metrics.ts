@@ -1,5 +1,7 @@
+import { Attributes } from '@opentelemetry/api'
 import { compose, forEach, path, reduce, replace, split } from 'ramda'
 
+import { ACCOUNT_HEADER, AttributeKeys } from '../../constants'
 import { RequestCancelledError } from '../../errors/RequestCancelledError'
 import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
 import {
@@ -13,6 +15,8 @@ import {
 import { TIMEOUT_CODE } from '../../utils/retry'
 import { statusLabel } from '../../utils/status'
 import { MiddlewareContext } from '../typings'
+
+const DEFAULT_ACCOUNT = 'unknown'
 
 interface MetricsOpts {
   metrics?: MetricsAccumulator
@@ -75,34 +79,83 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
 
         Object.assign(extensions, {[status]: 1})
 
+        // Determine cache state for diagnostics metrics
+        let cacheState = 'none'
+
         if (ctx.cacheHit) {
           Object.assign(extensions, ctx.cacheHit, {[`${status}-hit`]: 1})
+          cacheState = 'hit'
         } else if (!ctx.inflightHit && !ctx.memoizedHit) {
           // Lets us know how many calls passed through to origin
           Object.assign(extensions, {[`${status}-miss`]: 1})
+          cacheState = 'miss'
         }
 
         if (ctx.inflightHit) {
           Object.assign(extensions, {[`${status}-inflight`]: 1})
+          cacheState = 'inflight'
         }
 
         if (ctx.memoizedHit) {
           Object.assign(extensions, {[`${status}-memoized`]: 1})
+          cacheState = 'memoized'
         }
 
-        if (ctx.config.retryCount) {
-          const retryCount = ctx.config.retryCount
+        const retryCount = ctx.config.retryCount || 0
 
-          if (retryCount > 0) {
-            extensions[`retry-${status}-${retryCount}`] = 1
-          }
+        if (retryCount > 0) {
+          extensions[`retry-${status}-${retryCount}`] = 1
         }
 
         const end = status === 'success' && !ctx.cacheHit && !ctx.inflightHit && !ctx.memoizedHit
           ? process.hrtime(start)
           : undefined
 
+        // Legacy metrics (backward compatibility)
         metrics.batch(label, end, extensions)
+
+        // New diagnostics metrics with stable names and attributes
+        if (global.diagnosticsMetrics) {
+          const elapsed = process.hrtime(start)
+          const rawStatusCode = ctx.response?.status || errorStatus
+          // Extract account from request headers, fallback to default
+          const account = (ctx.config.headers?.[ACCOUNT_HEADER] as string) || DEFAULT_ACCOUNT
+          const baseAttributes: Attributes = {
+            [AttributeKeys.VTEX_ACCOUNT_NAME]: account,
+            component: 'http-client',
+            client_metric: ctx.config.metric,
+            status_code: rawStatusCode,
+            status,
+          }
+
+          // Record latency histogram with all context
+          global.diagnosticsMetrics.recordLatency(elapsed, {
+            ...baseAttributes,
+            cache_state: cacheState,
+          })
+
+          // Increment counters for different event types (replaces extensions behavior)
+          // Main request counter with status as attribute
+          global.diagnosticsMetrics.incrementCounter('http_client_requests_total', 1, baseAttributes)
+
+          // Cache counter with cache_state as attribute (replaces extensions like 'success-hit', 'error-miss')
+          if (cacheState !== 'none') {
+            global.diagnosticsMetrics.incrementCounter('http_client_cache_total', 1, {
+              ...baseAttributes,
+              cache_state: cacheState,
+            })
+          }
+
+          // Retry counter (replaces 'retry-{status}-{count}' extensions)
+          if (retryCount > 0) {
+            global.diagnosticsMetrics.incrementCounter('http_client_requests_retried_total', 1, {
+              ...baseAttributes,
+              retry_count: retryCount,
+            })
+          }
+        } else {
+          console.warn('DiagnosticsMetrics not available. HTTP client metrics not reported.')
+        }
 
         if (ctx.config.verbose) {
           console.log(`VERBOSE: ${name}.${ctx.config.label}`, {

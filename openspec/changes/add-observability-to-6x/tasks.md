@@ -51,28 +51,29 @@ Each numbered group below follows red → green → refactor: write the failing 
 
 Deploying `6.53.0-beta.0` to the `iotest-ju2` test cluster with `DIAGNOSTICS_TELEMETRY_ENABLED=true` surfaced that no metrics were reaching ClickHouse. Root cause: groups 1–7 ported the `DiagnosticsMetrics` API and telemetry client, but never wired them into `6.x`'s actual request pipeline — `service/index.ts` never called `initializeTelemetry()`/set `global.diagnosticsMetrics`, and none of `master`'s five consumer call sites exist on `6.x` yet. This group closes that gap.
 
-- [ ] 8.1 **Red**: write/extend a test for `src/service/index.ts`'s `startApp()` asserting it calls `initializeTelemetry()` and sets `global.diagnosticsMetrics` to a `DiagnosticsMetrics` instance before serving requests; confirm it fails against the current implementation
-- [ ] 8.2 **Green**: update `startApp()` to call `await initializeTelemetry()` and set `global.diagnosticsMetrics = new DiagnosticsMetrics()`, matching `master`; declare the `global.diagnosticsMetrics` type augmentation
-- [ ] 8.3 **Red**: extend `src/service/worker/runtime/http/middlewares/timings.ts`'s test coverage with the "HTTP handler latency and counter" scenario (base attributes via `runWithBaseAttributes`, `recordLatency`, `incrementCounter('http_handler_requests_total', ...)`, graceful degradation when `global.diagnosticsMetrics` is unavailable); confirm it fails
-- [ ] 8.4 **Green**: port `master`'s `global.diagnosticsMetrics` emission logic into `timings.ts` to pass 8.3
-- [ ] 8.5 **Red**: extend `src/service/worker/runtime/http/middlewares/requestStats.ts`'s test coverage with the "Request lifecycle counters" scenario (closed/aborted/total); confirm it fails
-- [ ] 8.6 **Green**: port `master`'s `global.diagnosticsMetrics` emission logic into `requestStats.ts` to pass 8.5
-- [ ] 8.7 **Red**: extend `src/HttpClient/middlewares/metrics.ts`'s test coverage with the "Outbound HTTP client metrics" scenario; confirm it fails
-- [ ] 8.8 **Green**: port `master`'s `global.diagnosticsMetrics` emission logic into `HttpClient/middlewares/metrics.ts` to pass 8.7
-- [ ] 8.9 **Red**: extend `src/HttpClient/middlewares/request/HttpAgentSingleton.ts`'s test coverage with the "HTTP agent metrics" scenario; confirm it fails
-- [ ] 8.10 **Green**: port `master`'s `global.diagnosticsMetrics` emission logic into `HttpAgentSingleton.ts` to pass 8.9
-- [ ] 8.11 **Red**: extend `src/service/worker/runtime/graphql/schema/schemaDirectives/Metric.ts`'s test coverage with the "GraphQL `@metric` directive" scenario; confirm it fails
-- [ ] 8.12 **Green**: port `master`'s `global.diagnosticsMetrics` emission logic into `Metric.ts` to pass 8.11
-- [ ] 8.13 **Refactor**: confirm every emission point uses the same `if (global.diagnosticsMetrics) { ... } else { console.warn(...) }` guard shape as `master`, with no duplicated boilerplate beyond what `master` itself has
+- [x] 8.1 **Red**: added `src/service/index.test.ts` asserting `startApp()` calls `initializeTelemetry()` (before `startMaster`, via `invocationCallOrder`) and sets `global.diagnosticsMetrics` to a usable `DiagnosticsMetrics` instance; confirmed it fails on the missing `global.diagnosticsMetrics` type augmentation
+- [x] 8.2 **Green**: `startApp()` now `await initializeTelemetry()`s and sets `global.diagnosticsMetrics = new DiagnosticsMetrics()` before the master/worker branch, matching `master`; added the `NodeJS.Global` type augmentation. Note: the test asserts `initializeTelemetry` was called (not an exact count) because `DiagnosticsMetrics`'s own constructor also triggers it via `getMetricClient()` — the real singleton dedupes this, an exact-count assertion would just be testing a coincidence of the mock setup.
+- [x] 8.3 **Red**: ported `master`'s `src/service/worker/runtime/http/middlewares/timings.test.ts` verbatim (19 tests: base attributes, latency/counter recording, all status-code categories, graceful degradation); confirmed it fails against the pre-wiring `timings.ts`
+- [x] 8.4 **Green**: ported `master`'s `timings.ts` wiring (`runWithBaseAttributes`, `recordLatency`, `incrementCounter('http_handler_requests_total', ...)`) verbatim to pass 8.3
+- [x] 8.5 **Red**: ported `master`'s `requestStats.test.ts` verbatim; confirmed it fails against the pre-wiring `requestStats.ts`
+- [x] 8.6 **Green**: ported `master`'s `requestStats.ts` wiring (closed/aborted/total counters) verbatim to pass 8.5
+- [x] 8.7 **Red**: ported `master`'s `HttpClient/middlewares/metrics.test.ts` verbatim (13 tests); confirmed it fails against the pre-wiring `metrics.ts`
+- [x] 8.8 **Green**: ported `master`'s `metrics.ts` wiring, substituting `ACCOUNT_HEADER` for `master`'s `HeaderKeys.ACCOUNT` (the `HeaderKeys` refactor stays out of scope per design.md) to pass 8.7
+- [x] 8.9 **Red**: ported `master`'s `HttpAgentSingleton.test.ts` verbatim (covers the new `updateHttpAgentMetrics()` static method); confirmed it fails on the missing method
+- [x] 8.10 **Green**: added `HttpAgentSingleton.updateHttpAgentMetrics()` (gauges for sockets/free sockets/pending requests) to pass 8.9 — **plus one addition beyond the literal spec scenario list**: wired its only caller, `statusTrack.ts`'s `trackStatus()` (matching `master`), with a new test in `statusTrack.test.ts`; without this the method exists but nothing ever calls it periodically
+- [x] 8.11 **Red**: ported `master`'s `Metric.test.ts`, but added a new `describe` block that exercises the *real* `Metric` class directly (`Object.create(Metric.prototype)` + manual `.args`) — the ported test from `master` only reimplements the resolver logic inline and never imports the real class, so it would have passed trivially without any implementation change; confirmed the new block fails against the pre-wiring `Metric.ts`
+- [x] 8.12 **Green**: ported `master`'s `Metric.ts` wiring (`recordLatency`, `incrementCounter('graphql_field_requests_total', ...)`) to pass 8.11
+- [x] 8.13 **Refactor**: confirmed every emission point uses the same `if (global.diagnosticsMetrics) { ... } else { console.warn(...) }` guard shape as `master`, with no duplicated boilerplate beyond what `master` itself has
 
 ## 9. Full-suite regression and manual verification
 
 - [x] 9.1 Ran the complete `6.x` jest suite after groups 1–7: 88/88 tests pass across 8 suites; 1 pre-existing suite (`axiosTracing.test.ts`) fails on an unrelated TypeScript strictness error in `TestServer.ts` (`resolve()` called with no argument) — confirmed pre-existing via unchanged `yarn.lock` `typescript@4.9.5` resolution and a zero-diff on that file; not caused by this change
-- [ ] 9.2 Re-run the full jest suite after group 8 lands; confirm no regressions
-- [x] 9.3 Manually verify in a non-production workspace with `DIAGNOSTICS_TELEMETRY_ENABLED=true` — **done, and this is what surfaced the group-8 gap**: deployed `6.53.0-beta.0` to the `iotest-ju2` cluster; telemetry clients initialize (per the flag) but no per-request metrics reached ClickHouse, because nothing called the emission points. Re-verify after group 8 lands that `io_app_operation_duration_milliseconds` and the HTTP/GraphQL counters actually arrive.
-- [ ] 9.4 Manually verify with the flag unset in a live workspace: no telemetry initialization side effects (still `noop: true`) and app behavior unchanged from the pre-change baseline
+- [x] 9.2 Re-ran the full jest suite after group 8: 180/180 tests pass across 20 suites (up from 88/8 — the rebase onto `6.x`'s tip also picked up an unrelated Prometheus-aggregation backport's own new suites); same single pre-existing `axiosTracing.test.ts` failure, unchanged. `yarn build` compiles clean.
+- [x] 9.3 Manually verify in a non-production workspace with `DIAGNOSTICS_TELEMETRY_ENABLED=true` — **done, and this is what surfaced the group-8 gap**: deployed `6.53.0-beta.0` to the `iotest-ju2` cluster; telemetry clients initialize (per the flag) but no per-request metrics reached ClickHouse, because nothing called the emission points.
+- [ ] 9.4 Re-verify on `iotest-ju2` (or another test cluster) with a build that includes group 8: confirm `io_app_operation_duration_milliseconds`, `http_handler_requests_total`, `http_server_requests_*_total`, `http_client_requests_total`, `http_agent_*_current`, and `graphql_field_requests_total` all actually reach ClickHouse — not performed in this session, needs a live deploy
+- [ ] 9.5 Manually verify with the flag unset in a live workspace: no telemetry initialization side effects (still `noop: true`) and app behavior unchanged from the pre-change baseline — not performed in this session
 
 ## 10. Documentation and release
 
-- [x] 10.1 Added a `CHANGELOG.md` entry (currently under `[6.53.0-beta.0]`) on the `6.x` branch describing the diagnostics metrics capability and the `DIAGNOSTICS_TELEMETRY_ENABLED` flag — update this entry once group 8 lands to mention that metrics are now actually wired into the request pipeline, not just available as a library API
-- [ ] 10.2 Release a stable `6.x` version of `node-vtex-api` including this change, once group 8 is verified end-to-end on a test cluster
+- [x] 10.1 `CHANGELOG.md` entry exists under `[6.53.0-beta.0]` on the `6.x` branch describing the diagnostics metrics capability and the `DIAGNOSTICS_TELEMETRY_ENABLED` flag; updated to mention metrics are now wired into the request pipeline, not just available as a library API
+- [ ] 10.2 Release a stable `6.x` version of `node-vtex-api` including this change, once 9.4/9.5 are verified end-to-end on a test cluster

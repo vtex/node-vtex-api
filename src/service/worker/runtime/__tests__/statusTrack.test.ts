@@ -1,4 +1,12 @@
-import { statusTrackHandler } from '../statusTrack'
+const mockUpdateHttpAgentMetrics = jest.fn()
+
+jest.mock('../../../../HttpClient/middlewares/request/HttpAgentSingleton', () => ({
+  HttpAgentSingleton: {
+    updateHttpAgentMetrics: mockUpdateHttpAgentMetrics,
+  },
+}))
+
+import { statusTrackHandler, trackStatus } from '../statusTrack'
 import { ServiceContext } from '../typings'
 
 describe('statusTrackHandler', () => {
@@ -25,5 +33,19 @@ describe('statusTrackHandler', () => {
     await statusTrackHandler(ctx as ServiceContext)
 
     expect(ctx.requestHandlerName).toBe('builtin:status-track')
+  })
+})
+
+describe('trackStatus', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+    global.metrics = { statusTrack: jest.fn() } as any
+  })
+
+  it('updates HTTP agent diagnostics metrics alongside the legacy flush', () => {
+    trackStatus()
+
+    expect(mockUpdateHttpAgentMetrics).toHaveBeenCalledTimes(1)
+    expect(global.metrics.statusTrack).toHaveBeenCalledTimes(1)
   })
 })
