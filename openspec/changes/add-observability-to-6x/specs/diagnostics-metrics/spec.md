@@ -179,23 +179,73 @@
 - **AND** host-level metrics (event loop lag, memory, CPU) are collected automatically without app code calling `DiagnosticsMetrics` directly
 
 ### Requirement: Feature flag gating
-`node-vtex-api@6.x` SHALL gate all diagnostics telemetry behavior (client initialization, instrumentation registration, metric emission) behind the `DIAGNOSTICS_TELEMETRY_ENABLED` environment flag, defaulting to disabled.
+`node-vtex-api@6.x` SHALL gate diagnostics telemetry behind the `DIAGNOSTICS_TELEMETRY_ENABLED` environment flag, defaulting to disabled. When disabled, the underlying `@vtex/diagnostics-nodejs` telemetry client is constructed in the SDK's built-in no-op mode (`noop: true`) rather than not constructed at all; auto-instrumentation registration, however, is skipped entirely rather than run in a no-op mode.
 
 #### Scenario: Flag disabled (default)
 - **GIVEN** `DIAGNOSTICS_TELEMETRY_ENABLED` is unset
 - **WHEN** the service starts
-- **THEN** no diagnostics telemetry client is initialized
+- **THEN** the telemetry client is initialized with `noop: true`, so no data is actually exported
 - **AND** no Koa or host-metrics auto-instrumentation is registered
 - **AND** existing `6.x` app behavior is unchanged from before this feature existed
 
 #### Scenario: Flag explicitly set to a falsy value
 - **GIVEN** `DIAGNOSTICS_TELEMETRY_ENABLED` is set to any value other than the literal string `'true'` (e.g. `'false'`, `'0'`, `'no'`)
 - **WHEN** the service starts
-- **THEN** diagnostics telemetry remains disabled, identically to the unset case
+- **THEN** diagnostics telemetry remains in no-op mode, identically to the unset case
 
 #### Scenario: Flag enabled
 - **GIVEN** `DIAGNOSTICS_TELEMETRY_ENABLED` is set to `'true'`
 - **WHEN** the service starts
-- **THEN** telemetry clients initialize
+- **THEN** the telemetry client is initialized with `noop: false`, so metrics/traces/logs are actually exported
 - **AND** `DiagnosticsMetrics` becomes usable
 - **AND** Koa/host-metrics auto-instrumentation is registered
+
+### Requirement: Telemetry initialization and `DiagnosticsMetrics` wiring at boot
+`node-vtex-api@6.x` SHALL initialize the telemetry clients and make `DiagnosticsMetrics` globally available as part of application startup, not only as a lazy side effect of unrelated code (such as the structured logger) happening to run first.
+
+#### Scenario: Telemetry initializes at boot
+- **GIVEN** the service is starting up
+- **WHEN** `startApp()` runs
+- **THEN** `initializeTelemetry()` is called before the app begins serving requests
+- **AND** `global.diagnosticsMetrics` is set to a `DiagnosticsMetrics` instance, available to all request-handling code
+
+#### Scenario: Boot does not depend on the logger being used first
+- **GIVEN** a request is served before any structured log line has been emitted
+- **WHEN** that request completes
+- **THEN** `global.diagnosticsMetrics` is already available and usable, because initialization happened at boot rather than being triggered lazily by the logger
+
+### Requirement: Request-pipeline metric emission
+`node-vtex-api@6.x` SHALL emit metrics through `global.diagnosticsMetrics` at the same points `master` does, so that per-request and per-operation data actually reaches the configured OTLP endpoint rather than the ported API surface sitting unused. Each emission point SHALL check for `global.diagnosticsMetrics`'s existence and degrade gracefully (log a warning, skip emission) rather than throw if it is unavailable.
+
+#### Scenario: HTTP handler latency and counter
+- **GIVEN** an inbound HTTP request completes handling
+- **WHEN** the `timings` middleware runs
+- **THEN** `global.diagnosticsMetrics.recordLatency` is called with the request's total duration
+- **AND** `global.diagnosticsMetrics.incrementCounter('http_handler_requests_total', ...)` is called
+- **AND** both calls run within a `runWithBaseAttributes` scope carrying the request's account, route id, and route type
+
+#### Scenario: Request lifecycle counters
+- **GIVEN** an HTTP request is closed, aborted, or completed
+- **WHEN** the `requestStats` middleware observes that event
+- **THEN** the corresponding counter is incremented via `global.diagnosticsMetrics`
+
+#### Scenario: Outbound HTTP client metrics
+- **GIVEN** `node-vtex-api`'s HTTP client makes an outbound request
+- **WHEN** the request completes
+- **THEN** `global.diagnosticsMetrics` records the corresponding client-side metric, matching `master`'s `HttpClient/middlewares/metrics.ts` behavior
+
+#### Scenario: HTTP agent metrics
+- **GIVEN** the shared HTTP agent handles a socket lifecycle event
+- **WHEN** that event occurs
+- **THEN** `global.diagnosticsMetrics` records the corresponding agent metric, matching `master`'s `HttpAgentSingleton.ts` behavior
+
+#### Scenario: GraphQL `@metric` directive
+- **GIVEN** a GraphQL field is annotated with the `@metric` directive
+- **WHEN** that field resolves
+- **THEN** `global.diagnosticsMetrics` records the field's metric, matching `master`'s `Metric.ts` schema directive behavior
+
+#### Scenario: Graceful degradation when diagnostics metrics are unavailable
+- **GIVEN** `global.diagnosticsMetrics` is not set (e.g. telemetry initialization failed)
+- **WHEN** any of the above emission points is reached
+- **THEN** a warning is logged identifying which metric was not reported
+- **AND** request handling continues normally, without throwing

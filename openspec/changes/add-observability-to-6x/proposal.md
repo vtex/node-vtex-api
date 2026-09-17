@@ -11,6 +11,14 @@
 - Add the supporting constants already present on `master` but missing on `6.x`: `AttributeKeys` (sourced from `@vtex/diagnostics-semconv`), `CLUSTER_ID`, `CLUSTER_ROLE`, `METRIC_CLIENT_INIT_TIMEOUT_MS`, `OTEL_EXPORTER_OTLP_ENDPOINT`, `DIAGNOSTICS_TELEMETRY_ENABLED`. The `HeaderKeys` refactor on `master` is unrelated cleanup and is **out of scope**.
 - Wire Koa auto-instrumentation and host-metrics collection into the `6.x` service bootstrap, gated behind the existing `DIAGNOSTICS_TELEMETRY_ENABLED` env flag so the feature ships dark by default.
 - Update jest mocking for `@vtex/diagnostics-nodejs` (`6.x` already stubs an older shape for jest@25 compatibility; the stub needs to match the new client surface).
+- **Wire `DiagnosticsMetrics` into the actual request pipeline**, matching `master`: call `initializeTelemetry()` and set `global.diagnosticsMetrics = new DiagnosticsMetrics()` in `src/service/index.ts`'s `startApp()`, and add the corresponding `global.diagnosticsMetrics` emission calls (guarded by a `global.diagnosticsMetrics` existence check, matching `master`'s graceful-degradation pattern) to:
+  - `src/service/worker/runtime/http/middlewares/timings.ts` (per-request HTTP handler latency + counter, with request-scoped base attributes via `runWithBaseAttributes`)
+  - `src/service/worker/runtime/http/middlewares/requestStats.ts` (request closed/aborted/total counters)
+  - `src/HttpClient/middlewares/metrics.ts` (outbound HTTP client metrics)
+  - `src/HttpClient/middlewares/request/HttpAgentSingleton.ts` (HTTP agent metrics)
+  - `src/service/worker/runtime/graphql/schema/schemaDirectives/Metric.ts` (`@metric` GraphQL directive)
+
+  Without this wiring, the ported `DiagnosticsMetrics` class and telemetry client are reachable but inert: nothing in `6.x`'s request path ever calls them, so no per-request/per-operation data reaches the configured OTLP endpoint even with the feature flag on. (This gap was found only after deploying `6.53.0-beta.0` to a test cluster and observing no metrics landing in ClickHouse — the original proposal covered porting the API surface but not this wiring layer.)
 
 No changes to `builder-hub` or `service-runtime-node` are required by this change — the build-time and runtime environments already support this dependency tree on the `node: 6.x` builder.
 
@@ -24,7 +32,7 @@ _None — `6.x`'s existing telemetry-backed structured logging keeps its current
 
 ## Impact
 
-- **Affected code**: `src/service/telemetry/*`, `src/metrics/DiagnosticsMetrics.ts` (new), `src/constants.ts`, `__mocks__/@vtex/diagnostics-nodejs`, jest config for the new mock surface.
+- **Affected code**: `src/service/telemetry/*`, `src/metrics/DiagnosticsMetrics.ts` (new), `src/constants.ts`, `__mocks__/@vtex/diagnostics-nodejs`, jest config for the new mock surface, `src/service/index.ts`, and the five request-pipeline middleware/directive files listed above.
 - **Dependencies**: `package.json` gains `@vtex/diagnostics-semconv` and the `@opentelemetry/*` quartet; `@vtex/diagnostics-nodejs` is bumped across a major beta-to-stable jump (`0.1.0-beta.10` → `0.1.8-io`) — its own changelog/breaking changes need review during implementation.
 - **Consumers**: every VTEX IO app on the `node: 6.x` builder gains these dependencies transitively; verified they resolve under the `6.x` builder's Node 16.20.2 runtime with no native compilation or ESM-resolution requirements.
 - **Systems**: no changes needed in `builder-hub` or `service-runtime-node`; this is scoped entirely to `node-vtex-api`.
