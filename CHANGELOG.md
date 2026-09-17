@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Diagnostics metrics observability, backported from the `master` (7.x) line: `DiagnosticsMetrics`
+  (`recordLatency`, `incrementCounter`, `setGauge`, `runWithBaseAttributes`), a split
+  traces/metrics/logs telemetry client (`@vtex/diagnostics-nodejs@0.1.8-io`,
+  `@vtex/diagnostics-semconv`), cluster resource attributes, and automatic Koa + host-metrics
+  instrumentation. Disabled by default; opt in per app with
+  `VTEX_DIAGNOSTICS_TELEMETRY_ENABLED=true`.
 
 ## [6.52.0]
 ### Added

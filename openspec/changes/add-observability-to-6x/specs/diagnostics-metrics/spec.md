@@ -179,23 +179,23 @@
 - **AND** host-level metrics (event loop lag, memory, CPU) are collected automatically without app code calling `DiagnosticsMetrics` directly
 
 ### Requirement: Feature flag gating
-`node-vtex-api@6.x` SHALL gate all diagnostics telemetry behavior (client initialization, instrumentation registration, metric emission) behind the `DIAGNOSTICS_TELEMETRY_ENABLED` environment flag, defaulting to disabled.
+`node-vtex-api@6.x` SHALL gate diagnostics telemetry behind the `DIAGNOSTICS_TELEMETRY_ENABLED` environment flag, defaulting to disabled. When disabled, the underlying `@vtex/diagnostics-nodejs` telemetry client is constructed in the SDK's built-in no-op mode (`noop: true`) rather than not constructed at all; auto-instrumentation registration, however, is skipped entirely rather than run in a no-op mode.
 
 #### Scenario: Flag disabled (default)
 - **GIVEN** `DIAGNOSTICS_TELEMETRY_ENABLED` is unset
 - **WHEN** the service starts
-- **THEN** no diagnostics telemetry client is initialized
+- **THEN** the telemetry client is initialized with `noop: true`, so no data is actually exported
 - **AND** no Koa or host-metrics auto-instrumentation is registered
 - **AND** existing `6.x` app behavior is unchanged from before this feature existed
 
 #### Scenario: Flag explicitly set to a falsy value
 - **GIVEN** `DIAGNOSTICS_TELEMETRY_ENABLED` is set to any value other than the literal string `'true'` (e.g. `'false'`, `'0'`, `'no'`)
 - **WHEN** the service starts
-- **THEN** diagnostics telemetry remains disabled, identically to the unset case
+- **THEN** diagnostics telemetry remains in no-op mode, identically to the unset case
 
 #### Scenario: Flag enabled
 - **GIVEN** `DIAGNOSTICS_TELEMETRY_ENABLED` is set to `'true'`
 - **WHEN** the service starts
-- **THEN** telemetry clients initialize
+- **THEN** the telemetry client is initialized with `noop: false`, so metrics/traces/logs are actually exported
 - **AND** `DiagnosticsMetrics` becomes usable
 - **AND** Koa/host-metrics auto-instrumentation is registered

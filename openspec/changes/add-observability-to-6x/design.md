@@ -33,6 +33,15 @@ A dependency audit (done as part of scoping this change) resolved every `package
 
 **Treat the jest mock for `@vtex/diagnostics-nodejs` as part of this change, not a follow-up.** `6.x` already carries a stub shaped for the old single-client API (added under `test(jest): stub @vtex/diagnostics-nodejs so metrics suites load under jest@25`); it must be updated to the `Exporters`/`Instrumentation`/multi-client shape `master`'s test suite mocks, or the new tests (ported alongside the implementation) won't load.
 
+## Implementation Addenda
+
+Two decisions were made during implementation that this document didn't anticipate:
+
+1. **`TelemetryClientSingleton` exposes a `getTelemetryClient()` getter for the raw `@vtex/diagnostics-nodejs` `TelemetryClient`, in addition to `master`'s three pre-built clients.** `6.x`'s structured logger builds a *dynamic* per-request logs client (`newLogsClient()` with a loggerName derived from `account`/`workspace`/`appName` passed at call time), which `master`'s fixed-at-init three-client shape doesn't support. Exposing the raw client lets the logger keep this exact behavior with zero changes to its call site or public signature — the only diff is what backs `getTelemetryClient()` internally. Confirmed with the user before implementing (see conversation).
+2. **jest's bundled resolver (jest 25) doesn't support `package.json` "exports" maps**, so `@opentelemetry/otlp-exporter-base/node-http` — a subpath pulled in transitively by the diagnostics dependency bump — failed to resolve under tests even though Node's own runtime `require()` resolves it fine. Fixed with a `moduleNameMapper` entry in `jest.config.js` pointing straight at the package's build output. This is a test-infrastructure-only fix; it doesn't affect the engines/Node-version analysis above, which is about production runtime resolution, not jest's resolver.
+
+Additionally, the `@vtex/diagnostics-nodejs` version bump surfaced a real breaking change not previously visible from the outside: `Exporters.CreateLogsExporterConfig`'s `ExporterOptions` type dropped `path`, `protocol`, and `headers` between `0.1.0-beta.10` and `0.1.8-io`. `6.x`'s logger passed all three; they were removed to match the new type (matching `master`'s simpler usage, which only ever passed `endpoint`).
+
 ## Risks / Trade-offs
 
 - **[Risk]** `@vtex/diagnostics-nodejs` jumped from a `0.1.0` beta to `0.1.8-io` — an 8-patch, beta-to-"io"-tagged gap whose changelog hasn't been reviewed line-by-line yet. → **Mitigation**: review the package's changelog/tags between the two versions as an explicit task before wiring the new client shape; since `master` already runs `0.1.8-io` in production, any incompatibility surfaces as a diff against known-working behavior, not unknown territory.

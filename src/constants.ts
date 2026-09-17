@@ -1,3 +1,12 @@
+import {
+  ATTR_VTEX_ACCOUNT_NAME,
+  ATTR_VTEX_IO_APP_AUTHOR_TYPE,
+  ATTR_VTEX_IO_APP_ID,
+  ATTR_VTEX_IO_CLUSTER_ID,
+  ATTR_VTEX_IO_CLUSTER_ROLE,
+  ATTR_VTEX_IO_WORKSPACE_NAME,
+  ATTR_VTEX_IO_WORKSPACE_TYPE,
+} from '@vtex/diagnostics-semconv'
 import { versionToMajor } from './utils/app'
 // tslint:disable-next-line
 const pkg = require('../package.json')
@@ -6,6 +15,9 @@ export const NODE_VTEX_API_VERSION = pkg.version
 export const DEFAULT_WORKSPACE = 'master'
 export const IS_IO = process.env.VTEX_IO
 export const PID = process.pid
+
+export const CLUSTER_ID = process.env.VTEX_CLUSTER_ID as string
+export const CLUSTER_ROLE = process.env.VTEX_CLUSTER_ROLE as string
 
 export const CACHE_CONTROL_HEADER = 'cache-control'
 export const SEGMENT_HEADER = 'x-vtex-segment'
@@ -51,6 +63,16 @@ export const MAX_AGE = {
 export const HTTP_SERVER_PORT = 5050
 export const MAX_WORKERS = 4
 
+export const AttributeKeys = {
+  VTEX_ACCOUNT_NAME: ATTR_VTEX_ACCOUNT_NAME,
+  VTEX_IO_APP_AUTHOR_TYPE: ATTR_VTEX_IO_APP_AUTHOR_TYPE,
+  VTEX_IO_APP_ID: ATTR_VTEX_IO_APP_ID,
+  VTEX_IO_CLUSTER_ID: ATTR_VTEX_IO_CLUSTER_ID,
+  VTEX_IO_CLUSTER_ROLE: ATTR_VTEX_IO_CLUSTER_ROLE,
+  VTEX_IO_WORKSPACE_NAME: ATTR_VTEX_IO_WORKSPACE_NAME,
+  VTEX_IO_WORKSPACE_TYPE: ATTR_VTEX_IO_WORKSPACE_TYPE,
+}
+
 export const LINKED = !!process.env.VTEX_APP_LINK
 export const REGION = process.env.VTEX_REGION as string
 export const PUBLIC_ENDPOINT = process.env.VTEX_PUBLIC_ENDPOINT || 'myvtex.com'
@@ -74,3 +96,10 @@ export const INSPECT_DEBUGGER_PORT = 5858
 export const cancellableMethods = new Set(['GET', 'OPTIONS', 'HEAD'])
 
 export const LOG_CLIENT_INIT_TIMEOUT_MS = 5000
+export const METRIC_CLIENT_INIT_TIMEOUT_MS = 5000
+
+export const OTEL_EXPORTER_OTLP_ENDPOINT = process.env.OTEL_EXPORTER_OTLP_ENDPOINT as string
+
+export const DK_APP_ID = (process.env.NODE_VTEX_API_DK_APP_ID as string) || 'apps-team'
+
+export const DIAGNOSTICS_TELEMETRY_ENABLED = process.env.VTEX_DIAGNOSTICS_TELEMETRY_ENABLED === 'true'
