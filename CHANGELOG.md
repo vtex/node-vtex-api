@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [6.53.0-beta.2]
+## [6.53.0-beta.3]
 ### Added
 - Diagnostics metrics observability, backported from the `master` (7.x) line: `DiagnosticsMetrics`
   (`recordLatency`, `incrementCounter`, `setGauge`, `runWithBaseAttributes`), a split
@@ -16,10 +16,18 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   HTTP client metrics, HTTP agent socket gauges, and the `@metric` GraphQL directive all emit
   through `DiagnosticsMetrics` at the same points `master` does. Disabled by default; opt in
   per app with `VTEX_DIAGNOSTICS_TELEMETRY_ENABLED=true`.
-### Debug
-- TEMPORARY: `debug: true` hardcoded in the `NewTelemetryClient` call, to diagnose why no
-  telemetry from `6.x` apps reaches ClickHouse despite clean initialization logs. Surfaces the
-  underlying OTel SDK's real export-attempt errors via the console. Revert once root-caused.
+### Fixed
+- No metrics/traces/logs from `6.x` apps ever reached ClickHouse, despite clean
+  "Telemetry enabled" initialization logs. Root cause (found via a temporary `debug: true`
+  diagnostic build): `yarn install` resolved `@grpc/grpc-js` into two separate copies —
+  `1.14.4` (satisfying `@vtex/diagnostics-nodejs`'s own `^1.13.4` requirement) and `1.13.3`
+  (satisfying the four `@opentelemetry/exporter-*-otlp-grpc` packages' `^1.7.1` requirement) —
+  a classic dual-package hazard: the `ChannelCredentials` object built by one copy failed an
+  `instanceof` check performed by the other (`TypeError: Channel credentials must be a
+  ChannelCredentials object`), so every export silently failed in the background. `master`
+  never hit this because its `yarn.lock` happened to collapse both ranges onto a single
+  `1.13.4` resolution. Fixed with a `resolutions` pin forcing `@grpc/grpc-js` to `1.13.4`
+  everywhere, matching `master`'s naturally-deduped resolution.
 
 ## [6.52.0]
 ### Added

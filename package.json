@@ -1,6 +1,6 @@
 {
   "name": "@vtex/api",
-  "version": "6.53.0-beta.2",
+  "version": "6.53.0-beta.3",
   "description": "VTEX I/O API client",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
@@ -129,5 +129,8 @@
     "typemoq": "^2.1.0",
     "typescript": "^4.4.4",
     "typescript-json-schema": "^0.52.0"
+  },
+  "resolutions": {
+    "@grpc/grpc-js": "1.13.4"
   }
 }
