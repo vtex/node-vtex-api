@@ -18,4 +18,13 @@ module.exports = {
   },
   testRegex: '(.*(test|spec)).tsx?$',
   testEnvironment: 'node',
+  // jest 25's bundled resolver predates package.json "exports" map support, so
+  // conditional-export-only subpaths (no legacy "main"-style file) fail to resolve
+  // even though Node itself resolves them fine at runtime. Map the ones pulled in
+  // transitively by @vtex/diagnostics-nodejs's OTLP gRPC exporters directly to their
+  // build output.
+  moduleNameMapper: {
+    '^@opentelemetry/otlp-exporter-base/node-http$':
+      '<rootDir>/node_modules/@opentelemetry/otlp-exporter-base/build/src/index-node-http.js',
+  },
 }
