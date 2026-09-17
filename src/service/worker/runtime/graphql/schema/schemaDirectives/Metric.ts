@@ -1,6 +1,7 @@
+import { Attributes } from '@opentelemetry/api'
 import { defaultFieldResolver, GraphQLField } from 'graphql'
 import { SchemaDirectiveVisitor } from 'graphql-tools'
-import { APP } from '../../../../../..'
+import { APP, AttributeKeys } from '../../../../../..'
 import { GraphQLServiceContext } from '../../typings'
 
 interface Args {
@@ -26,13 +27,33 @@ export class Metric extends SchemaDirectiveVisitor {
         failedToResolve = true
       }
 
-      ctx.graphql.status = failedToResolve ? 'error' : 'success'
+      const status = failedToResolve ? 'error' : 'success'
+      ctx.graphql.status = status
 
       const payload = {
-        [ctx.graphql.status]: 1,
+        [status]: 1,
       }
 
+      // Legacy metrics (backward compatibility)
       metrics.batch(`graphql-metric-${name}`, failedToResolve ? undefined : ellapsed, payload)
+
+      // New diagnostics metrics with stable names and attributes
+      if (global.diagnosticsMetrics) {
+        const attributes: Attributes = {
+          [AttributeKeys.VTEX_ACCOUNT_NAME]: ctx.vtex.account,
+          component: 'graphql',
+          field_name: name,
+          status,
+        }
+
+        // Record latency histogram (record all requests, not just successful ones)
+        global.diagnosticsMetrics.recordLatency(ellapsed, attributes)
+
+        // Increment counter (status is an attribute, not in metric name)
+        global.diagnosticsMetrics.incrementCounter('graphql_field_requests_total', 1, attributes)
+      } else {
+        console.warn('DiagnosticsMetrics not available. GraphQL field metrics not reported.')
+      }
 
       if (failedToResolve) {
         throw result

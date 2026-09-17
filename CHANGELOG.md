@@ -11,8 +11,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   (`recordLatency`, `incrementCounter`, `setGauge`, `runWithBaseAttributes`), a split
   traces/metrics/logs telemetry client (`@vtex/diagnostics-nodejs@0.1.8-io`,
   `@vtex/diagnostics-semconv`), cluster resource attributes, and automatic Koa + host-metrics
-  instrumentation. Disabled by default; opt in per app with
-  `VTEX_DIAGNOSTICS_TELEMETRY_ENABLED=true`.
+  instrumentation. Metrics are wired into the request pipeline itself, not just exposed as a
+  library API: HTTP handler latency/counters, request closed/aborted/total counters, outbound
+  HTTP client metrics, HTTP agent socket gauges, and the `@metric` GraphQL directive all emit
+  through `DiagnosticsMetrics` at the same points `master` does. Disabled by default; opt in
+  per app with `VTEX_DIAGNOSTICS_TELEMETRY_ENABLED=true`.
 
 ## [6.52.0]
 ### Added
