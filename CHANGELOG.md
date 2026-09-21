@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `getWithBody` no longer runs `Buffer` bodies through `JSON.stringify` to compute
+  the cache-key `bodyHash`. Consumers that compress the body (e.g. gzip) before
+  calling `getWithBody` pass a `Buffer` as `data`; `JSON.stringify` invokes
+  `Buffer.prototype.toJSON()`, which serializes it as `{"type":"Buffer","data":[...]}`
+  — the byte array is hashed as decimal text, not the actual transmitted bytes, and
+  the JSON serialization of a large buffer is far more expensive than hashing it
+  directly. `Buffer` bodies are now hashed directly with `createHash('md5').update(buffer)`;
+  behavior for non-`Buffer` data is unchanged. This changes the `bodyHash` value (and
+  therefore the cache-key query param) for existing consumers that pass a `Buffer`
+  to `getWithBody` — the worst case is a one-time cache miss on old KubeRouter
+  entries, not incorrect content being served.
+
 ## [7.5.0]
 
 ### Added

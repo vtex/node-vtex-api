@@ -1,0 +1,75 @@
+import { createHash } from 'crypto'
+import { gzipSync } from 'zlib'
+import { computeBodyHash } from './bodyHash'
+
+const deterministicReplacer = (_: any, v: any) => {
+  try {
+    return typeof v !== 'object' || v === null || Array.isArray(v) ? v :
+      Object.fromEntries(Object.entries(v).sort(([ka], [kb]) =>
+        ka < kb ? -1 : ka > kb ? 1 : 0))
+  }
+  catch (error) {
+    return v
+  }
+}
+
+describe('computeBodyHash', () => {
+  describe('non-Buffer data', () => {
+    it('produces the same hash as JSON.stringify with the deterministic replacer', () => {
+      const data = { b: 2, a: 1 }
+      const expected = createHash('md5').update(JSON.stringify(data, deterministicReplacer)).digest('hex')
+
+      expect(computeBodyHash(data)).toBe(expected)
+    })
+
+    it('produces the same hash regardless of key order (deterministic replacer)', () => {
+      expect(computeBodyHash({ a: 1, b: 2 })).toBe(computeBodyHash({ b: 2, a: 1 }))
+    })
+  })
+
+  describe('Buffer data', () => {
+    it('produces the same hash for two buffers with identical bytes', () => {
+      const bufferA = Buffer.from([1, 2, 3, 4, 5])
+      const bufferB = Buffer.from([1, 2, 3, 4, 5])
+
+      expect(computeBodyHash(bufferA)).toBe(computeBodyHash(bufferB))
+    })
+
+    it('produces different hashes for buffers with different bytes', () => {
+      const bufferA = Buffer.from([1, 2, 3, 4, 5])
+      const bufferB = Buffer.from([1, 2, 3, 4, 6])
+
+      expect(computeBodyHash(bufferA)).not.toBe(computeBodyHash(bufferB))
+    })
+
+    it('hashes the raw buffer bytes directly, not the JSON.stringify representation', () => {
+      const buffer = Buffer.from([1, 2, 3, 4, 5])
+      const legacyHash = createHash('md5').update(JSON.stringify(buffer, deterministicReplacer)).digest('hex')
+      const directHash = createHash('md5').update(buffer).digest('hex')
+
+      expect(computeBodyHash(buffer)).not.toBe(legacyHash)
+      expect(computeBodyHash(buffer)).toBe(directHash)
+    })
+  })
+
+  describe('gzip-compressed body across separate requests (render-ssr scenario)', () => {
+    it('produces the same hash when the same JSON payload is gzip-compressed independently twice', () => {
+      const payload = JSON.stringify({ page: 'home', props: { locale: 'en-US', items: [1, 2, 3] } })
+
+      // Two independent compressions of the same content, as if produced by two
+      // separate requests, rather than reusing the same Buffer instance.
+      const bufferFromRequestA = gzipSync(Buffer.from(payload))
+      const bufferFromRequestB = gzipSync(Buffer.from(payload))
+
+      expect(bufferFromRequestA.equals(bufferFromRequestB)).toBe(true)
+      expect(computeBodyHash(bufferFromRequestA)).toBe(computeBodyHash(bufferFromRequestB))
+    })
+
+    it('produces a different hash when the underlying JSON payload differs', () => {
+      const bufferA = gzipSync(Buffer.from(JSON.stringify({ page: 'home' })))
+      const bufferB = gzipSync(Buffer.from(JSON.stringify({ page: 'checkout' })))
+
+      expect(computeBodyHash(bufferA)).not.toBe(computeBodyHash(bufferB))
+    })
+  })
+})
