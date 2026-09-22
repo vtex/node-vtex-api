@@ -1,4 +1,4 @@
-import { createHash } from 'crypto' // NOSONAR: `node:crypto` types aren't available with the `@types/node@12.x` pinned in this repo
+import { createHash, randomBytes } from 'crypto' // NOSONAR: `node:crypto` types aren't available with the `@types/node@12.x` pinned in this repo
 
 // Object keys from `Object.entries` are always distinct, so `ka` and `kb` are never equal here.
 const compareKeys = ([ka]: [string, unknown], [kb]: [string, unknown]) => (ka < kb ? -1 : 1)
@@ -35,9 +35,12 @@ export function computeBodyHash(data: any, onSerializeError?: () => void): strin
   catch {
     // JSON.stringify can still fail (or return undefined) even after the replacer recovers -
     // e.g. a property whose getter fails on every access (not just the one the replacer
-    // already caught), or `data` itself serializing to `undefined` (e.g. data === undefined).
-    // Fall back to a representation that never throws.
+    // already caught), a circular reference, or `data` itself serializing to `undefined`
+    // (e.g. data === undefined). A constant fallback (e.g. String(data)) would collapse
+    // any two different bodies that hit this path into the same bodyHash - a cache-key
+    // collision, not just a miss. Use random bytes instead: every call gets a unique key,
+    // so this path can only ever cause a cache miss, never serve the wrong content.
     onSerializeError?.()
-    return createHash('md5').update(String(data)).digest('hex') // NOSONAR
+    return randomBytes(16).toString('hex')
   }
 }

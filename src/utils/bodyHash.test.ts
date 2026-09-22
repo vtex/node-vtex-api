@@ -93,6 +93,21 @@ describe('computeBodyHash', () => {
     it('does not throw when data is undefined and no callback is provided', () => {
       expect(() => computeBodyHash(undefined)).not.toThrow()
     })
+
+    it('does not collide for structurally different data that both fail to serialize (e.g. circular references)', () => {
+      // A fallback like String(data) collapses any plain object to a constant
+      // "[object Object]", so two unrelated bodies that both hit the fallback path
+      // would otherwise get the same bodyHash - a cache-key collision, not just a miss.
+      const circularA: Record<string, any> = { name: 'bodyA' }
+      circularA.self = circularA
+
+      const circularB: Record<string, any> = { name: 'bodyB', other: 'completely different content' }
+      circularB.self = circularB
+
+      expect(() => computeBodyHash(circularA)).not.toThrow()
+      expect(() => computeBodyHash(circularB)).not.toThrow()
+      expect(computeBodyHash(circularA)).not.toBe(computeBodyHash(circularB))
+    })
   })
 
   describe('Buffer data', () => {
