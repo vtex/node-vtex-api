@@ -27,7 +27,17 @@ export function computeBodyHash(data: any, onSerializeError?: () => void): strin
     }
   }
 
-  // MD5 here only derives a cache-key digest for the request body, not a security-sensitive
-  // value - no secret protection or tamper-integrity guarantee is being made.
-  return createHash('md5').update(JSON.stringify(data, replacer)).digest('hex') // NOSONAR
+  try {
+    // MD5 here only derives a cache-key digest for the request body, not a security-sensitive
+    // value - no secret protection or tamper-integrity guarantee is being made.
+    return createHash('md5').update(JSON.stringify(data, replacer)).digest('hex') // NOSONAR
+  }
+  catch {
+    // JSON.stringify can still fail (or return undefined) even after the replacer recovers -
+    // e.g. a property whose getter fails on every access (not just the one the replacer
+    // already caught), or `data` itself serializing to `undefined` (e.g. data === undefined).
+    // Fall back to a representation that never throws.
+    onSerializeError?.()
+    return createHash('md5').update(String(data)).digest('hex') // NOSONAR
+  }
 }

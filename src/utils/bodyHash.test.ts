@@ -64,6 +64,35 @@ describe('computeBodyHash', () => {
 
       expect(() => computeBodyHash(flaky)).not.toThrow()
     })
+
+    it('does not throw when a property getter fails on every access, not just the first', () => {
+      // JSON.stringify's own traversal re-reads a nested value's own properties to
+      // serialize it, *after* the replacer already recovered from the first failure -
+      // that second read happens outside the replacer's own try/catch, so it must be
+      // guarded independently.
+      const onSerializeError = jest.fn()
+      const alwaysFlaky: Record<string, any> = {}
+      Object.defineProperty(alwaysFlaky, 'x', {
+        enumerable: true,
+        get() {
+          throw new Error('always boom')
+        },
+      })
+
+      expect(() => computeBodyHash({ nested: alwaysFlaky }, onSerializeError)).not.toThrow()
+      expect(onSerializeError).toHaveBeenCalled()
+    })
+
+    it('does not throw when data is undefined', () => {
+      const onSerializeError = jest.fn()
+
+      expect(() => computeBodyHash(undefined, onSerializeError)).not.toThrow()
+      expect(onSerializeError).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not throw when data is undefined and no callback is provided', () => {
+      expect(() => computeBodyHash(undefined)).not.toThrow()
+    })
   })
 
   describe('Buffer data', () => {
