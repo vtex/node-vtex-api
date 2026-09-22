@@ -25,6 +25,45 @@ describe('computeBodyHash', () => {
     it('produces the same hash regardless of key order (deterministic replacer)', () => {
       expect(computeBodyHash({ a: 1, b: 2 })).toBe(computeBodyHash({ b: 2, a: 1 }))
     })
+
+    it('recovers via onSerializeError instead of throwing when reading a property fails', () => {
+      // Simulates a property access that fails once (e.g. a lazily-computed value
+      // backed by an external resource) - not a plain data-shape issue, exactly
+      // the kind of unexpected failure the try/catch around the replacer guards against.
+      const onSerializeError = jest.fn()
+      let getterCalls = 0
+      const flaky: Record<string, any> = {}
+      Object.defineProperty(flaky, 'x', {
+        enumerable: true,
+        get() {
+          getterCalls += 1
+          if (getterCalls === 1) {
+            throw new Error('boom')
+          }
+          return 42
+        },
+      })
+
+      expect(() => computeBodyHash(flaky, onSerializeError)).not.toThrow()
+      expect(onSerializeError).toHaveBeenCalledTimes(1)
+    })
+
+    it('recovers without throwing when no onSerializeError callback is provided', () => {
+      let getterCalls = 0
+      const flaky: Record<string, any> = {}
+      Object.defineProperty(flaky, 'x', {
+        enumerable: true,
+        get() {
+          getterCalls += 1
+          if (getterCalls === 1) {
+            throw new Error('boom')
+          }
+          return 42
+        },
+      })
+
+      expect(() => computeBodyHash(flaky)).not.toThrow()
+    })
   })
 
   describe('Buffer data', () => {
