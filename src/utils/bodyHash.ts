@@ -10,7 +10,9 @@ const deterministicReplacer = (_: any, v: any) => {
 
 export function computeBodyHash(data: any, onSerializeError?: () => void): string {
   if (Buffer.isBuffer(data)) {
-    return createHash('md5').update(data).digest('hex')
+    // MD5 here only derives a cache-key digest for the request body, not a security-sensitive
+    // value - no secret protection or tamper-integrity guarantee is being made.
+    return createHash('md5').update(data).digest('hex') // NOSONAR
   }
 
   const replacer = (key: string, value: any) => {
@@ -25,5 +27,7 @@ export function computeBodyHash(data: any, onSerializeError?: () => void): strin
     }
   }
 
-  return createHash('md5').update(JSON.stringify(data, replacer)).digest('hex')
+  // MD5 here only derives a cache-key digest for the request body, not a security-sensitive
+  // value - no secret protection or tamper-integrity guarantee is being made.
+  return createHash('md5').update(JSON.stringify(data, replacer)).digest('hex') // NOSONAR
 }
