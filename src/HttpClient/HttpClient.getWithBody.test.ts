@@ -46,6 +46,19 @@ describe('HttpClient#getWithBody', () => {
     expect(passedConfig.params[BODY_HASH]).toBe(computeBodyHash(data))
   })
 
+  it('overrides a caller-supplied BODY_HASH param with the computed hash', async () => {
+    const client = createClient()
+    const data = { a: 1, b: 2 }
+
+    await client.getWithBody('/some-url', data, { params: { [BODY_HASH]: 'caller-supplied-hash' } })
+
+    const requestMock = (client as any).request as jest.Mock
+    const passedConfig = requestMock.mock.calls[0][0]
+
+    expect(passedConfig.params[BODY_HASH]).toBe(computeBodyHash(data))
+    expect(passedConfig.params[BODY_HASH]).not.toBe('caller-supplied-hash')
+  })
+
   it('resolves with the response data', async () => {
     const client = createClient()
 

@@ -9,10 +9,23 @@ const deterministicReplacer = (_: any, v: any) => {
 }
 
 export function computeBodyHash(data: any, onSerializeError?: () => void): string {
-  if (Buffer.isBuffer(data)) {
+  if (ArrayBuffer.isView(data)) {
     // MD5 here only derives a cache-key digest for the request body, not a security-sensitive
     // value - no secret protection or tamper-integrity guarantee is being made.
-    return createHash('md5').update(data).digest('hex') // NOSONAR
+    // Cast needed: the `@types/node@12.x` pinned in this repo types `Hash.update` against a
+    // narrower `BinaryLike` than the `ArrayBufferView` the `ArrayBuffer.isView` guard produces,
+    // even though every ArrayBufferView (Buffer, TypedArray, DataView) is accepted at runtime.
+    return createHash('md5').update(data as Buffer).digest('hex') // NOSONAR
+  }
+
+  // Reports at most once per call, even if both the replacer and the outer JSON.stringify
+  // catch below end up hitting it for the same underlying failure.
+  let hasReportedSerializeError = false
+  const reportSerializeError = () => {
+    if (!hasReportedSerializeError) {
+      hasReportedSerializeError = true
+      onSerializeError?.()
+    }
   }
 
   const replacer = (key: string, value: any) => {
@@ -22,7 +35,7 @@ export function computeBodyHash(data: any, onSerializeError?: () => void): strin
     catch {
       // I don't believe this will ever happen, but just in case
       // Also, I didn't include error as I am unsure if it would have sensitive information
-      onSerializeError?.()
+      reportSerializeError()
       return value
     }
   }
@@ -40,7 +53,7 @@ export function computeBodyHash(data: any, onSerializeError?: () => void): strin
     // any two different bodies that hit this path into the same bodyHash - a cache-key
     // collision, not just a miss. Use random bytes instead: every call gets a unique key,
     // so this path can only ever cause a cache miss, never serve the wrong content.
-    onSerializeError?.()
+    reportSerializeError()
     return randomBytes(16).toString('hex')
   }
 }

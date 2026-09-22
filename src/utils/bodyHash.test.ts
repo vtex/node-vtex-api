@@ -80,7 +80,9 @@ describe('computeBodyHash', () => {
       })
 
       expect(() => computeBodyHash({ nested: alwaysFlaky }, onSerializeError)).not.toThrow()
-      expect(onSerializeError).toHaveBeenCalled()
+      // Even though both the replacer's catch and the outer JSON.stringify catch observe
+      // this failure, onSerializeError should only be reported once per call.
+      expect(onSerializeError).toHaveBeenCalledTimes(1)
     })
 
     it('does not throw when data is undefined', () => {
@@ -132,6 +134,21 @@ describe('computeBodyHash', () => {
 
       expect(computeBodyHash(buffer)).not.toBe(legacyHash)
       expect(computeBodyHash(buffer)).toBe(directHash)
+    })
+  })
+
+  describe('other ArrayBuffer views (e.g. Uint8Array)', () => {
+    it('hashes a Uint8Array the same way as the equivalent Buffer', () => {
+      const bytes = new Uint8Array([1, 2, 3, 4, 5])
+
+      expect(computeBodyHash(bytes)).toBe(computeBodyHash(Buffer.from(bytes)))
+    })
+
+    it('produces different hashes for Uint8Arrays with different bytes', () => {
+      const bytesA = new Uint8Array([1, 2, 3, 4, 5])
+      const bytesB = new Uint8Array([1, 2, 3, 4, 6])
+
+      expect(computeBodyHash(bytesA)).not.toBe(computeBodyHash(bytesB))
     })
   })
 
