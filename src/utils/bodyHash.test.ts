@@ -89,11 +89,20 @@ describe('computeBodyHash', () => {
       const onSerializeError = jest.fn()
 
       expect(() => computeBodyHash(undefined, onSerializeError)).not.toThrow()
-      expect(onSerializeError).toHaveBeenCalledTimes(1)
+      // An omitted body is a normal case, not a serialization failure - it must not be
+      // reported as one.
+      expect(onSerializeError).not.toHaveBeenCalled()
     })
 
     it('does not throw when data is undefined and no callback is provided', () => {
       expect(() => computeBodyHash(undefined)).not.toThrow()
+    })
+
+    it('produces the same, stable hash every time data is undefined', () => {
+      // Unlike genuine serialization failures (randomBytes fallback), an omitted body must
+      // hash deterministically, or callers of getWithBody(url) without a body would get a
+      // different bodyHash - and therefore cache-key - on every request.
+      expect(computeBodyHash(undefined)).toBe(computeBodyHash(undefined))
     })
 
     it('does not collide for structurally different data that both fail to serialize (e.g. circular references)', () => {

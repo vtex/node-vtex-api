@@ -18,6 +18,14 @@ export function computeBodyHash(data: any, onSerializeError?: () => void): strin
     return createHash('md5').update(data as Buffer).digest('hex') // NOSONAR
   }
 
+  if (data === undefined) {
+    // getWithBody's `data` is optional, so an omitted body is a normal, deterministic case -
+    // not a serialization failure. It must hash to a fixed value, or callers that omit the
+    // body would get a different bodyHash (and cache-key) on every single request, permanently
+    // defeating the cache rather than the "one-time miss" the randomBytes fallback below allows.
+    return createHash('md5').update('undefined').digest('hex') // NOSONAR
+  }
+
   // Reports at most once per call, even if both the replacer and the outer JSON.stringify
   // catch below end up hitting it for the same underlying failure.
   let hasReportedSerializeError = false
