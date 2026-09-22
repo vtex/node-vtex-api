@@ -9,7 +9,6 @@ import {
   RequestsMetricLabels,
 } from '../tracing/metrics/instruments'
 import { ServiceContext } from '../worker/runtime/typings'
-import { requestHandlerLabel } from './requestHandlerLabel'
 
 
 export const addRequestMetricsMiddleware = () => {
@@ -24,7 +23,7 @@ export const addRequestMetricsMiddleware = () => {
     concurrentRequests.inc(1)
 
     ctx.req.once('aborted', () =>
-      abortedRequests.inc({ [RequestsMetricLabels.REQUEST_HANDLER]: requestHandlerLabel(ctx.requestHandlerName) }, 1)
+      abortedRequests.inc({ [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName }, 1)
     )
 
     let responseClosed = false
@@ -36,14 +35,14 @@ export const addRequestMetricsMiddleware = () => {
       const responseLength = ctx.response.length
       if (responseLength) {
         responseSizes.observe(
-          { [RequestsMetricLabels.REQUEST_HANDLER]: requestHandlerLabel(ctx.requestHandlerName) },
+          { [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName },
           responseLength
         )
       }
 
       totalRequests.inc(
         {
-          [RequestsMetricLabels.REQUEST_HANDLER]: requestHandlerLabel(ctx.requestHandlerName),
+          [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
           [RequestsMetricLabels.STATUS_CODE]: ctx.response.status,
         },
         1
@@ -52,7 +51,7 @@ export const addRequestMetricsMiddleware = () => {
       const onResFinished = () => {
         requestTimings.observe(
           {
-            [RequestsMetricLabels.REQUEST_HANDLER]: requestHandlerLabel(ctx.requestHandlerName),
+            [RequestsMetricLabels.REQUEST_HANDLER]: ctx.requestHandlerName,
           },
           hrToMillisFloat(process.hrtime(start))
         )
