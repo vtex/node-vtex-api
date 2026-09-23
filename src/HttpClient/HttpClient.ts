@@ -1,5 +1,4 @@
 import { AxiosResponse } from 'axios'
-import { createHash } from 'crypto'
 import { IncomingMessage } from 'http'
 import compose from 'koa-compose'
 import pLimit from 'p-limit'
@@ -10,6 +9,7 @@ import {
 import { Logger } from '../service/logger'
 import { IOContext } from '../service/worker/runtime/typings'
 import { formatBindingHeaderValue } from '../utils/binding'
+import { computeBodyHash } from '../utils/bodyHash'
 import { formatTenantHeaderValue } from '../utils/tenant'
 import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
 import { cancellationToken } from './middlewares/cancellationToken'
@@ -129,22 +129,7 @@ export class HttpClient {
   }
 
   public getWithBody = <T = any>(url: string, data?: any, config: RequestConfig = {}): Promise<T> => {
-    const deterministicReplacer = (_ : any, v : any) => {
-      try {
-        return typeof v !== 'object' || v === null || Array.isArray(v) ? v :
-                  Object.fromEntries(Object.entries(v).sort(([ka], [kb]) =>
-                    ka < kb ? -1 : ka > kb ? 1 : 0))
-      }
-      catch(error) {
-        // I don't believe this will ever happen, but just in case
-        // Also, I didn't include error as I am unsure if it would have sensitive information
-        this.logger.warn({message: 'Error while sorting object for cache key'})
-        return v
-      }
-    }
-
-
-    const bodyHash = createHash('md5').update(JSON.stringify(data, deterministicReplacer)).digest('hex')
+    const bodyHash = computeBodyHash(data, () => this.logger.warn({ message: 'Error while sorting object for cache key' }))
     const cacheableConfig = this.getConfig(url, {
       ...config,
       data,

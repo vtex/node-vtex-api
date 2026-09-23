@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `getWithBody` no longer runs `Buffer` bodies through `JSON.stringify` to compute
+  the cache-key `bodyHash`. Consumers that compress the body (e.g. gzip) before
+  calling `getWithBody` pass a `Buffer` as `data`; `JSON.stringify` invokes
+  `Buffer.prototype.toJSON()`, which serializes it as `{"type":"Buffer","data":[...]}`
+  — the byte array is hashed as decimal text, not the actual transmitted bytes, and
+  the JSON serialization of a large buffer is far more expensive than hashing it
+  directly. `Buffer` bodies are now hashed directly with `createHash('md5').update(buffer)`;
+  behavior for non-`Buffer` data is unchanged. This changes the `bodyHash` value (and
+  therefore the cache-key query param) for existing consumers that pass a `Buffer`
+  to `getWithBody` — the worst case is a one-time cache miss on old KubeRouter
+  entries, not incorrect content being served.
+- `getWithBody` no longer throws when computing the `bodyHash` for a body that
+  can't be serialized deterministically (e.g. a circular reference, or a property
+  getter that keeps throwing). Previously, `JSON.stringify` had no surrounding
+  try/catch, so such a body made the failure propagate straight out of `getWithBody`
+  to the caller. It's now caught and downgraded to a randomly-generated, one-off
+  `bodyHash` instead — the request still goes through, just without a stable
+  cache-key for that call. This is a deliberate fail-fast → fail-open change: a
+  caller that relied on that throw to catch a bug in the data it was building will
+  no longer see an exception, only an uncached request.
+
 ## [7.5.0]
 
 ### Added
