@@ -1,4 +1,4 @@
-import { Types } from '@vtex/diagnostics-nodejs'
+import { Metrics, Types } from '@vtex/diagnostics-nodejs'
 import { context, ObservableCallback } from '@opentelemetry/api'
 import { AsyncHooksContextManager } from '@opentelemetry/context-async-hooks'
 import { AggregationTemporality, InMemoryMetricExporter, MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics'
@@ -756,11 +756,19 @@ describe('DiagnosticsMetrics', () => {
   })
 
   describe('registerObservableGauge / registerObservableCounter', () => {
-    // These reach the SDK through metricsClient.getProvider().getMeter(...), so this
-    // block mocks the Meter directly instead of the createCounter/Gauge/Histogram wrapper.
-    let gaugeInstruments: Map<string, { addCallback: jest.Mock; removeCallback: jest.Mock }>
-    let counterInstruments: Map<string, { addCallback: jest.Mock; removeCallback: jest.Mock }>
-    let observableMeter: {
+    // These go through the library's observable API, so this block mocks
+    // createObservableGauge/createObservableCounter and reproduces what the library
+    // guarantees: the callback is attached to the instrument at creation, and the
+    // returned wrapper's remove() detaches it.
+    interface FakeObservable {
+      instrument: { addCallback: jest.Mock; removeCallback: jest.Mock }
+      remove: jest.Mock
+      attached: ObservableCallback[]
+    }
+
+    let gaugeInstruments: Map<string, FakeObservable>
+    let counterInstruments: Map<string, FakeObservable>
+    let observableClient: {
       createObservableGauge: jest.Mock
       createObservableCounter: jest.Mock
       addBatchObservableCallback: jest.Mock
@@ -768,28 +776,41 @@ describe('DiagnosticsMetrics', () => {
     let observableMetricsClient: Types.MetricClient
     let observableDiagnostics: DiagnosticsMetrics
 
-    function fakeInstrumentFactory(instruments: Map<string, { addCallback: jest.Mock; removeCallback: jest.Mock }>) {
-      return jest.fn((name: string) => {
-        if (!instruments.has(name)) {
-          instruments.set(name, { addCallback: jest.fn(), removeCallback: jest.fn() })
+    function fakeObservableFactory(instruments: Map<string, FakeObservable>) {
+      return jest.fn((name: string, observe?: ObservableCallback) => {
+        let entry = instruments.get(name)
+        if (!entry) {
+          entry = { instrument: { addCallback: jest.fn(), removeCallback: jest.fn() }, remove: jest.fn(), attached: [] }
+          instruments.set(name, entry)
         }
-        return instruments.get(name)
+
+        const observable = entry
+        if (observe) {
+          observable.attached.push(observe)
+          observable.instrument.addCallback(observe)
+          observable.remove.mockImplementation(() => observable.instrument.removeCallback(observe))
+        }
+
+        return { instrument: observable.instrument, remove: observable.remove }
       })
     }
 
     beforeEach(async () => {
       gaugeInstruments = new Map()
       counterInstruments = new Map()
-      observableMeter = {
-        createObservableGauge: fakeInstrumentFactory(gaugeInstruments),
-        createObservableCounter: fakeInstrumentFactory(counterInstruments),
+      observableClient = {
+        createObservableGauge: fakeObservableFactory(gaugeInstruments),
+        createObservableCounter: fakeObservableFactory(counterInstruments),
         addBatchObservableCallback: jest.fn(),
       }
       observableMetricsClient = {
         createHistogram: jest.fn(),
         createCounter: jest.fn(),
         createGauge: jest.fn(),
-        getProvider: () => ({ getMeter: () => observableMeter }),
+        createObservableGauge: observableClient.createObservableGauge,
+        createObservableCounter: observableClient.createObservableCounter,
+        addBatchObservableCallback: observableClient.addBatchObservableCallback,
+        removeBatchObservableCallback: jest.fn(),
       } as any
 
       ;(getMetricClient as jest.Mock).mockResolvedValue(observableMetricsClient)
@@ -799,23 +820,22 @@ describe('DiagnosticsMetrics', () => {
 
     // The callback handed to the instrument is a wrapper that applies the attribute
     // limit, so these assert delegation rather than function identity.
-    function attachedCallbacksOf(instrument: { addCallback: jest.Mock }): Array<ObservableCallback> {
-      return instrument.addCallback.mock.calls.map(([callback]) => callback)
-    }
-
-    function fireLast(instrument: { addCallback: jest.Mock }, result: { observe: jest.Mock }) {
-      const callbacks = attachedCallbacksOf(instrument)
-      callbacks[callbacks.length - 1](result as any)
+    function fireLast(instrument: { attached: ObservableCallback[] }, result: { observe: jest.Mock }) {
+      instrument.attached[instrument.attached.length - 1](result as any)
     }
 
     it('creates the instrument (passing options through) and attaches the callback', () => {
       const observe = jest.fn()
       observableDiagnostics.registerObservableGauge('queue_depth_current', observe, { unit: '1' })
 
-      expect(observableMeter.createObservableGauge).toHaveBeenCalledWith('queue_depth_current', { unit: '1' })
+      expect(observableClient.createObservableGauge).toHaveBeenCalledWith(
+        'queue_depth_current',
+        expect.any(Function),
+        { unit: '1' }
+      )
 
       const instrument = gaugeInstruments.get('queue_depth_current')!
-      expect(instrument.addCallback).toHaveBeenCalledTimes(1)
+      expect(instrument.instrument.addCallback).toHaveBeenCalledTimes(1)
       fireLast(instrument, { observe: jest.fn() })
       expect(observe).toHaveBeenCalledTimes(1)
     })
@@ -840,7 +860,7 @@ describe('DiagnosticsMetrics', () => {
       expect(observe).toHaveBeenCalledWith(3, { queue: 'x' })
     })
 
-    it('reuses the instrument and replaces the previous callback on re-registration', () => {
+    it('keeps one instrument and one attached callback across re-registration', () => {
       const first = jest.fn()
       const second = jest.fn()
 
@@ -848,9 +868,11 @@ describe('DiagnosticsMetrics', () => {
       observableDiagnostics.registerObservableGauge('queue_depth_current', second)
 
       const instrument = gaugeInstruments.get('queue_depth_current')!
-      expect(observableMeter.createObservableGauge).toHaveBeenCalledTimes(1)
-      // the wrapper for `first` was detached, and only `second` still fires
-      expect(instrument.removeCallback).toHaveBeenCalledWith(attachedCallbacksOf(instrument)[0])
+      expect(observableClient.createObservableGauge).toHaveBeenCalledTimes(1)
+      // re-registration is a map update behind the callback that is already attached,
+      // so the SDK is not touched and only `second` fires
+      expect(instrument.instrument.addCallback).toHaveBeenCalledTimes(1)
+      expect(instrument.instrument.removeCallback).not.toHaveBeenCalled()
       fireLast(instrument, { observe: jest.fn() })
       expect(first).not.toHaveBeenCalled()
       expect(second).toHaveBeenCalledTimes(1)
@@ -864,7 +886,7 @@ describe('DiagnosticsMetrics', () => {
       observableDiagnostics.registerObservableGauge('dup_metric', gauge)
       const dispose = observableDiagnostics.registerObservableCounter('dup_metric', counter)
 
-      expect(observableMeter.createObservableCounter).not.toHaveBeenCalledWith('dup_metric', undefined)
+      expect(observableClient.createObservableCounter).not.toHaveBeenCalled()
       expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('dup_metric'))
       expect(() => dispose()).not.toThrow()
 
@@ -878,14 +900,18 @@ describe('DiagnosticsMetrics', () => {
       dispose()
       dispose()
 
-      expect(gaugeInstruments.get('queue_depth_current')!.removeCallback).toHaveBeenCalledTimes(1)
+      expect(gaugeInstruments.get('queue_depth_current')!.remove).toHaveBeenCalledTimes(1)
     })
 
     it('registerObservableCounter creates a counter instrument (same code path as the gauge)', () => {
       const observe = jest.fn()
       observableDiagnostics.registerObservableCounter('jobs_processed_total', observe)
 
-      expect(observableMeter.createObservableCounter).toHaveBeenCalledWith('jobs_processed_total', undefined)
+      expect(observableClient.createObservableCounter).toHaveBeenCalledWith(
+        'jobs_processed_total',
+        expect.any(Function),
+        undefined
+      )
       fireLast(counterInstruments.get('jobs_processed_total')!, { observe: jest.fn() })
       expect(observe).toHaveBeenCalledTimes(1)
     })
@@ -898,7 +924,7 @@ describe('DiagnosticsMetrics', () => {
       observableDiagnostics.registerObservableCounter('jobs_processed_total', second)
 
       const instrument = counterInstruments.get('jobs_processed_total')!
-      expect(observableMeter.createObservableCounter).toHaveBeenCalledTimes(1)
+      expect(observableClient.createObservableCounter).toHaveBeenCalledTimes(1)
       fireLast(instrument, { observe: jest.fn() })
       expect(first).not.toHaveBeenCalled()
       expect(second).toHaveBeenCalledTimes(1)
@@ -914,7 +940,7 @@ describe('DiagnosticsMetrics', () => {
       const observe = jest.fn()
       pending.registerObservableGauge('startup_queue_depth', observe)
 
-      expect(observableMeter.createObservableGauge).not.toHaveBeenCalledWith('startup_queue_depth', undefined)
+      expect(observableClient.createObservableGauge).not.toHaveBeenCalled()
 
       resolveClient(observableMetricsClient)
       await new Promise(resolve => setTimeout(resolve, 10))
@@ -936,7 +962,7 @@ describe('DiagnosticsMetrics', () => {
       resolveClient(observableMetricsClient)
       await new Promise(resolve => setTimeout(resolve, 10))
 
-      expect(observableMeter.createObservableGauge).not.toHaveBeenCalledWith('cancelled_before_ready', undefined)
+      expect(observableClient.createObservableGauge).not.toHaveBeenCalled()
     })
   })
 
@@ -984,17 +1010,15 @@ describe('DiagnosticsMetrics', () => {
       return result.resourceMetrics.scopeMetrics.flatMap(sm => sm.metrics.map(m => m.descriptor.name))
     }
 
+    // The library's own client over a real provider: the observable instruments have to
+    // reach a real meter for collect() to report them, and routing them through the
+    // library is the path under test.
     function buildClient(temporality: AggregationTemporality) {
       exporter = new InMemoryMetricExporter(temporality)
       reader = new PeriodicExportingMetricReader({ exporter, exportIntervalMillis: 1000000 }) // never fires; collect() is manual
       provider = new MeterProvider({ readers: [reader] })
 
-      return {
-        createCounter: jest.fn(() => ({ add: jest.fn() })),
-        createGauge: jest.fn(() => ({ set: jest.fn() })),
-        createHistogram: jest.fn(),
-        getProvider: () => provider,
-      } as any
+      return new Metrics.MetricsClientImpl({ provider }, 'test-service', 'diagnostics-metrics-test')
     }
 
     beforeEach(async () => {
@@ -1149,10 +1173,11 @@ describe('DiagnosticsMetrics', () => {
       expect(allMetricNamesIn(result)).not.toEqual(expect.arrayContaining([expect.stringMatching(/hit.?rate/i)]))
     })
 
-    it('never reaches for the provider in an app that uses no observable instrument', async () => {
+    it('never creates an observable instrument in an app that registers none', async () => {
       // Spied before construction: this has to cover initialization too, not just the
       // push-based calls, or the "inert if unused" guarantee isn't actually tested.
-      const getProviderSpy = jest.spyOn(cacheMetricsClient, 'getProvider')
+      const createObservableGaugeSpy = jest.spyOn(cacheMetricsClient, 'createObservableGauge')
+      const createObservableCounterSpy = jest.spyOn(cacheMetricsClient, 'createObservableCounter')
       ;(getMetricClient as jest.Mock).mockResolvedValue(cacheMetricsClient)
 
       const pushOnly = new DiagnosticsMetrics()
@@ -1161,7 +1186,8 @@ describe('DiagnosticsMetrics', () => {
       pushOnly.setGauge('unrelated_current', 1)
       pushOnly.recordLatency(1, { operation: 'x' })
 
-      expect(getProviderSpy).not.toHaveBeenCalled()
+      expect(createObservableGaugeSpy).not.toHaveBeenCalled()
+      expect(createObservableCounterSpy).not.toHaveBeenCalled()
     })
 
     it('recovers from a cache whose read throws, without dropping other caches', async () => {

@@ -3,9 +3,7 @@ import {
   BatchObservableResult,
   context,
   createContextKey,
-  Meter,
   MetricOptions,
-  Observable,
   ObservableCallback,
   ObservableCounter,
   ObservableGauge,
@@ -31,8 +29,6 @@ const MAX_CUSTOM_ATTRIBUTES = 7
  */
 const BASE_ATTRIBUTES_KEY = createContextKey('vtex.metrics.baseAttributes')
 
-const OBSERVABLE_METER_NAME = 'node-vtex-api'
-
 // trackCache() metric names — one shared instrument set, differentiated by `cache`.
 const CACHE_OPERATIONS_METRIC = 'io_app_cache_operations_total'
 const CACHE_ITEMS_METRIC = 'io_app_cache_items_current'
@@ -53,13 +49,9 @@ interface ObservableRegistration {
   options?: MetricOptions
 }
 
-// `callback` is the app's function (the identity we key replacement/removal on);
-// `attached` is the attribute-limiting wrapper actually handed to the instrument.
-interface AttachedObservable {
-  instrument: Observable
-  callback: ObservableCallback
-  attached: ObservableCallback
-}
+// The library's wrapper around the OTel instrument: it holds the callback it
+// attached, and remove() detaches it.
+type ObservableInstrument = Types.ObservableGauge | Types.ObservableCounter
 
 /**
  * Converts an hrtime tuple [seconds, nanoseconds] to milliseconds.
@@ -170,10 +162,10 @@ export class DiagnosticsMetrics {
   private readonly counters: Map<string, Types.Counter>
   private readonly gauges: Map<string, Types.Gauge>
 
-  // What apps registered, and what's actually attached to an OTel instrument
+  // What apps registered, and the instrument each name is attached to
   // (empty until the client is ready — see syncObservables), keyed by name.
   private readonly observableRegistrations: Record<ObservableKind, Map<string, ObservableRegistration>>
-  private readonly observableInstruments: Record<ObservableKind, Map<string, AttachedObservable>>
+  private readonly observableInstruments: Record<ObservableKind, Map<string, ObservableInstrument>>
 
   // trackCache() state: registered caches and the shared instruments.
   private readonly cacheRegistry: Map<string, TrackedCache>
@@ -459,11 +451,6 @@ export class DiagnosticsMetrics {
     this.gauges.get(name)!.set(value, mergedAttributes)
   }
 
-  // getProvider() is already part of the metrics client's type.
-  private getObservableMeter(): Meter | undefined {
-    return this.metricsClient?.getProvider().getMeter(OBSERVABLE_METER_NAME)
-  }
-
   // Registers (or replaces) a pull-based gauge: OTel calls `observe` on its own
   // schedule, with `result.observe(value, attributes?)`. No base-attribute merging —
   // there's no request in progress when this runs — but the attributes reported are
@@ -495,47 +482,51 @@ export class DiagnosticsMetrics {
     this.syncObservables(kind)
 
     return () => {
-      if (this.observableRegistrations[kind].get(name)?.observe === observe) {
-        this.observableRegistrations[kind].delete(name)
+      // A later registration for the same name owns the instrument now; disposing
+      // this one must not tear that down.
+      if (this.observableRegistrations[kind].get(name)?.observe !== observe) {
+        return
       }
 
-      const active = this.observableInstruments[kind].get(name)
-      if (active?.callback === observe) {
-        active.instrument.removeCallback(active.attached)
-        this.observableInstruments[kind].delete(name)
-      }
+      this.observableRegistrations[kind].delete(name)
+      this.observableInstruments[kind].get(name)?.remove()
+      this.observableInstruments[kind].delete(name)
     }
   }
 
   // Attaches every `kind` registration to its instrument. A no-op if there's nothing
   // registered or the client isn't ready — safe to call anytime, including from
   // flushPendingObservables() once the client becomes ready.
+  //
+  // One instrument per name, carrying one callback for its whole life: the callback
+  // is a trampoline that reads whatever registration is current, so replacing the
+  // app's function is a map update and never touches the SDK. Re-creating the
+  // instrument instead would leave the meter holding a stream the collector sees as
+  // a duplicate type for the same name.
   private syncObservables(kind: ObservableKind): void {
     if (this.observableRegistrations[kind].size === 0) {
-      return // skip getObservableMeter() entirely if this kind is unused
+      return // skip the meter entirely if this kind is unused
     }
 
-    const meter = this.getObservableMeter()
-    if (!meter) {
+    const client = this.metricsClient
+    if (!client) {
       return
     }
 
-    for (const [name, { observe, options }] of this.observableRegistrations[kind]) {
-      const active = this.observableInstruments[kind].get(name)
-      if (active?.callback === observe) {
+    for (const [name, { options }] of this.observableRegistrations[kind]) {
+      if (this.observableInstruments[kind].has(name)) {
         continue
       }
 
-      if (active) {
-        active.instrument.removeCallback(active.attached)
+      const attached: ObservableCallback = (result) => {
+        this.observableRegistrations[kind].get(name)?.observe(limitObservableResult(result))
       }
 
-      const instrument: Observable = active?.instrument ??
-        (kind === 'gauge' ? meter.createObservableGauge(name, options) : meter.createObservableCounter(name, options))
+      const instrument = kind === 'gauge'
+        ? client.createObservableGauge(name, attached, options)
+        : client.createObservableCounter(name, attached, options)
 
-      const attached: ObservableCallback = (result) => observe(limitObservableResult(result))
-      instrument.addCallback(attached)
-      this.observableInstruments[kind].set(name, { instrument, callback: observe, attached })
+      this.observableInstruments[kind].set(name, instrument)
     }
   }
 
@@ -567,34 +558,41 @@ export class DiagnosticsMetrics {
       return
     }
 
-    const meter = this.getObservableMeter()
-    if (!meter) {
+    const client = this.metricsClient
+    if (!client) {
       return
     }
 
-    const operations = meter.createObservableCounter(CACHE_OPERATIONS_METRIC, {
+    const operations = client.createObservableCounter(CACHE_OPERATIONS_METRIC, undefined, {
       description: 'Hit/miss operations for a VTEX IO app in-memory cache',
       unit: '1',
     })
-    const items = meter.createObservableGauge(CACHE_ITEMS_METRIC, {
+    const items = client.createObservableGauge(CACHE_ITEMS_METRIC, undefined, {
       description: 'Current number of items held by a VTEX IO app cache',
       unit: '1',
     })
-    const capacity = meter.createObservableGauge(CACHE_CAPACITY_METRIC, {
+    const capacity = client.createObservableGauge(CACHE_CAPACITY_METRIC, undefined, {
       description: 'Capacity of a VTEX IO app cache, in the units that cache uses (item count, unless the LRU was built with a length function)',
       unit: '1',
     })
-    const disposed = meter.createObservableCounter(CACHE_DISPOSED_METRIC, {
+    const disposed = client.createObservableCounter(CACHE_DISPOSED_METRIC, undefined, {
       description: 'Items disposed (evicted) from a VTEX IO app cache',
       unit: '1',
     })
 
-    meter.addBatchObservableCallback(
+    client.addBatchObservableCallback(
       (result) => this.observeCaches(result),
-      [operations, items, capacity, disposed]
+      [operations.instrument, items.instrument, capacity.instrument, disposed.instrument]
     )
 
-    this.cacheInstruments = { operations, items, capacity, disposed }
+    // These live for the process, so only the handles are kept: the wrappers exist
+    // to attach the batch callback above.
+    this.cacheInstruments = {
+      operations: operations.instrument,
+      items: items.instrument,
+      capacity: capacity.instrument,
+      disposed: disposed.instrument,
+    }
   }
 
   // Reads each registered cache's cumulative counters straight into the instruments.
