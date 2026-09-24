@@ -20,13 +20,13 @@
  * @returns {string} The combined full path
  */
 export default function(baseURL?: string, requestedURL?: string, allowAbsoluteUrls?: boolean): string | undefined {
-    let isRelativeUrl = !isAbsoluteURL(requestedURL);
-    if (baseURL && (isRelativeUrl || allowAbsoluteUrls == false)) {
-      return combineURLs(baseURL, requestedURL);
+    const isRelativeUrl = !isAbsoluteURL(requestedURL)
+    if (baseURL && (isRelativeUrl || allowAbsoluteUrls === false)) {
+      return combineURLs(baseURL, requestedURL)
     }
-    return requestedURL;
+    return requestedURL
   }
-  
+
   /**
    * Determines whether the specified URL is absolute
    *
@@ -38,9 +38,9 @@ export default function(baseURL?: string, requestedURL?: string, allowAbsoluteUr
       // A URL is considered absolute if it begins with "<scheme>://" or "//" (protocol-relative URL).
       // RFC 3986 defines scheme name as a sequence of characters beginning with a letter and followed
       // by any combination of letters, digits, plus, period, or hyphen.
-      return !!url && /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url);
+      return !!url && /^([a-z][a-z\d+\-.]*:)?\/\//i.test(url)
   }
-  
+
   /**
    * Creates a new URL by combining the specified URLs
    *
@@ -52,5 +52,5 @@ export default function(baseURL?: string, requestedURL?: string, allowAbsoluteUr
   function combineURLs(baseURL?: string, relativeURL?: string): string | undefined {
       return relativeURL && baseURL
         ? baseURL.replace(/\/?\/$/, '') + '/' + relativeURL.replace(/^\/+/, '')
-        : baseURL;
+        : baseURL
   }

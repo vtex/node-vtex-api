@@ -49,7 +49,7 @@ export class TestServer {
   }
   public closeServer() {
     console.log('Closing test server...')
-    return new Promise((resolve, reject) => {
+    return new Promise<void>((resolve, reject) => {
       this.server.close(err => {
         if (err) {
           return reject(err)

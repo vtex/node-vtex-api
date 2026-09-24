@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.52.4]
+### Fixed
+- `yarn test` no longer fails to even load `src/service/logger` and its transitive
+  dependents under `jest@25`: that resolver predates the package `exports` field, so
+  it couldn't resolve `@vtex/diagnostics-nodejs@0.1.0-beta.10`'s OpenTelemetry OTLP
+  exporter chain (reached via `@opentelemetry/otlp-exporter-base/node-http`), which is
+  loaded at module-eval time by nearly every service module. Stubbed the package for
+  tests via `jest.config.js` `moduleNameMapper` (see `jest/stubs/diagnosticsNodejs.js`);
+  the real telemetry/log-client paths are lazy and error-guarded, so this has no
+  behavioural effect on the code under test.
+- `TestServer.closeServer()`'s `new Promise((resolve) => ...)` failed to type-check
+  under strict `Promise<void>` typing; typed the executor explicitly.
+- The `axiosTracing.test.ts` "forcing ECONNREFUSED" suite pointed at `localhost`, which
+  Node's `autoSelectFamily` (Happy Eyeballs) resolves to both loopback addresses; since
+  both connections are refused, Node throws an `AggregateError` with an empty top-level
+  `message` instead of the plain `ECONNREFUSED` error the test asserts on. Uses the
+  literal `127.0.0.1` instead.
+
+## [6.52.2]
+### Fixed
+- TSLint violations across `src/axios.d.ts`, `src/caches/MultilayeredCache.ts`,
+  `src/HttpClient/middlewares/cache.ts`, `src/HttpClient/middlewares/request/index.ts`,
+  `src/HttpClient/middlewares/request/setupAxios/interceptors/tracing/spanSetup.ts`,
+  `src/service/logger/client.ts`, `src/service/logger/logger.ts`,
+  `src/service/telemetry/client.ts`,
+  `src/service/worker/runtime/graphql/schema/schemaDirectives/Auth.ts`,
+  `src/tracing/utils.test.ts` and `src/utils/buildFullPath.ts` (semicolon usage,
+  member ordering, `==` vs `===`, unsorted object keys, import ordering, and
+  other `tslint-config-vtex` rule failures) that were blocking the CI lint gate
+  on unrelated PRs against the 6.x line.
+
 ## [6.51.0] - 2026-06-23
 ### Added
 - Base `IOClients` getter `janusCatalogSystem` (Janus Catalog) and
