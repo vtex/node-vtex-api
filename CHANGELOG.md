@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.52.2]
+### Fixed
+- TSLint violations across `src/axios.d.ts`, `src/caches/MultilayeredCache.ts`,
+  `src/HttpClient/middlewares/cache.ts`, `src/HttpClient/middlewares/request/index.ts`,
+  `src/HttpClient/middlewares/request/setupAxios/interceptors/tracing/spanSetup.ts`,
+  `src/service/logger/client.ts`, `src/service/logger/logger.ts`,
+  `src/service/telemetry/client.ts`,
+  `src/service/worker/runtime/graphql/schema/schemaDirectives/Auth.ts`,
+  `src/tracing/utils.test.ts` and `src/utils/buildFullPath.ts` (semicolon usage,
+  member ordering, `==` vs `===`, unsorted object keys, import ordering, and
+  other `tslint-config-vtex` rule failures) that were blocking the CI lint gate
+  on unrelated PRs against the 6.x line.
+
 ## [6.51.0] - 2026-06-23
 ### Added
 - Base `IOClients` getter `janusCatalogSystem` (Janus Catalog) and

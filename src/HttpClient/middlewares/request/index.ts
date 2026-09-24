@@ -1,8 +1,8 @@
 import { AxiosRequestConfig } from 'axios'
-import buildFullPath from '../../../utils/buildFullPath'
 import { Limit } from 'p-limit'
 import { stringify } from 'qs'
 import { toLower } from 'ramda'
+import buildFullPath from '../../../utils/buildFullPath'
 
 
 import { CustomHttpTags, OpentracingTags } from '../../../tracing/Tags'
