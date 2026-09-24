@@ -11,10 +11,6 @@ module.exports = {
     // the stub above.
     '^@opentelemetry/otlp-exporter-base/node-http$':
       '<rootDir>/node_modules/@opentelemetry/otlp-exporter-base/build/src/index-node-http.js',
-    // axios's "main" field points at its ESM entry; jest@25 predates the "exports" field
-    // that real Node/bundlers use to pick the CJS build instead, so it fails to parse the
-    // `import` statement in that ESM entry. Map straight to the CJS build.
-    '^axios$': '<rootDir>/node_modules/axios/dist/node/axios.cjs',
   },
   roots: ['<rootDir>/src'],
   transform: {

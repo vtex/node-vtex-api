@@ -28,7 +28,10 @@ async function initializeClient(account: string, workspace: string, appName: str
 
     const logsConfig = Exporters.CreateLogsExporterConfig({
       endpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+      headers: { 'Content-Type': 'application/json' },
       interval: 5,
+      path: process.env.OTEL_EXPORTER_OTLP_PATH || '/v1/logs',
+      protocol: 'http',
       timeoutSeconds: 5,
     })
 

@@ -40,7 +40,6 @@ class TelemetryClientSingleton {
       const telemetryClient = await NewTelemetryClient(
         'node-vtex-api',
         APP.ID || 'vtex-app',
-        APP.NAME || 'vtex-app',
         {
           additionalAttrs: {
             'environment': process.env.VTEX_WORKSPACE || 'development',

@@ -7,22 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [6.52.3]
+## [6.52.4]
 ### Fixed
 - `yarn test` no longer fails to even load `src/service/logger` and its transitive
   dependents under `jest@25`: that resolver predates the package `exports` field, so
-  it couldn't resolve `@vtex/diagnostics-nodejs`'s modern OpenTelemetry exporter chain
-  (`@opentelemetry/otlp-exporter-base/node-http`) or axios's dual CJS/ESM package
-  (whose `main` field points at the ESM build). Both are now mapped to their CJS/legacy
-  entry points via `jest.config.js` `moduleNameMapper` (see `jest/stubs/diagnosticsNodejs.js`).
-- `src/service/telemetry/client.ts` called `NewTelemetryClient` with only 3 of its 4
-  required positional arguments (missing `serviceName`), which failed to type-check;
-  fixed by passing `APP.NAME`.
-- `src/service/logger/client.ts` passed `headers`, `path` and `protocol` to
-  `Exporters.CreateLogsExporterConfig`, none of which exist on the installed
-  `@vtex/diagnostics-nodejs` version's `ExporterOptions` type (nor are read by its
-  runtime implementation, which only forwards `endpoint`/`interval`/`timeoutSeconds`/
-  `compression`/`insecure` to a gRPC, not HTTP, exporter) — removed the dead options.
+  it couldn't resolve `@vtex/diagnostics-nodejs@0.1.0-beta.10`'s OpenTelemetry OTLP
+  exporter chain (reached via `@opentelemetry/otlp-exporter-base/node-http`), which is
+  loaded at module-eval time by nearly every service module. Stubbed the package for
+  tests via `jest.config.js` `moduleNameMapper` (see `jest/stubs/diagnosticsNodejs.js`);
+  the real telemetry/log-client paths are lazy and error-guarded, so this has no
+  behavioural effect on the code under test.
 - `TestServer.closeServer()`'s `new Promise((resolve) => ...)` failed to type-check
   under strict `Promise<void>` typing; typed the executor explicitly.
 - The `axiosTracing.test.ts` "forcing ECONNREFUSED" suite pointed at `localhost`, which
