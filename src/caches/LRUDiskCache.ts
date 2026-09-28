@@ -1,5 +1,5 @@
 import { CacheLayer } from './CacheLayer'
-import { LRUDiskCacheOptions, LRUStats } from './typings'
+import { CumulativeStats, LRUDiskCacheOptions, LRUStats } from './typings'
 
 import { outputJSON, readJSON, remove } from 'fs-extra'
 import LRU from 'lru-cache'
@@ -14,6 +14,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   private total = 0
   private lruStorage: LRU<string, number>
   private keyToBeDeleted: string
+  private reported = { disposed: 0, hits: 0, total: 0 }
 
   constructor(private cachePath: string, options: LRUDiskCacheOptions, private readFile=readJSON, private writeFile=outputJSON) {
     this.hits = 0
@@ -40,21 +41,30 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   public has = (key: string): boolean => this.lruStorage.has(key)
 
   public getStats = (name='disk-lru-cache'): LRUStats => {
+    const hits = this.hits - this.reported.hits
+    const total = this.total - this.reported.total
     const stats = {
-      disposedItems: this.disposed,
-      hitRate: this.total > 0 ? this.hits / this.total : undefined,
-      hits: this.hits,
+      disposedItems: this.disposed - this.reported.disposed,
+      hitRate: total > 0 ? hits / total : undefined,
+      hits,
       itemCount: this.lruStorage.itemCount,
       length: this.lruStorage.length,
       max: this.lruStorage.max,
       name,
-      total: this.total,
+      total,
     }
-    this.hits = 0
-    this.total = 0
-    this.disposed = 0
+    this.reported = { disposed: this.disposed, hits: this.hits, total: this.total }
     return stats
   }
+
+  public getCumulativeStats = (): CumulativeStats => ({
+    disposedItems: this.disposed,
+    hits: this.hits,
+    itemCount: this.lruStorage.itemCount,
+    length: this.lruStorage.length,
+    max: this.lruStorage.max,
+    total: this.total,
+  })
 
   public get = async (key: string): Promise<V | void>  => {
     const timeOfDeath = this.lruStorage.get(key)
