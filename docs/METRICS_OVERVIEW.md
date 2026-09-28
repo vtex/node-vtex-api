@@ -191,6 +191,16 @@ const dispose = global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage
 
 This is a direct replacement, not a manual re-implementation with `incrementCounter`/`setGauge` (Pattern 4's approach) — `trackCache()` reads the cache exactly once per collection cycle no matter how many metrics it produces from it.
 
+**Probe the method, not the global, before calling on a runtime you don't control.** `global.diagnosticsMetrics` exists since 7.3.0, but `trackCache()` only arrives in 7.5.1 — and in production the runtime supplies the `@vtex/api` your app runs on, not your lockfile. On a runtime in between, the global is there and the method is not, and a call at module load dies with `TypeError: diagnosticsMetrics.trackCache is not a function` before the app serves a single request. Optional chaining on the global (`global.diagnosticsMetrics?.trackCache(...)`) does not help there — it skips the absent *global*, not the absent *method*. Detect the facade without an exception like this:
+
+```typescript
+if (typeof global.diagnosticsMetrics?.trackCache === 'function') {
+  global.diagnosticsMetrics.trackCache('pages', pagesCacheStorage)
+}
+```
+
+Skip the probe only when the rollout order already guarantees the runtime carries the method. The rollout's adoption app does exactly that: a guard there would trade a loud failure for silently missing metrics, which is worse for whoever watches the dashboards.
+
 **Leaving the legacy call in place is harmless.** The legacy `getStats()` reports a per-flush window and consumes it on read; `getCumulativeStats()` reports the process-lifetime total and has no side effects, so the two readers don't steal counts from each other:
 
 ```typescript

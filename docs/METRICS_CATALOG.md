@@ -271,6 +271,8 @@ Reads the cache's `getCumulativeStats()`, which has no side effects — so this 
 const dispose = global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)
 ```
 
+> `trackCache()` exists from `@vtex/api` 7.5.1; the `diagnosticsMetrics` global from 7.3.0. On a runtime in between the global is present and the method is not — probe `typeof global.diagnosticsMetrics?.trackCache === 'function'` before calling on a runtime you don't control (see [METRICS_OVERVIEW.md](./METRICS_OVERVIEW.md), Pattern 5).
+
 ---
 
 ## Legacy Metrics (Non-Diagnostics)
