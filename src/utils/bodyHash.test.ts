@@ -161,6 +161,21 @@ describe('computeBodyHash', () => {
     })
   })
 
+  describe('raw ArrayBuffer data', () => {
+    it('produces different hashes for ArrayBuffers with different contents', () => {
+      const bufferA = new Uint8Array([1, 2, 3]).buffer
+      const bufferB = new Uint8Array([9, 9, 9]).buffer
+
+      expect(computeBodyHash(bufferA)).not.toBe(computeBodyHash(bufferB))
+    })
+
+    it('hashes an ArrayBuffer the same way as a Buffer with the same bytes', () => {
+      const bytes = new Uint8Array([1, 2, 3, 4, 5])
+
+      expect(computeBodyHash(bytes.buffer)).toBe(computeBodyHash(Buffer.from(bytes)))
+    })
+  })
+
   describe('gzip-compressed body across separate requests (render-ssr scenario)', () => {
     it('produces the same hash when the same JSON payload is gzip-compressed independently twice', () => {
       const payload = JSON.stringify({ page: 'home', props: { locale: 'en-US', items: [1, 2, 3] } })

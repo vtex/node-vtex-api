@@ -15,8 +15,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   `Buffer.prototype.toJSON()`, which serializes it as `{"type":"Buffer","data":[...]}`
   — the byte array is hashed as decimal text, not the actual transmitted bytes, and
   the JSON serialization of a large buffer is far more expensive than hashing it
-  directly. `Buffer` bodies are now hashed directly with `createHash('md5').update(buffer)`;
-  behavior for non-`Buffer` data is unchanged. This changes the `bodyHash` value (and
+  directly. `Buffer` bodies (and other binary bodies: typed arrays, `DataView` and raw
+  `ArrayBuffer`) are now hashed directly with `createHash('md5').update(...)`; a raw
+  `ArrayBuffer` previously serialized to `{}` for any content, so different bodies
+  shared one `bodyHash`. Behavior for other non-binary data is unchanged. This changes the `bodyHash` value (and
   therefore the cache-key query param) for existing consumers that pass a `Buffer`
   to `getWithBody` — the worst case is a one-time cache miss on old KubeRouter
   entries, not incorrect content being served.

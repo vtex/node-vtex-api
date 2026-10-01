@@ -2,8 +2,7 @@ import { BODY_HASH } from '../constants'
 import { computeBodyHash } from '../utils/bodyHash'
 import { HttpClient } from './HttpClient'
 
-function createClient(): HttpClient {
-  const logger = { warn: jest.fn() }
+function createClient(logger: { warn: jest.Mock } = { warn: jest.fn() }): HttpClient {
   const tracer = { isTraceSampled: false }
 
   const client = new HttpClient({
@@ -57,6 +56,18 @@ describe('HttpClient#getWithBody', () => {
 
     expect(passedConfig.params[BODY_HASH]).toBe(computeBodyHash(data))
     expect(passedConfig.params[BODY_HASH]).not.toBe('caller-supplied-hash')
+  })
+
+  it('logs a warning once when the body cannot be serialized for the cache key', async () => {
+    const logger = { warn: jest.fn() }
+    const client = createClient(logger)
+    const circular: Record<string, any> = { name: 'body' }
+    circular.self = circular
+
+    await client.getWithBody('/some-url', circular)
+
+    expect(logger.warn).toHaveBeenCalledTimes(1)
+    expect(logger.warn).toHaveBeenCalledWith({ message: 'Error while sorting object for cache key' })
   })
 
   it('resolves with the response data', async () => {

@@ -18,6 +18,13 @@ export function computeBodyHash(data: any, onSerializeError?: () => void): strin
     return createHash('md5').update(data as Buffer).digest('hex') // NOSONAR
   }
 
+  // A raw ArrayBuffer isn't an ArrayBufferView and has no enumerable own properties, so it
+  // would serialize to '{}' for any content - colliding on the same bodyHash. The toString
+  // tag check (unlike `instanceof`) also matches an ArrayBuffer created in another realm.
+  if (Object.prototype.toString.call(data) === '[object ArrayBuffer]') {
+    return createHash('md5').update(Buffer.from(data)).digest('hex') // NOSONAR
+  }
+
   if (data === undefined) {
     // getWithBody's `data` is optional, so an omitted body is a normal, deterministic case -
     // not a serialization failure. It must hash to a fixed value, or callers that omit the
