@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `getWithBody` no longer runs `Buffer` bodies through `JSON.stringify` to compute
+  the cache-key `bodyHash`. Consumers that compress the body (e.g. gzip) before
+  calling `getWithBody` pass a `Buffer` as `data`; `JSON.stringify` invokes
+  `Buffer.prototype.toJSON()`, which serializes it as `{"type":"Buffer","data":[...]}`
+  — the byte array is hashed as decimal text, not the actual transmitted bytes, and
+  the JSON serialization of a large buffer is far more expensive than hashing it
+  directly. `Buffer` bodies (and other binary bodies: typed arrays, `DataView` and raw
+  `ArrayBuffer`) are now hashed directly with `createHash('md5').update(...)`; a raw
+  `ArrayBuffer` previously serialized to `{}` for any content, so different bodies
+  shared one `bodyHash`. Behavior for other non-binary data is unchanged. This changes the `bodyHash` value (and
+  therefore the cache-key query param) for existing consumers that pass a `Buffer`
+  to `getWithBody` — the worst case is a one-time cache miss on old KubeRouter
+  entries, not incorrect content being served.
+- Computing the `bodyHash` in `getWithBody` no longer throws on its own for a body
+  that can't be serialized (e.g. a circular reference). Previously the `JSON.stringify`
+  used for the hash had no surrounding try/catch, so such a body made `getWithBody`
+  throw synchronously. The hash computation now falls back to a one-off random
+  `bodyHash`, but an invalid body still fails: axios serializes it again when sending
+  the request and rejects. The only observable change is that the error now surfaces
+  as a rejected promise from the request (with axios's error, e.g. a `RangeError` for a
+  circular structure) instead of a synchronous throw from `getWithBody`.
+
 ## [7.5.0]
 
 ### Added
