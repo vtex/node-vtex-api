@@ -8,10 +8,13 @@ const deterministicReplacer = (_: any, v: any) => {
     Object.fromEntries(Object.entries(v).sort(compareKeys))
 }
 
+/**
+ * Derives the cache-key digest for a `getWithBody` request body. MD5 is used only for that -
+ * it is not a security-sensitive value, and no secret protection or tamper-integrity
+ * guarantee is being made. Never throws, even if `onSerializeError` does.
+ */
 export function computeBodyHash(data: any, onSerializeError?: () => void): string {
   if (ArrayBuffer.isView(data)) {
-    // MD5 here only derives a cache-key digest for the request body, not a security-sensitive
-    // value - no secret protection or tamper-integrity guarantee is being made.
     // Cast needed: the `@types/node@12.x` pinned in this repo types `Hash.update` against a
     // narrower `BinaryLike` than the `ArrayBufferView` the `ArrayBuffer.isView` guard produces,
     // even though every ArrayBufferView (Buffer, TypedArray, DataView) is accepted at runtime.
@@ -33,15 +36,9 @@ export function computeBodyHash(data: any, onSerializeError?: () => void): strin
     return createHash('md5').update('undefined').digest('hex') // NOSONAR
   }
 
-  // Reports at most once per call, even if both the replacer and the outer JSON.stringify
-  // catch below end up hitting it for the same underlying failure.
-  let hasReportedSerializeError = false
-  const reportSerializeError = () => {
-    if (!hasReportedSerializeError) {
-      hasReportedSerializeError = true
-      onSerializeError?.()
-    }
-  }
+  // The failure is reported once, after JSON.stringify has unwound - not from inside the
+  // replacer, where a stack overflow (e.g. circular reference) leaves no room to call it.
+  let serializeFailed = false
 
   const replacer = (key: string, value: any) => {
     try {
@@ -50,14 +47,12 @@ export function computeBodyHash(data: any, onSerializeError?: () => void): strin
     catch {
       // I don't believe this will ever happen, but just in case
       // Also, I didn't include error as I am unsure if it would have sensitive information
-      reportSerializeError()
+      serializeFailed = true
       return value
     }
   }
 
   try {
-    // MD5 here only derives a cache-key digest for the request body, not a security-sensitive
-    // value - no secret protection or tamper-integrity guarantee is being made.
     return createHash('md5').update(JSON.stringify(data, replacer)).digest('hex') // NOSONAR
   }
   catch {
@@ -69,7 +64,18 @@ export function computeBodyHash(data: any, onSerializeError?: () => void): strin
     // not just a miss. Use random bytes instead: every call gets a unique key, so the hash
     // can only ever cause a cache miss, never serve the wrong content. Such a body is
     // invalid anyway, so the request itself still fails later when axios serializes it.
-    reportSerializeError()
+    serializeFailed = true
     return randomBytes(16).toString('hex')
+  }
+  finally {
+    if (serializeFailed) {
+      try {
+        onSerializeError?.()
+      }
+      catch {
+        // A failing callback (e.g. a logger that throws) must never turn the safe fallback
+        // path back into a throw.
+      }
+    }
   }
 }

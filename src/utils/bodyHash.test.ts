@@ -85,6 +85,15 @@ describe('computeBodyHash', () => {
       expect(onSerializeError).toHaveBeenCalledTimes(1)
     })
 
+    it('does not throw when the onSerializeError callback itself throws', () => {
+      const circular: Record<string, any> = { name: 'body' }
+      circular.self = circular
+      const onSerializeError = jest.fn(() => { throw new Error('logger failed') })
+
+      expect(() => computeBodyHash(circular, onSerializeError)).not.toThrow()
+      expect(onSerializeError).toHaveBeenCalledTimes(1)
+    })
+
     it('does not throw when data is undefined', () => {
       const onSerializeError = jest.fn()
 
@@ -158,6 +167,16 @@ describe('computeBodyHash', () => {
       const bytesB = new Uint8Array([1, 2, 3, 4, 6])
 
       expect(computeBodyHash(bytesA)).not.toBe(computeBodyHash(bytesB))
+    })
+  })
+
+  describe('DataView data', () => {
+    it('hashes only the view window, not the whole backing buffer', () => {
+      const backing = new Uint8Array([0, 0, 1, 2, 3, 9, 9]).buffer
+      const view = new DataView(backing, 2, 3)
+
+      expect(computeBodyHash(view)).toBe(computeBodyHash(Buffer.from([1, 2, 3])))
+      expect(computeBodyHash(view)).not.toBe(computeBodyHash(backing))
     })
   })
 
