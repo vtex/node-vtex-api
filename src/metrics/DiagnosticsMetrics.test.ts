@@ -891,6 +891,19 @@ describe('DiagnosticsMetrics', () => {
       errorSpy.mockRestore()
     })
 
+    it('refuses a name reserved for trackCache()', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation()
+      const observe = jest.fn()
+
+      const dispose = observableDiagnostics.registerObservableGauge('io_app_cache_capacity', observe)
+
+      expect(observableClient.createObservableGauge).not.toHaveBeenCalled()
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('io_app_cache_capacity'))
+      expect(() => dispose()).not.toThrow()
+
+      errorSpy.mockRestore()
+    })
+
     it('detaches on dispose; the disposer is a no-op if called again', () => {
       const observe = jest.fn()
       const dispose = observableDiagnostics.registerObservableGauge('queue_depth_current', observe)

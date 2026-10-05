@@ -35,6 +35,15 @@ const CACHE_ITEMS_METRIC = 'io_app_cache_items_current'
 const CACHE_CAPACITY_METRIC = 'io_app_cache_capacity'
 const CACHE_DISPOSED_METRIC = 'io_app_cache_disposed_total'
 
+// Names owned by trackCache(), which creates them straight on the client. An app
+// registering one of them as its own observable would publish a duplicate stream.
+const CACHE_METRIC_NAMES = new Set([
+  CACHE_OPERATIONS_METRIC,
+  CACHE_ITEMS_METRIC,
+  CACHE_CAPACITY_METRIC,
+  CACHE_DISPOSED_METRIC,
+])
+
 // Cache instances exposing a non-resetting read (all four cache classes).
 export interface TrackedCache {
   getCumulativeStats(): CumulativeStats
@@ -99,6 +108,24 @@ function limitCustomAttributes(customAttributes?: Attributes): Attributes | unde
  */
 function capacityOrSentinel(max: number): number {
   return Number.isFinite(max) ? max : Number.MAX_SAFE_INTEGER
+}
+
+/**
+ * A disposer that only releases the entry it was created for. A later registration of
+ * the same name owns that entry, so an older disposer is a no-op instead of tearing
+ * down its successor.
+ */
+function releaseIfOwner<T>(registry: Map<string, T>, name: string, entry: T, onRelease?: () => void): () => void {
+  return () => {
+    if (registry.get(name) !== entry) {
+      return
+    }
+
+    registry.delete(name)
+    if (onRelease) {
+      onRelease()
+    }
+  }
 }
 
 /**
@@ -338,19 +365,29 @@ export class DiagnosticsMetrics {
   }
 
   /**
+   * Counter and gauge instruments are created once per name and reused.
+   */
+  private instrumentFor<T>(map: Map<string, T>, name: string, create: () => T): T {
+    const existing = map.get(name)
+    if (existing !== undefined) {
+      return existing
+    }
+
+    const instrument = create()
+    map.set(name, instrument)
+    return instrument
+  }
+
+  /**
    * Record a latency measurement using the single shared histogram.
    * Accepts either an hrtime tuple from process.hrtime() or milliseconds as a number.
    * Use attributes to differentiate between different operations.
    * 
-   * Base attributes from the current context (set via `runWithBaseAttributes`) are
-   * automatically merged with the provided custom attributes. Base attributes take 
-   * precedence - if a custom attribute key conflicts with a base attribute key, 
-   * the custom attribute is silently dropped.
-   * 
-   * Custom attributes are limited to MAX_CUSTOM_ATTRIBUTES (5). Base attributes are not limited.
+   * Base attributes from `runWithBaseAttributes` are merged in automatically and take
+   * precedence; custom attributes are capped at MAX_CUSTOM_ATTRIBUTES (7). See the class doc.
    *
    * @param value Either [seconds, nanoseconds] from process.hrtime() or milliseconds
-   * @param attributes Custom attributes including 'operation' to identify the operation type (max 5 custom attributes)
+   * @param attributes Custom attributes including 'operation' to identify the operation type (max 7 custom attributes)
    *
    * @example
    * ```typescript
@@ -382,16 +419,12 @@ export class DiagnosticsMetrics {
    * Increment a counter by a specific value.
    * Multiple counters are stored by name since counters represent different types of events.
    * 
-   * Base attributes from the current context (set via `runWithBaseAttributes`) are
-   * automatically merged with the provided custom attributes. Base attributes take 
-   * precedence - if a custom attribute key conflicts with a base attribute key, 
-   * the custom attribute is silently dropped.
-   * 
-   * Custom attributes are limited to MAX_CUSTOM_ATTRIBUTES (5). Base attributes are not limited.
+   * Base attributes from `runWithBaseAttributes` are merged in automatically and take
+   * precedence; custom attributes are capped at MAX_CUSTOM_ATTRIBUTES (7). See the class doc.
    *
    * @param name Counter name (e.g., 'http_requests_total', 'cache_hits_total')
    * @param value Amount to increment by (typically 1)
-   * @param attributes Optional custom attributes for the counter (max 5 custom attributes, e.g., { method: 'GET', status: '2xx' })
+   * @param attributes Optional custom attributes for the counter (max 7 custom attributes, e.g., { method: 'GET', status: '2xx' })
    *
    * @example
    * ```typescript
@@ -404,36 +437,24 @@ export class DiagnosticsMetrics {
       return
     }
 
-    // Get or create counter instrument
-    if (!this.counters.has(name)) {
-      const counter = this.metricsClient.createCounter(name, {
-        description: `Counter for ${name}`,
-        unit: '1',
-      })
-      this.counters.set(name, counter)
-    }
+    const counter = this.instrumentFor(this.counters, name, () =>
+      this.metricsClient!.createCounter(name, { description: `Counter for ${name}`, unit: '1' })
+    )
 
-    // Merge base attributes from context with custom attributes (custom attrs are limited internally)
-    const mergedAttributes = this.mergeAttributes(attributes)
-
-    // Increment the counter
-    this.counters.get(name)!.add(value, mergedAttributes)
+    // mergeAttributes() limits custom attributes internally
+    counter.add(value, this.mergeAttributes(attributes))
   }
 
   /**
    * Set a gauge to a specific value (current state).
    * Multiple gauges are stored by name since gauges represent different types of measurements.
    * 
-   * Base attributes from the current context (set via `runWithBaseAttributes`) are
-   * automatically merged with the provided custom attributes. Base attributes take 
-   * precedence - if a custom attribute key conflicts with a base attribute key, 
-   * the custom attribute is silently dropped.
-   * 
-   * Custom attributes are limited to MAX_CUSTOM_ATTRIBUTES (5). Base attributes are not limited.
+   * Base attributes from `runWithBaseAttributes` are merged in automatically and take
+   * precedence; custom attributes are capped at MAX_CUSTOM_ATTRIBUTES (7). See the class doc.
    *
    * @param name Gauge name (e.g., 'cache_items_current', 'memory_usage_bytes')
    * @param value Current value
-   * @param attributes Optional custom attributes for the gauge (max 5 custom attributes, e.g., { cache: 'pages' })
+   * @param attributes Optional custom attributes for the gauge (max 7 custom attributes, e.g., { cache: 'pages' })
    *
    * @example
    * ```typescript
@@ -446,20 +467,12 @@ export class DiagnosticsMetrics {
       return
     }
 
-    // Get or create gauge instrument
-    if (!this.gauges.has(name)) {
-      const gauge = this.metricsClient.createGauge(name, {
-        description: `Gauge for ${name}`,
-        unit: '1',
-      })
-      this.gauges.set(name, gauge)
-    }
+    const gauge = this.instrumentFor(this.gauges, name, () =>
+      this.metricsClient!.createGauge(name, { description: `Gauge for ${name}`, unit: '1' })
+    )
 
-    // Merge base attributes from context with custom attributes (custom attrs are limited internally)
-    const mergedAttributes = this.mergeAttributes(attributes)
-
-    // Set the gauge value
-    this.gauges.get(name)!.set(value, mergedAttributes)
+    // mergeAttributes() limits custom attributes internally
+    gauge.set(value, this.mergeAttributes(attributes))
   }
 
   // Registers (or replaces) a pull-based gauge: OTel calls `observe` on its own schedule
@@ -476,6 +489,14 @@ export class DiagnosticsMetrics {
   }
 
   private registerObservable(kind: ObservableKind, name: string, observe: ObservableCallback, options?: MetricOptions): () => void {
+    if (CACHE_METRIC_NAMES.has(name)) {
+      console.error(
+        `DiagnosticsMetrics: '${name}' is reserved for trackCache(); ignoring the ${kind} registration. ` +
+        `Pick a distinct metric name.`
+      )
+      return () => undefined
+    }
+
     // The same name registered as both kinds produces two same-named streams of
     // different types in one meter, which the SDK accepts silently and the collector
     // then rejects. Refuse the second one instead of publishing a broken metric.
@@ -492,18 +513,10 @@ export class DiagnosticsMetrics {
     this.observableRegistrations[kind].set(name, registration)
     this.syncObservables(kind)
 
-    return () => {
-      // A later registration for the same name owns the instrument now; disposing this
-      // one must not tear that down. Compares the entry, not the callback: the same
-      // function registered twice would defeat the guard.
-      if (this.observableRegistrations[kind].get(name) !== registration) {
-        return
-      }
-
-      this.observableRegistrations[kind].delete(name)
+    return releaseIfOwner(this.observableRegistrations[kind], name, registration, () => {
       this.observableInstruments[kind].get(name)?.remove()
       this.observableInstruments[kind].delete(name)
-    }
+    })
   }
 
   // Attaches every `kind` registration to its instrument; a no-op when there is nothing
@@ -554,16 +567,7 @@ export class DiagnosticsMetrics {
     this.cacheRegistry.set(name, registration)
     this.ensureCacheInstruments()
 
-    return () => {
-      // A later registration for the same name owns it now; disposing this one must not
-      // drop that cache from the collection. Compares the entry, not the instance: the
-      // same cache registered twice would defeat the guard.
-      if (this.cacheRegistry.get(name) !== registration) {
-        return
-      }
-
-      this.cacheRegistry.delete(name)
-    }
+    return releaseIfOwner(this.cacheRegistry, name, registration)
   }
 
   private ensureCacheInstruments(): void {
