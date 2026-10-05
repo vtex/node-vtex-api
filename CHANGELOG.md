@@ -5,30 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [7.5.1-beta.0] - 2026-09-24
+## [7.5.1]
 
 ### Added
 
-- `DiagnosticsMetrics.trackCache(name, cache)`: the observable replacement for the
-  legacy `metrics.trackCache()`. Publishes `io_app_cache_operations_total`,
-  `io_app_cache_items_current`, `io_app_cache_capacity` and `io_app_cache_disposed_total`
-  for every registered cache, read once per collection cycle through the new
-  `getCumulativeStats()`. Safe to run alongside the legacy registration: neither
-  reader consumes the other's counts.
-- `DiagnosticsMetrics.registerObservableGauge(name, observe, options?)` and
-  `registerObservableCounter(name, observe, options?)`: pull-based instruments on the
-  library's observable API, for values that only exist on a schedule (queues, pool
-  sizes, flush-time computations — the `addOnFlushMetric` replacement pattern).
-- `getCumulativeStats()` on `LRUCache`, `DiskCache`, `LRUDiskCache` and
-  `MultilayeredCache`: process-lifetime totals with no side effects. `getStats()`
-  keeps its per-window behavior.
-
-### Changed
-
-- `@vtex/diagnostics-nodejs` pinned to `0.1.8-io-beta.4`, the IO-line beta carrying
-  the observable base (brings `@opentelemetry/instrumentation-runtime-node` in
-  transitively; jest needs two `node:` shims until it is upgraded past 25 — see
-  `jest.config.js`).
+- `DiagnosticsMetrics.trackCache(name, cache)`: observable cache metrics (`io_app_cache_*`), safe alongside the legacy `trackCache`
+- `DiagnosticsMetrics.registerObservableGauge/Counter(name, observe, options?)`: pull-based instruments
+- `getCumulativeStats()` on the four cache classes: process-lifetime totals, side-effect free
 
 ## [7.5.0]
 
