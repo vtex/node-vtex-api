@@ -94,6 +94,14 @@ function limitCustomAttributes(customAttributes?: Attributes): Attributes | unde
 }
 
 /**
+ * A cache with no `max` reports Infinity (lru-cache@5's default for a missing one), so
+ * the capacity gauge publishes the sentinel the catalog documents instead.
+ */
+function capacityOrSentinel(max: number): number {
+  return Number.isFinite(max) ? max : Number.MAX_SAFE_INTEGER
+}
+
+/**
  * Applies the same cardinality limit the push methods use to whatever an observable
  * callback reports. Observables run outside any request, so every attribute is custom.
  */
@@ -628,9 +636,7 @@ export class DiagnosticsMetrics {
       }
 
       if (typeof stats.max === 'number') {
-        // An unbounded cache reports Infinity (lru-cache@5's default for a missing
-        // `max`); publish the documentable sentinel instead of a non-finite value.
-        result.observe(capacity, Number.isFinite(stats.max) ? stats.max : Number.MAX_SAFE_INTEGER, attributes)
+        result.observe(capacity, capacityOrSentinel(stats.max), attributes)
       }
 
       if (typeof stats.disposedItems === 'number') {
