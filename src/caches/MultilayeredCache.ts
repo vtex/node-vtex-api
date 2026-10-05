@@ -55,8 +55,8 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
   }
 
   public getCumulativeStats = (): CumulativeStats => {
-    const { hits, total } = this.counters.cumulative()
-    return { hits, total }
+    const { hits, misses, total } = this.counters.cumulative()
+    return { hits, misses, total }
   }
 
   private findIndex = async <T> (func: (item: T) => Promise<boolean>, array: T[]): Promise<number> => {
@@ -68,6 +68,8 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
         return index
       }
     }
+
+    this.counters.countMiss()
     return -1
   }
 

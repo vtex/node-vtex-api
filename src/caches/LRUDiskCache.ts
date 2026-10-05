@@ -51,13 +51,14 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   }
 
   public getCumulativeStats = (): CumulativeStats => {
-    const { disposed, hits, total } = this.counters.cumulative()
+    const { disposed, hits, misses, total } = this.counters.cumulative()
     return {
       disposedItems: disposed,
       hits,
       itemCount: this.lruStorage.itemCount,
       length: this.lruStorage.length,
       max: this.lruStorage.max,
+      misses,
       total,
     }
   }
@@ -66,6 +67,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     const timeOfDeath = this.lruStorage.get(key)
     this.counters.countRead()
     if (timeOfDeath === undefined) {
+      this.counters.countMiss()
 
       // if it is an outdated file when stale=false
       if (this.keyToBeDeleted) {
@@ -85,6 +87,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
           resolve(fileData)
         } catch (e) {
           release()
+          this.counters.countMiss()
           resolve(null as unknown as V)
         }
       })

@@ -27,6 +27,7 @@ export type LRUStats = {
 export type CumulativeStats = {
   hits: number,
   total: number,
+  misses?: number,
   disposedItems?: number,
   itemCount?: number,
   length?: number,

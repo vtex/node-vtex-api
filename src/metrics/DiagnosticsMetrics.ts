@@ -111,6 +111,15 @@ function capacityOrSentinel(max: number): number {
 }
 
 /**
+ * The cache's miss count. A cache that reports misses directly wins: deriving them from
+ * `total - hits` reads as a decrease while a read is in flight across a collection cycle,
+ * and the SDK turns a decrease on a monotonic counter into a reset.
+ */
+function missesOf(stats: CumulativeStats): number {
+  return typeof stats.misses === 'number' ? stats.misses : Math.max(stats.total - stats.hits, 0)
+}
+
+/**
  * A disposer that only releases the entry it was created for. A later registration of
  * the same name owns that entry, so an older disposer is a no-op instead of tearing
  * down its successor.
@@ -661,7 +670,7 @@ export class DiagnosticsMetrics {
       const attributes = { cache: name }
       if (typeof stats.hits === 'number' && typeof stats.total === 'number') {
         result.observe(operations, stats.hits, { ...attributes, cache_state: 'hit' })
-        result.observe(operations, Math.max(stats.total - stats.hits, 0), { ...attributes, cache_state: 'miss' })
+        result.observe(operations, missesOf(stats), { ...attributes, cache_state: 'miss' })
       }
 
       if (typeof stats.itemCount === 'number') {

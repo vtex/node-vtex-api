@@ -76,11 +76,11 @@ describe('cache stats: windowed getStats() vs cumulative getCumulativeStats()', 
 
       await cache.get('a')
       expect(pick(cache.getStats())).toEqual({ hits: 1, total: 1, hitRate: undefined })
-      expect(cache.getCumulativeStats()).toEqual({ hits: 1, total: 1 })
+      expect(cache.getCumulativeStats()).toEqual({ hits: 1, misses: 0, total: 1 })
 
       await cache.get('b')
       expect(pick(cache.getStats())).toEqual({ hits: 1, total: 1, hitRate: undefined })
-      expect(cache.getCumulativeStats()).toEqual({ hits: 2, total: 2 })
+      expect(cache.getCumulativeStats()).toEqual({ hits: 2, misses: 0, total: 2 })
     })
 
     it('counts a failed read as a miss', async () => {
@@ -89,7 +89,7 @@ describe('cache stats: windowed getStats() vs cumulative getCumulativeStats()', 
 
       await cache.get('a')
 
-      expect(cache.getCumulativeStats()).toEqual({ hits: 0, total: 1 })
+      expect(cache.getCumulativeStats()).toEqual({ hits: 0, misses: 1, total: 1 })
     })
   })
 
@@ -122,12 +122,60 @@ describe('cache stats: windowed getStats() vs cumulative getCumulativeStats()', 
       await cache.get('absent')
 
       expect(pick(cache.getStats())).toEqual({ hits: 1, total: 2, hitRate: 0.5 })
-      expect(cache.getCumulativeStats()).toEqual({ hits: 1, total: 2 })
+      expect(cache.getCumulativeStats()).toEqual({ hits: 1, misses: 1, total: 2 })
 
       await cache.get('a')
 
       expect(pick(cache.getStats())).toEqual({ hits: 1, total: 1, hitRate: 1 })
-      expect(cache.getCumulativeStats()).toEqual({ hits: 2, total: 3 })
+      expect(cache.getCumulativeStats()).toEqual({ hits: 2, misses: 1, total: 3 })
+    })
+  })
+
+  describe('miss accounting', () => {
+    it('LRUCache counts a miss for a read that finds nothing', () => {
+      const cache = new LRUCache<string, number>({ max: 10 })
+      cache.set('a', 1)
+
+      cache.get('absent')
+      expect(cache.getCumulativeStats()).toMatchObject({ hits: 0, misses: 1, total: 1 })
+
+      cache.get('a')
+      expect(cache.getCumulativeStats()).toMatchObject({ hits: 1, misses: 1, total: 2 })
+    })
+
+    it('DiskCache does not count a read as a miss while it is still in flight', async () => {
+      // The published miss count is monotonic only because it is counted at resolution:
+      // deriving it from total - hits dips while a read is in flight, and the SDK reports a
+      // dip on a monotonic counter as a reset.
+      let release!: () => void
+      const readFile = jest.fn(() => new Promise(resolve => { release = () => resolve({ value: 1 }) }))
+      const cache = new DiskCache<any>('/tmp/does-not-matter', readFile as any, jest.fn())
+
+      const inFlight = cache.get('a')
+      expect(cache.getCumulativeStats()).toMatchObject({ hits: 0, misses: 0, total: 1 })
+
+      release()
+      await inFlight
+      expect(cache.getCumulativeStats()).toMatchObject({ hits: 1, misses: 0, total: 1 })
+    })
+
+    it('LRUDiskCache counts each resolved miss once', async () => {
+      const cache = new LRUDiskCache<any>('/tmp/does-not-matter', { max: 10 }, jest.fn(), jest.fn())
+
+      await cache.get('absent')
+      expect(cache.getCumulativeStats()).toMatchObject({ hits: 0, misses: 1, total: 1 })
+
+      await cache.get('absent')
+      expect(cache.getCumulativeStats()).toMatchObject({ hits: 0, misses: 2, total: 2 })
+    })
+
+    it('MultilayeredCache counts one miss per lookup that finds nothing', async () => {
+      const layer = new LRUCache<string, number>({ max: 10 })
+      const cache = new MultilayeredCache<string, number>([layer])
+
+      await cache.get('absent')
+
+      expect(cache.getCumulativeStats()).toMatchObject({ hits: 0, misses: 1, total: 1 })
     })
   })
 })

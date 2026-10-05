@@ -2,6 +2,7 @@ import { Metrics, Types } from '@vtex/diagnostics-nodejs'
 import { context, ObservableCallback } from '@opentelemetry/api'
 import { AsyncHooksContextManager } from '@opentelemetry/context-async-hooks'
 import { AggregationTemporality, InMemoryMetricExporter, MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics'
+import { DiskCache } from '../caches/DiskCache'
 import { LRUCache } from '../caches/LRUCache'
 import { CumulativeStats } from '../caches/typings'
 import { DiagnosticsMetrics, TrackedCache } from './DiagnosticsMetrics'
@@ -1103,6 +1104,42 @@ describe('DiagnosticsMetrics', () => {
 
       expect(ops).toContainEqual({ value: 3, attributes: { cache: 'pages', cache_state: 'hit' } })
       expect(ops).toContainEqual({ value: 2, attributes: { cache: 'pages', cache_state: 'miss' } })
+    })
+
+    it('prefers the miss count the cache reports over deriving it', async () => {
+      cacheDiagnostics.trackCache('pages', fakeCache([{ hits: 1, misses: 1, total: 5 }]))
+
+      const ops = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
+
+      expect(ops).toContainEqual({ value: 1, attributes: { cache: 'pages', cache_state: 'miss' } })
+    })
+
+    it('falls back to total minus hits for a cache that reports no misses', async () => {
+      cacheDiagnostics.trackCache('custom', fakeCache([{ hits: 3, total: 7 }]))
+
+      const ops = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
+
+      expect(ops).toContainEqual({ value: 4, attributes: { cache: 'custom', cache_state: 'miss' } })
+    })
+
+    it('never reports a miss series that decreases, with a read in flight', async () => {
+      let release!: () => void
+      const readFile = jest.fn(() => new Promise(resolve => { release = () => resolve({ value: 1 }) }))
+      const cache = new DiskCache<any>('/tmp/does-not-matter', readFile as any, jest.fn())
+      cacheDiagnostics.trackCache('pages', cache)
+
+      const missOf = (points: ReturnType<typeof dataPointsIn>) =>
+        points.find(point => point.attributes.cache_state === 'miss')!.value
+
+      const inFlight = cache.get('a')
+      const first = missOf(dataPointsIn(await reader.collect(), 'io_app_cache_operations_total'))
+
+      release()
+      await inFlight
+      const second = missOf(dataPointsIn(await reader.collect(), 'io_app_cache_operations_total'))
+
+      expect(first).toBe(0)
+      expect(second).toBe(0)
     })
 
     it('reports a monotonic total across collection cycles', async () => {

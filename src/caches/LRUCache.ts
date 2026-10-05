@@ -23,6 +23,8 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
     const value = this.storage.get(key)
     if (this.storage.has(key)) {
       this.counters.countHit()
+    } else {
+      this.counters.countMiss()
     }
     this.counters.countRead()
     return value
@@ -49,13 +51,14 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
   }
 
   public getCumulativeStats = (): CumulativeStats => {
-    const { disposed, hits, total } = this.counters.cumulative()
+    const { disposed, hits, misses, total } = this.counters.cumulative()
     return {
       disposedItems: disposed,
       hits,
       itemCount: this.storage.itemCount,
       length: this.storage.length,
       max: this.storage.max,
+      misses,
       total,
     }
   }

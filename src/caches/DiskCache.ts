@@ -26,8 +26,8 @@ export class DiskCache<V> implements CacheLayer<string, V>{
   }
 
   public getCumulativeStats = (): CumulativeStats => {
-    const { hits, total } = this.counters.cumulative()
-    return { hits, total }
+    const { hits, misses, total } = this.counters.cumulative()
+    return { hits, misses, total }
   }
 
   public get = async (key: string): Promise<V | void>  => {
@@ -42,6 +42,7 @@ export class DiskCache<V> implements CacheLayer<string, V>{
           resolve(fileData)
         } catch (e) {
           release()
+          this.counters.countMiss()
           resolve(null as unknown as V)
         }
       })
