@@ -204,8 +204,11 @@ Skip the probe only when the rollout order already guarantees the runtime carrie
 **Leaving the legacy call in place is harmless.** The legacy `getStats()` reports a per-flush window and consumes it on read; `getCumulativeStats()` reports the process-lifetime total and has no side effects, so the two readers don't steal counts from each other:
 
 ```typescript
-metrics.trackCache('pages', pagesCacheStorage)                      // harmless to keep
-global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)   // add; drop the line above when convenient
+metrics.trackCache('pages', pagesCacheStorage) // harmless to keep
+
+if (typeof global.diagnosticsMetrics?.trackCache === 'function') {
+  global.diagnosticsMetrics.trackCache('pages', pagesCacheStorage)
+}
 ```
 
 This is about safety, not about comparing the two. Since #676 (v7.4.2) nothing consumes what the legacy flush returns, so there is no legacy cache metric to compare against — what you get is that a half-migrated app still reports correct numbers. That matters when the call sites are migrated by different people in different PRs: under a read that consumed the counters, a cache registered in both places would leak an arbitrary fraction of its counts into a flush that discards them, and no second metric would reveal the discrepancy.

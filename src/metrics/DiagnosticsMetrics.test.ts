@@ -239,6 +239,16 @@ describe('DiagnosticsMetrics', () => {
       expect(recordedCounterCalls.get('counter2')![0].value).toBe(2)
     })
 
+    it('should refuse a name reserved for trackCache()', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation()
+
+      diagnosticsMetrics.incrementCounter('io_app_cache_operations_total', 1)
+
+      expect(recordedCounterCalls.get('io_app_cache_operations_total')).toBeUndefined()
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('reserved for trackCache()'))
+      errorSpy.mockRestore()
+    })
+
     it('should warn if not initialized', () => {
       const uninitializedMetrics = new DiagnosticsMetrics()
       const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation()
@@ -293,6 +303,20 @@ describe('DiagnosticsMetrics', () => {
       expect(recordedGaugeCalls.get('gauge2')).toHaveLength(1)
       expect(recordedGaugeCalls.get('gauge1')![0].value).toBe(100)
       expect(recordedGaugeCalls.get('gauge2')![0].value).toBe(200)
+    })
+
+    it('should refuse a name a counter already took, and a reserved one', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation()
+
+      diagnosticsMetrics.incrementCounter('shared_total', 1)
+      diagnosticsMetrics.setGauge('shared_total', 5)
+      diagnosticsMetrics.setGauge('io_app_cache_capacity', 10)
+
+      expect(recordedGaugeCalls.get('shared_total')).toBeUndefined()
+      expect(recordedGaugeCalls.get('io_app_cache_capacity')).toBeUndefined()
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('already used by another instrument'))
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('reserved for trackCache()'))
+      errorSpy.mockRestore()
     })
 
     it('should warn if not initialized', () => {
@@ -899,6 +923,20 @@ describe('DiagnosticsMetrics', () => {
 
       expect(observableClient.createObservableGauge).not.toHaveBeenCalled()
       expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('io_app_cache_capacity'))
+      expect(() => dispose()).not.toThrow()
+
+      errorSpy.mockRestore()
+    })
+
+    it('refuses a name a push instrument already took', () => {
+      const errorSpy = jest.spyOn(console, 'error').mockImplementation()
+      ;(observableMetricsClient.createCounter as jest.Mock).mockReturnValue({ add: jest.fn() })
+
+      observableDiagnostics.incrementCounter('shared_total', 1)
+      const dispose = observableDiagnostics.registerObservableGauge('shared_total', jest.fn())
+
+      expect(observableClient.createObservableGauge).not.toHaveBeenCalled()
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('already used by another instrument'))
       expect(() => dispose()).not.toThrow()
 
       errorSpy.mockRestore()

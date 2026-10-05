@@ -365,6 +365,30 @@ export class DiagnosticsMetrics {
   }
 
   /**
+   * The reason `name` cannot carry a new instrument, or undefined when it can. The SDK
+   * accepts two same-named streams silently and the collector then rejects them, so a name
+   * is owned by whichever instrument took it first: reusing it through the other API, or
+   * under the other kind, is a conflict. Reusing it in place — same API, same kind — is a
+   * replace, not a conflict.
+   */
+  private nameConflict(name: string, kind: ObservableKind, origin: 'push' | 'observable'): string | undefined {
+    if (CACHE_METRIC_NAMES.has(name)) {
+      return 'reserved for trackCache()'
+    }
+
+    const other: ObservableKind = kind === 'gauge' ? 'counter' : 'gauge'
+    const foreign = origin === 'push'
+      ? [this.observableRegistrations[kind], this.observableRegistrations[other], this.pushInstruments(other)]
+      : [this.pushInstruments(kind), this.pushInstruments(other), this.observableRegistrations[other]]
+
+    return foreign.some(instruments => instruments.has(name)) ? 'already used by another instrument' : undefined
+  }
+
+  private pushInstruments(kind: ObservableKind): Map<string, unknown> {
+    return kind === 'counter' ? this.counters : this.gauges
+  }
+
+  /**
    * Counter and gauge instruments are created once per name and reused.
    */
   private instrumentFor<T>(map: Map<string, T>, name: string, create: () => T): T {
@@ -437,6 +461,14 @@ export class DiagnosticsMetrics {
       return
     }
 
+    const conflict = this.nameConflict(name, 'counter', 'push')
+    if (conflict) {
+      console.error(
+        `DiagnosticsMetrics: '${name}' is ${conflict}; ignoring the counter. Pick a distinct metric name.`
+      )
+      return
+    }
+
     const counter = this.instrumentFor(this.counters, name, () =>
       this.metricsClient!.createCounter(name, { description: `Counter for ${name}`, unit: '1' })
     )
@@ -467,6 +499,14 @@ export class DiagnosticsMetrics {
       return
     }
 
+    const conflict = this.nameConflict(name, 'gauge', 'push')
+    if (conflict) {
+      console.error(
+        `DiagnosticsMetrics: '${name}' is ${conflict}; ignoring the gauge. Pick a distinct metric name.`
+      )
+      return
+    }
+
     const gauge = this.instrumentFor(this.gauges, name, () =>
       this.metricsClient!.createGauge(name, { description: `Gauge for ${name}`, unit: '1' })
     )
@@ -489,22 +529,11 @@ export class DiagnosticsMetrics {
   }
 
   private registerObservable(kind: ObservableKind, name: string, observe: ObservableCallback, options?: MetricOptions): () => void {
-    if (CACHE_METRIC_NAMES.has(name)) {
+    const conflict = this.nameConflict(name, kind, 'observable')
+    if (conflict) {
       console.error(
-        `DiagnosticsMetrics: '${name}' is reserved for trackCache(); ignoring the ${kind} registration. ` +
+        `DiagnosticsMetrics: '${name}' is ${conflict}; ignoring the ${kind} registration. ` +
         `Pick a distinct metric name.`
-      )
-      return () => undefined
-    }
-
-    // The same name registered as both kinds produces two same-named streams of
-    // different types in one meter, which the SDK accepts silently and the collector
-    // then rejects. Refuse the second one instead of publishing a broken metric.
-    const otherKind: ObservableKind = kind === 'gauge' ? 'counter' : 'gauge'
-    if (this.observableRegistrations[otherKind].has(name)) {
-      console.error(
-        `DiagnosticsMetrics: '${name}' is already registered as an observable ${otherKind}; ` +
-        `ignoring the ${kind} registration. Pick a distinct metric name.`
       )
       return () => undefined
     }
