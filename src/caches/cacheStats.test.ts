@@ -3,10 +3,8 @@ import { LRUCache } from './LRUCache'
 import { LRUDiskCache } from './LRUDiskCache'
 import { MultilayeredCache } from './MultilayeredCache'
 
-// getStats() reports a per-window delta and has done so since the legacy
-// MetricsAccumulator flushed it as a log line. getCumulativeStats() reports the
-// process-lifetime total and never resets, so an observable reader and the legacy
-// flush can both read the same cache without stealing counts from each other.
+// getStats() reports a per-window delta, consumed on read; getCumulativeStats() reports
+// the process-lifetime total and never resets, so both readers can share a cache.
 describe('cache stats: windowed getStats() vs cumulative getCumulativeStats()', () => {
   describe('LRUCache', () => {
     const primed = () => {

@@ -1295,11 +1295,6 @@
     tslib "^2.8.1"
     uuid "^11.1.0"
 
-"@vtex/diagnostics-semconv@5.5.2":
-  version "5.5.2"
-  resolved "https://registry.yarnpkg.com/@vtex/diagnostics-semconv/-/diagnostics-semconv-5.5.2.tgz#87eeaed851b8bea8ef46f1211552324f98e345f6"
-  integrity sha512-2uQNJVfLjbhay2pq1pVIIrSe7x7rsIyqIVD9z7syez4Sz/lzlwxNvRfJPt+Sg7MeGraK4+/YiSEO5kgpxGPRLg==
-
 "@vtex/diagnostics-semconv@5.5.3":
   version "5.5.3"
   resolved "https://registry.yarnpkg.com/@vtex/diagnostics-semconv/-/diagnostics-semconv-5.5.3.tgz#1477509d1bc5cc244265123e9f2d2bb8d5204c63"

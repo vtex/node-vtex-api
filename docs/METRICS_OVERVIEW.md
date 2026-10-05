@@ -184,8 +184,8 @@ metrics.trackCache('pages', pagesCacheStorage)
 
 **After:**
 ```typescript
-// Same registration call, same cache instance — DiagnosticsMetrics reads getStats()
-// on the OTel SDK's own collection schedule instead of on every legacy flush.
+// Same registration call, same cache instance — DiagnosticsMetrics reads
+// getCumulativeStats() on the OTel SDK's own collection schedule, not per flush.
 const dispose = global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)
 ```
 
@@ -208,7 +208,7 @@ metrics.trackCache('pages', pagesCacheStorage)                      // harmless 
 global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)   // add; drop the line above when convenient
 ```
 
-This is about safety, not about comparing the two. Since #676 (v7.4.2) nothing consumes what the legacy flush returns — `statusTrack()` keeps running only because flushing also resets the metric accumulators, the CPU baseline and the request stats. So there is no legacy cache metric to compare against; what you get is that a half-migrated app still reports correct numbers. That matters when 23 call sites across three apps are migrated by different people in different PRs: under a read that consumed the counters, registering a cache in both places would have leaked an arbitrary fraction of its counts into a flush that discards them — a plausible-looking, permanently wrong number, with no second metric anywhere to reveal the discrepancy.
+This is about safety, not about comparing the two. Since #676 (v7.4.2) nothing consumes what the legacy flush returns, so there is no legacy cache metric to compare against — what you get is that a half-migrated app still reports correct numbers. That matters when the call sites are migrated by different people in different PRs: under a read that consumed the counters, a cache registered in both places would leak an arbitrary fraction of its counts into a flush that discards them, and no second metric would reveal the discrepancy.
 
 Emits `io_app_cache_operations_total`, `io_app_cache_items_current`, `io_app_cache_capacity` and `io_app_cache_disposed_total` — see [METRICS_CATALOG.md](./METRICS_CATALOG.md#cache-metrics-observable) for the full attribute reference. `hitRate` is not republished; derive it from `io_app_cache_operations_total` instead.
 
@@ -253,7 +253,7 @@ global.diagnosticsMetrics?.registerObservableGauge('my_queue_size_current', resu
 Notes that apply to both register methods:
 
 - Use `registerObservableCounter` only for values that **never decrease** and report the cumulative total — the SDK derives the per-cycle delta itself. Anything that can go down is a gauge.
-- Re-registering the same name replaces the previous callback. A name already taken by the other kind is refused with an error log, since two same-named streams of different types break the collector.
+- Re-registering the same name replaces the previous callback; `options` (`description`, `unit`) apply only on the first registration, since the instrument itself is created once. A name already taken by the other kind is refused with an error log, since two same-named streams of different types break the collector.
 - Attributes reported by the callback are subject to the same limit as the push methods; base attributes are not merged, because the callback runs outside any request.
 - Both return a disposer. Call it when the thing you're observing goes away.
 

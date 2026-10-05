@@ -756,10 +756,8 @@ describe('DiagnosticsMetrics', () => {
   })
 
   describe('registerObservableGauge / registerObservableCounter', () => {
-    // These go through the library's observable API, so this block mocks
-    // createObservableGauge/createObservableCounter and reproduces what the library
-    // guarantees: the callback is attached to the instrument at creation, and the
-    // returned wrapper's remove() detaches it.
+    // These go through the library's observable API, so this block mocks it: the callback
+    // is attached to the instrument at creation, and the wrapper's remove() detaches it.
     interface FakeObservable {
       instrument: { addCallback: jest.Mock; removeCallback: jest.Mock }
       remove: jest.Mock
@@ -903,6 +901,22 @@ describe('DiagnosticsMetrics', () => {
       expect(gaugeInstruments.get('queue_depth_current')!.remove).toHaveBeenCalledTimes(1)
     })
 
+    it('disposing an earlier registration keeps a later one for the same name alive', () => {
+      // The same function registered twice: comparing callbacks instead of registry
+      // entries would let the first disposer tear down the second registration.
+      const observe = jest.fn()
+
+      const disposeFirst = observableDiagnostics.registerObservableGauge('queue_depth_current', observe)
+      observableDiagnostics.registerObservableGauge('queue_depth_current', observe)
+
+      disposeFirst()
+
+      const instrument = gaugeInstruments.get('queue_depth_current')!
+      expect(instrument.remove).not.toHaveBeenCalled()
+      fireLast(instrument, { observe: jest.fn() })
+      expect(observe).toHaveBeenCalledTimes(1)
+    })
+
     it('registerObservableCounter creates a counter instrument (same code path as the gauge)', () => {
       const observe = jest.fn()
       observableDiagnostics.registerObservableCounter('jobs_processed_total', observe)
@@ -967,9 +981,8 @@ describe('DiagnosticsMetrics', () => {
   })
 
   describe('trackCache', () => {
-    // Exercised against a real MeterProvider + MetricReader instead of a mock: the
-    // single-read-per-cycle accounting and the cumulative-counter contract are easy to
-    // get wrong in a way a mock would still pass.
+    // A real MeterProvider + MetricReader, not a mock: the per-cycle accounting and the
+    // cumulative-counter contract are easy to get wrong in a way a mock would still pass.
     let provider: MeterProvider
     let reader: PeriodicExportingMetricReader
     let exporter: InMemoryMetricExporter
@@ -1010,9 +1023,8 @@ describe('DiagnosticsMetrics', () => {
       return result.resourceMetrics.scopeMetrics.flatMap(sm => sm.metrics.map(m => m.descriptor.name))
     }
 
-    // The library's own client over a real provider: the observable instruments have to
-    // reach a real meter for collect() to report them, and routing them through the
-    // library is the path under test.
+    // The library's own client over a real provider: the instruments must reach a real
+    // meter for collect() to report them, and routing through the library is the path under test.
     function buildClient(temporality: AggregationTemporality) {
       exporter = new InMemoryMetricExporter(temporality)
       reader = new PeriodicExportingMetricReader({ exporter, exportIntervalMillis: 1000000 }) // never fires; collect() is manual
@@ -1157,6 +1169,24 @@ describe('DiagnosticsMetrics', () => {
       const result = await reader.collect()
 
       expect(dataPointsIn(result, 'io_app_cache_operations_total')).toHaveLength(0)
+    })
+
+    it('disposing an earlier registration keeps a later cache of the same name', async () => {
+      const disposeFirst = cacheDiagnostics.trackCache('pages', fakeCache([{ hits: 1, total: 1 }]))
+      cacheDiagnostics.trackCache('pages', fakeCache([{ hits: 9, total: 9 }]))
+
+      disposeFirst()
+
+      const ops = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
+      expect(ops).toContainEqual({ value: 9, attributes: { cache: 'pages', cache_state: 'hit' } })
+    })
+
+    it('reports the capacity sentinel for an unbounded cache instead of Infinity', async () => {
+      // lru-cache@5 defaults `max` to Infinity when the cache is built without one.
+      cacheDiagnostics.trackCache('pages', new LRUCache<string, number>({}))
+
+      const capacity = dataPointsIn(await reader.collect(), 'io_app_cache_capacity')
+      expect(capacity).toEqual([{ value: Number.MAX_SAFE_INTEGER, attributes: { cache: 'pages' } }])
     })
 
     it('does not publish hitRate, which a real cache does report', async () => {

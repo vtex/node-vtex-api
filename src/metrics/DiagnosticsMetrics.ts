@@ -35,8 +35,7 @@ const CACHE_ITEMS_METRIC = 'io_app_cache_items_current'
 const CACHE_CAPACITY_METRIC = 'io_app_cache_capacity'
 const CACHE_DISPOSED_METRIC = 'io_app_cache_disposed_total'
 
-// Cache instances that expose a non-resetting read (LRUCache, DiskCache,
-// LRUDiskCache, MultilayeredCache).
+// Cache instances exposing a non-resetting read (all four cache classes).
 export interface TrackedCache {
   getCumulativeStats(): CumulativeStats
 }
@@ -49,8 +48,7 @@ interface ObservableRegistration {
   options?: MetricOptions
 }
 
-// The library's wrapper around the OTel instrument: it holds the callback it
-// attached, and remove() detaches it.
+// The library's wrapper: holds the callback it attached; remove() detaches it.
 type ObservableInstrument = Types.ObservableGauge | Types.ObservableCounter
 
 /**
@@ -90,9 +88,8 @@ function limitCustomAttributes(customAttributes?: Attributes): Attributes | unde
 }
 
 /**
- * Applies the same cardinality limit the push-based methods use to whatever an
- * observable callback reports. Observables run outside any request, so there are no
- * base attributes to merge — every attribute here is a custom one.
+ * Applies the same cardinality limit the push methods use to whatever an observable
+ * callback reports. Observables run outside any request, so every attribute is custom.
  */
 function limitObservableResult(result: ObservableResult): ObservableResult {
   return {
@@ -162,18 +159,18 @@ export class DiagnosticsMetrics {
   private readonly counters: Map<string, Types.Counter>
   private readonly gauges: Map<string, Types.Gauge>
 
-  // What apps registered, and the instrument each name is attached to
-  // (empty until the client is ready — see syncObservables), keyed by name.
+  // Registrations per kind, and the instrument each name is attached to (empty until
+  // the client is ready — see syncObservables).
   private readonly observableRegistrations: Record<ObservableKind, Map<string, ObservableRegistration>>
   private readonly observableInstruments: Record<ObservableKind, Map<string, ObservableInstrument>>
 
   // trackCache() state: registered caches and the shared instruments.
   private readonly cacheRegistry: Map<string, TrackedCache>
   private cacheInstruments: {
-    operations: ObservableCounter
-    items: ObservableGauge
     capacity: ObservableGauge
     disposed: ObservableCounter
+    items: ObservableGauge
+    operations: ObservableCounter
   } | undefined
 
   constructor() {
@@ -451,10 +448,9 @@ export class DiagnosticsMetrics {
     this.gauges.get(name)!.set(value, mergedAttributes)
   }
 
-  // Registers (or replaces) a pull-based gauge: OTel calls `observe` on its own
-  // schedule, with `result.observe(value, attributes?)`. No base-attribute merging —
-  // there's no request in progress when this runs — but the attributes reported are
-  // held to the same MAX_CUSTOM_ATTRIBUTES limit as the push-based methods.
+  // Registers (or replaces) a pull-based gauge: OTel calls `observe` on its own schedule
+  // with `result.observe(value, attributes?)`. No base-attribute merging (no request is
+  // in progress), but reported attributes keep the MAX_CUSTOM_ATTRIBUTES limit.
   public registerObservableGauge(name: string, observe: ObservableCallback, options?: MetricOptions): () => void {
     return this.registerObservable('gauge', name, observe, options)
   }
@@ -478,13 +474,15 @@ export class DiagnosticsMetrics {
       return () => undefined
     }
 
-    this.observableRegistrations[kind].set(name, { observe, options })
+    const registration: ObservableRegistration = { observe, options }
+    this.observableRegistrations[kind].set(name, registration)
     this.syncObservables(kind)
 
     return () => {
-      // A later registration for the same name owns the instrument now; disposing
-      // this one must not tear that down.
-      if (this.observableRegistrations[kind].get(name)?.observe !== observe) {
+      // A later registration for the same name owns the instrument now; disposing this
+      // one must not tear that down. Compares the entry, not the callback: the same
+      // function registered twice would defeat the guard.
+      if (this.observableRegistrations[kind].get(name) !== registration) {
         return
       }
 
@@ -494,15 +492,9 @@ export class DiagnosticsMetrics {
     }
   }
 
-  // Attaches every `kind` registration to its instrument. A no-op if there's nothing
-  // registered or the client isn't ready — safe to call anytime, including from
-  // flushPendingObservables() once the client becomes ready.
-  //
-  // One instrument per name, carrying one callback for its whole life: the callback
-  // is a trampoline that reads whatever registration is current, so replacing the
-  // app's function is a map update and never touches the SDK. Re-creating the
-  // instrument instead would leave the meter holding a stream the collector sees as
-  // a duplicate type for the same name.
+  // Attaches every `kind` registration to its instrument; a no-op when there is nothing
+  // registered or the client is not ready. One instrument per name, with a callback that
+  // trampolines over the current registration — re-creating it would duplicate the stream.
   private syncObservables(kind: ObservableKind): void {
     if (this.observableRegistrations[kind].size === 0) {
       return // skip the meter entirely if this kind is unused
@@ -515,7 +507,7 @@ export class DiagnosticsMetrics {
 
     for (const [name, { options }] of this.observableRegistrations[kind]) {
       if (this.observableInstruments[kind].has(name)) {
-        continue
+        continue // already attached; options apply only on the first registration
       }
 
       const attached: ObservableCallback = (result) => {
@@ -541,14 +533,19 @@ export class DiagnosticsMetrics {
     }
   }
 
-  // Replacement for the legacy MetricsAccumulator.trackCache() — same cache instances,
-  // see METRICS_CATALOG.md for the metrics emitted. Reads getCumulativeStats(), which
-  // has no side effects, so this can run alongside the legacy trackCache().
+  // Replacement for the legacy MetricsAccumulator.trackCache() over the same cache
+  // instances; reads getCumulativeStats(), which has no side effects. See METRICS_CATALOG.md.
   public trackCache(name: string, cacheInstance: TrackedCache): () => void {
     this.cacheRegistry.set(name, cacheInstance)
     this.ensureCacheInstruments()
 
     return () => {
+      // A later registration for the same name owns it now; disposing this one must
+      // not drop that cache from the collection.
+      if (this.cacheRegistry.get(name) !== cacheInstance) {
+        return
+      }
+
       this.cacheRegistry.delete(name)
     }
   }
@@ -588,10 +585,10 @@ export class DiagnosticsMetrics {
     // These live for the process, so only the handles are kept: the wrappers exist
     // to attach the batch callback above.
     this.cacheInstruments = {
-      operations: operations.instrument,
-      items: items.instrument,
       capacity: capacity.instrument,
       disposed: disposed.instrument,
+      items: items.instrument,
+      operations: operations.instrument,
     }
   }
 
@@ -623,7 +620,9 @@ export class DiagnosticsMetrics {
       }
 
       if (typeof stats.max === 'number') {
-        result.observe(capacity, stats.max, attributes)
+        // An unbounded cache reports Infinity (lru-cache@5's default for a missing
+        // `max`); publish the documentable sentinel instead of a non-finite value.
+        result.observe(capacity, Number.isFinite(stats.max) ? stats.max : Number.MAX_SAFE_INTEGER, attributes)
       }
 
       if (typeof stats.disposedItems === 'number') {

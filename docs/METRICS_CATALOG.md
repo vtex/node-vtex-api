@@ -98,7 +98,7 @@ All Metrics in node-vtex-api
 │       └── Cache (metrics/DiagnosticsMetrics.ts, via trackCache — observable/pull, not per-request)
 │           ├── io_app_cache_operations_total (Observable Counter) - attrs: cache, cache_state
 │           ├── io_app_cache_items_current (Observable Gauge) - caches that expose itemCount
-│           ├── io_app_cache_capacity (Observable Gauge) - caches that expose max
+│           ├── io_app_cache_capacity (Observable Gauge) - the cache's max, sentinel when unbounded
 │           └── io_app_cache_disposed_total (Observable Counter) - caches that expose disposedItems
 │
 └── 🏛️ Legacy Metrics (Non-Diagnostics)
@@ -252,20 +252,22 @@ These are operation-specific metrics recorded in middleware components.
 
 **Source:** `metrics/DiagnosticsMetrics.ts` (`trackCache()`)
 
-The replacement for the legacy `MetricsAccumulator.trackCache()` (see [Legacy Metrics](#legacy-metrics-non-diagnostics) below). Unlike every other metric on this page, these are **observable (pull-based)**: the app registers a cache once, and the four instruments below are read by a callback on the OTel SDK's own collection schedule, not pushed per-request. See `registerObservableGauge`/`registerObservableCounter` on `DiagnosticsMetrics` if you need the same pull model for something other than a cache.
+The replacement for the legacy `MetricsAccumulator.trackCache()` (see [Legacy Metrics](#legacy-metrics-non-diagnostics) below). Unlike every other metric on this page, these are **observable (pull-based)**: the cache is registered once and read on the OTel SDK's own collection schedule, not pushed per-request. For the same pull model on something that isn't a cache, see `registerObservableGauge`/`registerObservableCounter`.
 
-Reads the cache's `getCumulativeStats()`, which has no side effects — so this can run alongside the legacy `metrics.trackCache()` without either reader consuming the other's counts. A cache registered in both places reports correctly in both, which is what makes a partial migration safe.
+Reads `getCumulativeStats()`, which has no side effects, so it can run alongside the legacy `metrics.trackCache()` without either reader consuming the other's counts — which is what makes a partial migration safe.
 
 | Metric Name | Type | Attributes | Reported when |
 |-------------|------|------------|----------------|
 | `io_app_cache_operations_total` | Observable Counter | `cache`, `cache_state` (`hit` \| `miss`) | Cache reports `hits` and `total` (all four cache classes do) |
 | `io_app_cache_items_current` | Observable Gauge | `cache` | Cache reports `itemCount` (`LRUCache`, `LRUDiskCache`) |
-| `io_app_cache_capacity` | Observable Gauge | `cache` | Cache reports `max` (`LRUCache`, `LRUDiskCache`) |
+| `io_app_cache_capacity` | Observable Gauge | `cache` | Cache reports `max` (`LRUCache`, `LRUDiskCache`; sentinel when there is none) |
 | `io_app_cache_disposed_total` | Observable Counter | `cache` | Cache reports `disposedItems` (`LRUCache`, `LRUDiskCache`) |
 
 `hitRate` is not republished — derive it from `io_app_cache_operations_total` (`hit / (hit + miss)`) so it aggregates correctly across instances instead of averaging pre-computed ratios.
 
 **`io_app_cache_capacity` is in the cache's own units.** It reports the LRU's `max`, which is an item count for a cache built with a plain `max`, but a size budget for one built with a `length` function. Only treat `items_current / capacity` as a fill ratio when you know the cache is count-limited.
+
+**A cache with no `max` reports `9007199254740991` (`Number.MAX_SAFE_INTEGER`).** `lru-cache@5` defaults `max` to `Infinity` for an unbounded cache, and a non-finite capacity is not publishable, so the sentinel stands in for it. Anything aggregating capacity MUST group by `cache`, or that sentinel poisons the aggregate into a meaningless number.
 
 ```typescript
 const dispose = global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)

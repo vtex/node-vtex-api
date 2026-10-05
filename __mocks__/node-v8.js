@@ -1,3 +1,2 @@
-// See node-perf-hooks.js: the same `node:` prefix workaround for jest 25, and the
-// same reason the require below uses the unprefixed name.
+// Same `node:` prefix workaround as node-perf-hooks.js (unprefixed on purpose).
 module.exports = require('v8') // NOSONAR
