@@ -1181,6 +1181,20 @@ describe('DiagnosticsMetrics', () => {
       expect(ops).toContainEqual({ value: 9, attributes: { cache: 'pages', cache_state: 'hit' } })
     })
 
+    it('disposing an earlier registration keeps a second one of the same instance', async () => {
+      // Same instance under the same name: comparing the instance rather than the
+      // registry entry would let the first disposer drop the second registration.
+      const cache = fakeCache([{ hits: 9, total: 9 }])
+
+      const disposeFirst = cacheDiagnostics.trackCache('pages', cache)
+      cacheDiagnostics.trackCache('pages', cache)
+
+      disposeFirst()
+
+      const ops = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
+      expect(ops).toContainEqual({ value: 9, attributes: { cache: 'pages', cache_state: 'hit' } })
+    })
+
     it('reports the capacity sentinel for an unbounded cache instead of Infinity', async () => {
       // lru-cache@5 defaults `max` to Infinity when the cache is built without one.
       cacheDiagnostics.trackCache('pages', new LRUCache<string, number>({}))

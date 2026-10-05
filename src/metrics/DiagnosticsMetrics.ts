@@ -40,6 +40,12 @@ export interface TrackedCache {
   getCumulativeStats(): CumulativeStats
 }
 
+// One registered cache. The disposer holds its own entry so a later registration of
+// the same name owns the collection, the same way ObservableRegistration does.
+interface CacheRegistration {
+  cache: TrackedCache
+}
+
 // ObservableGauge and ObservableCounter are both just Observable in the OTel API,
 // so registerObservableGauge/Counter share one implementation, keyed by kind.
 type ObservableKind = 'gauge' | 'counter'
@@ -165,7 +171,7 @@ export class DiagnosticsMetrics {
   private readonly observableInstruments: Record<ObservableKind, Map<string, ObservableInstrument>>
 
   // trackCache() state: registered caches and the shared instruments.
-  private readonly cacheRegistry: Map<string, TrackedCache>
+  private readonly cacheRegistry: Map<string, CacheRegistration>
   private cacheInstruments: {
     capacity: ObservableGauge
     disposed: ObservableCounter
@@ -536,13 +542,15 @@ export class DiagnosticsMetrics {
   // Replacement for the legacy MetricsAccumulator.trackCache() over the same cache
   // instances; reads getCumulativeStats(), which has no side effects. See METRICS_CATALOG.md.
   public trackCache(name: string, cacheInstance: TrackedCache): () => void {
-    this.cacheRegistry.set(name, cacheInstance)
+    const registration: CacheRegistration = { cache: cacheInstance }
+    this.cacheRegistry.set(name, registration)
     this.ensureCacheInstruments()
 
     return () => {
-      // A later registration for the same name owns it now; disposing this one must
-      // not drop that cache from the collection.
-      if (this.cacheRegistry.get(name) !== cacheInstance) {
+      // A later registration for the same name owns it now; disposing this one must not
+      // drop that cache from the collection. Compares the entry, not the instance: the
+      // same cache registered twice would defeat the guard.
+      if (this.cacheRegistry.get(name) !== registration) {
         return
       }
 
@@ -600,7 +608,7 @@ export class DiagnosticsMetrics {
 
     const { operations, items, capacity, disposed } = this.cacheInstruments
 
-    for (const [name, cache] of this.cacheRegistry) {
+    for (const [name, { cache }] of this.cacheRegistry) {
       let stats: CumulativeStats
       try {
         stats = cache.getCumulativeStats()
