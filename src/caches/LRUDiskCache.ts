@@ -10,7 +10,7 @@ import ReadWriteLock from 'rwlock'
 export class LRUDiskCache<V> implements CacheLayer<string, V>{
 
   private lock: ReadWriteLock
-  private counters: WindowedCounters
+  private readonly counters: WindowedCounters
   private lruStorage: LRU<string, number>
   private keyToBeDeleted: string
 

@@ -5,7 +5,7 @@ import { WindowedCounters } from './WindowedCounters'
 
 export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
 
-  private counters = new WindowedCounters()
+  private readonly counters = new WindowedCounters()
 
   constructor (private caches: Array<CacheLayer<K, V>>) {}
 

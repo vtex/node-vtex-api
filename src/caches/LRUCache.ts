@@ -7,7 +7,7 @@ import { WindowedCounters } from './WindowedCounters'
 export class LRUCache <K, V> implements CacheLayer<K, V>{
   private multilayer: MultilayeredCache<K, V>
   private storage: LRU<K, V>
-  private counters: WindowedCounters
+  private readonly counters: WindowedCounters
 
   constructor (options: LRU.Options<K, V>) {
     this.counters = new WindowedCounters()

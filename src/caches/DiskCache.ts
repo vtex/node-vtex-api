@@ -8,7 +8,7 @@ import ReadWriteLock from 'rwlock'
 
 export class DiskCache<V> implements CacheLayer<string, V>{
 
-  private counters = new WindowedCounters()
+  private readonly counters = new WindowedCounters()
   private lock: ReadWriteLock
 
   constructor(private cachePath: string, private readFile=readJSON, private writeFile=outputJSON) {
