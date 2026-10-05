@@ -1047,7 +1047,7 @@ describe('DiagnosticsMetrics', () => {
     function fakeCache(sequence: Partial<CumulativeStats>[]): TrackedCache {
       let call = 0
       return {
-        getCumulativeStats: () => sequence[Math.min(call++, sequence.length - 1)] as CumulativeStats,
+        getCumulativeStats: () => sequence[Math.min(call++, sequence.length - 1)],
       }
     }
 

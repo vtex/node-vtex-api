@@ -116,7 +116,11 @@ function capacityOrSentinel(max: number): number {
  * and the SDK turns a decrease on a monotonic counter into a reset.
  */
 function missesOf(stats: CumulativeStats): number {
-  return typeof stats.misses === 'number' ? stats.misses : Math.max(stats.total - stats.hits, 0)
+  if (typeof stats.misses === 'number') {
+    return stats.misses
+  }
+
+  return Math.max((stats.total ?? 0) - (stats.hits ?? 0), 0)
 }
 
 /**
