@@ -40,9 +40,9 @@ export class DiskCache<V> implements CacheLayer<string, V>{
           release()
           this.counters.countHit()
           resolve(fileData)
-        } catch (e) {
+        } catch {
           release()
-          this.counters.countMiss()
+          this.counters.countMiss() // a missing or unreadable file is a miss
           resolve(null as unknown as V)
         }
       })
@@ -58,7 +58,7 @@ export class DiskCache<V> implements CacheLayer<string, V>{
           const writePromise = await this.writeFile(pathKey, value)
           release()
           resolve(writePromise)
-        } catch (e) {
+        } catch {
           release()
           resolve(true)
         }
