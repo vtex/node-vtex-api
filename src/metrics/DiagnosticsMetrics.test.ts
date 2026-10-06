@@ -4,6 +4,7 @@ import { AsyncHooksContextManager } from '@opentelemetry/context-async-hooks'
 import { AggregationTemporality, InMemoryMetricExporter, MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics'
 import { DiskCache } from '../caches/DiskCache'
 import { LRUCache } from '../caches/LRUCache'
+import { LRUDiskCache } from '../caches/LRUDiskCache'
 import { CumulativeStats } from '../caches/typings'
 import { DiagnosticsMetrics, TrackedCache } from './DiagnosticsMetrics'
 
@@ -1140,6 +1141,62 @@ describe('DiagnosticsMetrics', () => {
 
       expect(first).toBe(0)
       expect(second).toBe(0)
+    })
+
+    it('keeps the miss series monotonic for an LRUDiskCache straddled by in-flight reads', async () => {
+      // The DiskCache test above covers one straddling read. This one uses the class
+      // render-server registers most of its caches as, with several reads in flight
+      // per cycle, which is the shape the fixed bug actually showed up in.
+      const releases: Array<(value: unknown) => void> = []
+      const readFile = jest.fn(
+        () => new Promise(resolve => { releases.push(resolve) })
+      )
+      const cache = new LRUDiskCache<any>('/tmp/does-not-matter', { max: 10 }, readFile as any, jest.fn() as any)
+      await cache.set('a', { value: 1 })
+      cacheDiagnostics.trackCache('pages', cache)
+
+      const missOf = async () => {
+        const points = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
+        return points.find(point => point.attributes.cache_state === 'miss')!.value
+      }
+
+      const seen: number[] = []
+      for (let cycle = 0; cycle < 5; cycle++) {
+        const pending = [cache.get('a'), cache.get('a'), cache.get('a')]
+        seen.push(await missOf())
+
+        while (releases.length) {
+          releases.shift()!({ value: 1 })
+        }
+
+        await Promise.all(pending)
+        seen.push(await missOf())
+      }
+
+      const dips = seen.slice(1).filter((value, index) => value < seen[index])
+
+      expect(dips).toEqual([])
+      expect(seen.every(value => value === 0)).toBe(true)
+    })
+
+    it('counts a genuine miss exactly once, at resolution', async () => {
+      const readFile = jest.fn(() => Promise.reject(new Error('missing file')))
+      const cache = new LRUDiskCache<any>('/tmp/does-not-matter', { max: 10 }, readFile as any, jest.fn() as any)
+      cacheDiagnostics.trackCache('pages', cache)
+
+      const missOf = async () => {
+        const points = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
+        return points.find(point => point.attributes.cache_state === 'miss')!.value
+      }
+
+      // Absent from the LRU index: a miss with no file read at all.
+      await cache.get('never-indexed')
+      expect(await missOf()).toBe(1)
+
+      // In the index, but the file is unreadable: a miss too, counted when the read resolves.
+      await cache.set('broken', { value: 1 })
+      await cache.get('broken')
+      expect(await missOf()).toBe(2)
     })
 
     it('reports a monotonic total across collection cycles', async () => {
