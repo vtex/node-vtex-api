@@ -58,9 +58,14 @@ interface CacheRegistration {
 // ObservableGauge and ObservableCounter are both just Observable in the OTel API,
 // so registerObservableGauge/Counter share one implementation, keyed by kind.
 type ObservableKind = 'gauge' | 'counter'
+
+// The library's baseOptions() forwards only these two, so the public signature promises
+// only these: MetricOptions also carries valueType and advice, which would be dropped.
+type ObservableMetricOptions = Pick<MetricOptions, 'description' | 'unit'>
+
 interface ObservableRegistration {
   observe: ObservableCallback
-  options?: MetricOptions
+  options?: ObservableMetricOptions
 }
 
 // The library's wrapper: holds the callback it attached; remove() detaches it.
@@ -246,11 +251,12 @@ export class DiagnosticsMetrics {
     }
 
     this.clientInitPromise = (async () => {
-      try {
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error('Metric client initialization timeout')), METRIC_CLIENT_INIT_TIMEOUT_MS)
-        })
+      let timeoutId: ReturnType<typeof setTimeout> | undefined
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Metric client initialization timeout')), METRIC_CLIENT_INIT_TIMEOUT_MS)
+      })
 
+      try {
         this.metricsClient = await Promise.race([
           getMetricClient(),
           timeoutPromise
@@ -260,17 +266,39 @@ export class DiagnosticsMetrics {
         this.createLatencyHistogram()
 
         // Attach any observable registrations made before the client was ready.
-        // No-op if there are none.
-        this.flushPendingObservables()
+        try {
+          this.flushPendingObservables()
+        } catch (error) {
+          // The client is up; only the pending registrations failed to attach.
+          console.error('Failed to attach the pending observable registrations:', error)
+        }
 
         return this.metricsClient
       } catch (error) {
         console.error('Failed to initialize metric client:', error)
+        this.warnPendingRegistrations()
         return undefined
+      } finally {
+        // Promise.race leaves the loser running, so the timeout timer needs clearing.
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+        }
       }
     })()
 
     return this.clientInitPromise
+  }
+
+  // Registrations that never attach should be reported once, not left for an app to
+  // discover through a dashboard with missing series.
+  private warnPendingRegistrations(): void {
+    const pending = this.cacheRegistry.size +
+      this.observableRegistrations.gauge.size +
+      this.observableRegistrations.counter.size
+
+    if (pending > 0) {
+      console.warn(`DiagnosticsMetrics: metric client unavailable; ${pending} pending registration(s) are not being published.`)
+    }
   }
 
   /**
@@ -383,6 +411,11 @@ export class DiagnosticsMetrics {
    * is owned by whichever instrument took it first: reusing it through the other API, or
    * under the other kind, is a conflict. Reusing it in place — same API, same kind — is a
    * replace, not a conflict.
+   *
+   * Disposing leaves a gap: remove() only detaches the callback, so the meter keeps the
+   * instrument and this check stops seeing the name. Reusing it under the other kind from
+   * then on would duplicate the stream, which only bites under cumulative temporality (a
+   * delta export drops the orphan). Re-registering the same kind after dispose is safe.
    */
   private nameConflict(name: string, kind: ObservableKind, origin: 'push' | 'observable'): string | undefined {
     if (CACHE_METRIC_NAMES.has(name)) {
@@ -531,17 +564,17 @@ export class DiagnosticsMetrics {
   // Registers (or replaces) a pull-based gauge: OTel calls `observe` on its own schedule
   // with `result.observe(value, attributes?)`. No base-attribute merging (no request is
   // in progress), but reported attributes keep the MAX_CUSTOM_ATTRIBUTES limit.
-  public registerObservableGauge(name: string, observe: ObservableCallback, options?: MetricOptions): () => void {
+  public registerObservableGauge(name: string, observe: ObservableCallback, options?: ObservableMetricOptions): () => void {
     return this.registerObservable('gauge', name, observe, options)
   }
 
   // Same as registerObservableGauge, but `observe` reports the cumulative total —
   // the SDK derives the delta itself.
-  public registerObservableCounter(name: string, observe: ObservableCallback, options?: MetricOptions): () => void {
+  public registerObservableCounter(name: string, observe: ObservableCallback, options?: ObservableMetricOptions): () => void {
     return this.registerObservable('counter', name, observe, options)
   }
 
-  private registerObservable(kind: ObservableKind, name: string, observe: ObservableCallback, options?: MetricOptions): () => void {
+  private registerObservable(kind: ObservableKind, name: string, observe: ObservableCallback, options?: ObservableMetricOptions): () => void {
     const conflict = this.nameConflict(name, kind, 'observable')
     if (conflict) {
       console.error(
@@ -605,6 +638,15 @@ export class DiagnosticsMetrics {
   // Replacement for the legacy MetricsAccumulator.trackCache() over the same cache
   // instances; reads getCumulativeStats(), which has no side effects. See METRICS_CATALOG.md.
   public trackCache(name: string, cacheInstance: TrackedCache): () => void {
+    // TrackedCache is a compile-time contract only: a JS caller, or a cache built by
+    // another copy of @vtex/api, would otherwise throw on every collection cycle.
+    if (typeof cacheInstance?.getCumulativeStats !== 'function') {
+      console.error(
+        `DiagnosticsMetrics: '${name}' does not implement getCumulativeStats(); ignoring the cache registration.`
+      )
+      return () => undefined
+    }
+
     const registration: CacheRegistration = { cache: cacheInstance }
     this.cacheRegistry.set(name, registration)
     this.ensureCacheInstruments()

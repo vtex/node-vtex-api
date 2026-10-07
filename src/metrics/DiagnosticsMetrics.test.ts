@@ -135,6 +135,50 @@ describe('DiagnosticsMetrics', () => {
 
       consoleErrorSpy.mockRestore()
     })
+
+    it('should warn about registrations left pending when initialization fails', async () => {
+      const error = new Error('Initialization failed')
+      ;(getMetricClient as jest.Mock).mockRejectedValueOnce(error)
+
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+      const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation()
+
+      const failingMetrics = new DiagnosticsMetrics()
+      failingMetrics.trackCache('pages', { getCumulativeStats: () => ({ hits: 0, total: 0 }) })
+      failingMetrics.registerObservableGauge('queue_depth_current', jest.fn())
+
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'DiagnosticsMetrics: metric client unavailable; 2 pending registration(s) are not being published.'
+      )
+
+      consoleErrorSpy.mockRestore()
+      consoleWarnSpy.mockRestore()
+    })
+
+    it('should report a failing flush separately from a failing initialization', async () => {
+      const error = new Error('createObservableGauge failed')
+      ;(mockMetricsClient as any).createObservableGauge = () => {
+        throw error
+      }
+
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+
+      const metrics = new DiagnosticsMetrics()
+      metrics.registerObservableGauge('queue_depth_current', jest.fn())
+
+      await new Promise(resolve => setTimeout(resolve, 10))
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to attach the pending observable registrations:', error)
+      expect(consoleErrorSpy).not.toHaveBeenCalledWith('Failed to initialize metric client:', expect.anything())
+
+      // The client itself is up, so the push methods keep working.
+      metrics.recordLatency(100)
+      expect(recordedHistogramCalls).toHaveLength(1)
+
+      consoleErrorSpy.mockRestore()
+    })
   })
 
   describe('recordLatency', () => {
@@ -1314,6 +1358,21 @@ describe('DiagnosticsMetrics', () => {
       const result = await reader.collect()
 
       expect(dataPointsIn(result, 'io_app_cache_operations_total')).toHaveLength(0)
+    })
+
+    it('refuses a cache with no getCumulativeStats() instead of throwing every cycle', async () => {
+      // TrackedCache is a compile-time contract: a JS caller reaches this path.
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
+
+      cacheDiagnostics.trackCache('pages', {} as TrackedCache)
+      const result = await reader.collect()
+
+      const [message] = consoleErrorSpy.mock.calls[0]
+      expect(message).toContain('pages')
+      expect(message).toContain('does not implement getCumulativeStats()')
+      expect(allMetricNamesIn(result)).not.toContain('io_app_cache_operations_total')
+
+      consoleErrorSpy.mockRestore()
     })
 
     it('disposing an earlier registration keeps a later cache of the same name', async () => {
