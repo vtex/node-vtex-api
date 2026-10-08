@@ -97,7 +97,12 @@ describe('Axios retries are traced independently - forcing ECONNREFUSED', () => 
     },
     requestsConfig: {
       retries: 3,
-      url: 'http://localhost:32123',
+      // Use the literal loopback address rather than 'localhost': Node's
+      // autoSelectFamily (Happy Eyeballs) resolves 'localhost' to both the
+      // IPv4 and IPv6 loopback addresses and, since both connections are
+      // refused, throws an AggregateError with an empty top-level message
+      // instead of the plain ECONNREFUSED error asserted on below.
+      url: 'http://127.0.0.1:32123',
     },
   }
 

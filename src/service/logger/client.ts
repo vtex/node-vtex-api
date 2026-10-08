@@ -1,54 +1,54 @@
-import { Exporters } from '@vtex/diagnostics-nodejs';
-import { LogClient } from '@vtex/diagnostics-nodejs/dist/types';
-import { getTelemetryClient } from '../telemetry';
+import { Exporters } from '@vtex/diagnostics-nodejs'
+import { LogClient } from '@vtex/diagnostics-nodejs/dist/types'
+import { getTelemetryClient } from '../telemetry'
 
-let logClient: LogClient | undefined;
-let isInitializing = false;
-let initPromise: Promise<LogClient> | undefined = undefined;
+let logClient: LogClient | undefined
+let isInitializing = false
+let initPromise: Promise<LogClient> | undefined
 
 export async function getLogClient(account: string, workspace: string, appName: string): Promise<LogClient> {
 
   if (logClient) {
-    return logClient;
+    return logClient
   }
 
   if (initPromise) {
-    return initPromise;
+    return initPromise
   }
 
-  isInitializing = true;
-  initPromise = initializeClient(account, workspace, appName);
+  isInitializing = true
+  initPromise = initializeClient(account, workspace, appName)
 
-  return initPromise;
+  return initPromise
 }
 
 async function initializeClient(account: string, workspace: string, appName: string): Promise<LogClient> {
   try {
-    const telemetryClient = await getTelemetryClient();
+    const telemetryClient = await getTelemetryClient()
 
     const logsConfig = Exporters.CreateLogsExporterConfig({
       endpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT,
+      headers: { 'Content-Type': 'application/json' },
+      interval: 5,
       path: process.env.OTEL_EXPORTER_OTLP_PATH || '/v1/logs',
       protocol: 'http',
-      interval: 5,
       timeoutSeconds: 5,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    })
 
-    const logsExporter = Exporters.CreateExporter(logsConfig, 'otlp');
-    await logsExporter.initialize();
+    const logsExporter = Exporters.CreateExporter(logsConfig, 'otlp')
+    await logsExporter.initialize()
 
-    const clientKey = `${account}-${workspace}-${appName}`;
+    const clientKey = `${account}-${workspace}-${appName}`
     logClient = await telemetryClient.newLogsClient({
       exporter: logsExporter,
       loggerName: `node-vtex-api-${clientKey}`,
-    });
+    })
 
-    return logClient;
+    return logClient
   } catch (error) {
-    console.error('Failed to initialize logs client:', error);
-    throw error;
+    console.error('Failed to initialize logs client:', error)
+    throw error
   } finally {
-    isInitializing = false;
+    isInitializing = false
   }
 }

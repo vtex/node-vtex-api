@@ -109,7 +109,7 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
 
 
     const cacheReadSpan = createCacheSpan(cacheType, 'read', tracer, span)
-    let cached: void | Cached = undefined
+    let cached: void | Cached
     try {
       const cacheHasWithSegment = await storage.has(keyWithSegment)
       cached = cacheHasWithSegment ? await storage.get(keyWithSegment) : await storage.get(key)
@@ -155,7 +155,7 @@ export const cacheMiddleware = ({ type, storage, asyncSet }: CacheOptions) => {
       if (cachedEtag && validateStatus(response.status as number)) {
         ctx.config.headers = {
           ...ctx.config.headers,
-          'if-none-match': cachedEtag
+          'if-none-match': cachedEtag,
         }
         ctx.config.validateStatus = validateStatus
       }
