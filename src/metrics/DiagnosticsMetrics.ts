@@ -1,7 +1,18 @@
-import { Attributes, context, createContextKey } from '@opentelemetry/api'
+import {
+  Attributes,
+  BatchObservableResult,
+  context,
+  createContextKey,
+  MetricOptions,
+  ObservableCallback,
+  ObservableCounter,
+  ObservableGauge,
+  ObservableResult,
+} from '@opentelemetry/api'
 import { Types } from '@vtex/diagnostics-nodejs'
+import { CumulativeStats } from '../caches/typings'
+import { LINKED, METRIC_CLIENT_INIT_TIMEOUT_MS } from '../constants'
 import { getMetricClient } from '../service/metrics/client'
-import { METRIC_CLIENT_INIT_TIMEOUT_MS, LINKED } from '../constants'
 
 /**
  * Maximum number of custom attributes allowed per metric call to control cardinality.
@@ -17,6 +28,48 @@ const MAX_CUSTOM_ATTRIBUTES = 7
  * These attributes are automatically merged with custom attributes in all metric methods.
  */
 const BASE_ATTRIBUTES_KEY = createContextKey('vtex.metrics.baseAttributes')
+
+// trackCache() metric names — one shared instrument set, differentiated by `cache`.
+const CACHE_OPERATIONS_METRIC = 'io_app_cache_operations_total'
+const CACHE_ITEMS_METRIC = 'io_app_cache_items_current'
+const CACHE_CAPACITY_METRIC = 'io_app_cache_capacity'
+const CACHE_DISPOSED_METRIC = 'io_app_cache_disposed_total'
+
+// Names owned by trackCache(), which creates them straight on the client. An app
+// registering one of them as its own observable would publish a duplicate stream.
+const CACHE_METRIC_NAMES = new Set([
+  CACHE_OPERATIONS_METRIC,
+  CACHE_ITEMS_METRIC,
+  CACHE_CAPACITY_METRIC,
+  CACHE_DISPOSED_METRIC,
+])
+
+// Cache instances exposing a non-resetting read (all four cache classes).
+export interface TrackedCache {
+  getCumulativeStats(): CumulativeStats
+}
+
+// One registered cache. The disposer holds its own entry so a later registration of
+// the same name owns the collection, the same way ObservableRegistration does.
+interface CacheRegistration {
+  cache: TrackedCache
+}
+
+// ObservableGauge and ObservableCounter are both just Observable in the OTel API,
+// so registerObservableGauge/Counter share one implementation, keyed by kind.
+type ObservableKind = 'gauge' | 'counter'
+
+// The library's baseOptions() forwards only these two, so the public signature promises
+// only these: MetricOptions also carries valueType and advice, which would be dropped.
+type ObservableMetricOptions = Pick<MetricOptions, 'description' | 'unit'>
+
+interface ObservableRegistration {
+  observe: ObservableCallback
+  options?: ObservableMetricOptions
+}
+
+// The library's wrapper: holds the callback it attached; remove() detaches it.
+type ObservableInstrument = Types.ObservableGauge | Types.ObservableCounter
 
 /**
  * Converts an hrtime tuple [seconds, nanoseconds] to milliseconds.
@@ -52,6 +105,55 @@ function limitCustomAttributes(customAttributes?: Attributes): Attributes | unde
   }
 
   return Object.fromEntries(entries.slice(0, MAX_CUSTOM_ATTRIBUTES))
+}
+
+/**
+ * A cache with no `max` reports Infinity (lru-cache@5's default for a missing one), so
+ * the capacity gauge publishes the sentinel the catalog documents instead.
+ */
+function capacityOrSentinel(max: number): number {
+  return Number.isFinite(max) ? max : Number.MAX_SAFE_INTEGER
+}
+
+/**
+ * The cache's miss count. A cache that reports misses directly wins: deriving them from
+ * `total - hits` reads as a decrease while a read is in flight across a collection cycle,
+ * and the SDK turns a decrease on a monotonic counter into a reset.
+ */
+function missesOf(stats: CumulativeStats): number {
+  if (typeof stats.misses === 'number') {
+    return stats.misses
+  }
+
+  return Math.max((stats.total ?? 0) - (stats.hits ?? 0), 0)
+}
+
+/**
+ * A disposer that only releases the entry it was created for. A later registration of
+ * the same name owns that entry, so an older disposer is a no-op instead of tearing
+ * down its successor.
+ */
+function releaseIfOwner<T>(registry: Map<string, T>, name: string, entry: T, onRelease?: () => void): () => void {
+  return () => {
+    if (registry.get(name) !== entry) {
+      return
+    }
+
+    registry.delete(name)
+    if (onRelease) {
+      onRelease()
+    }
+  }
+}
+
+/**
+ * Applies the same cardinality limit the push methods use to whatever an observable
+ * callback reports. Observables run outside any request, so every attribute is custom.
+ */
+function limitObservableResult(result: ObservableResult): ObservableResult {
+  return {
+    observe: (value: number, attributes?: Attributes) => result.observe(value, limitCustomAttributes(attributes)),
+  }
 }
 
 /**
@@ -113,12 +215,29 @@ export class DiagnosticsMetrics {
 
   private latencyHistogram: Types.Histogram | undefined
   // Counters and gauges keyed by name
-  private counters: Map<string, Types.Counter>
-  private gauges: Map<string, Types.Gauge>
+  private readonly counters: Map<string, Types.Counter>
+  private readonly gauges: Map<string, Types.Gauge>
+
+  // Registrations per kind, and the instrument each name is attached to (empty until
+  // the client is ready — see syncObservables).
+  private readonly observableRegistrations: Record<ObservableKind, Map<string, ObservableRegistration>>
+  private readonly observableInstruments: Record<ObservableKind, Map<string, ObservableInstrument>>
+
+  // trackCache() state: registered caches and the shared instruments.
+  private readonly cacheRegistry: Map<string, CacheRegistration>
+  private cacheInstruments: {
+    capacity: ObservableGauge
+    disposed: ObservableCounter
+    items: ObservableGauge
+    operations: ObservableCounter
+  } | undefined
 
   constructor() {
     this.counters = new Map()
     this.gauges = new Map()
+    this.observableRegistrations = { gauge: new Map(), counter: new Map() }
+    this.observableInstruments = { gauge: new Map(), counter: new Map() }
+    this.cacheRegistry = new Map()
     this.initMetricClient()
   }
 
@@ -132,11 +251,12 @@ export class DiagnosticsMetrics {
     }
 
     this.clientInitPromise = (async () => {
-      try {
-        const timeoutPromise = new Promise<never>((_, reject) => {
-          setTimeout(() => reject(new Error('Metric client initialization timeout')), METRIC_CLIENT_INIT_TIMEOUT_MS)
-        })
+      let timeoutId: ReturnType<typeof setTimeout> | undefined
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Metric client initialization timeout')), METRIC_CLIENT_INIT_TIMEOUT_MS)
+      })
 
+      try {
         this.metricsClient = await Promise.race([
           getMetricClient(),
           timeoutPromise
@@ -145,14 +265,40 @@ export class DiagnosticsMetrics {
         // Create the single latency histogram after client is ready
         this.createLatencyHistogram()
 
+        // Attach any observable registrations made before the client was ready.
+        try {
+          this.flushPendingObservables()
+        } catch (error) {
+          // The client is up; only the pending registrations failed to attach.
+          console.error('Failed to attach the pending observable registrations:', error)
+        }
+
         return this.metricsClient
       } catch (error) {
         console.error('Failed to initialize metric client:', error)
+        this.warnPendingRegistrations()
         return undefined
+      } finally {
+        // Promise.race leaves the loser running, so the timeout timer needs clearing.
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+        }
       }
     })()
 
     return this.clientInitPromise
+  }
+
+  // Registrations that never attach should be reported once, not left for an app to
+  // discover through a dashboard with missing series.
+  private warnPendingRegistrations(): void {
+    const pending = this.cacheRegistry.size +
+      this.observableRegistrations.gauge.size +
+      this.observableRegistrations.counter.size
+
+    if (pending > 0) {
+      console.warn(`DiagnosticsMetrics: metric client unavailable; ${pending} pending registration(s) are not being published.`)
+    }
   }
 
   /**
@@ -260,19 +406,58 @@ export class DiagnosticsMetrics {
   }
 
   /**
+   * The reason `name` cannot carry a new instrument, or undefined when it can. The SDK
+   * accepts two same-named streams silently and the collector then rejects them, so a name
+   * is owned by whichever instrument took it first: reusing it through the other API, or
+   * under the other kind, is a conflict. Reusing it in place — same API, same kind — is a
+   * replace, not a conflict.
+   *
+   * Disposing leaves a gap: remove() only detaches the callback, so the meter keeps the
+   * instrument and this check stops seeing the name. Reusing it under the other kind from
+   * then on would duplicate the stream, which only bites under cumulative temporality (a
+   * delta export drops the orphan). Re-registering the same kind after dispose is safe.
+   */
+  private nameConflict(name: string, kind: ObservableKind, origin: 'push' | 'observable'): string | undefined {
+    if (CACHE_METRIC_NAMES.has(name)) {
+      return 'reserved for trackCache()'
+    }
+
+    const other: ObservableKind = kind === 'gauge' ? 'counter' : 'gauge'
+    const foreign = origin === 'push'
+      ? [this.observableRegistrations[kind], this.observableRegistrations[other], this.pushInstruments(other)]
+      : [this.pushInstruments(kind), this.pushInstruments(other), this.observableRegistrations[other]]
+
+    return foreign.some(instruments => instruments.has(name)) ? 'already used by another instrument' : undefined
+  }
+
+  private pushInstruments(kind: ObservableKind): Map<string, unknown> {
+    return kind === 'counter' ? this.counters : this.gauges
+  }
+
+  /**
+   * Counter and gauge instruments are created once per name and reused.
+   */
+  private instrumentFor<T>(map: Map<string, T>, name: string, create: () => T): T {
+    const existing = map.get(name)
+    if (existing !== undefined) {
+      return existing
+    }
+
+    const instrument = create()
+    map.set(name, instrument)
+    return instrument
+  }
+
+  /**
    * Record a latency measurement using the single shared histogram.
    * Accepts either an hrtime tuple from process.hrtime() or milliseconds as a number.
    * Use attributes to differentiate between different operations.
    * 
-   * Base attributes from the current context (set via `runWithBaseAttributes`) are
-   * automatically merged with the provided custom attributes. Base attributes take 
-   * precedence - if a custom attribute key conflicts with a base attribute key, 
-   * the custom attribute is silently dropped.
-   * 
-   * Custom attributes are limited to MAX_CUSTOM_ATTRIBUTES (5). Base attributes are not limited.
+   * Base attributes from `runWithBaseAttributes` are merged in automatically and take
+   * precedence; custom attributes are capped at MAX_CUSTOM_ATTRIBUTES (7). See the class doc.
    *
    * @param value Either [seconds, nanoseconds] from process.hrtime() or milliseconds
-   * @param attributes Custom attributes including 'operation' to identify the operation type (max 5 custom attributes)
+   * @param attributes Custom attributes including 'operation' to identify the operation type (max 7 custom attributes)
    *
    * @example
    * ```typescript
@@ -304,16 +489,12 @@ export class DiagnosticsMetrics {
    * Increment a counter by a specific value.
    * Multiple counters are stored by name since counters represent different types of events.
    * 
-   * Base attributes from the current context (set via `runWithBaseAttributes`) are
-   * automatically merged with the provided custom attributes. Base attributes take 
-   * precedence - if a custom attribute key conflicts with a base attribute key, 
-   * the custom attribute is silently dropped.
-   * 
-   * Custom attributes are limited to MAX_CUSTOM_ATTRIBUTES (5). Base attributes are not limited.
+   * Base attributes from `runWithBaseAttributes` are merged in automatically and take
+   * precedence; custom attributes are capped at MAX_CUSTOM_ATTRIBUTES (7). See the class doc.
    *
    * @param name Counter name (e.g., 'http_requests_total', 'cache_hits_total')
    * @param value Amount to increment by (typically 1)
-   * @param attributes Optional custom attributes for the counter (max 5 custom attributes, e.g., { method: 'GET', status: '2xx' })
+   * @param attributes Optional custom attributes for the counter (max 7 custom attributes, e.g., { method: 'GET', status: '2xx' })
    *
    * @example
    * ```typescript
@@ -326,36 +507,32 @@ export class DiagnosticsMetrics {
       return
     }
 
-    // Get or create counter instrument
-    if (!this.counters.has(name)) {
-      const counter = this.metricsClient.createCounter(name, {
-        description: `Counter for ${name}`,
-        unit: '1',
-      })
-      this.counters.set(name, counter)
+    const conflict = this.nameConflict(name, 'counter', 'push')
+    if (conflict) {
+      console.error(
+        `DiagnosticsMetrics: '${name}' is ${conflict}; ignoring the counter. Pick a distinct metric name.`
+      )
+      return
     }
 
-    // Merge base attributes from context with custom attributes (custom attrs are limited internally)
-    const mergedAttributes = this.mergeAttributes(attributes)
+    const counter = this.instrumentFor(this.counters, name, () =>
+      this.metricsClient!.createCounter(name, { description: `Counter for ${name}`, unit: '1' })
+    )
 
-    // Increment the counter
-    this.counters.get(name)!.add(value, mergedAttributes)
+    // mergeAttributes() limits custom attributes internally
+    counter.add(value, this.mergeAttributes(attributes))
   }
 
   /**
    * Set a gauge to a specific value (current state).
    * Multiple gauges are stored by name since gauges represent different types of measurements.
    * 
-   * Base attributes from the current context (set via `runWithBaseAttributes`) are
-   * automatically merged with the provided custom attributes. Base attributes take 
-   * precedence - if a custom attribute key conflicts with a base attribute key, 
-   * the custom attribute is silently dropped.
-   * 
-   * Custom attributes are limited to MAX_CUSTOM_ATTRIBUTES (5). Base attributes are not limited.
+   * Base attributes from `runWithBaseAttributes` are merged in automatically and take
+   * precedence; custom attributes are capped at MAX_CUSTOM_ATTRIBUTES (7). See the class doc.
    *
    * @param name Gauge name (e.g., 'cache_items_current', 'memory_usage_bytes')
    * @param value Current value
-   * @param attributes Optional custom attributes for the gauge (max 5 custom attributes, e.g., { cache: 'pages' })
+   * @param attributes Optional custom attributes for the gauge (max 7 custom attributes, e.g., { cache: 'pages' })
    *
    * @example
    * ```typescript
@@ -368,20 +545,192 @@ export class DiagnosticsMetrics {
       return
     }
 
-    // Get or create gauge instrument
-    if (!this.gauges.has(name)) {
-      const gauge = this.metricsClient.createGauge(name, {
-        description: `Gauge for ${name}`,
-        unit: '1',
-      })
-      this.gauges.set(name, gauge)
+    const conflict = this.nameConflict(name, 'gauge', 'push')
+    if (conflict) {
+      console.error(
+        `DiagnosticsMetrics: '${name}' is ${conflict}; ignoring the gauge. Pick a distinct metric name.`
+      )
+      return
     }
 
-    // Merge base attributes from context with custom attributes (custom attrs are limited internally)
-    const mergedAttributes = this.mergeAttributes(attributes)
+    const gauge = this.instrumentFor(this.gauges, name, () =>
+      this.metricsClient!.createGauge(name, { description: `Gauge for ${name}`, unit: '1' })
+    )
 
-    // Set the gauge value
-    this.gauges.get(name)!.set(value, mergedAttributes)
+    // mergeAttributes() limits custom attributes internally
+    gauge.set(value, this.mergeAttributes(attributes))
+  }
+
+  // Registers (or replaces) a pull-based gauge: OTel calls `observe` on its own schedule
+  // with `result.observe(value, attributes?)`. No base-attribute merging (no request is
+  // in progress), but reported attributes keep the MAX_CUSTOM_ATTRIBUTES limit.
+  public registerObservableGauge(name: string, observe: ObservableCallback, options?: ObservableMetricOptions): () => void {
+    return this.registerObservable('gauge', name, observe, options)
+  }
+
+  // Same as registerObservableGauge, but `observe` reports the cumulative total —
+  // the SDK derives the delta itself.
+  public registerObservableCounter(name: string, observe: ObservableCallback, options?: ObservableMetricOptions): () => void {
+    return this.registerObservable('counter', name, observe, options)
+  }
+
+  private registerObservable(kind: ObservableKind, name: string, observe: ObservableCallback, options?: ObservableMetricOptions): () => void {
+    const conflict = this.nameConflict(name, kind, 'observable')
+    if (conflict) {
+      console.error(
+        `DiagnosticsMetrics: '${name}' is ${conflict}; ignoring the ${kind} registration. ` +
+        `Pick a distinct metric name.`
+      )
+      return () => undefined
+    }
+
+    const registration: ObservableRegistration = { observe, options }
+    this.observableRegistrations[kind].set(name, registration)
+    this.syncObservables(kind)
+
+    return releaseIfOwner(this.observableRegistrations[kind], name, registration, () => {
+      this.observableInstruments[kind].get(name)?.remove()
+      this.observableInstruments[kind].delete(name)
+    })
+  }
+
+  // Attaches every `kind` registration to its instrument; a no-op when there is nothing
+  // registered or the client is not ready. One instrument per name, with a callback that
+  // trampolines over the current registration — re-creating it would duplicate the stream.
+  private syncObservables(kind: ObservableKind): void {
+    if (this.observableRegistrations[kind].size === 0) {
+      return // skip the meter entirely if this kind is unused
+    }
+
+    const client = this.metricsClient
+    if (!client) {
+      return
+    }
+
+    for (const [name, { options }] of this.observableRegistrations[kind]) {
+      if (this.observableInstruments[kind].has(name)) {
+        continue // already attached; options apply only on the first registration
+      }
+
+      const attached: ObservableCallback = (result) => {
+        this.observableRegistrations[kind].get(name)?.observe(limitObservableResult(result))
+      }
+
+      const instrument = kind === 'gauge'
+        ? client.createObservableGauge(name, attached, options)
+        : client.createObservableCounter(name, attached, options)
+
+      this.observableInstruments[kind].set(name, instrument)
+    }
+  }
+
+  // Runs once the client is ready. No-op for an app that never calls
+  // registerObservableGauge/Counter/trackCache.
+  private flushPendingObservables(): void {
+    this.syncObservables('gauge')
+    this.syncObservables('counter')
+
+    if (this.cacheRegistry.size > 0) {
+      this.ensureCacheInstruments()
+    }
+  }
+
+  // Replacement for the legacy MetricsAccumulator.trackCache() over the same cache
+  // instances; reads getCumulativeStats(), which has no side effects. See METRICS_CATALOG.md.
+  public trackCache(name: string, cacheInstance: TrackedCache): () => void {
+    // TrackedCache is a compile-time contract only: a JS caller, or a cache built by
+    // another copy of @vtex/api, would otherwise throw on every collection cycle.
+    if (typeof cacheInstance?.getCumulativeStats !== 'function') {
+      console.error(
+        `DiagnosticsMetrics: '${name}' does not implement getCumulativeStats(); ignoring the cache registration.`
+      )
+      return () => undefined
+    }
+
+    const registration: CacheRegistration = { cache: cacheInstance }
+    this.cacheRegistry.set(name, registration)
+    this.ensureCacheInstruments()
+
+    return releaseIfOwner(this.cacheRegistry, name, registration)
+  }
+
+  private ensureCacheInstruments(): void {
+    if (this.cacheInstruments) {
+      return
+    }
+
+    const client = this.metricsClient
+    if (!client) {
+      return
+    }
+
+    const operations = client.createObservableCounter(CACHE_OPERATIONS_METRIC, undefined, {
+      description: 'Hit/miss operations for a VTEX IO app in-memory cache',
+      unit: '1',
+    })
+    const items = client.createObservableGauge(CACHE_ITEMS_METRIC, undefined, {
+      description: 'Current number of items held by a VTEX IO app cache',
+      unit: '1',
+    })
+    const capacity = client.createObservableGauge(CACHE_CAPACITY_METRIC, undefined, {
+      description: 'Capacity of a VTEX IO app cache, in the units that cache uses (item count, unless the LRU was built with a length function)',
+      unit: '1',
+    })
+    const disposed = client.createObservableCounter(CACHE_DISPOSED_METRIC, undefined, {
+      description: 'Items disposed (evicted) from a VTEX IO app cache',
+      unit: '1',
+    })
+
+    client.addBatchObservableCallback(
+      (result) => this.observeCaches(result),
+      [operations.instrument, items.instrument, capacity.instrument, disposed.instrument]
+    )
+
+    // These live for the process, so only the handles are kept: the wrappers exist
+    // to attach the batch callback above.
+    this.cacheInstruments = {
+      capacity: capacity.instrument,
+      disposed: disposed.instrument,
+      items: items.instrument,
+      operations: operations.instrument,
+    }
+  }
+
+  // Reads each registered cache's cumulative counters straight into the instruments.
+  private observeCaches(result: BatchObservableResult): void {
+    if (!this.cacheInstruments) {
+      return
+    }
+
+    const { operations, items, capacity, disposed } = this.cacheInstruments
+
+    for (const [name, { cache }] of this.cacheRegistry) {
+      let stats: CumulativeStats
+      try {
+        stats = cache.getCumulativeStats()
+      } catch (error) {
+        console.error('DiagnosticsMetrics: failed to read stats for cache', name, error)
+        continue
+      }
+
+      const attributes = { cache: name }
+      if (typeof stats.hits === 'number' && typeof stats.total === 'number') {
+        result.observe(operations, stats.hits, { ...attributes, cache_state: 'hit' })
+        result.observe(operations, missesOf(stats), { ...attributes, cache_state: 'miss' })
+      }
+
+      if (typeof stats.itemCount === 'number') {
+        result.observe(items, stats.itemCount, attributes)
+      }
+
+      if (typeof stats.max === 'number') {
+        result.observe(capacity, capacityOrSentinel(stats.max), attributes)
+      }
+
+      if (typeof stats.disposedItems === 'number') {
+        result.observe(disposed, stats.disposedItems, attributes)
+      }
+    }
   }
 }
 

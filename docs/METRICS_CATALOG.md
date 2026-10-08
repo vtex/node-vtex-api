@@ -90,10 +90,16 @@ All Metrics in node-vtex-api
 │       │   ├── latency histogram (via recordLatency)
 │       │   └── graphql_field_requests_total (Counter)
 │       │
-│       └── HTTP Agent (HttpClient/middlewares/request/HttpAgentSingleton.ts)
-│           ├── http_agent_sockets_current (Gauge)
-│           ├── http_agent_free_sockets_current (Gauge)
-│           └── http_agent_pending_requests_current (Gauge)
+│       ├── HTTP Agent (HttpClient/middlewares/request/HttpAgentSingleton.ts)
+│       │   ├── http_agent_sockets_current (Gauge)
+│       │   ├── http_agent_free_sockets_current (Gauge)
+│       │   └── http_agent_pending_requests_current (Gauge)
+│       │
+│       └── Cache (metrics/DiagnosticsMetrics.ts, via trackCache — observable/pull, not per-request)
+│           ├── io_app_cache_operations_total (Observable Counter) - attrs: cache, cache_state
+│           ├── io_app_cache_items_current (Observable Gauge) - caches that expose itemCount
+│           ├── io_app_cache_capacity (Observable Gauge) - the cache's max, sentinel when unbounded
+│           └── io_app_cache_disposed_total (Observable Counter) - caches that expose disposedItems
 │
 └── 🏛️ Legacy Metrics (Non-Diagnostics)
     │
@@ -149,7 +155,7 @@ All Metrics in node-vtex-api
     │   │   ├── httpAgent - sockets, freeSockets, pendingRequests
     │   │   └── incomingRequest - total, closed, aborted
     │   │
-    │   └── Cache Metrics (via trackCache)
+    │   └── Cache Metrics (via trackCache — output discarded since #676; replacement above)
     │       └── {cache_name}-cache
     │           ├── LRU: itemCount, length, disposedItems, hitRate, hits, max, total
     │           ├── Disk: hits, total
@@ -241,6 +247,33 @@ These are operation-specific metrics recorded in middleware components.
 | `http_agent_sockets_current` | Gauge | Active sockets |
 | `http_agent_free_sockets_current` | Gauge | Free sockets in pool |
 | `http_agent_pending_requests_current` | Gauge | Pending requests waiting for socket |
+
+#### Cache Metrics (Observable)
+
+**Source:** `metrics/DiagnosticsMetrics.ts` (`trackCache()`)
+
+The replacement for the legacy `MetricsAccumulator.trackCache()` (see [Legacy Metrics](#legacy-metrics-non-diagnostics) below). Unlike every other metric on this page, these are **observable (pull-based)**: the cache is registered once and read on the OTel SDK's own collection schedule, not pushed per-request. For the same pull model on something that isn't a cache, see `registerObservableGauge`/`registerObservableCounter`.
+
+Reads `getCumulativeStats()`, which has no side effects, so it can run alongside the legacy `metrics.trackCache()` without either reader consuming the other's counts — which is what makes a partial migration safe.
+
+| Metric Name | Type | Attributes | Reported when |
+|-------------|------|------------|----------------|
+| `io_app_cache_operations_total` | Observable Counter | `cache`, `cache_state` (`hit` \| `miss`) | Cache reports `hits` and `total` (all four cache classes do) |
+| `io_app_cache_items_current` | Observable Gauge | `cache` | Cache reports `itemCount` (`LRUCache`, `LRUDiskCache`) |
+| `io_app_cache_capacity` | Observable Gauge | `cache` | Cache reports `max` (`LRUCache`, `LRUDiskCache`; sentinel when there is none) |
+| `io_app_cache_disposed_total` | Observable Counter | `cache` | Cache reports `disposedItems` (`LRUCache`, `LRUDiskCache`) |
+
+`hitRate` is not republished — derive it from `io_app_cache_operations_total` (`hit / (hit + miss)`) so it aggregates correctly across instances instead of averaging pre-computed ratios.
+
+**`io_app_cache_capacity` is in the cache's own units.** It reports the LRU's `max`, which is an item count for a cache built with a plain `max`, but a size budget for one built with a `length` function. Only treat `items_current / capacity` as a fill ratio when you know the cache is count-limited.
+
+**A cache with no `max` reports `9007199254740991` (`Number.MAX_SAFE_INTEGER`).** `lru-cache@5` defaults `max` to `Infinity` for an unbounded cache, and a non-finite capacity is not publishable, so the sentinel stands in for it. Anything aggregating capacity MUST group by `cache`, or that sentinel poisons the aggregate into a meaningless number.
+
+```typescript
+const dispose = global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)
+```
+
+> `trackCache()` exists from `@vtex/api` 7.6.0; the `diagnosticsMetrics` global from 7.3.0. On a runtime in between the global is present and the method is not — probe `typeof global.diagnosticsMetrics?.trackCache === 'function'` before calling on a runtime you don't control (see [METRICS_OVERVIEW.md](./METRICS_OVERVIEW.md), Pattern 5).
 
 ---
 

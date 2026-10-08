@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [7.6.0]
+
+### Added
+
+- `DiagnosticsMetrics.trackCache(name, cache)`: observable cache metrics (`io_app_cache_*`), safe alongside the legacy `trackCache`
+- `DiagnosticsMetrics.registerObservableGauge/Counter(name, observe, options?)`: pull-based instruments
+- `getCumulativeStats()` on the four cache classes: process-lifetime totals, side-effect free
+
+### Fixed
+
+- `io_app_cache_operations_total{cache_state="miss"}` counts misses when a read resolves, so the
+  series stays monotonic for the async caches (`LRUDiskCache`, `DiskCache`)
+
+### Changed
+
+- `@vtex/diagnostics-nodejs` pinned to `0.2.0-io`, the IO line's current tag, replacing the
+  `0.1.8-io-beta.4` beta
+
 ## [7.5.0]
 
 ### Added

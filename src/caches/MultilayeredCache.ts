@@ -1,11 +1,11 @@
 import { any, map, slice } from 'ramda'
 import { CacheLayer } from './CacheLayer'
-import { FetchResult, MultilayerStats } from './typings'
+import { CumulativeStats, FetchResult, MultilayerStats } from './typings'
+import { WindowedCounters } from './WindowedCounters'
 
 export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
 
-  private hits = 0
-  private total = 0
+  private readonly counters = new WindowedCounters()
 
   constructor (private caches: Array<CacheLayer<K, V>>) {}
 
@@ -45,30 +45,32 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
   }
 
   public getStats = (name='multilayred-cache'): MultilayerStats => {
-    const multilayerStats = {
-      hitRate: this.total > 0 ? this.hits / this.total : undefined,
-      hits: this.hits,
+    const { hits, total } = this.counters.windowed()
+    return {
+      hitRate: total > 0 ? hits / total : undefined,
+      hits,
       name,
-      total: this.total,
+      total,
     }
-    this.resetCounters()
-    return multilayerStats
+  }
+
+  public getCumulativeStats = (): CumulativeStats => {
+    const { hits, misses, total } = this.counters.cumulative()
+    return { hits, misses, total }
   }
 
   private findIndex = async <T> (func: (item: T) => Promise<boolean>, array: T[]): Promise<number> => {
-    this.total += 1
+    this.counters.countRead()
     for (let index = 0; index < array.length; index++) {
       const hasKey = await func(array[index])
       if (hasKey) {
-        this.hits += 1
+        this.counters.countHit()
         return index
       }
     }
+
+    this.counters.countMiss()
     return -1
   }
 
-  private resetCounters () {
-    this.hits = 0
-    this.total = 0
-  }
 }

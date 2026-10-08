@@ -1,5 +1,6 @@
 import { CacheLayer } from './CacheLayer'
-import { LRUDiskCacheOptions, LRUStats } from './typings'
+import { CumulativeStats, LRUDiskCacheOptions, LRUStats } from './typings'
+import { WindowedCounters } from './WindowedCounters'
 
 import { outputJSON, readJSON, remove } from 'fs-extra'
 import LRU from 'lru-cache'
@@ -9,22 +10,18 @@ import ReadWriteLock from 'rwlock'
 export class LRUDiskCache<V> implements CacheLayer<string, V>{
 
   private lock: ReadWriteLock
-  private disposed: number
-  private hits = 0
-  private total = 0
+  private readonly counters: WindowedCounters
   private lruStorage: LRU<string, number>
   private keyToBeDeleted: string
 
   constructor(private cachePath: string, options: LRUDiskCacheOptions, private readFile=readJSON, private writeFile=outputJSON) {
-    this.hits = 0
-    this.total = 0
-    this.disposed = 0
+    this.counters = new WindowedCounters()
     this.keyToBeDeleted = ''
     this.lock = new ReadWriteLock()
 
     const dispose = (key: string): void => {
       this.keyToBeDeleted = key
-      this.disposed += 1
+      this.counters.countDisposed()
     }
 
     const lruOptions = {
@@ -40,26 +37,37 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   public has = (key: string): boolean => this.lruStorage.has(key)
 
   public getStats = (name='disk-lru-cache'): LRUStats => {
-    const stats = {
-      disposedItems: this.disposed,
-      hitRate: this.total > 0 ? this.hits / this.total : undefined,
-      hits: this.hits,
+    const { disposed, hits, total } = this.counters.windowed()
+    return {
+      disposedItems: disposed,
+      hitRate: total > 0 ? hits / total : undefined,
+      hits,
       itemCount: this.lruStorage.itemCount,
       length: this.lruStorage.length,
       max: this.lruStorage.max,
       name,
-      total: this.total,
+      total,
     }
-    this.hits = 0
-    this.total = 0
-    this.disposed = 0
-    return stats
+  }
+
+  public getCumulativeStats = (): CumulativeStats => {
+    const { disposed, hits, misses, total } = this.counters.cumulative()
+    return {
+      disposedItems: disposed,
+      hits,
+      itemCount: this.lruStorage.itemCount,
+      length: this.lruStorage.length,
+      max: this.lruStorage.max,
+      misses,
+      total,
+    }
   }
 
   public get = async (key: string): Promise<V | void>  => {
     const timeOfDeath = this.lruStorage.get(key)
-    this.total += 1
+    this.counters.countRead()
     if (timeOfDeath === undefined) {
+      this.counters.countMiss()
 
       // if it is an outdated file when stale=false
       if (this.keyToBeDeleted) {
@@ -75,10 +83,11 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
         try {
           const fileData = await this.readFile(pathKey)
           release()
-          this.hits += 1
+          this.counters.countHit()
           resolve(fileData)
-        } catch (e) {
+        } catch {
           release()
+          this.counters.countMiss() // a missing or unreadable file is a miss
           resolve(null as unknown as V)
         }
       })
@@ -114,7 +123,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
           const writePromise = await this.writeFile(pathKey, value)
           release()
           resolve(writePromise)
-        } catch (e) {
+        } catch {
           release()
           resolve(true)
         }
@@ -137,7 +146,7 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
           const removePromise = await remove(pathKey)
           release()
           resolve(removePromise)
-        } catch (e) {
+        } catch {
           release()
           resolve(true)
         }

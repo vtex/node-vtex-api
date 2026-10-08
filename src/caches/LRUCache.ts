@@ -1,22 +1,19 @@
 import LRU from 'lru-cache'
 import { CacheLayer } from './CacheLayer'
 import { MultilayeredCache } from './MultilayeredCache'
-import { FetchResult, LRUStats } from './typings'
+import { CumulativeStats, FetchResult, LRUStats } from './typings'
+import { WindowedCounters } from './WindowedCounters'
 
 export class LRUCache <K, V> implements CacheLayer<K, V>{
   private multilayer: MultilayeredCache<K, V>
   private storage: LRU<K, V>
-  private hits: number
-  private total: number
-  private disposed: number
+  private readonly counters: WindowedCounters
 
   constructor (options: LRU.Options<K, V>) {
-    this.hits = 0
-    this.total = 0
-    this.disposed = 0
+    this.counters = new WindowedCounters()
     this.storage = new LRU({
       ...options,
-      dispose: () => this.disposed += 1,
+      dispose: () => this.counters.countDisposed(),
       noDisposeOnSet: true,
     })
     this.multilayer = new MultilayeredCache([this])
@@ -25,9 +22,11 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
   public get = (key: K): V | void => {
     const value = this.storage.get(key)
     if (this.storage.has(key)) {
-      this.hits += 1
+      this.counters.countHit()
+    } else {
+      this.counters.countMiss()
     }
-    this.total += 1
+    this.counters.countRead()
     return value
   }
 
@@ -38,19 +37,29 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
   public has = (key: K): boolean => this.storage.has(key)
 
   public getStats = (name='lru-cache'): LRUStats => {
-    const stats = {
-      disposedItems: this.disposed,
-      hitRate: this.total > 0 ? this.hits / this.total : undefined,
-      hits: this.hits,
+    const { disposed, hits, total } = this.counters.windowed()
+    return {
+      disposedItems: disposed,
+      hitRate: total > 0 ? hits / total : undefined,
+      hits,
       itemCount: this.storage.itemCount,
       length: this.storage.length,
       max: this.storage.max,
       name,
-      total: this.total,
+      total,
     }
-    this.hits = 0
-    this.total = 0
-    this.disposed = 0
-    return stats
+  }
+
+  public getCumulativeStats = (): CumulativeStats => {
+    const { disposed, hits, misses, total } = this.counters.cumulative()
+    return {
+      disposedItems: disposed,
+      hits,
+      itemCount: this.storage.itemCount,
+      length: this.storage.length,
+      max: this.storage.max,
+      misses,
+      total,
+    }
   }
 }

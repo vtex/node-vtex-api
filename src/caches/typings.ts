@@ -23,6 +23,19 @@ export type LRUStats = {
   total: number,
 }
 
+// What a cache exposes to the observable reader. Every field is optional: a cache reports
+// only what it can, and the reader publishes one series per field it actually finds.
+// tslint:disable-next-line:interface-over-type-literal
+export type CumulativeStats = {
+  hits?: number,
+  total?: number,
+  misses?: number,
+  disposedItems?: number,
+  itemCount?: number,
+  length?: number,
+  max?: number,
+}
+
 // tslint:disable-next-line:interface-over-type-literal
 export type MultilayerStats = {
   hitRate: number | undefined,

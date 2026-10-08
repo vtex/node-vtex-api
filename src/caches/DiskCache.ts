@@ -1,5 +1,6 @@
 import { CacheLayer } from './CacheLayer'
-import { DiskStats } from './typings'
+import { CumulativeStats, DiskStats } from './typings'
+import { WindowedCounters } from './WindowedCounters'
 
 import { outputJSON, pathExistsSync, readJSON } from 'fs-extra'
 import { join } from 'path'
@@ -7,8 +8,7 @@ import ReadWriteLock from 'rwlock'
 
 export class DiskCache<V> implements CacheLayer<string, V>{
 
-  private hits = 0
-  private total = 0
+  private readonly counters = new WindowedCounters()
   private lock: ReadWriteLock
 
   constructor(private cachePath: string, private readFile=readJSON, private writeFile=outputJSON) {
@@ -21,28 +21,28 @@ export class DiskCache<V> implements CacheLayer<string, V>{
   }
 
   public getStats = (name='disk-cache'): DiskStats => {
-    const stats = {
-      hits: this.hits,
-      name,
-      total: this.total,
-    }
-    this.hits = 0
-    this.total = 0
-    return stats
+    const { hits, total } = this.counters.windowed()
+    return { hits, name, total }
+  }
+
+  public getCumulativeStats = (): CumulativeStats => {
+    const { hits, misses, total } = this.counters.cumulative()
+    return { hits, misses, total }
   }
 
   public get = async (key: string): Promise<V | void>  => {
     const pathKey = this.getPathKey(key)
-    this.total += 1
+    this.counters.countRead()
     const data = await new Promise<V | undefined>(resolve => {
       this.lock.readLock(key, async (release: () => void) => {
         try {
           const fileData = await this.readFile(pathKey)
           release()
-          this.hits += 1
+          this.counters.countHit()
           resolve(fileData)
-        } catch (e) {
+        } catch {
           release()
+          this.counters.countMiss() // a missing or unreadable file is a miss
           resolve(null as unknown as V)
         }
       })
@@ -58,7 +58,7 @@ export class DiskCache<V> implements CacheLayer<string, V>{
           const writePromise = await this.writeFile(pathKey, value)
           release()
           resolve(writePromise)
-        } catch (e) {
+        } catch {
           release()
           resolve(true)
         }
