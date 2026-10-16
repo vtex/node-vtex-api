@@ -184,7 +184,9 @@ metrics.trackCache('pages', pagesCacheStorage)
 
 **After (from 7.7.0, for caches built from this package's classes):**
 ```typescript
-// The name travels with the cache: no registration call, no probe, no disposer.
+// Every LRUCache/LRUDiskCache/DiskCache/MultilayeredCache is tracked automatically.
+// metricName only decides what the series is called; it is the name a dashboard
+// should rely on.
 const pagesCacheStorage = new LRUCache<string, Cached>({
   max: 3000,
   metricName: 'pages',
@@ -200,7 +202,7 @@ const dispose = global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage
 
 This is a direct replacement, not a manual re-implementation with `incrementCounter`/`setGauge` (Pattern 4's approach) — the registered cache is read exactly once per collection cycle no matter how many metrics it produces.
 
-With `metricName` there is nothing to probe: the option is a plain property an older runtime simply ignores (the cache works, no series is published), and registration is order-independent — a module-level cache constructed before `startApp()` creates the metrics global is drained from a process-wide registry once `DiagnosticsMetrics` exists. `LRUCache`, `LRUDiskCache`, `DiskCache` and `MultilayeredCache` all accept it. One instance publishes under one name: if a leftover manual `trackCache()` calls the same instance under another name during a migration, the second registration is refused with an error instead of counting the same counters twice.
+Without a `metricName`, the cache is still tracked: the name falls back to the construction callsite (a path relative to the app root, plus an ordinal per file), upgraded to the client class name when the cache becomes a client's `memoryCache`. The precedence is explicit > client > callsite, and a stronger origin renames a weaker one, typically before the first collection cycle publishes anything. Two caveats: a callsite name renames its series when caches are added, removed or reordered in that file, and a shared `memoryCache` keeps the name of the first client that wraps it. `metricName: false` opts a cache out entirely. Registration is order-independent — a module-level cache constructed before `startApp()` creates the metrics global is drained from a process-wide registry once `DiagnosticsMetrics` exists — and there is nothing to probe: the option is a plain property an older runtime simply ignores.
 
 **Calling `trackCache()` yourself? Probe the method, not the global, on a runtime you don't control.** `global.diagnosticsMetrics` exists since 7.3.0, but `trackCache()` only arrives in 7.6.0 — and in production the runtime supplies the `@vtex/api` your app runs on, not your lockfile. On a runtime in between, the global is there and the method is not, and a call at module load dies with `TypeError: diagnosticsMetrics.trackCache is not a function` before the app serves a single request. Optional chaining on the global (`global.diagnosticsMetrics?.trackCache(...)`) does not help there — it skips the absent *global*, not the absent *method*. Detect the facade without an exception like this:
 
