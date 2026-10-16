@@ -1,4 +1,5 @@
 import { CacheLayer } from './CacheLayer'
+import { createCountedLRU, cumulativeLRUStats, windowedLRUStats } from './countedLRU'
 import { registerCacheForTracking } from './trackingRegistry'
 import { CumulativeStats, LRUDiskCacheOptions, LRUStats } from './typings'
 import { WindowedCounters } from './WindowedCounters'
@@ -22,18 +23,9 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     this.keyToBeDeleted = ''
     this.lock = new ReadWriteLock()
 
-    const dispose = (key: string): void => {
+    this.lruStorage = createCountedLRU(this.counters, storageOptions, key => {
       this.keyToBeDeleted = key
-      this.counters.countDisposed()
-    }
-
-    const lruOptions = {
-      ...storageOptions,
-      dispose,
-      noDisposeOnSet: true,
-    }
-
-    this.lruStorage = new LRU<string, number>(lruOptions)
+    })
 
     if (metricName) {
       registerCacheForTracking(metricName, this)
@@ -42,32 +34,9 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
 
   public has = (key: string): boolean => this.lruStorage.has(key)
 
-  public getStats = (name='disk-lru-cache'): LRUStats => {
-    const { disposed, hits, total } = this.counters.windowed()
-    return {
-      disposedItems: disposed,
-      hitRate: total > 0 ? hits / total : undefined,
-      hits,
-      itemCount: this.lruStorage.itemCount,
-      length: this.lruStorage.length,
-      max: this.lruStorage.max,
-      name,
-      total,
-    }
-  }
+  public getStats = (name='disk-lru-cache'): LRUStats => windowedLRUStats(this.counters, this.lruStorage, name)
 
-  public getCumulativeStats = (): CumulativeStats => {
-    const { disposed, hits, misses, total } = this.counters.cumulative()
-    return {
-      disposedItems: disposed,
-      hits,
-      itemCount: this.lruStorage.itemCount,
-      length: this.lruStorage.length,
-      max: this.lruStorage.max,
-      misses,
-      total,
-    }
-  }
+  public getCumulativeStats = (): CumulativeStats => cumulativeLRUStats(this.counters, this.lruStorage)
 
   public get = async (key: string): Promise<V | void>  => {
     const timeOfDeath = this.lruStorage.get(key)

@@ -1,5 +1,6 @@
 import LRU from 'lru-cache'
 import { CacheLayer } from './CacheLayer'
+import { createCountedLRU, cumulativeLRUStats, windowedLRUStats } from './countedLRU'
 import { MultilayeredCache } from './MultilayeredCache'
 import { registerCacheForTracking } from './trackingRegistry'
 import { CumulativeStats, FetchResult, LRUCacheOptions, LRUStats } from './typings'
@@ -14,11 +15,7 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
     const { metricName, ...lruOptions } = options
 
     this.counters = new WindowedCounters()
-    this.storage = new LRU({
-      ...lruOptions,
-      dispose: () => this.counters.countDisposed(),
-      noDisposeOnSet: true,
-    })
+    this.storage = createCountedLRU(this.counters, lruOptions)
     // The internal multilayer gets no metricName: registering it would count the
     // getOrSet reads twice, once here and once there.
     this.multilayer = new MultilayeredCache([this])
@@ -45,30 +42,7 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
 
   public has = (key: K): boolean => this.storage.has(key)
 
-  public getStats = (name='lru-cache'): LRUStats => {
-    const { disposed, hits, total } = this.counters.windowed()
-    return {
-      disposedItems: disposed,
-      hitRate: total > 0 ? hits / total : undefined,
-      hits,
-      itemCount: this.storage.itemCount,
-      length: this.storage.length,
-      max: this.storage.max,
-      name,
-      total,
-    }
-  }
+  public getStats = (name='lru-cache'): LRUStats => windowedLRUStats(this.counters, this.storage, name)
 
-  public getCumulativeStats = (): CumulativeStats => {
-    const { disposed, hits, misses, total } = this.counters.cumulative()
-    return {
-      disposedItems: disposed,
-      hits,
-      itemCount: this.storage.itemCount,
-      length: this.storage.length,
-      max: this.storage.max,
-      misses,
-      total,
-    }
-  }
+  public getCumulativeStats = (): CumulativeStats => cumulativeLRUStats(this.counters, this.storage)
 }
