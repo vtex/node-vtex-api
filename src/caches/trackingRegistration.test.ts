@@ -1,38 +1,55 @@
+import { resetCacheNamingForTests } from './cacheNaming'
 import { DiskCache } from './DiskCache'
 import { LRUCache } from './LRUCache'
 import { LRUDiskCache } from './LRUDiskCache'
 import { MultilayeredCache } from './MultilayeredCache'
 import { resetCacheTrackingRegistryForTests, subscribeToCacheTracking } from './trackingRegistry'
 
-// The metricName constructor option: each cache class self-registers at construction
-// time, so apps never call DiagnosticsMetrics.trackCache() for them by hand.
-describe('metricName constructor option', () => {
+// How the four cache classes land in the tracking registry: an explicit metricName,
+// a callsite-derived name when there is none, and nothing at all when opted out.
+describe('cache tracking registration', () => {
   let registrations: Array<[string, unknown]>
 
   beforeEach(() => {
     resetCacheTrackingRegistryForTests()
+    resetCacheNamingForTests()
     registrations = []
-    subscribeToCacheTracking((name, cache) => registrations.push([name, cache]))
+    subscribeToCacheTracking(event => registrations.push([event.name, event.cache]))
   })
 
-  it('registers an LRUCache built with metricName', () => {
+  it('registers an LRUCache built with metricName under that name', () => {
     const cache = new LRUCache<string, number>({ max: 10, metricName: 'pages' })
 
     expect(registrations).toEqual([['pages', cache]])
   })
 
-  it('does not register an LRUCache without metricName', () => {
-    // tslint:disable-next-line:no-unused-expression
-    new LRUCache<string, number>({ max: 10 })
+  it('derives a callsite name for an LRUCache built without metricName', () => {
+    const cache = new LRUCache<string, number>({ max: 10 })
+
+    expect(registrations).toEqual([['src/caches/trackingRegistration.test.ts', cache]])
+  })
+
+  it('suffixes the derived name of a second unnamed cache from the same file', () => {
+    new LRUCache<string, number>({ max: 10 }) // tslint:disable-line:no-unused-expression
+    const second = new LRUCache<string, number>({ max: 10 })
+
+    expect(registrations.map(([name]) => name)).toEqual([
+      'src/caches/trackingRegistration.test.ts',
+      'src/caches/trackingRegistration.test.ts#2',
+    ])
+    expect(registrations[1][1]).toBe(second)
+  })
+
+  it('does not register a cache built with metricName: false', () => {
+    new LRUCache<string, number>({ max: 10, metricName: false }) // tslint:disable-line:no-unused-expression
 
     expect(registrations).toEqual([])
   })
 
   it('does not register the multilayer an LRUCache builds internally', () => {
-    // The internal MultilayeredCache wraps the LRUCache itself: registering it would
-    // count the getOrSet reads twice, once per wrapper.
-    // tslint:disable-next-line:no-unused-expression
-    new LRUCache<string, number>({ max: 10, metricName: 'pages' })
+    // The internal MultilayeredCache wraps the LRUCache itself and opts out:
+    // registering it would count the getOrSet reads twice, once per wrapper.
+    new LRUCache<string, number>({ max: 10, metricName: 'pages' }) // tslint:disable-line:no-unused-expression
 
     expect(registrations).toHaveLength(1)
     expect(registrations[0][0]).toBe('pages')
@@ -59,7 +76,7 @@ describe('metricName constructor option', () => {
   })
 
   it('registers a MultilayeredCache built with metricName', () => {
-    const layer = new LRUCache<string, number>({ max: 10 })
+    const layer = new LRUCache<string, number>({ max: 10, metricName: false })
     const cache = new MultilayeredCache<string, number>([layer], { metricName: 'layered' })
 
     expect(registrations).toEqual([['layered', cache]])

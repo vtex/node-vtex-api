@@ -10,6 +10,7 @@ import {
   ObservableResult,
 } from '@opentelemetry/api'
 import { Types } from '@vtex/diagnostics-nodejs'
+import { CacheNameSource, outranks } from '../caches/cacheNaming'
 import { subscribeToCacheTracking } from '../caches/trackingRegistry'
 import { CumulativeStats } from '../caches/typings'
 import { LINKED, METRIC_CLIENT_INIT_TIMEOUT_MS } from '../constants'
@@ -50,10 +51,12 @@ export interface TrackedCache {
   getCumulativeStats(): CumulativeStats
 }
 
-// One registered cache. The disposer holds its own entry so a later registration of
-// the same name owns the collection, the same way ObservableRegistration does.
+// One registered cache, tagged with the origin of its name. The disposer holds its
+// own entry so a later registration of the same name owns the collection, the same
+// way ObservableRegistration does.
 interface CacheRegistration {
   cache: TrackedCache
+  source: CacheNameSource
 }
 
 // ObservableGauge and ObservableCounter are both just Observable in the OTel API,
@@ -225,10 +228,11 @@ export class DiagnosticsMetrics {
   private readonly observableInstruments: Record<ObservableKind, Map<string, ObservableInstrument>>
 
   // trackCache() state: registered caches and the shared instruments. trackedCaches
-  // maps each instance to the name it took, so the same cache cannot be tracked under
-  // two names (which would publish the same counters as two different series).
+  // maps each instance to the name (and its origin) it took, so the same cache
+  // cannot be tracked under two names — which would publish the same counters as
+  // two different series — while a stronger origin can still rename it.
   private readonly cacheRegistry: Map<string, CacheRegistration>
-  private readonly trackedCaches: WeakMap<TrackedCache, string>
+  private readonly trackedCaches: WeakMap<TrackedCache, { name: string, source: CacheNameSource }>
   private cacheInstruments: {
     capacity: ObservableGauge
     disposed: ObservableCounter
@@ -244,12 +248,15 @@ export class DiagnosticsMetrics {
     this.cacheRegistry = new Map()
     this.trackedCaches = new WeakMap()
 
-    // Caches built with the metricName option self-register at construction time,
-    // possibly before this instance (or the client) exists; the subscription drains
-    // those and reports every later one. Each entry goes through trackCache(), so
-    // the pending-until-ready handling below applies unchanged.
-    subscribeToCacheTracking((name, cache) => {
-      this.trackCache(name, cache)
+    // Caches self-register at construction time, possibly before this instance (or
+    // the client) exists; the subscription drains those and reports every later
+    // one, including renames to a stronger name. Each event goes through
+    // trackCache(), so the pending-until-ready handling below applies unchanged.
+    subscribeToCacheTracking(({ name, previousName, cache, source }) => {
+      if (previousName && previousName !== name) {
+        this.untrackCache(previousName, cache)
+      }
+      this.trackCacheAs(name, cache, source)
     })
 
     this.initMetricClient()
@@ -651,9 +658,13 @@ export class DiagnosticsMetrics {
 
   // Replacement for the legacy MetricsAccumulator.trackCache() over the same cache
   // instances; reads getCumulativeStats(), which has no side effects. See METRICS_CATALOG.md.
-  // Apps building caches from this package's classes should prefer the metricName
-  // constructor option, which registers through this same method automatically.
+  // A manual call is an explicit name: it renames a cache that only has a derived
+  // one (callsite or client), and is never overridden by a derived one.
   public trackCache(name: string, cacheInstance: TrackedCache): () => void {
+    return this.trackCacheAs(name, cacheInstance, 'explicit')
+  }
+
+  private trackCacheAs(name: string, cacheInstance: TrackedCache, source: CacheNameSource): () => void {
     // TrackedCache is a compile-time contract only: a JS caller, or a cache built by
     // another copy of @vtex/api, would otherwise throw on every collection cycle.
     if (typeof cacheInstance?.getCumulativeStats !== 'function') {
@@ -663,15 +674,23 @@ export class DiagnosticsMetrics {
       return () => undefined
     }
 
-    // One name per instance. Re-registering under the same name keeps the existing
-    // replace semantics; under another name it would count the same counters twice.
-    const trackedAs = this.trackedCaches.get(cacheInstance)
-    if (trackedAs !== undefined && trackedAs !== name) {
-      console.error(
-        `DiagnosticsMetrics: this cache instance is already tracked as '${trackedAs}'; ` +
-        `ignoring the registration as '${name}'. A double registration would publish the same counters twice.`
-      )
-      return () => undefined
+    // One name per instance. Re-registering under the same name keeps the replace
+    // semantics (the new registration owns the entry and the old disposer goes
+    // inert); a stronger origin renames the instance; a weaker one is ignored.
+    // Two explicit names would count the same counters twice.
+    const tracked = this.trackedCaches.get(cacheInstance)
+    if (tracked && tracked.name !== name) {
+      if (!outranks(source, tracked.source)) {
+        if (source === 'explicit' && tracked.source === 'explicit') {
+          console.error(
+            `DiagnosticsMetrics: this cache instance is already tracked as '${tracked.name}'; ` +
+            `ignoring the registration as '${name}'. A double registration would publish the same counters twice.`
+          )
+        }
+        return () => undefined
+      }
+
+      this.cacheRegistry.delete(tracked.name)
     }
 
     // The name moved to a different instance: free the previous one to be tracked again.
@@ -680,14 +699,26 @@ export class DiagnosticsMetrics {
       this.trackedCaches.delete(previous.cache)
     }
 
-    const registration: CacheRegistration = { cache: cacheInstance }
+    const registration: CacheRegistration = { cache: cacheInstance, source }
     this.cacheRegistry.set(name, registration)
-    this.trackedCaches.set(cacheInstance, name)
+    this.trackedCaches.set(cacheInstance, { name, source })
     this.ensureCacheInstruments()
 
     return releaseIfOwner(this.cacheRegistry, name, registration, () => {
       this.trackedCaches.delete(cacheInstance)
     })
+  }
+
+  // Drops the registration of `name` when it still points at `cache`. Renames route
+  // here so the weaker name stops being read before the stronger one starts.
+  private untrackCache(name: string, cache: TrackedCache): void {
+    const registration = this.cacheRegistry.get(name)
+    if (!registration || registration.cache !== cache) {
+      return
+    }
+
+    this.cacheRegistry.delete(name)
+    this.trackedCaches.delete(cache)
   }
 
   private ensureCacheInstruments(): void {

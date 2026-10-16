@@ -1,5 +1,6 @@
 import { any, map, slice } from 'ramda'
 import { CacheLayer } from './CacheLayer'
+import { resolveCacheTracking } from './cacheNaming'
 import { registerCacheForTracking } from './trackingRegistry'
 import { CacheTrackingOptions, CumulativeStats, FetchResult, MultilayerStats } from './typings'
 import { WindowedCounters } from './WindowedCounters'
@@ -9,8 +10,9 @@ export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
   private readonly counters = new WindowedCounters()
 
   constructor (private caches: Array<CacheLayer<K, V>>, options: CacheTrackingOptions = {}) {
-    if (options.metricName) {
-      registerCacheForTracking(options.metricName, this)
+    const tracking = resolveCacheTracking(options.metricName)
+    if (tracking) {
+      registerCacheForTracking(tracking.name, this, tracking.source)
     }
   }
 

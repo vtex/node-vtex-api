@@ -1,4 +1,5 @@
 import { CacheLayer } from './CacheLayer'
+import { resolveCacheTracking } from './cacheNaming'
 import { createCountedLRU, cumulativeLRUStats, windowedLRUStats } from './countedLRU'
 import { registerCacheForTracking } from './trackingRegistry'
 import { CumulativeStats, LRUDiskCacheOptions, LRUStats } from './typings'
@@ -27,8 +28,9 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
       this.keyToBeDeleted = key
     })
 
-    if (metricName) {
-      registerCacheForTracking(metricName, this)
+    const tracking = resolveCacheTracking(metricName)
+    if (tracking) {
+      registerCacheForTracking(tracking.name, this, tracking.source)
     }
   }
 

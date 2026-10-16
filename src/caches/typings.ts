@@ -70,22 +70,30 @@ export type LRUDiskCacheOptions = {
    */
   stale?: boolean,
   /**
-   * Registers the cache for observable metrics under this name at construction
-   * time, so the app does not call DiagnosticsMetrics.trackCache() by hand.
-   * See docs/METRICS_CATALOG.md, "Cache Metrics (Observable)".
+   * Observable-metrics name for this cache. A string registers it under that
+   * name at construction time, so the app does not call
+   * DiagnosticsMetrics.trackCache() by hand; false opts the cache out of
+   * tracking entirely. Left undefined, a name is derived from the construction
+   * callsite (and upgraded to the client's name if the cache becomes an
+   * HttpClient's memoryCache). See docs/METRICS_CATALOG.md, "Cache Metrics
+   * (Observable)".
    */
-  metricName?: string,
+  metricName?: string | false,
 }
 
 // LRUCache takes lru-cache's own options plus the metricName registration option.
 // tslint:disable-next-line:interface-over-type-literal
 export type LRUCacheOptions<K, V> = LRU.Options<K, V> & {
   /**
-   * Registers the cache for observable metrics under this name at construction
-   * time, so the app does not call DiagnosticsMetrics.trackCache() by hand.
-   * See docs/METRICS_CATALOG.md, "Cache Metrics (Observable)".
+   * Observable-metrics name for this cache. A string registers it under that
+   * name at construction time, so the app does not call
+   * DiagnosticsMetrics.trackCache() by hand; false opts the cache out of
+   * tracking entirely. Left undefined, a name is derived from the construction
+   * callsite (and upgraded to the client's name if the cache becomes an
+   * HttpClient's memoryCache). See docs/METRICS_CATALOG.md, "Cache Metrics
+   * (Observable)".
    */
-  metricName?: string,
+  metricName?: string | false,
 }
 
 // MultilayeredCache and DiskCache take no lru-cache options, so the registration
@@ -93,9 +101,13 @@ export type LRUCacheOptions<K, V> = LRU.Options<K, V> & {
 // tslint:disable-next-line:interface-over-type-literal
 export type CacheTrackingOptions = {
   /**
-   * Registers the cache for observable metrics under this name at construction
-   * time, so the app does not call DiagnosticsMetrics.trackCache() by hand.
-   * See docs/METRICS_CATALOG.md, "Cache Metrics (Observable)".
+   * Observable-metrics name for this cache. A string registers it under that
+   * name at construction time, so the app does not call
+   * DiagnosticsMetrics.trackCache() by hand; false opts the cache out of
+   * tracking entirely. Left undefined, a name is derived from the construction
+   * callsite (and upgraded to the client's name if the cache becomes an
+   * HttpClient's memoryCache). See docs/METRICS_CATALOG.md, "Cache Metrics
+   * (Observable)".
    */
-  metricName?: string,
+  metricName?: string | false,
 }

@@ -2,10 +2,11 @@ import { Metrics, Types } from '@vtex/diagnostics-nodejs'
 import { context, ObservableCallback } from '@opentelemetry/api'
 import { AsyncHooksContextManager } from '@opentelemetry/context-async-hooks'
 import { AggregationTemporality, InMemoryMetricExporter, MeterProvider, PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics'
+import { resetCacheNamingForTests } from '../caches/cacheNaming'
 import { DiskCache } from '../caches/DiskCache'
 import { LRUCache } from '../caches/LRUCache'
 import { LRUDiskCache } from '../caches/LRUDiskCache'
-import { resetCacheTrackingRegistryForTests } from '../caches/trackingRegistry'
+import { registerCacheForTracking, resetCacheTrackingRegistryForTests } from '../caches/trackingRegistry'
 import { CumulativeStats } from '../caches/typings'
 import { DiagnosticsMetrics, TrackedCache } from './DiagnosticsMetrics'
 
@@ -37,7 +38,9 @@ describe('DiagnosticsMetrics', () => {
   beforeEach(() => {
     // Every instance subscribes to the process-wide tracking registry in its
     // constructor; start each test from a clean one so registrations never leak.
+    // The callsite ordinals reset too, or derived names depend on test order.
     resetCacheTrackingRegistryForTests()
+    resetCacheNamingForTests()
 
     // Reset call tracking
     recordedHistogramCalls = []
@@ -1569,6 +1572,66 @@ describe('DiagnosticsMetrics', () => {
 
         const ops = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
         expect(ops).toContainEqual({ value: 1, attributes: { cache: 'pages', cache_state: 'hit' } })
+      })
+    })
+
+    describe('name origins (derived names and upgrades)', () => {
+      it('tracks an unnamed cache under its callsite-derived name', async () => {
+        const cache = new LRUCache<string, number>({ max: 10 })
+        cache.set('a', 1)
+        cache.get('a')
+
+        const ops = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
+        expect(ops).toContainEqual({
+          value: 1,
+          attributes: { cache: 'src/metrics/DiagnosticsMetrics.test.ts', cache_state: 'hit' },
+        })
+      })
+
+      it('renames an unnamed cache when a manual trackCache gives it an explicit name', async () => {
+        const cache = new LRUCache<string, number>({ max: 10 })
+        cache.set('a', 1)
+        cache.get('a')
+
+        cacheDiagnostics.trackCache('pages', cache)
+
+        const ops = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
+        expect(ops).toContainEqual({ value: 1, attributes: { cache: 'pages', cache_state: 'hit' } })
+        expect(ops.every(point => point.attributes.cache === 'pages')).toBe(true)
+      })
+
+      it('renames an unnamed cache when a client name arrives through the registry', async () => {
+        const cache = new LRUCache<string, number>({ max: 10 })
+        cache.set('a', 1)
+        cache.get('a')
+
+        // The HttpClient hook registers memoryCaches under the client class name.
+        registerCacheForTracking('Apps', cache, 'client')
+
+        const ops = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
+        expect(ops).toContainEqual({ value: 1, attributes: { cache: 'Apps', cache_state: 'hit' } })
+        expect(ops.every(point => point.attributes.cache === 'Apps')).toBe(true)
+      })
+
+      it('keeps an explicit metricName when a client name arrives later', async () => {
+        const cache = new LRUCache<string, number>({ max: 10, metricName: 'pages' })
+        cache.set('a', 1)
+        cache.get('a')
+
+        registerCacheForTracking('Apps', cache, 'client')
+
+        const ops = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
+        expect(ops).toContainEqual({ value: 1, attributes: { cache: 'pages', cache_state: 'hit' } })
+        expect(ops.every(point => point.attributes.cache === 'pages')).toBe(true)
+      })
+
+      it('never tracks a cache built with metricName: false', async () => {
+        const cache = new LRUCache<string, number>({ max: 10, metricName: false })
+        cache.set('a', 1)
+        cache.get('a')
+
+        const result = await reader.collect()
+        expect(allMetricNamesIn(result)).not.toContain('io_app_cache_operations_total')
       })
     })
 

@@ -1,5 +1,6 @@
 import LRU from 'lru-cache'
 import { CacheLayer } from './CacheLayer'
+import { resolveCacheTracking } from './cacheNaming'
 import { createCountedLRU, cumulativeLRUStats, windowedLRUStats } from './countedLRU'
 import { MultilayeredCache } from './MultilayeredCache'
 import { registerCacheForTracking } from './trackingRegistry'
@@ -16,12 +17,13 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
 
     this.counters = new WindowedCounters()
     this.storage = createCountedLRU(this.counters, lruOptions)
-    // The internal multilayer gets no metricName: registering it would count the
-    // getOrSet reads twice, once here and once there.
-    this.multilayer = new MultilayeredCache([this])
+    // The internal multilayer opts out of tracking: its getOrSet reads are
+    // already counted by this LRUCache, so registering it would count them twice.
+    this.multilayer = new MultilayeredCache([this], { metricName: false })
 
-    if (metricName) {
-      registerCacheForTracking(metricName, this)
+    const tracking = resolveCacheTracking(metricName)
+    if (tracking) {
+      registerCacheForTracking(tracking.name, this, tracking.source)
     }
   }
 

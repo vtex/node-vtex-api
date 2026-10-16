@@ -1,4 +1,5 @@
 import { CacheLayer } from './CacheLayer'
+import { resolveCacheTracking } from './cacheNaming'
 import { registerCacheForTracking } from './trackingRegistry'
 import { CacheTrackingOptions, CumulativeStats, DiskStats } from './typings'
 import { WindowedCounters } from './WindowedCounters'
@@ -15,8 +16,9 @@ export class DiskCache<V> implements CacheLayer<string, V>{
   constructor(private cachePath: string, private readFile=readJSON, private writeFile=outputJSON, options: CacheTrackingOptions = {}) {
     this.lock = new ReadWriteLock()
 
-    if (options.metricName) {
-      registerCacheForTracking(options.metricName, this)
+    const tracking = resolveCacheTracking(options.metricName)
+    if (tracking) {
+      registerCacheForTracking(tracking.name, this, tracking.source)
     }
   }
 
