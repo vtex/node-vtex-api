@@ -1,5 +1,7 @@
 import { CacheLayer } from './CacheLayer'
-import { CumulativeStats, DiskStats } from './typings'
+import { resolveCacheTracking } from './cacheNaming'
+import { registerCacheForTracking } from './trackingRegistry'
+import { CacheTrackingOptions, CumulativeStats, DiskStats } from './typings'
 import { WindowedCounters } from './WindowedCounters'
 
 import { outputJSON, pathExistsSync, readJSON } from 'fs-extra'
@@ -11,8 +13,13 @@ export class DiskCache<V> implements CacheLayer<string, V>{
   private readonly counters = new WindowedCounters()
   private lock: ReadWriteLock
 
-  constructor(private cachePath: string, private readFile=readJSON, private writeFile=outputJSON) {
+  constructor(private cachePath: string, private readFile=readJSON, private writeFile=outputJSON, options: CacheTrackingOptions = {}) {
     this.lock = new ReadWriteLock()
+
+    const tracking = resolveCacheTracking(options.metricName)
+    if (tracking) {
+      registerCacheForTracking(tracking.name, this, tracking.source)
+    }
   }
 
   public has = (key: string): boolean => {

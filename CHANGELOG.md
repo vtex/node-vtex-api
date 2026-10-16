@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Every cache built from `LRUCache`, `LRUDiskCache`, `DiskCache` or `MultilayeredCache`
+  is now tracked for the observable `io_app_cache_*` metrics automatically, through a
+  process-wide registry that `DiagnosticsMetrics` drains — no `trackCache()` call and
+  no probe. The series name comes from, strongest first: the `metricName` constructor
+  option, the client class name when the cache is a client's `memoryCache`, or a
+  callsite-derived fallback. `metricName: false` opts a cache out
+- `DiagnosticsMetrics.trackCache()` now refuses to track the same instance under a
+  second explicit name, so a `metricName` plus a leftover manual call during a
+  migration cannot publish the same counters twice; a stronger name origin renames a
+  weaker one
+- The runtime's own caches are tracked out of the box: `console-log-history` and
+  `graphql-document-storage`
+
 ## [7.6.0]
 
 ### Added
