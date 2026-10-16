@@ -182,16 +182,27 @@ global.diagnosticsMetrics.setGauge('cache_items_current', stats.size, {
 metrics.trackCache('pages', pagesCacheStorage)
 ```
 
-**After:**
+**After (from 7.7.0, for caches built from this package's classes):**
+```typescript
+// The name travels with the cache: no registration call, no probe, no disposer.
+const pagesCacheStorage = new LRUCache<string, Cached>({
+  max: 3000,
+  metricName: 'pages',
+})
+```
+
+**After (7.6.0, or for any other object implementing `getCumulativeStats()`):**
 ```typescript
 // Same registration call, same cache instance — DiagnosticsMetrics reads
 // getCumulativeStats() on the OTel SDK's own collection schedule, not per flush.
 const dispose = global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)
 ```
 
-This is a direct replacement, not a manual re-implementation with `incrementCounter`/`setGauge` (Pattern 4's approach) — `trackCache()` reads the cache exactly once per collection cycle no matter how many metrics it produces from it.
+This is a direct replacement, not a manual re-implementation with `incrementCounter`/`setGauge` (Pattern 4's approach) — the registered cache is read exactly once per collection cycle no matter how many metrics it produces.
 
-**Probe the method, not the global, before calling on a runtime you don't control.** `global.diagnosticsMetrics` exists since 7.3.0, but `trackCache()` only arrives in 7.6.0 — and in production the runtime supplies the `@vtex/api` your app runs on, not your lockfile. On a runtime in between, the global is there and the method is not, and a call at module load dies with `TypeError: diagnosticsMetrics.trackCache is not a function` before the app serves a single request. Optional chaining on the global (`global.diagnosticsMetrics?.trackCache(...)`) does not help there — it skips the absent *global*, not the absent *method*. Detect the facade without an exception like this:
+With `metricName` there is nothing to probe: the option is a plain property an older runtime simply ignores (the cache works, no series is published), and registration is order-independent — a module-level cache constructed before `startApp()` creates the metrics global is drained from a process-wide registry once `DiagnosticsMetrics` exists. `LRUCache`, `LRUDiskCache`, `DiskCache` and `MultilayeredCache` all accept it. One instance publishes under one name: if a leftover manual `trackCache()` calls the same instance under another name during a migration, the second registration is refused with an error instead of counting the same counters twice.
+
+**Calling `trackCache()` yourself? Probe the method, not the global, on a runtime you don't control.** `global.diagnosticsMetrics` exists since 7.3.0, but `trackCache()` only arrives in 7.6.0 — and in production the runtime supplies the `@vtex/api` your app runs on, not your lockfile. On a runtime in between, the global is there and the method is not, and a call at module load dies with `TypeError: diagnosticsMetrics.trackCache is not a function` before the app serves a single request. Optional chaining on the global (`global.diagnosticsMetrics?.trackCache(...)`) does not help there — it skips the absent *global*, not the absent *method*. Detect the facade without an exception like this:
 
 ```typescript
 if (typeof global.diagnosticsMetrics?.trackCache === 'function') {

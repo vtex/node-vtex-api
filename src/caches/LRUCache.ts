@@ -1,7 +1,8 @@
 import LRU from 'lru-cache'
 import { CacheLayer } from './CacheLayer'
 import { MultilayeredCache } from './MultilayeredCache'
-import { CumulativeStats, FetchResult, LRUStats } from './typings'
+import { registerCacheForTracking } from './trackingRegistry'
+import { CumulativeStats, FetchResult, LRUCacheOptions, LRUStats } from './typings'
 import { WindowedCounters } from './WindowedCounters'
 
 export class LRUCache <K, V> implements CacheLayer<K, V>{
@@ -9,14 +10,22 @@ export class LRUCache <K, V> implements CacheLayer<K, V>{
   private storage: LRU<K, V>
   private readonly counters: WindowedCounters
 
-  constructor (options: LRU.Options<K, V>) {
+  constructor (options: LRUCacheOptions<K, V>) {
+    const { metricName, ...lruOptions } = options
+
     this.counters = new WindowedCounters()
     this.storage = new LRU({
-      ...options,
+      ...lruOptions,
       dispose: () => this.counters.countDisposed(),
       noDisposeOnSet: true,
     })
+    // The internal multilayer gets no metricName: registering it would count the
+    // getOrSet reads twice, once here and once there.
     this.multilayer = new MultilayeredCache([this])
+
+    if (metricName) {
+      registerCacheForTracking(metricName, this)
+    }
   }
 
   public get = (key: K): V | void => {

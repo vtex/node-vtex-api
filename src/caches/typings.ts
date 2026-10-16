@@ -1,3 +1,5 @@
+import LRU from 'lru-cache'
+
 // tslint:disable-next-line:interface-over-type-literal
 export type FetchResult<V> = {
   value: V,
@@ -67,4 +69,33 @@ export type LRUDiskCacheOptions = {
    * as if it had already been deleted.
    */
   stale?: boolean,
+  /**
+   * Registers the cache for observable metrics under this name at construction
+   * time, so the app does not call DiagnosticsMetrics.trackCache() by hand.
+   * See docs/METRICS_CATALOG.md, "Cache Metrics (Observable)".
+   */
+  metricName?: string,
+}
+
+// LRUCache takes lru-cache's own options plus the metricName registration option.
+// tslint:disable-next-line:interface-over-type-literal
+export type LRUCacheOptions<K, V> = LRU.Options<K, V> & {
+  /**
+   * Registers the cache for observable metrics under this name at construction
+   * time, so the app does not call DiagnosticsMetrics.trackCache() by hand.
+   * See docs/METRICS_CATALOG.md, "Cache Metrics (Observable)".
+   */
+  metricName?: string,
+}
+
+// MultilayeredCache and DiskCache take no lru-cache options, so the registration
+// option arrives on its own.
+// tslint:disable-next-line:interface-over-type-literal
+export type CacheTrackingOptions = {
+  /**
+   * Registers the cache for observable metrics under this name at construction
+   * time, so the app does not call DiagnosticsMetrics.trackCache() by hand.
+   * See docs/METRICS_CATALOG.md, "Cache Metrics (Observable)".
+   */
+  metricName?: string,
 }

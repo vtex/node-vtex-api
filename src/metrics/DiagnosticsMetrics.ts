@@ -10,6 +10,7 @@ import {
   ObservableResult,
 } from '@opentelemetry/api'
 import { Types } from '@vtex/diagnostics-nodejs'
+import { subscribeToCacheTracking } from '../caches/trackingRegistry'
 import { CumulativeStats } from '../caches/typings'
 import { LINKED, METRIC_CLIENT_INIT_TIMEOUT_MS } from '../constants'
 import { getMetricClient } from '../service/metrics/client'
@@ -223,8 +224,11 @@ export class DiagnosticsMetrics {
   private readonly observableRegistrations: Record<ObservableKind, Map<string, ObservableRegistration>>
   private readonly observableInstruments: Record<ObservableKind, Map<string, ObservableInstrument>>
 
-  // trackCache() state: registered caches and the shared instruments.
+  // trackCache() state: registered caches and the shared instruments. trackedCaches
+  // maps each instance to the name it took, so the same cache cannot be tracked under
+  // two names (which would publish the same counters as two different series).
   private readonly cacheRegistry: Map<string, CacheRegistration>
+  private readonly trackedCaches: WeakMap<TrackedCache, string>
   private cacheInstruments: {
     capacity: ObservableGauge
     disposed: ObservableCounter
@@ -238,6 +242,16 @@ export class DiagnosticsMetrics {
     this.observableRegistrations = { gauge: new Map(), counter: new Map() }
     this.observableInstruments = { gauge: new Map(), counter: new Map() }
     this.cacheRegistry = new Map()
+    this.trackedCaches = new WeakMap()
+
+    // Caches built with the metricName option self-register at construction time,
+    // possibly before this instance (or the client) exists; the subscription drains
+    // those and reports every later one. Each entry goes through trackCache(), so
+    // the pending-until-ready handling below applies unchanged.
+    subscribeToCacheTracking((name, cache) => {
+      this.trackCache(name, cache)
+    })
+
     this.initMetricClient()
   }
 
@@ -637,6 +651,8 @@ export class DiagnosticsMetrics {
 
   // Replacement for the legacy MetricsAccumulator.trackCache() over the same cache
   // instances; reads getCumulativeStats(), which has no side effects. See METRICS_CATALOG.md.
+  // Apps building caches from this package's classes should prefer the metricName
+  // constructor option, which registers through this same method automatically.
   public trackCache(name: string, cacheInstance: TrackedCache): () => void {
     // TrackedCache is a compile-time contract only: a JS caller, or a cache built by
     // another copy of @vtex/api, would otherwise throw on every collection cycle.
@@ -647,11 +663,31 @@ export class DiagnosticsMetrics {
       return () => undefined
     }
 
+    // One name per instance. Re-registering under the same name keeps the existing
+    // replace semantics; under another name it would count the same counters twice.
+    const trackedAs = this.trackedCaches.get(cacheInstance)
+    if (trackedAs !== undefined && trackedAs !== name) {
+      console.error(
+        `DiagnosticsMetrics: this cache instance is already tracked as '${trackedAs}'; ` +
+        `ignoring the registration as '${name}'. A double registration would publish the same counters twice.`
+      )
+      return () => undefined
+    }
+
+    // The name moved to a different instance: free the previous one to be tracked again.
+    const previous = this.cacheRegistry.get(name)
+    if (previous && previous.cache !== cacheInstance) {
+      this.trackedCaches.delete(previous.cache)
+    }
+
     const registration: CacheRegistration = { cache: cacheInstance }
     this.cacheRegistry.set(name, registration)
+    this.trackedCaches.set(cacheInstance, name)
     this.ensureCacheInstruments()
 
-    return releaseIfOwner(this.cacheRegistry, name, registration)
+    return releaseIfOwner(this.cacheRegistry, name, registration, () => {
+      this.trackedCaches.delete(cacheInstance)
+    })
   }
 
   private ensureCacheInstruments(): void {

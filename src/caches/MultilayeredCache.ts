@@ -1,13 +1,18 @@
 import { any, map, slice } from 'ramda'
 import { CacheLayer } from './CacheLayer'
-import { CumulativeStats, FetchResult, MultilayerStats } from './typings'
+import { registerCacheForTracking } from './trackingRegistry'
+import { CacheTrackingOptions, CumulativeStats, FetchResult, MultilayerStats } from './typings'
 import { WindowedCounters } from './WindowedCounters'
 
 export class MultilayeredCache <K, V> implements CacheLayer<K, V>{
 
   private readonly counters = new WindowedCounters()
 
-  constructor (private caches: Array<CacheLayer<K, V>>) {}
+  constructor (private caches: Array<CacheLayer<K, V>>, options: CacheTrackingOptions = {}) {
+    if (options.metricName) {
+      registerCacheForTracking(options.metricName, this)
+    }
+  }
 
   public get = async (key: K, fetcher?: () => Promise<FetchResult<V>>): Promise<V | void> => {
     let value: V | void = undefined

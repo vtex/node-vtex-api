@@ -5,6 +5,7 @@ import { AggregationTemporality, InMemoryMetricExporter, MeterProvider, Periodic
 import { DiskCache } from '../caches/DiskCache'
 import { LRUCache } from '../caches/LRUCache'
 import { LRUDiskCache } from '../caches/LRUDiskCache'
+import { resetCacheTrackingRegistryForTests } from '../caches/trackingRegistry'
 import { CumulativeStats } from '../caches/typings'
 import { DiagnosticsMetrics, TrackedCache } from './DiagnosticsMetrics'
 
@@ -34,6 +35,10 @@ describe('DiagnosticsMetrics', () => {
   let recordedGaugeCalls: Map<string, Array<{ value: number; attributes?: any }>>
 
   beforeEach(() => {
+    // Every instance subscribes to the process-wide tracking registry in its
+    // constructor; start each test from a clean one so registrations never leak.
+    resetCacheTrackingRegistryForTests()
+
     // Reset call tracking
     recordedHistogramCalls = []
     recordedCounterCalls = new Map()
@@ -62,6 +67,19 @@ describe('DiagnosticsMetrics', () => {
           recordedGaugeCalls.get(name)!.push({ value, attributes })
         },
       }),
+      // Observable stubs: every DiagnosticsMetrics instance subscribes to the
+      // process-wide tracking registry, so any cache built with metricName in a
+      // test reaches this client too — without these, ensureCacheInstruments throws.
+      createObservableCounter: (name: string) => ({
+        instrument: { addCallback: jest.fn(), removeCallback: jest.fn() },
+        remove: jest.fn(),
+      }),
+      createObservableGauge: (name: string) => ({
+        instrument: { addCallback: jest.fn(), removeCallback: jest.fn() },
+        remove: jest.fn(),
+      }),
+      addBatchObservableCallback: jest.fn(),
+      removeBatchObservableCallback: jest.fn(),
     } as any
 
     // Mock only the external call
@@ -1460,5 +1478,99 @@ describe('DiagnosticsMetrics', () => {
       disposeBroken() // avoid a second throw during afterEach's shutdown-triggered collect
       errorSpy.mockRestore()
     })
+
+    describe('cache auto-registration (metricName option)', () => {
+      // Same real-provider setup as the trackCache block: cacheDiagnostics exists from
+      // the outer beforeEach, subscribed to a clean tracking registry.
+      it('picks up a cache constructed after the DiagnosticsMetrics instance', async () => {
+        const cache = new LRUCache<string, number>({ max: 10, metricName: 'pages' })
+        cache.set('a', 1)
+        cache.get('a')
+        cache.get('absent')
+
+        const ops = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
+        expect(ops).toContainEqual({ value: 1, attributes: { cache: 'pages', cache_state: 'hit' } })
+        expect(ops).toContainEqual({ value: 1, attributes: { cache: 'pages', cache_state: 'miss' } })
+      })
+
+      it('drains a cache registered before the DiagnosticsMetrics instance existed', async () => {
+        // Module-level caches are constructed before startApp() creates the global:
+        // this is the ordering that makes the registry necessary at all.
+        resetCacheTrackingRegistryForTests()
+        const cache = new LRUCache<string, number>({ max: 10, metricName: 'early' })
+        cache.set('a', 1)
+        cache.get('a')
+
+        const late = new DiagnosticsMetrics()
+        await new Promise(resolve => setTimeout(resolve, 10))
+
+        const ops = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
+        expect(ops).toContainEqual({ value: 1, attributes: { cache: 'early', cache_state: 'hit' } })
+        expect(late).toBeDefined()
+      })
+
+      it('reports capacity and items for an auto-registered cache, through the shared instruments', async () => {
+        const cache = new LRUCache<string, number>({ max: 100, metricName: 'pages' })
+        cache.set('a', 1)
+
+        const result = await reader.collect()
+
+        expect(dataPointsIn(result, 'io_app_cache_items_current')).toEqual([
+          { value: 1, attributes: { cache: 'pages' } },
+        ])
+        expect(dataPointsIn(result, 'io_app_cache_capacity')).toEqual([
+          { value: 100, attributes: { cache: 'pages' } },
+        ])
+      })
+
+      it('refuses a manual trackCache of the same instance under another name', async () => {
+        // The migration hazard: metricName in the constructor plus a leftover manual
+        // trackCache() call. Two names for one instance would count the counters twice.
+        const errorSpy = jest.spyOn(console, 'error').mockImplementation()
+        const cache = new LRUCache<string, number>({ max: 10, metricName: 'pages' })
+        cache.set('a', 1)
+        cache.get('a')
+
+        cacheDiagnostics.trackCache('pages-cache', cache)
+
+        const result = await reader.collect()
+        const ops = dataPointsIn(result, 'io_app_cache_operations_total')
+
+        // Every published series carries the first name; nothing under 'pages-cache'.
+        expect(ops).toContainEqual({ value: 1, attributes: { cache: 'pages', cache_state: 'hit' } })
+        expect(ops.every(point => point.attributes.cache === 'pages')).toBe(true)
+        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("already tracked as 'pages'"))
+        errorSpy.mockRestore()
+      })
+
+      it('accepts a manual trackCache of the same instance under the same name', async () => {
+        const errorSpy = jest.spyOn(console, 'error').mockImplementation()
+        const cache = new LRUCache<string, number>({ max: 10, metricName: 'pages' })
+        cache.set('a', 1)
+        cache.get('a')
+
+        cacheDiagnostics.trackCache('pages', cache)
+
+        const result = await reader.collect()
+        const ops = dataPointsIn(result, 'io_app_cache_operations_total')
+
+        expect(ops).toContainEqual({ value: 1, attributes: { cache: 'pages', cache_state: 'hit' } })
+        expect(ops.every(point => point.attributes.cache === 'pages')).toBe(true)
+        expect(errorSpy).not.toHaveBeenCalled()
+        errorSpy.mockRestore()
+      })
+
+      it('lets a disposed cache be tracked again', async () => {
+        const cache = fakeCache([{ hits: 1, total: 1 }])
+
+        const dispose = cacheDiagnostics.trackCache('pages', cache)
+        dispose()
+        cacheDiagnostics.trackCache('pages', cache)
+
+        const ops = dataPointsIn(await reader.collect(), 'io_app_cache_operations_total')
+        expect(ops).toContainEqual({ value: 1, attributes: { cache: 'pages', cache_state: 'hit' } })
+      })
+    })
+
   })
 })

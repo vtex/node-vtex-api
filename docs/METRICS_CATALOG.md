@@ -269,11 +269,24 @@ Reads `getCumulativeStats()`, which has no side effects, so it can run alongside
 
 **A cache with no `max` reports `9007199254740991` (`Number.MAX_SAFE_INTEGER`).** `lru-cache@5` defaults `max` to `Infinity` for an unbounded cache, and a non-finite capacity is not publishable, so the sentinel stands in for it. Anything aggregating capacity MUST group by `cache`, or that sentinel poisons the aggregate into a meaningless number.
 
+**Caches built from this package's classes (`LRUCache`, `LRUDiskCache`, `DiskCache`, `MultilayeredCache`) need no registration call at all**: pass the name as the `metricName` constructor option and the cache registers itself at construction time, whether or not the metrics client exists yet.
+
+```typescript
+const pagesCacheStorage = new LRUCache<string, Cached>({
+  max: 3000,
+  metricName: 'pages',
+})
+```
+
+For a cache that doesn't come from these classes — anything implementing `getCumulativeStats()` — register it by hand:
+
 ```typescript
 const dispose = global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)
 ```
 
-> `trackCache()` exists from `@vtex/api` 7.6.0; the `diagnosticsMetrics` global from 7.3.0. On a runtime in between the global is present and the method is not — probe `typeof global.diagnosticsMetrics?.trackCache === 'function'` before calling on a runtime you don't control (see [METRICS_OVERVIEW.md](./METRICS_OVERVIEW.md), Pattern 5).
+> `metricName` exists from `@vtex/api` 7.7.0; on an older runtime the option is ignored and the cache simply publishes no series. `trackCache()` exists from 7.6.0; the `diagnosticsMetrics` global from 7.3.0. On a runtime in between the global is present and the method is not — probe `typeof global.diagnosticsMetrics?.trackCache === 'function'` before calling on a runtime you don't control (see [METRICS_OVERVIEW.md](./METRICS_OVERVIEW.md), Pattern 5).
+>
+> One instance, one name: an instance registered twice under different names (a `metricName` plus a leftover manual `trackCache()` during a migration) keeps its first name and the second registration is refused with an error, so the same counters can never be published as two series.
 
 ---
 

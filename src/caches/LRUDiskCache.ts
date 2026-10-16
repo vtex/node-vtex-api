@@ -1,4 +1,5 @@
 import { CacheLayer } from './CacheLayer'
+import { registerCacheForTracking } from './trackingRegistry'
 import { CumulativeStats, LRUDiskCacheOptions, LRUStats } from './typings'
 import { WindowedCounters } from './WindowedCounters'
 
@@ -15,6 +16,8 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
   private keyToBeDeleted: string
 
   constructor(private cachePath: string, options: LRUDiskCacheOptions, private readFile=readJSON, private writeFile=outputJSON) {
+    const { metricName, ...storageOptions } = options
+
     this.counters = new WindowedCounters()
     this.keyToBeDeleted = ''
     this.lock = new ReadWriteLock()
@@ -25,13 +28,16 @@ export class LRUDiskCache<V> implements CacheLayer<string, V>{
     }
 
     const lruOptions = {
-      ...options,
+      ...storageOptions,
       dispose,
       noDisposeOnSet: true,
     }
 
     this.lruStorage = new LRU<string, number>(lruOptions)
 
+    if (metricName) {
+      registerCacheForTracking(metricName, this)
+    }
   }
 
   public has = (key: string): boolean => this.lruStorage.has(key)

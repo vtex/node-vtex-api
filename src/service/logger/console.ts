@@ -11,6 +11,7 @@ export interface LogMessage {
 
 const history = new LRUCache<string, boolean>({
   max: 42,
+  metricName: 'console-log-history',
 })
 
 export const LOG_ONCE = 'logOnce'
