@@ -59,6 +59,13 @@ export class VBase extends InfraClient {
     }})
   }
 
+  /**
+   * @deprecated VBase is being deprecated for VTEX IO apps in favor of Master Data
+   * (see https://developers.vtex.com/updates/release-notes/2026-08-24-vtex-io-vbase-deprecation-master-data-migration).
+   * The VBase list-files route is only served for a hardcoded allowlist of apps and returns 404
+   * for all other apps, even when the files exist. To list files, keep a JSON index file in the
+   * bucket or migrate to Master Data.
+   */
   public listFiles = (bucket: string, opts?: string | VBaseOptions, tracingConfig?: RequestTracingConfig) => {
     let params: VBaseOptions = {}
     if (isVBaseOptions(opts)) {
