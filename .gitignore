@@ -43,4 +43,5 @@ package-lock.json
 yarn-error.log
 
 # AI IDE
-.cursor/
+.cursor/*
+!.cursor/mcp.json
