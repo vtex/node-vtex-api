@@ -59,6 +59,12 @@ export class VBase extends InfraClient {
     }})
   }
 
+  /**
+   * @deprecated The VBase list-files route is no longer maintained by VTEX, and only a few internal
+   * applications have access to due to needed backwards compatibility, reason why this interface
+   * remains in the code. Using this method will result in 404 by any caller, regardless of account
+   * and workspace.
+   */
   public listFiles = (bucket: string, opts?: string | VBaseOptions, tracingConfig?: RequestTracingConfig) => {
     let params: VBaseOptions = {}
     if (isVBaseOptions(opts)) {
