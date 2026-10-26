@@ -9,6 +9,7 @@ import { LRUCache } from './../../../../../caches/LRUCache'
 
 const documentStorage = new LRUCache<string, DocumentNode>({
   max: 500,
+  metricName: 'graphql-document-storage',
 })
 
 const queryFromUrl = (url: string) => {

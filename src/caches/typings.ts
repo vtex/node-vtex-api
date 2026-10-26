@@ -1,3 +1,5 @@
+import LRU from 'lru-cache'
+
 // tslint:disable-next-line:interface-over-type-literal
 export type FetchResult<V> = {
   value: V,
@@ -67,4 +69,45 @@ export type LRUDiskCacheOptions = {
    * as if it had already been deleted.
    */
   stale?: boolean,
+  /**
+   * Observable-metrics name for this cache. A string registers it under that
+   * name at construction time, so the app does not call
+   * DiagnosticsMetrics.trackCache() by hand; false opts the cache out of
+   * tracking entirely. Left undefined, a name is derived from the construction
+   * callsite (and upgraded to the client's name if the cache becomes an
+   * HttpClient's memoryCache). See docs/METRICS_CATALOG.md, "Cache Metrics
+   * (Observable)".
+   */
+  metricName?: string | false,
+}
+
+// LRUCache takes lru-cache's own options plus the metricName registration option.
+// tslint:disable-next-line:interface-over-type-literal
+export type LRUCacheOptions<K, V> = LRU.Options<K, V> & {
+  /**
+   * Observable-metrics name for this cache. A string registers it under that
+   * name at construction time, so the app does not call
+   * DiagnosticsMetrics.trackCache() by hand; false opts the cache out of
+   * tracking entirely. Left undefined, a name is derived from the construction
+   * callsite (and upgraded to the client's name if the cache becomes an
+   * HttpClient's memoryCache). See docs/METRICS_CATALOG.md, "Cache Metrics
+   * (Observable)".
+   */
+  metricName?: string | false,
+}
+
+// MultilayeredCache and DiskCache take no lru-cache options, so the registration
+// option arrives on its own.
+// tslint:disable-next-line:interface-over-type-literal
+export type CacheTrackingOptions = {
+  /**
+   * Observable-metrics name for this cache. A string registers it under that
+   * name at construction time, so the app does not call
+   * DiagnosticsMetrics.trackCache() by hand; false opts the cache out of
+   * tracking entirely. Left undefined, a name is derived from the construction
+   * callsite (and upgraded to the client's name if the cache becomes an
+   * HttpClient's memoryCache). See docs/METRICS_CATALOG.md, "Cache Metrics
+   * (Observable)".
+   */
+  metricName?: string | false,
 }

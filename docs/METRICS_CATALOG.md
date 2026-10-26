@@ -269,11 +269,31 @@ Reads `getCumulativeStats()`, which has no side effects, so it can run alongside
 
 **A cache with no `max` reports `9007199254740991` (`Number.MAX_SAFE_INTEGER`).** `lru-cache@5` defaults `max` to `Infinity` for an unbounded cache, and a non-finite capacity is not publishable, so the sentinel stands in for it. Anything aggregating capacity MUST group by `cache`, or that sentinel poisons the aggregate into a meaningless number.
 
+**Every cache built from this package's classes (`LRUCache`, `LRUDiskCache`, `DiskCache`, `MultilayeredCache`) is tracked automatically** — no registration call, no probe. What the app controls is the name each series carries in the `cache` attribute, from strongest to weakest origin:
+
+1. **Explicit**: the `metricName` constructor option (or a manual `trackCache()` call). Always wins. This is the only name a dashboard should rely on long-term.
+
+```typescript
+const pagesCacheStorage = new LRUCache<string, Cached>({
+  max: 3000,
+  metricName: 'pages',
+})
+```
+
+2. **Client**: an unnamed cache passed as a client's `memoryCache` is renamed to the client's name (the client class name, e.g. `Apps`). The rename happens when the client first wraps the cache, typically before the first collection cycle, so the weaker name is never published.
+3. **Callsite**: with no other name, one is derived from where the cache is constructed — a path relative to the app root plus an ordinal per file (`node/index.js`, `node/index.js#2`). It covers every cache, but adding, removing or reordering caches in one file renames that file's derived series.
+
+`metricName: false` opts a cache out of tracking entirely.
+
+For a cache that doesn't come from these classes — anything implementing `getCumulativeStats()` — register it by hand:
+
 ```typescript
 const dispose = global.diagnosticsMetrics?.trackCache('pages', pagesCacheStorage)
 ```
 
-> `trackCache()` exists from `@vtex/api` 7.6.0; the `diagnosticsMetrics` global from 7.3.0. On a runtime in between the global is present and the method is not — probe `typeof global.diagnosticsMetrics?.trackCache === 'function'` before calling on a runtime you don't control (see [METRICS_OVERVIEW.md](./METRICS_OVERVIEW.md), Pattern 5).
+> Automatic tracking and `metricName` exist from `@vtex/api` 7.7.0; on an older runtime the option is ignored and the cache simply publishes no series. `trackCache()` exists from 7.6.0; the `diagnosticsMetrics` global from 7.3.0. On a runtime in between the global is present and the method is not — probe `typeof global.diagnosticsMetrics?.trackCache === 'function'` before calling on a runtime you don't control (see [METRICS_OVERVIEW.md](./METRICS_OVERVIEW.md), Pattern 5).
+>
+> One instance, one name: an instance registered twice under different names (a `metricName` plus a leftover manual `trackCache()` during a migration) keeps its first name and the second registration is refused with an error, so the same counters can never be published as two series. A stronger origin renaming a weaker one is the only sanctioned rename.
 
 ---
 

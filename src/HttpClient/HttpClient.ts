@@ -9,6 +9,7 @@ import {
 } from '../constants'
 import { Logger } from '../service/logger'
 import { IOContext } from '../service/worker/runtime/typings'
+import { registerCacheForTracking, TrackableCache } from '../caches/trackingRegistry'
 import { formatBindingHeaderValue } from '../utils/binding'
 import { formatTenantHeaderValue } from '../utils/tenant'
 import { CacheableRequestConfig, cacheMiddleware, CacheType } from './middlewares/cache'
@@ -77,6 +78,15 @@ export class HttpClient {
     this.logger = logger
     this.cacheableType = cacheableType
     this.memoizable = memoizable
+
+    // A memory cache with no name of its own takes the client's: the client class
+    // name is what the app would have written in a manual trackCache call, and it
+    // is stable while code moves around it. An explicit metricName (or any name a
+    // stronger origin already gave the cache) always wins — see caches/cacheNaming.
+    const trackableMemoryCache = memoryCache as unknown as Partial<TrackableCache> | undefined
+    if (typeof trackableMemoryCache?.getCumulativeStats === 'function') {
+      registerCacheForTracking(this.name, trackableMemoryCache as TrackableCache, 'client')
+    }
 
     const limit = concurrency && concurrency > 0 && pLimit(concurrency) || undefined
     const headers: Record<string, string> = {
