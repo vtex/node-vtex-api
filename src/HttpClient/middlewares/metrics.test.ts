@@ -310,6 +310,108 @@ describe('metricsMiddleware', () => {
     })
   })
 
+  describe('outbound method', () => {
+    it('should record the outbound method on http_client_requests_total', async () => {
+      mockCtx.config.method = 'post'
+
+      const middleware = metricsMiddleware({ metrics: mockMetrics, name: 'test' })
+
+      await middleware(mockCtx, mockNext)
+
+      expect(mockDiagnosticsMetrics.incrementCounter).toHaveBeenCalledWith(
+        'http_client_requests_total',
+        1,
+        expect.objectContaining({
+          component: 'http-client',
+          client_metric: 'test-client',
+          status_code: 200,
+          status: 'success',
+          method: 'post',
+        })
+      )
+
+      const latencyCall = mockDiagnosticsMetrics.recordLatency.mock.calls[0]
+      expect(latencyCall[1]).toMatchObject({ method: 'post' })
+
+      expect(mockDiagnosticsMetrics.incrementCounter).toHaveBeenCalledWith(
+        'http_client_cache_total',
+        1,
+        expect.objectContaining({
+          method: 'post',
+          cache_state: 'miss',
+        })
+      )
+    })
+
+    it('should record get when the outbound method is omitted', async () => {
+      const middleware = metricsMiddleware({ metrics: mockMetrics, name: 'test' })
+
+      await middleware(mockCtx, mockNext)
+
+      expect(mockDiagnosticsMetrics.incrementCounter).toHaveBeenCalledWith(
+        'http_client_requests_total',
+        1,
+        expect.objectContaining({ method: 'get' })
+      )
+    })
+
+    it('should record get when the outbound method is empty', async () => {
+      ;(mockCtx.config as { method?: string }).method = ''
+
+      const middleware = metricsMiddleware({ metrics: mockMetrics, name: 'test' })
+
+      await middleware(mockCtx, mockNext)
+
+      expect(mockDiagnosticsMetrics.incrementCounter).toHaveBeenCalledWith(
+        'http_client_requests_total',
+        1,
+        expect.objectContaining({ method: 'get' })
+      )
+    })
+
+    it('should record the outbound method when the call fails', async () => {
+      mockCtx.config.method = 'put'
+      mockNext.mockRejectedValueOnce({
+        response: {
+          status: 500,
+        },
+      })
+
+      const middleware = metricsMiddleware({ metrics: mockMetrics, name: 'test' })
+
+      await expect(middleware(mockCtx, mockNext)).rejects.toMatchObject({
+        response: { status: 500 },
+      })
+
+      expect(mockDiagnosticsMetrics.incrementCounter).toHaveBeenCalledWith(
+        'http_client_requests_total',
+        1,
+        expect.objectContaining({
+          method: 'put',
+          status: 'error',
+        })
+      )
+    })
+
+    it('should record the outbound method on retried calls', async () => {
+      mockCtx.config.method = 'patch'
+      mockCtx.config.retryCount = 2
+
+      const middleware = metricsMiddleware({ metrics: mockMetrics, name: 'test' })
+
+      await middleware(mockCtx, mockNext)
+
+      expect(mockDiagnosticsMetrics.incrementCounter).toHaveBeenCalledWith(
+        'http_client_requests_retried_total',
+        1,
+        expect.objectContaining({
+          method: 'patch',
+          retry_count: 2,
+        })
+      )
+    })
+  })
+
   describe('graceful degradation', () => {
     it('should work without global.diagnosticsMetrics', async () => {
       delete (global as any).diagnosticsMetrics
