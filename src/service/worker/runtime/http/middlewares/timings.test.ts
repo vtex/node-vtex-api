@@ -103,6 +103,20 @@ describe('timings middleware', () => {
       )
     })
 
+    it('should not record the inbound request method', async () => {
+      expect(mockCtx.method).toBe('GET')
+
+      await timings(mockCtx, mockNext)
+
+      const baseAttributes = mockDiagnosticsMetrics.runWithBaseAttributes.mock.calls[0][0]
+      expect(baseAttributes).not.toHaveProperty('method')
+
+      const handlerCall = mockDiagnosticsMetrics.incrementCounter.mock.calls.find(
+        (call) => call[0] === 'http_handler_requests_total'
+      )
+      expect(handlerCall?.[2]).not.toHaveProperty('method')
+    })
+
     it('should log timing and billing information', async () => {
       await timings(mockCtx, mockNext)
 
