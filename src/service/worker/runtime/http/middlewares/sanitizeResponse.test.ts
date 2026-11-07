@@ -1,0 +1,444 @@
+/**
+ * @jest-environment node
+ */
+import axios, { AxiosError } from 'axios'
+import { Agent, createServer, Server } from 'http'
+import Koa from 'koa'
+import compress from 'koa-compress'
+import { gunzipSync } from 'zlib'
+
+const TOKEN = 'app-token-eyJhbGciOiJSUzI1NiJ9.payload.signature'
+const RESPONSE_SANITIZER_SWITCH = 'VTEX_IO_RESPONSE_SANITIZER'
+
+// The middleware reads whether the app is linked when it is loaded, so each use gets a fresh copy.
+const loadSanitizeResponse = () => {
+  let loaded: any
+  jest.resetModules()
+  jest.isolateModules(() => {
+    loaded = require('./sanitizeResponse').sanitizeResponse
+  })
+  return loaded as typeof import('./sanitizeResponse').sanitizeResponse
+}
+
+type Handler = (ctx: any) => Promise<void> | void
+const listen = (server: Server) =>
+  new Promise<string>(resolve => server.listen(0, '127.0.0.1', () => resolve(`http://127.0.0.1:${(server.address() as any).port}`)))
+
+const close = (server: Server) => new Promise<void>(resolve => server.close(() => resolve()))
+
+describe('sanitizeResponse', () => {
+  const agent = new Agent({ keepAlive: false })
+  let upstream: Server
+  let upstreamURL: string
+  let handler: Handler
+  let appServer: Server
+  let appURL: string
+  let captured: { body?: any, status?: number, thrown?: any }
+  let rawLogs: string[]
+  const logs = () => rawLogs.map(log => JSON.parse(log))
+
+  const callUpstream = async (): Promise<AxiosError> => {
+    try {
+      await axios.get(`${upstreamURL}/orders`, {
+        headers: { 'Proxy-Authorization': TOKEN },
+        httpAgent: agent,
+      })
+    } catch (e) {
+      return e as AxiosError
+    }
+    throw new Error('the upstream call was expected to fail')
+  }
+
+  const buildApp = (withSanitizer: boolean) => {
+    const app = new Koa()
+    app.use(async (ctx, next) => {
+      // Stands for the `error` middleware, the outermost one, and for the context of the service.
+      ctx.vtex = { logger: { warn: (log: any) => rawLogs.push(JSON.stringify(log)) }, route: { id: 'orders' } }
+      try {
+        await next()
+      } catch (e) {
+        captured.thrown = e
+        ctx.status = 500
+      }
+      captured.status = ctx.status
+    })
+    app.use(compress())
+    app.use(async (ctx, next) => {
+      // Sees the body as the sanitizer leaves it, before compress() serializes it.
+      try {
+        await next()
+      } finally {
+        captured.body = ctx.body
+      }
+    })
+    if (withSanitizer) {
+      app.use(loadSanitizeResponse() as any)
+    }
+    app.use(async ctx => { await handler(ctx) })
+    return app
+  }
+
+  const startApp = async (withSanitizer = true) => {
+    appServer = createServer(buildApp(withSanitizer).callback())
+    appURL = await listen(appServer)
+  }
+
+  // Decompresses by hand: axios would do it and hide whether the response was compressed.
+  const get = (path = '/', headers: Record<string, string> = {}) =>
+    axios.get(`${appURL}${path}`, {
+      decompress: false,
+      headers: { 'Accept-Encoding': 'gzip', ...headers },
+      httpAgent: agent,
+      responseType: 'arraybuffer',
+      validateStatus: () => true,
+    }).then(res => {
+      const encoding: string | undefined = res.headers['content-encoding']
+      const raw = Buffer.from(res.data)
+      const text = (encoding === 'gzip' ? gunzipSync(raw) : raw).toString('utf8')
+      return { encoding, headers: res.headers, status: res.status, text }
+    })
+
+  beforeAll(async () => {
+    upstream = createServer((_, res) => {
+      res.setHeader('content-type', 'application/json')
+      res.statusCode = 400
+      // Long enough for koa-compress to compress what is sent back.
+      res.end(JSON.stringify({ reason: 'bad input', details: 'x'.repeat(2048) }))
+    })
+    upstreamURL = await listen(upstream)
+  })
+
+  afterAll(async () => {
+    agent.destroy()
+    await close(upstream)
+  })
+
+  beforeEach(() => {
+    captured = {}
+    rawLogs = []
+    delete process.env[RESPONSE_SANITIZER_SWITCH]
+    delete process.env.VTEX_APP_LINK
+    handler = async ctx => { ctx.body = await callUpstream() }
+  })
+
+  afterEach(async () => {
+    delete process.env[RESPONSE_SANITIZER_SWITCH]
+    if (appServer) {
+      await close(appServer)
+    }
+  })
+
+  describe('control', () => {
+    it('leaks the credential through gzip when the sanitizer is not registered', async () => {
+      await startApp(false)
+
+      const res = await get()
+
+      expect(res.encoding).toBe('gzip')
+      expect(res.text).toContain(TOKEN)
+    })
+  })
+
+  describe('an error written to the body', () => {
+    it('is sent without credentials, config, agents or stack, and compressed', async () => {
+      await startApp()
+
+      const res = await get()
+      const body = JSON.parse(res.text)
+
+      expect(res.status).toBe(200)
+      expect(res.encoding).toBe('gzip')
+      expect(res.headers['content-type']).toMatch(/^application\/json/)
+      expect(res.text).not.toContain(TOKEN)
+      expect(res.text).not.toContain('httpAgent')
+      expect(body).toMatchObject({
+        code: 'ERR_BAD_REQUEST',
+        message: 'Request failed with status code 400',
+        name: 'AxiosError',
+        response: { status: 400 },
+        status: 400,
+      })
+      expect(body).not.toHaveProperty('config')
+      expect(body).not.toHaveProperty('request')
+      expect(body).not.toHaveProperty('stack')
+    })
+
+    it('is sent without credentials when nested in the response', async () => {
+      handler = async ctx => {
+        const error = await callUpstream()
+        ctx.body = { data: { id: 1 }, errors: [{ extensions: { exception: error }, message: 'failed' }] }
+      }
+      await startApp()
+
+      const res = await get()
+      const body = JSON.parse(res.text)
+
+      expect(res.text).not.toContain(TOKEN)
+      expect(body.data).toEqual({ id: 1 })
+      expect(body.errors[0].message).toBe('failed')
+      expect(body.errors[0].extensions.exception.name).toBe('AxiosError')
+    })
+
+    it('does not change the status of the response', async () => {
+      handler = async ctx => {
+        ctx.status = 404
+        ctx.body = await callUpstream()
+      }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.status).toBe(404)
+      expect(captured.status).toBe(404)
+      expect(res.text).not.toContain(TOKEN)
+    })
+
+    it('keeps the content type chosen by the app', async () => {
+      handler = async ctx => {
+        ctx.body = await callUpstream()
+        ctx.type = 'application/vnd.api+json; charset=utf-8'
+      }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.headers['content-type']).toBe('application/vnd.api+json; charset=utf-8')
+      expect(res.text).not.toContain(TOKEN)
+    })
+
+    it('is sanitized even if the handler throws afterwards', async () => {
+      handler = async ctx => {
+        ctx.body = await callUpstream()
+        throw new Error('failed after setting the body')
+      }
+      await startApp()
+
+      const res = await get()
+
+      expect(captured.thrown).toEqual(expect.objectContaining({ message: 'failed after setting the body' }))
+      expect(res.status).toBe(500)
+      expect(res.text).not.toContain(TOKEN)
+      expect(JSON.parse(res.text).name).toBe('AxiosError')
+    })
+
+    it('logs how many errors were removed, without any of their content', async () => {
+      await startApp()
+
+      await get()
+
+      expect(logs()).toEqual([
+        {
+          errors: 1,
+          message: 'response-sanitizer: error_object_removed',
+          reason: 'error_object_removed',
+          routeId: 'orders',
+        },
+      ])
+      expect(rawLogs.join()).not.toContain(TOKEN)
+    })
+  })
+
+  describe('a body without errors', () => {
+    it('is the same object, with the same content type', async () => {
+      const body = { items: [{ id: 1 }, { id: 2 }], token: 'abc' }
+      handler = ctx => {
+        ctx.body = body
+        ctx.type = 'application/vnd.api+json'
+      }
+      await startApp()
+
+      const res = await get()
+
+      expect(captured.body).toBe(body)
+      expect(res.headers['content-type']).toMatch(/^application\/vnd\.api\+json/)
+      expect(JSON.parse(res.text)).toEqual(body)
+      expect(logs()).toEqual([])
+    })
+
+    it.each([
+      ['string', 'plain text'],
+      ['buffer', Buffer.from('bytes')],
+    ])('is not touched when it is a %s', async (_, body) => {
+      handler = ctx => { ctx.body = body }
+      await startApp()
+
+      const res = await get()
+
+      expect(captured.body).toBe(body)
+      expect(res.status).toBe(200)
+    })
+
+    it('is not touched when there is none', async () => {
+      handler = ctx => { ctx.status = 204 }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.status).toBe(204)
+      expect(logs()).toEqual([])
+    })
+  })
+
+  describe('failures of the sanitizer', () => {
+    // An error that is in the body, and a property that makes the walk throw after it.
+    const taintedBodyThatBreaksTheWalk = async () => ({
+      error: await callUpstream(),
+      get list(): number[] {
+        throw new Error('getter failed')
+      },
+    })
+
+    it('withhold the body, with status 500, and are logged with a reason', async () => {
+      handler = async ctx => { ctx.body = await taintedBodyThatBreaksTheWalk() }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.status).toBe(500)
+      expect(JSON.parse(res.text)).toEqual({
+        code: 'E_RESPONSE_WITHHELD',
+        message: 'The response could not be safely returned.',
+      })
+      expect(res.text).not.toContain(TOKEN)
+      expect(logs()).toEqual([
+        {
+          errorName: 'Error',
+          message: 'response-sanitizer: sanitizer_failed',
+          reason: 'sanitizer_failed',
+          routeId: 'orders',
+        },
+      ])
+    })
+
+    it('keep an error status chosen by the app', async () => {
+      handler = async ctx => {
+        ctx.status = 404
+        ctx.body = await taintedBodyThatBreaksTheWalk()
+      }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.status).toBe(404)
+      expect(res.text).not.toContain(TOKEN)
+    })
+
+    it('withhold the body when the handler throws afterwards too', async () => {
+      handler = async ctx => {
+        ctx.body = await taintedBodyThatBreaksTheWalk()
+        throw new Error('failed after setting the body')
+      }
+      await startApp()
+
+      const res = await get()
+
+      expect(captured.thrown).toEqual(expect.objectContaining({ message: 'failed after setting the body' }))
+      expect(res.text).not.toContain(TOKEN)
+      expect(JSON.parse(res.text).code).toBe('E_RESPONSE_WITHHELD')
+    })
+  })
+
+  describe('together with the error middleware', () => {
+    const { error } = require('./error')
+
+    const startAppWithErrorMiddleware = async () => {
+      const app = new Koa()
+      app.use(async (ctx, next) => {
+        ctx.vtex = {
+          logger: { log: jest.fn(), warn: (log: any) => rawLogs.push(JSON.stringify(log)) },
+          route: { id: 'orders', params: {} },
+        }
+        await next()
+      })
+      app.use(error)
+      app.use(compress())
+      app.use(loadSanitizeResponse() as any)
+      app.use(async ctx => { await handler(ctx) })
+      appServer = createServer(app.callback())
+      appURL = await listen(appServer)
+    }
+
+    beforeEach(() => {
+      jest.spyOn(console, 'error').mockImplementation(() => undefined)
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('does not keep a tainted body when the handler throws after setting it', async () => {
+      handler = async ctx => {
+        ctx.body = await callUpstream()
+        throw new Error('failed while persisting the error')
+      }
+      await startAppWithErrorMiddleware()
+
+      const res = await get()
+
+      expect(res.status).toBe(500)
+      expect(res.text).not.toContain(TOKEN)
+      expect(JSON.parse(res.text)).toMatchObject({ name: 'AxiosError' })
+    })
+
+    it('does not keep a tainted body when the sanitizer fails and the handler throws', async () => {
+      handler = async ctx => {
+        ctx.body = {
+          error: await callUpstream(),
+          get list(): number[] {
+            throw new Error('getter failed')
+          },
+        }
+        throw new Error('failed while persisting the error')
+      }
+      await startAppWithErrorMiddleware()
+
+      const res = await get()
+
+      expect(res.status).toBe(500)
+      expect(res.text).not.toContain(TOKEN)
+      expect(JSON.parse(res.text).code).toBe('E_RESPONSE_WITHHELD')
+    })
+  })
+
+  describe(`${RESPONSE_SANITIZER_SWITCH}=off`, () => {
+    it('disables the sanitizer', async () => {
+      process.env[RESPONSE_SANITIZER_SWITCH] = 'off'
+      await startApp()
+
+      const res = await get()
+
+      expect(res.text).toContain(TOKEN)
+    })
+  })
+
+  describe('in a linked app', () => {
+    const originalLink = process.env.VTEX_APP_LINK
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+      if (originalLink === undefined) {
+        delete process.env.VTEX_APP_LINK
+      } else {
+        process.env.VTEX_APP_LINK = originalLink
+      }
+    })
+
+    it('keeps the stack, still without credentials', async () => {
+      process.env.VTEX_APP_LINK = 'vendor.app@0.0.1'
+      // This app has no `ctx.vtex`, so the sanitizer logs to the console.
+      jest.spyOn(console, 'warn').mockImplementation(() => undefined)
+      const app = new Koa()
+      app.use(compress())
+      app.use(loadSanitizeResponse() as any)
+      app.use(async ctx => { ctx.body = await callUpstream() })
+      appServer = createServer(app.callback())
+      appURL = await listen(appServer)
+
+      const res = await get()
+      const body = JSON.parse(res.text)
+      expect(body.stack).toEqual(expect.stringContaining('AxiosError'))
+      expect(res.text).not.toContain(TOKEN)
+      expect(body).not.toHaveProperty('config')
+    })
+  })
+})

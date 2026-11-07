@@ -1,6 +1,7 @@
 import { constants } from 'os'
 
 import { RequestCancelledError } from '../../errors/RequestCancelledError'
+import { toLoggableError } from '../../utils/responseSanitizer'
 import { Logger } from '../logger'
 
 export const logger = new Logger({account: 'unhandled', workspace: 'unhandled', requestId: 'unhandled', operationId: 'unhandled', production: process.env.VTEX_PRODUCTION === 'true'})
@@ -17,7 +18,7 @@ export const addProcessListeners = () => {
   }
 
   watched = process.on('uncaughtException', (err: any) => {
-    console.error('uncaughtException', err)
+    console.error('uncaughtException', toLoggableError(err))
     if (err && logger) {
       err.type = 'uncaughtException'
       logger.error(err)
@@ -25,11 +26,12 @@ export const addProcessListeners = () => {
     process.exit(420)
   })
 
-  process.on('unhandledRejection', (reason: Error | any, promise: Promise<void>)  => {
+  process.on('unhandledRejection', (reason: Error | any)  => {
     if (reason instanceof RequestCancelledError) {
       return
     }
-    console.error('unhandledRejection', reason, promise)
+    // The promise is not printed: inspecting it shows the rejection reason again, unsanitized.
+    console.error('unhandledRejection', toLoggableError(reason))
     if (reason && logger) {
       reason.type = 'unhandledRejection'
       logger.error(reason)

@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Security
+
+- Error objects assigned to the response body no longer expose the request
+  configuration, credentials, connection agents or, outside link mode, the
+  stack. If the response cannot be sanitized it is withheld.
+- Errors printed by the runtime no longer include the request configuration.
+- GraphQL error responses no longer include the stack outside link mode.
+
 ## [7.6.0]
 
 ### Added

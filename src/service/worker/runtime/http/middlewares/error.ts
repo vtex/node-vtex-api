@@ -9,6 +9,7 @@ import {
   tooManyRequestsStatus,
 } from '../../../../../errors/TooManyRequestsError'
 import { cleanError, SENSITIVE_EXCEPTION_FIELDS } from '../../../../../utils/error'
+import { toLoggableError } from '../../../../../utils/responseSanitizer'
 import { LogLevel } from '../../../../logger'
 import {
   ParamsContext,
@@ -98,7 +99,8 @@ export async function error (ctx: ServiceContext, next: () => Promise<void>) {
       ctx.status = tooManyRequestsStatus
       return
     }
-    console.error('[node-vtex-api error]', e)
+    // The raw error carries the request config, whose headers include credentials.
+    console.error('[node-vtex-api error]', toLoggableError(e))
     const err = cleanError(e)
 
     // Add response
