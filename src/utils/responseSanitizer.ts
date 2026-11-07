@@ -380,7 +380,7 @@ const scanChildren = (node: object, depth: number, state: ScanState) => {
   for (let i = 0; i < length && !state.found && !state.truncated; i++) {
     const child = keys ? record[keys[i]] : (node as unknown[])[i]
     if (child !== null && typeof child === 'object') {
-      scanNode(child as object, depth + 1, state)
+      scanNode(child, depth + 1, state)
     }
   }
   state.ancestors.pop()
