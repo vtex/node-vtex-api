@@ -423,12 +423,29 @@ describe('sanitizeErrors', () => {
       expect(result.replaced).toBe(0)
     })
 
+    it('does not keep an error that sits past the limit', () => {
+      const leaked: any = new Error('deep')
+      leaked.config = { headers: { authorization: TOKEN } }
+      let body: any = { error: leaked }
+      for (let i = 0; i < 5; i++) {
+        body = { child: body }
+      }
+
+      const result = sanitizeErrors(body, { linked: false, maxDepth: 3 })
+
+      expect(result.truncated).toBe(true)
+      expect(JSON.stringify(result.value)).toContain('[Truncated]')
+      expect(JSON.stringify(result.value)).not.toContain(TOKEN)
+    })
+
     it('stops at the maximum number of nodes and reports it', () => {
       const body = Array.from({ length: 50 }, (_, id) => ({ id }))
 
       const result = sanitizeErrors(body, { linked: false, maxNodes: 10 })
 
       expect(result.truncated).toBe(true)
+      expect(result.value).not.toBe(body)
+      expect(JSON.stringify(result.value)).toContain('[Truncated]')
     })
 
     it('does not report truncation within the limits', () => {

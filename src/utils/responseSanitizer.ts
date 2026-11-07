@@ -32,8 +32,8 @@ export interface SanitizeErrorsResult<T> {
    */
   replaced: number
   /**
-   * True when a depth or node limit stopped the walk early. Outside of errors, the remaining part
-   * was left as is. Inside an error it was replaced by a marker.
+   * True when a depth or node limit stopped the walk early. The part that was not visited is
+   * replaced by a marker, so the original subtree is not returned.
    */
   truncated: boolean
 }
@@ -99,8 +99,9 @@ class ErrorSanitizer {
       return this.insideError > 0 ? CIRCULAR : node
     }
     if (depth > this.maxDepth || this.nodes >= this.maxNodes) {
+      // Not inspected. The node itself may be an error, or may hold one, so it is not returned.
       this.truncated = true
-      return this.insideError > 0 ? TRUNCATED : node
+      return TRUNCATED
     }
     this.nodes++
 
