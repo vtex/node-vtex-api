@@ -10,13 +10,13 @@ import {
 } from '../../../../../errors/TooManyRequestsError'
 import { cleanError, SENSITIVE_EXCEPTION_FIELDS } from '../../../../../utils/error'
 import { sanitizeErrors, toLoggableError } from '../../../../../utils/responseSanitizer'
-import { redactKnownSecretsDeep } from '../../../../../utils/stringRedactor'
 import { LogLevel } from '../../../../logger'
 import {
   ParamsContext,
   RecorderState,
   ServiceContext,
 } from '../../typings'
+import { redactErrorBody } from '../../utils/redactErrorBody'
 import { WITHHELD_BODY } from './sanitizeResponse'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
@@ -94,14 +94,12 @@ const logAndRemoveSensitiveData = <
 // at the top level, and by a short list of header names, so an error that is a property of the
 // thrown value (`originalError`) kept its config, request and stack.
 // The tokens of the request are replaced wherever they appear, such as in a message that embeds
-// them (`new Error(`failed: ${token}`)`). So is the value of a credential-named field (`apiKey`,
-// `authorization`, `cookie`…), even when that value is not one of those tokens. This is an error
-// path: successful bodies are not walked for credentials.
+// them (`new Error(`failed: ${token}`)`). So is the value of a known credential header inside a
+// `headers` object, even when it is not one of those tokens; other field names are kept. This is an error path: successful bodies are not walked.
 const buildResponseBody = (thrown: any, ctx: ServiceContext) => {
   try {
     const body = cleanError(sanitizeErrors(thrown, { linked: LINKED }).value)
-    const { authToken, adminUserAuthToken, storeUserAuthToken } = ctx.vtex ?? {}
-    return redactKnownSecretsDeep(body, [authToken, adminUserAuthToken, storeUserAuthToken]).value
+    return redactErrorBody(body, ctx.vtex)
   } catch (sanitizeError) {
     console.error('[node-vtex-api error] the thrown value could not be sanitized', (sanitizeError as Error)?.name)
     return WITHHELD_BODY

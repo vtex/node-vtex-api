@@ -1,4 +1,4 @@
-import { REDACTED, TRUNCATED } from './stringRedactor'
+import { REDACTED, TRUNCATED } from './redactionMarkers'
 
 /**
  * Names under which credentials travel in HTTP headers, lower-case. Shared by the `HttpClient`
@@ -90,16 +90,20 @@ export const redactCredentialFields = (value: unknown, depth = 0): unknown => {
 
 /**
  * The request body (`config.data`). An object is scrubbed like `params`. The client also stores
- * the body as the JSON text it sent, so that text is parsed, scrubbed and written back. Plain
- * text, a buffer and a stream are returned as they are.
+ * the body as the text it sent: JSON text is parsed, scrubbed and written back, and a form body
+ * (`application/x-www-form-urlencoded`, `appToken=…&name=…`) has its credential-named values
+ * replaced like a URL query. Other text, a buffer and a stream are returned as they are.
  */
 export const redactRequestData = (data: unknown): unknown => {
   if (typeof data !== 'string') {
     return redactCredentialFields(data)
   }
   const first = /\S/.exec(data)
-  if (!first || (first[0] !== '{' && first[0] !== '[')) {
+  if (!first) {
     return data
+  }
+  if (first[0] !== '{' && first[0] !== '[') {
+    return isFormBody(data) ? redactQueryString(data) : data
   }
   try {
     const parsed = JSON.parse(data)
@@ -110,12 +114,30 @@ export const redactRequestData = (data: unknown): unknown => {
   }
 }
 
+// Form-encoded text: `name=value` pairs joined by `&`, with no whitespace (the encoding has none).
+const isFormBody = (text: string) => text.includes('=') && !/\s/.test(text)
+
 const safeDecode = (text: string) => {
   try {
-    return decodeURIComponent(text)
+    return decodeURIComponent(text.replace(/\+/g, ' '))
   } catch {
     return text
   }
+}
+
+// A query string or form body (`a=1&appToken=…`) with the value of credential-named keys replaced.
+// Encoded and nested keys are recognized (`filter%5BappToken%5D=…`). Returns the same string when
+// there is nothing to replace.
+function redactQueryString (query: string): string {
+  const redacted = query
+    .split('&')
+    .map(pair => {
+      const separator = pair.indexOf('=')
+      const name = separator === -1 ? pair : pair.slice(0, separator)
+      return separator !== -1 && isSensitiveParamName(safeDecode(name)) ? `${name}=${REDACTED}` : pair
+    })
+    .join('&')
+  return redacted === query ? query : redacted
 }
 
 /**
@@ -135,13 +157,6 @@ export const redactUrlQuery = (url: unknown) => {
   const hashStart = safeUrl.indexOf('#', queryStart)
   const queryEnd = hashStart === -1 ? safeUrl.length : hashStart
   const query = safeUrl.slice(queryStart + 1, queryEnd)
-  const redactedQuery = query
-    .split('&')
-    .map(pair => {
-      const separator = pair.indexOf('=')
-      const name = separator === -1 ? pair : pair.slice(0, separator)
-      return separator !== -1 && isSensitiveParamName(safeDecode(name)) ? `${name}=${REDACTED}` : pair
-    })
-    .join('&')
+  const redactedQuery = redactQueryString(query)
   return redactedQuery === query ? safeUrl : `${safeUrl.slice(0, queryStart + 1)}${redactedQuery}${safeUrl.slice(queryEnd)}`
 }

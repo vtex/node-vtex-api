@@ -221,6 +221,18 @@ describe('sanitizeHttpClientError', () => {
       expect(JSON.stringify(sanitizeHttpClientError(err).config)).toContain('[Truncated]')
     })
 
+    it('from credential-named fields of a form body, keeping the others', async () => {
+      const err = await failure('/fail', {
+        data: `appToken=${encodeURIComponent(TOKEN)}&client_secret=s3cr3t-value&name=catalog`,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        method: 'post',
+      })
+
+      expect(err.config.data).toBe(`appToken=${REDACTED}&client_secret=${REDACTED}&name=catalog`)
+      expect(JSON.stringify(err)).not.toContain(encodeURIComponent(TOKEN))
+      expect(JSON.stringify(cleanError(err))).not.toContain('s3cr3t-value')
+    })
+
     it('from basic auth', async () => {
       const err = await failure('/fail', { auth: { password: TOKEN, username: 'appkey-0123456789abcdef' } })
 

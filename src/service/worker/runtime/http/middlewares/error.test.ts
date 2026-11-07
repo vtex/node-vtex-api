@@ -138,19 +138,19 @@ describe('error middleware', () => {
       expect(res.data.error).not.toHaveProperty('config')
     })
 
-    it('replaces a credential-named field that is not one of the request tokens', async () => {
+    it('replaces a known credential header that is not one of the request tokens, keeping business fields', async () => {
       const thirdParty = 'tp-live-key-0123456789abcdef'
 
       const res = await serve(async () => {
         const failure = new Error('upstream rejected the key')
-        ;(failure as any).apiKey = thirdParty
+        ;(failure as any).details = { headers: { authorization: thirdParty }, key: 'SKU_UNAVAILABLE' }
         ;(failure as any).reason = 'bad input'
         throw failure
-      })
+      }, { authToken: TOKEN })
 
       expect(res.status).toBe(500)
       expect(JSON.stringify(res.data)).not.toContain(thirdParty)
-      expect(res.data.apiKey).toBe('[Redacted]')
+      expect(res.data.details).toEqual({ headers: { authorization: '[Redacted]' }, key: 'SKU_UNAVAILABLE' })
       expect(res.data.reason).toBe('bad input')
       expect(res.data.message).toBe('upstream rejected the key')
     })

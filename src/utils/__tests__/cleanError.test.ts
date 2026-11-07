@@ -84,6 +84,34 @@ describe('cleanError', () => {
     expect(cleaned.stack).toContain('Request failed with status code 400')
   })
 
+  it('scrubs a JSON request body larger than 8 KB before truncating it', () => {
+    const err = axiosLikeError({ accept: 'application/json' })
+    err.config.data = JSON.stringify({ appToken: TOKEN, items: 'x'.repeat(10 * 1024) })
+
+    const cleaned = cleanError(err)
+
+    expect(cleaned.config.data).not.toContain(TOKEN)
+    expect(cleaned.config.data.startsWith('{"appToken":"[Redacted]"')).toBe(true)
+    expect(cleaned.config.data.endsWith('[...TRUNCATED]')).toBe(true)
+  })
+
+  it('scrubs a form request body larger than 8 KB before truncating it', () => {
+    const err = axiosLikeError({ accept: 'application/json' })
+    err.config.data = `client_secret=${TOKEN}&items=${'x'.repeat(10 * 1024)}`
+
+    const cleaned = cleanError(err)
+
+    expect(cleaned.config.data).not.toContain(TOKEN)
+    expect(cleaned.config.data.startsWith('client_secret=[Redacted]&items=')).toBe(true)
+  })
+
+  it('keeps a request body that is not JSON as it was, truncated', () => {
+    const err = axiosLikeError({ accept: 'application/json' })
+    err.config.data = `plain text ${'x'.repeat(10 * 1024)}`
+
+    expect(cleanError(err).config.data).toBe(`${err.config.data.substring(0, 8 * 1024)}[...TRUNCATED]`)
+  })
+
   it('truncates very large strings to 8 KB', () => {
     const err: any = new Error('failed')
     err.details = 'x'.repeat(8 * 1024 + 10)

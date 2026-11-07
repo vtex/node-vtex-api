@@ -1,6 +1,7 @@
-import { isSensitiveParamName } from './sensitiveHeaders'
+import { CIRCULAR, REDACTED, TRUNCATED, UNSERIALIZABLE } from './redactionMarkers'
+import { isKnownCredentialHeaderName } from './sensitiveHeaders'
 
-export const REDACTED = '[Redacted]'
+export { CIRCULAR, REDACTED, TRUNCATED, UNSERIALIZABLE }
 
 // Shorter values are not credentials, and replacing them everywhere would damage ordinary text.
 const MIN_SECRET_LENGTH = 16
@@ -133,12 +134,6 @@ export const redactKnownSecrets = (text: string, secrets: Array<string | undefin
 
 const MAX_DEEP_DEPTH = 32
 
-/**
- * What replaces a container nested deeper than the walk inspects. It is not sent as it is: what
- * was not inspected could hold a secret.
- */
-export const TRUNCATED = '[Truncated]'
-
 const isPlainContainer = (value: unknown): value is Record<string, unknown> | unknown[] => {
   if (value === null || typeof value !== 'object') {
     return false
@@ -149,12 +144,6 @@ const isPlainContainer = (value: unknown): value is Record<string, unknown> | un
   const proto = Object.getPrototypeOf(value)
   return proto === Object.prototype || proto === null
 }
-
-/**
- * What replaces a value whose serialization failed. Fail closed: what could not be inspected is
- * not sent.
- */
-export const UNSERIALIZABLE = '[Unserializable]'
 
 // Whether `JSON.stringify` would not serialize the value as its own enumerable properties: a
 // class instance (`Date`, `Buffer`, a DTO…) or an object with a `toJSON`, own or inherited.
@@ -195,16 +184,25 @@ const assignChild = (copy: any, key: string, value: unknown) => {
  * A value that serializes itself (a class instance, or an object with a `toJSON`) is replaced by
  * what `JSON.stringify` makes of it, then inspected: otherwise its serialization would run after
  * the walk, unchecked. If that serialization fails, the value is replaced by `[Unserializable]`.
- * A container nested deeper than 32 levels is replaced by `[Truncated]`. Both are counted.
+ * A container nested deeper than 32 levels is replaced by `[Truncated]`. Both are counted. A
+ * reference back to a containing object is replaced by `[Circular]`, as `cleanError` does.
  *
- * The value of a credential-named field (`apiKey`, `authorization`, `cookie`…) is replaced whole,
- * even when it is not one of the given secrets. Array indexes are not names.
+ * Inside an object under a `headers` key, as in a serialized request config, the value of a known
+ * credential header (`authorization`, `cookie`, `x-vtex-api-apptoken`, `VtexIdclientAutCookie…`) is
+ * replaced whole, even when it is not one of the given secrets. Field names elsewhere are not
+ * inspected, so business fields such as `key`, `session` or a session namespace called `cookie`
+ * are kept.
+ *
+ * Without a usable secret the value is returned as it is.
  *
  * It is for error output (GraphQL `errors[]`, the body built from a thrown value), not for
  * successful responses, where dropping or reshaping data would not be acceptable.
  */
 export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | undefined> = []): { value: T, redacted: number, truncated: number, unserializable: number } => {
   const usable = secrets.filter((secret): secret is string => !!secret && secret.length >= MIN_SECRET_LENGTH)
+  if (usable.length === 0) {
+    return { redacted: 0, truncated: 0, unserializable: 0, value }
+  }
   let redacted = 0
   let truncated = 0
   let unserializable = 0
@@ -231,10 +229,10 @@ export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | unde
     return result.redacted > 0 ? result.value : text
   }
 
-  // The whole value of a credential-named field. Undefined means the field is not one, so the
+  // The whole value of a known credential header. Undefined means the field is not one, so the
   // caller inspects the value. Null and a value already replaced are left as they are.
   const redactCredentialField = (key: string, child: unknown): string | undefined => {
-    if (child == null || child === REDACTED || !isSensitiveParamName(key)) {
+    if (child == null || child === REDACTED || !isKnownCredentialHeaderName(key)) {
       return undefined
     }
     redacted++
@@ -250,14 +248,15 @@ export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | unde
     return target
   }
 
-  // Copy-on-write walk of a plain object or array.
-  const walk = (node: Record<string, unknown> | unknown[], depth: number) => {
+  // Copy-on-write walk of a plain object or array. `key` is the one it has in its parent: only the
+  // keys of a `headers` object are header names.
+  const walk = (node: Record<string, unknown> | unknown[], depth: number, key: string) => {
     seen.add(node)
     let copy: any = node
-    const keysAreNames = !Array.isArray(node)
+    const keysAreHeaderNames = !Array.isArray(node) && key.toLowerCase() === 'headers'
     for (const childKey of Object.keys(node)) {
       const child = (node as Record<string, unknown>)[childKey]
-      const replaced = keysAreNames ? redactCredentialField(childKey, child) : undefined
+      const replaced = keysAreHeaderNames ? redactCredentialField(childKey, child) : undefined
       const safe = replaced === undefined ? visit(child, depth + 1, childKey) : replaced
       copy = writeChild(copy, node, childKey, safe, child)
     }
@@ -269,8 +268,12 @@ export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | unde
     if (typeof node === 'string') {
       return visitString(node)
     }
-    if (node === null || typeof node !== 'object' || seen.has(node)) {
+    if (node === null || typeof node !== 'object') {
       return node
+    }
+    if (seen.has(node)) {
+      // A cycle: the reference would keep the original, unredacted, and JSON.stringify would throw.
+      return CIRCULAR
     }
     if (depth > MAX_DEEP_DEPTH) {
       truncated++
@@ -282,7 +285,7 @@ export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | unde
       unserializable++
       return UNSERIALIZABLE
     }
-    return serialization === 'own' ? materialize(node, depth, key) : walk(node, depth)
+    return serialization === 'own' ? materialize(node, depth, key) : walk(node, depth, key)
   }
 
   const sanitized = visit(value, 0, '')

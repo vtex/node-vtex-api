@@ -111,8 +111,10 @@ const redactConfig = (config: Record<string, any>) => {
  *   serialized header block (`_header`), which cannot be rewritten after the request was sent.
  *
  * It runs on the final rejection only, after the retries, which reuse the original config.
- * It never throws. If masking fails, the fields that carry credentials are removed and the error
- * is still returned.
+ * It never throws. If masking fails, the fields that carry credentials are cleared where the error
+ * allows it, and the error is still returned. A frozen error cannot be changed, so it is returned
+ * as it is: the client always creates its errors mutable, and replacing the instance would break
+ * `instanceof` and identity checks.
  */
 export const sanitizeHttpClientError = <T>(err: T): T => {
   if (!isObject(err)) {

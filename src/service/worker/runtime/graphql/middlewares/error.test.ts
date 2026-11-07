@@ -170,4 +170,30 @@ describe('graphqlError', () => {
       expect(ctx.vtex.logger.log).toHaveBeenCalled()
     })
   })
+
+  describe('when the errors cannot be redacted', () => {
+    // Fake credential only.
+    const TOKEN = 'app-token-eyJhbGciOiJSUzI1NiJ9.payload.signature'
+
+    afterEach(() => jest.dontMock('../../utils/redactErrorBody'))
+
+    it('still answers with each error message, path and code, without the tokens', async () => {
+      jest.doMock('../../utils/redactErrorBody', () => ({ redactErrorBody: () => { throw new TypeError('hostile') } }))
+      const graphqlError = loadGraphqlError()
+      const ctx = buildCtx()
+      ;(ctx.vtex as any).authToken = TOKEN
+      const failure: any = new Error(`upstream failed: ${TOKEN}`)
+      failure.path = ['orders', 0, TOKEN]
+      failure.extensions = { code: `E_${TOKEN}` }
+      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+
+      await graphqlError(ctx as any, async () => { throw failure })
+
+      const [error] = ctx.graphql.graphqlResponse.errors
+      expect(error.message).toBe('upstream failed: [Redacted]')
+      expect(error.path).toEqual(['orders', 0, '[Redacted]'])
+      expect(JSON.stringify(ctx.graphql.graphqlResponse)).not.toContain(TOKEN)
+      consoleError.mockRestore()
+    })
+  })
 })

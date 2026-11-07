@@ -316,23 +316,59 @@ describe('redactKnownSecretsDeep', () => {
     expect(redactKnownSecretsDeep(root, [TOKEN]).value).toEqual({ received: '', secret: REDACTED })
   })
 
-  it('replaces a credential-named field even when its value is not a known token', () => {
+  it('replaces the value of a known credential header inside headers, even when it is not a known token', () => {
     const thirdParty = 'tp-live-key-0123456789abcdef'
     const value = {
-      details: { apiKey: thirdParty, reason: 'bad input' },
-      headers: { authorization: thirdParty, 'content-type': 'application/json' },
-      list: [{ api_key: thirdParty }, thirdParty],
+      config: { headers: { Authorization: thirdParty, 'content-type': 'application/json', 'x-vtex-api-apptoken': thirdParty } },
+      headers: { cookie: thirdParty },
       message: 'upstream rejected the key',
     }
 
-    const result = redactKnownSecretsDeep(value, [])
+    const result = redactKnownSecretsDeep(value, [TOKEN])
 
-    expect(result.value.details).toEqual({ apiKey: REDACTED, reason: 'bad input' })
-    expect(result.value.headers).toEqual({ authorization: REDACTED, 'content-type': 'application/json' })
-    expect(result.value.list).toEqual([{ api_key: REDACTED }, thirdParty])
+    expect(result.value.config.headers).toEqual({ Authorization: REDACTED, 'content-type': 'application/json', 'x-vtex-api-apptoken': REDACTED })
+    expect(result.value.headers).toEqual({ cookie: REDACTED })
     expect(result.value.message).toBe('upstream rejected the key')
-    expect(JSON.stringify(result.value.details)).not.toContain(thirdParty)
-    expect(value.details.apiKey).toBe(thirdParty)
+    expect(value.config.headers.Authorization).toBe(thirdParty)
+  })
+
+  it('keeps fields named like credential headers outside headers, such as a session namespace', () => {
+    const value = {
+      authorization: { status: 'denied' },
+      session: { namespaces: { cookie: { VtexIdclientAutCookie_acme: { value: 'kept-as-it-is' } } } },
+    }
+
+    expect(redactKnownSecretsDeep(value, [TOKEN]).value).toBe(value)
+  })
+
+  it('keeps business fields whose names merely look like credentials', () => {
+    const value = {
+      author: 'catalog-team',
+      error: { key: 'SKU_UNAVAILABLE', message: 'x' },
+      idempotencyKey: 'order-123',
+      keys: ['a', 'b'],
+      messageKey: 'store/cart.unavailable',
+      session: { namespaces: { public: { country: 'BRA' } } },
+      sessionStatus: 'expired',
+    }
+
+    expect(redactKnownSecretsDeep(value, [TOKEN]).value).toBe(value)
+  })
+
+  it('returns the value as it is without a usable secret', () => {
+    const value = { headers: { authorization: 'tp-live-key-0123456789abcdef' } }
+
+    expect(redactKnownSecretsDeep(value, [undefined, 'short']).value).toBe(value)
+  })
+
+  it('replaces a reference back to a containing object, so the result serializes without the original', () => {
+    const extensions: any = { code: 'X', detail: TOKEN }
+    extensions.self = extensions
+
+    const result = redactKnownSecretsDeep([{ extensions, message: 'm' }], [TOKEN])
+
+    expect(result.value[0].extensions).toEqual({ code: 'X', detail: REDACTED, self: '[Circular]' })
+    expect(JSON.stringify(result.value)).not.toContain(TOKEN)
   })
 
   it('inspects class instances as JSON.stringify sends them', () => {
