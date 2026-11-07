@@ -16,7 +16,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   credential-looking names), `auth`, user info in the `url`/`baseURL` (in every form the URL
   parser accepts), credential-named `params` (also those with their own `toJSON`) and URL query
   values, and credential-named keys in the request body (`config.data`, JSON or form-encoded)
-  replaced by `[Redacted]`. `set-cookie` of the upstream response is masked too. `request`,
+  replaced by `[Redacted]`. The headers of the upstream response are kept, `set-cookie` included,
+  since a redirect rejects (`maxRedirects: 0`) and apps forward its cookie; the logger and error
+  bodies still leave it out. `request`,
   `response.request` and the connection agents stay readable but are no longer enumerable, so
   `JSON.stringify`, `toJSON()`, `util.inspect` and the logger no longer carry them. If that
   masking throws, `config`, `request`, and the response's `config` and `headers` are removed (and a

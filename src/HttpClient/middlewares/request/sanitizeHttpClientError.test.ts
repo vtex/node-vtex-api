@@ -52,6 +52,13 @@ describe('sanitizeHttpClientError', () => {
         res.end(JSON.stringify({ reason: 'bad input' }))
         return
       }
+      if (req.url!.startsWith('/redirect')) {
+        res.statusCode = 302
+        res.setHeader('location', '/checkout')
+        res.setHeader('set-cookie', 'checkout.vtex.com=__ofid=order-form-id; Path=/')
+        res.end()
+        return
+      }
       res.end('{"ok":true}')
     })
     baseURL = await listen(upstream)
@@ -147,18 +154,28 @@ describe('sanitizeHttpClientError', () => {
       expect(inspect({ ...err }, { depth: 10 })).not.toContain(TOKEN)
       expect(JSON.stringify(cleanError(err))).not.toContain(TOKEN)
       expect(JSON.stringify(new Error(`failed: ${JSON.stringify(err)}`).message)).not.toContain(TOKEN)
-      for (const text of [JSON.stringify(err), inspect(err, { depth: 10 }), JSON.stringify(cleanError(err))]) {
+      for (const text of [JSON.stringify(err), inspect(err.config, { depth: 10 }), JSON.stringify(cleanError(err))]) {
         expect(text).not.toContain(STORE_TOKEN)
       }
     })
 
-    it('from the response, which holds the config too, and from its set-cookie header', async () => {
+    it('from the response config, keeping the response headers', async () => {
       const err = await failure()
 
-      expect(JSON.stringify({ config: err.response.config, headers: err.response.headers })).not.toContain(STORE_TOKEN)
+      expect(JSON.stringify(err.response.config)).not.toContain(STORE_TOKEN)
       expect(JSON.stringify(err.response.config)).not.toContain(TOKEN)
-      expect(err.response.headers['set-cookie']).toBe(REDACTED)
+      expect(err.response.headers['set-cookie']).toEqual([`vtex_session=${STORE_TOKEN}; Path=/`])
       expect(err.response.headers['content-type']).toBe('application/json')
+    })
+
+    it('keeps the set-cookie of a redirect, which apps forward, out of the logs', async () => {
+      const err = await failure('/redirect')
+
+      expect(err.response.status).toBe(302)
+      expect(err.response.headers.location).toBe('/checkout')
+      expect(err.response.headers['set-cookie']).toEqual(['checkout.vtex.com=__ofid=order-form-id; Path=/'])
+      expect(cleanError(err).response.headers).not.toHaveProperty('set-cookie')
+      expect(JSON.stringify(err)).not.toContain('__ofid')
     })
 
     it('keeps the other response headers, even when their names look like credentials', async () => {

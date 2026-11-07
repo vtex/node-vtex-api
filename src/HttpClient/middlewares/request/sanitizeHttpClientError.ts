@@ -1,21 +1,21 @@
-import { isKnownCredentialHeaderName, isSensitiveHeaderName, redactCredentialFields, redactRequestData, redactUrlQuery } from '../../../utils/sensitiveHeaders'
+import { isSensitiveHeaderName, redactCredentialFields, redactRequestData, redactUrlQuery } from '../../../utils/sensitiveHeaders'
 import { REDACTED } from '../../../utils/stringRedactor'
 
 const isObject = (value: unknown): value is Record<string, any> =>
   value !== null && typeof value === 'object'
 
 /**
- * A copy of the headers with the value of every header `isSensitive` selects replaced. Keys are
- * kept. Returns the same object when there is nothing to replace. Works on plain objects (axios
- * 0.x) and on `AxiosHeaders` (axios 1.x), whose type is kept so code that calls `headers.get()`
- * still works.
+ * A copy of the headers with the value of every credential header replaced. Keys are kept.
+ * Returns the same object when there is nothing to replace. Works on plain objects (axios 0.x)
+ * and on `AxiosHeaders` (axios 1.x), whose type is kept so code that calls `headers.get()` still
+ * works.
  */
-const redactHeaders = (headers: unknown, isSensitive: (name: string) => boolean = isSensitiveHeaderName) => {
+const redactHeaders = (headers: unknown) => {
   if (!isObject(headers)) {
     return headers
   }
   const values: Record<string, unknown> = typeof headers.toJSON === 'function' ? headers.toJSON() : headers
-  const sensitive = Object.keys(values).filter(name => isSensitive(name) && values[name] != null)
+  const sensitive = Object.keys(values).filter(name => isSensitiveHeaderName(name) && values[name] != null)
   if (sensitive.length === 0) {
     return headers
   }
@@ -111,8 +111,9 @@ const redactConfig = (config: Record<string, any>) => {
  * - `config` (and `response.config`) becomes a copy with credential headers, `auth`,
  *   credential-named `params` and URL query values, and credential-named keys in the request body
  *   (`data`) replaced by `[Redacted]`.
- * - Known credential headers of the upstream response (`set-cookie`) are replaced the same way;
- *   other response headers (`www-authenticate`…) are kept.
+ * - The headers of the upstream response are kept, `set-cookie` included: with `maxRedirects: 0`
+ *   a redirect rejects, and apps forward its cookie. `cleanError` leaves it out of logs and error
+ *   bodies, and `toJSON()` does not serialize the response.
  * - `request` and `response.request` stay readable but are no longer enumerable: they hold the
  *   serialized header block (`_header`), which cannot be rewritten after the request was sent.
  *
@@ -138,9 +139,6 @@ export const sanitizeHttpClientError = <T>(err: T): T => {
       if (isObject(response.config)) {
         response.config = isObject(error.config) ? error.config : redactConfig(response.config)
       }
-      // Only the known credential headers (`set-cookie`): the upstream answer has no credential of
-      // the request under other names, and apps read headers such as `www-authenticate`.
-      response.headers = redactHeaders(response.headers, isKnownCredentialHeaderName)
       hide(response, 'request')
       if (error.config?.responseType === 'stream') {
         hide(response, 'data')
