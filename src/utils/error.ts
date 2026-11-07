@@ -59,7 +59,7 @@ const copyCommonProperties = (from: any, to: Record<string, any>) => {
 }
 
 const AXIOS_PROPERTIES = ['config', 'request', 'response']
-const URL_LOCATIONS = ['path', 'url']
+const URL_LOCATIONS = ['path', 'url', 'baseURL']
 
 const removeHeaders = (headers: Record<string, unknown>, isSensitive: (name: string) => boolean) => {
   for (const headerName of keys(headers) as string[]) {
