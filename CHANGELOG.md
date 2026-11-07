@@ -24,9 +24,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   `proxy-authorization` and `VtexIdclientAutCookie`.
 - The tokens of the request are replaced in GraphQL `errors[]` and in the body built from a
   thrown value. Those error bodies also replace the value of a credential-named field (`apiKey`,
-  `authorization`, `cookie`…), even when it is not one of the request tokens. The walk stops after
-  5,000,000 values or 16 MiB of text and replaces what it did not inspect with `[Truncated]`.
-  Successful bodies are not walked for credentials.
+  `authorization`, `cookie`…), even when it is not one of the request tokens. Successful bodies
+  are not walked for credentials.
 
 ### Fixed
 

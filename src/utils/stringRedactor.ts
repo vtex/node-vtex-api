@@ -133,11 +133,6 @@ export const redactKnownSecrets = (text: string, secrets: Array<string | undefin
 
 const MAX_DEEP_DEPTH = 32
 
-// The same bounds the previous response walk used. A wide error body or one huge string must not
-// make the error path do unbounded work. What is past the budget was not inspected, so it is not sent.
-const MAX_VALUES = 5000000
-const MAX_TEXT_LENGTH = 16 * 1024 * 1024
-
 /**
  * What replaces a container nested deeper than the walk inspects. It is not sent as it is: what
  * was not inspected could hold a secret.
@@ -200,8 +195,7 @@ const assignChild = (copy: any, key: string, value: unknown) => {
  * A value that serializes itself (a class instance, or an object with a `toJSON`) is replaced by
  * what `JSON.stringify` makes of it, then inspected: otherwise its serialization would run after
  * the walk, unchecked. If that serialization fails, the value is replaced by `[Unserializable]`.
- * A container nested deeper than 32 levels, or past 5,000,000 values or 16 MiB of text, is replaced
- * by `[Truncated]`. Both are counted.
+ * A container nested deeper than 32 levels is replaced by `[Truncated]`. Both are counted.
  *
  * The value of a credential-named field (`apiKey`, `authorization`, `cookie`…) is replaced whole,
  * even when it is not one of the given secrets. Array indexes are not names.
@@ -209,19 +203,11 @@ const assignChild = (copy: any, key: string, value: unknown) => {
  * It is for error output (GraphQL `errors[]`, the body built from a thrown value), not for
  * successful responses, where dropping or reshaping data would not be acceptable.
  */
-export const redactKnownSecretsDeep = <T>(
-  value: T,
-  secrets: Array<string | undefined> = [],
-  limits?: { maxValues?: number, maxTextLength?: number }
-): { value: T, redacted: number, truncated: number, unserializable: number } => {
+export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | undefined> = []): { value: T, redacted: number, truncated: number, unserializable: number } => {
   const usable = secrets.filter((secret): secret is string => !!secret && secret.length >= MIN_SECRET_LENGTH)
-  const maxValues = limits?.maxValues ?? MAX_VALUES
-  const maxTextLength = limits?.maxTextLength ?? MAX_TEXT_LENGTH
   let redacted = 0
   let truncated = 0
   let unserializable = 0
-  let values = 0
-  let textLength = 0
   const seen = new Set<object>()
 
   // The plain JSON value `JSON.stringify` would send for a value that serializes itself. It is
@@ -240,19 +226,9 @@ export const redactKnownSecretsDeep = <T>(
   }
 
   const visitString = (text: string) => {
-    if (textLength + text.length > maxTextLength) {
-      truncated++
-      return TRUNCATED
-    }
-    textLength += text.length
     const result = redactKnown(text, usable)
     redacted += result.redacted
     return result.redacted > 0 ? result.value : text
-  }
-
-  const exhausted = () => {
-    truncated++
-    return TRUNCATED
   }
 
   // The whole value of a credential-named field. Undefined means the field is not one, so the
@@ -274,56 +250,22 @@ export const redactKnownSecretsDeep = <T>(
     return target
   }
 
-  // Stops once the value budget is spent, without reading the rest. The unread tail is not returned.
-  const walkList = (node: unknown[], depth: number) => {
+  // Copy-on-write walk of a plain object or array.
+  const walk = (node: Record<string, unknown> | unknown[], depth: number) => {
     seen.add(node)
     let copy: any = node
-    for (let i = 0; i < node.length; i++) {
-      if (values >= maxValues) {
-        seen.delete(node)
-        return exhausted()
-      }
-      const child = node[i]
-      const safe = visit(child, depth + 1, String(i))
-      copy = writeChild(copy, node, String(i), safe, child)
-    }
-    seen.delete(node)
-    return copy
-  }
-
-  const walkRecord = (node: Record<string, unknown>, depth: number) => {
-    seen.add(node)
-    let copy: any = node
-    for (const childKey in node) {
-      if (!Object.prototype.hasOwnProperty.call(node, childKey)) {
-        continue
-      }
-      if (values >= maxValues) {
-        seen.delete(node)
-        return exhausted()
-      }
-      const child = node[childKey]
-      const replaced = redactCredentialField(childKey, child)
-      if (replaced !== undefined) {
-        values++
-        copy = writeChild(copy, node, childKey, replaced, child)
-        continue
-      }
-      const safe = visit(child, depth + 1, childKey)
+    const keysAreNames = !Array.isArray(node)
+    for (const childKey of Object.keys(node)) {
+      const child = (node as Record<string, unknown>)[childKey]
+      const replaced = keysAreNames ? redactCredentialField(childKey, child) : undefined
+      const safe = replaced === undefined ? visit(child, depth + 1, childKey) : replaced
       copy = writeChild(copy, node, childKey, safe, child)
     }
     seen.delete(node)
     return copy
   }
 
-  const walk = (node: Record<string, unknown> | unknown[], depth: number) =>
-    Array.isArray(node) ? walkList(node, depth) : walkRecord(node, depth)
-
   const visit = (node: any, depth: number, key: string): any => {
-    if (values >= maxValues) {
-      return exhausted()
-    }
-    values++
     if (typeof node === 'string') {
       return visitString(node)
     }
