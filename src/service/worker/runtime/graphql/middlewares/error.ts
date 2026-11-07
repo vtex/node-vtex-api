@@ -37,15 +37,34 @@ const withheldErrors = (errors: any[], vtex: IOContext) => {
   }
 }
 
+const isMap = (value: unknown) => value !== null && typeof value === 'object' && !Array.isArray(value)
+
+// A value that fails to serialize during the redaction becomes `[Unserializable]` instead of
+// throwing, so a field GraphQL requires to be a map or a list may come back as a string.
+const isGraphQLError = (err: unknown) => {
+  if (!isMap(err)) {
+    return false
+  }
+  const { extensions, locations, message, path } = err as Record<string, unknown>
+  return typeof message === 'string' &&
+    (extensions == null || isMap(extensions)) &&
+    (locations == null || Array.isArray(locations)) &&
+    (path == null || Array.isArray(path))
+}
+
 // The errors sent back, with the tokens of the request and known credential headers replaced. It
 // never throws: a failure here would turn the whole GraphQL response into a 500.
 const safeGraphQLErrors = (errors: any[], vtex: IOContext) => {
   try {
-    return redactErrorBody(errors, vtex)
+    const redacted = redactErrorBody(errors, vtex)
+    if (Array.isArray(redacted) && redacted.every(isGraphQLError)) {
+      return redacted
+    }
+    console.error('[node-vtex-api error] the sanitized GraphQL errors are not valid GraphQL errors')
   } catch (redactError) {
     console.error('[node-vtex-api error] the GraphQL errors could not be sanitized', (redactError as Error)?.name)
-    return withheldErrors(errors, vtex)
   }
+  return withheldErrors(errors, vtex)
 }
 
 const uniqErrorsByPath = (errors: any[]) => uniqBy(

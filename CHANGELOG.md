@@ -35,8 +35,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   of the request tokens; other fields (`key`, `session`, a session namespace called `cookie`…)
   are kept, also when the request has no token. A reference back to a containing object becomes
   `[Circular]`, so the errors still serialize. A redaction that takes over 50 ms is logged as a warning (`error-redaction: slow`)
-  instead of cutting the body. If the GraphQL errors cannot be redacted, each error is sent with
-  only its message, path and code, with the tokens replaced in each, instead of failing the
+  instead of cutting the body. If the GraphQL errors cannot be redacted, or a field that fails to
+  serialize leaves them in an invalid shape (`extensions` that is not a map), each error is sent
+  with only its message, path and code, with the tokens replaced in each, instead of failing the
   response. Successful
   bodies are not walked for credentials.
 

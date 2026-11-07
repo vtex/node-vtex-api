@@ -195,5 +195,26 @@ describe('graphqlError', () => {
       expect(JSON.stringify(ctx.graphql.graphqlResponse)).not.toContain(TOKEN)
       consoleError.mockRestore()
     })
+
+    it('still answers with valid errors when their extensions cannot be serialized', async () => {
+      const ctx = buildCtx()
+      const { GraphQLError } = require('graphql')
+      const engineError = new GraphQLError('engine failed', undefined, undefined, undefined, ['orders'], undefined, {
+        code: 'E_ORDERS',
+        toJSON: () => { throw new Error('boom') },
+      })
+      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+
+      await loadGraphqlError()(ctx as any, async () => {
+        ctx.graphql.graphqlResponse = { errors: [engineError] }
+      })
+
+      const [error] = ctx.graphql.graphqlResponse.errors
+      expect(error.message).toBe('engine failed')
+      expect(error.path).toEqual(['orders'])
+      expect(error.extensions === undefined || (typeof error.extensions === 'object' && !Array.isArray(error.extensions))).toBe(true)
+      expect(consoleError).toHaveBeenCalled()
+      consoleError.mockRestore()
+    })
   })
 })
