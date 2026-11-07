@@ -1,3 +1,5 @@
+import { isSensitiveParamName } from './sensitiveHeaders'
+
 export const REDACTED = '[Redacted]'
 
 // Shorter values are not credentials, and replacing them everywhere would damage ordinary text.
@@ -195,14 +197,14 @@ const assignChild = (copy: any, key: string, value: unknown) => {
  * the walk, unchecked. If that serialization fails, the value is replaced by `[Unserializable]`.
  * A container nested deeper than 32 levels is replaced by `[Truncated]`. Both are counted.
  *
+ * The value of a credential-named field (`apiKey`, `authorization`, `cookie`…) is replaced whole,
+ * even when it is not one of the given secrets. Array indexes are not names.
+ *
  * It is for error output (GraphQL `errors[]`, the body built from a thrown value), not for
  * successful responses, where dropping or reshaping data would not be acceptable.
  */
 export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | undefined> = []): { value: T, redacted: number, truncated: number, unserializable: number } => {
   const usable = secrets.filter((secret): secret is string => !!secret && secret.length >= MIN_SECRET_LENGTH)
-  if (usable.length === 0) {
-    return { redacted: 0, truncated: 0, unserializable: 0, value }
-  }
   let redacted = 0
   let truncated = 0
   let unserializable = 0
@@ -229,17 +231,35 @@ export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | unde
     return result.redacted > 0 ? result.value : text
   }
 
+  // The whole value of a credential-named field. Undefined means the field is not one, so the
+  // caller inspects the value. Null and a value already replaced are left as they are.
+  const redactCredentialField = (key: string, child: unknown): string | undefined => {
+    if (child == null || child === REDACTED || !isSensitiveParamName(key)) {
+      return undefined
+    }
+    redacted++
+    return REDACTED
+  }
+
+  const writeChild = (copy: any, node: any, key: string, safe: unknown, child: unknown) => {
+    if (safe === child) {
+      return copy
+    }
+    const target = copy === node ? shallowCopy(node) : copy
+    assignChild(target, key, safe)
+    return target
+  }
+
   // Copy-on-write walk of a plain object or array.
   const walk = (node: Record<string, unknown> | unknown[], depth: number) => {
     seen.add(node)
     let copy: any = node
+    const keysAreNames = !Array.isArray(node)
     for (const childKey of Object.keys(node)) {
       const child = (node as Record<string, unknown>)[childKey]
-      const safe = visit(child, depth + 1, childKey)
-      if (safe !== child) {
-        copy = copy === node ? shallowCopy(node) : copy
-        assignChild(copy, childKey, safe)
-      }
+      const replaced = keysAreNames ? redactCredentialField(childKey, child) : undefined
+      const safe = replaced === undefined ? visit(child, depth + 1, childKey) : replaced
+      copy = writeChild(copy, node, childKey, safe, child)
     }
     seen.delete(node)
     return copy

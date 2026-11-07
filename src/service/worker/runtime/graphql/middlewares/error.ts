@@ -118,7 +118,8 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
       }
 
       // The tokens of the request are replaced wherever they appear in the errors sent back, such
-      // as a resolver message that embeds a serialized upstream error. `data` is not touched.
+      // as a resolver message that embeds a serialized upstream error. So is the value of a
+      // credential-named field, even when it is not one of those tokens. `data` is not touched.
       const { authToken, adminUserAuthToken, storeUserAuthToken } = ctx.vtex
       const { value: safeErrors } = redactKnownSecretsDeep(uniqueErrors, [authToken, adminUserAuthToken, storeUserAuthToken])
 

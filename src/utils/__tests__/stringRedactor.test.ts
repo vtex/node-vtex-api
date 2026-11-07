@@ -311,9 +311,28 @@ describe('redactKnownSecretsDeep', () => {
   })
 
   it('gives toJSON an empty key at the root', () => {
-    const root = { toJSON: (key: string) => ({ key, secret: TOKEN }) }
+    const root = { toJSON: (key: string) => ({ received: key, secret: TOKEN }) }
 
-    expect(redactKnownSecretsDeep(root, [TOKEN]).value).toEqual({ key: '', secret: REDACTED })
+    expect(redactKnownSecretsDeep(root, [TOKEN]).value).toEqual({ received: '', secret: REDACTED })
+  })
+
+  it('replaces a credential-named field even when its value is not a known token', () => {
+    const thirdParty = 'tp-live-key-0123456789abcdef'
+    const value = {
+      details: { apiKey: thirdParty, reason: 'bad input' },
+      headers: { authorization: thirdParty, 'content-type': 'application/json' },
+      list: [{ api_key: thirdParty }, thirdParty],
+      message: 'upstream rejected the key',
+    }
+
+    const result = redactKnownSecretsDeep(value, [])
+
+    expect(result.value.details).toEqual({ apiKey: REDACTED, reason: 'bad input' })
+    expect(result.value.headers).toEqual({ authorization: REDACTED, 'content-type': 'application/json' })
+    expect(result.value.list).toEqual([{ api_key: REDACTED }, thirdParty])
+    expect(result.value.message).toBe('upstream rejected the key')
+    expect(JSON.stringify(result.value.details)).not.toContain(thirdParty)
+    expect(value.details.apiKey).toBe(thirdParty)
   })
 
   it('inspects class instances as JSON.stringify sends them', () => {

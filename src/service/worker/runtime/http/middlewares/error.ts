@@ -93,9 +93,10 @@ const logAndRemoveSensitiveData = <
 // bodies the app sets, so both paths expose the same: `cleanError` alone removes credentials only
 // at the top level, and by a short list of header names, so an error that is a property of the
 // thrown value (`originalError`) kept its config, request and stack.
-// The tokens of the request are also replaced wherever they appear in it, such as in a message
-// that embeds them (`new Error(`failed: ${token}`)`). This is an error path: successful bodies are
-// not walked for credentials.
+// The tokens of the request are replaced wherever they appear, such as in a message that embeds
+// them (`new Error(`failed: ${token}`)`). So is the value of a credential-named field (`apiKey`,
+// `authorization`, `cookie`…), even when that value is not one of those tokens. This is an error
+// path: successful bodies are not walked for credentials.
 const buildResponseBody = (thrown: any, ctx: ServiceContext) => {
   try {
     const body = cleanError(sanitizeErrors(thrown, { linked: LINKED }).value)
