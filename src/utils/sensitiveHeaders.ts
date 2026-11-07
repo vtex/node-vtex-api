@@ -97,7 +97,7 @@ export const redactRequestData = (data: unknown): unknown => {
   if (typeof data !== 'string') {
     return redactCredentialFields(data)
   }
-  const first = data.match(/\S/)
+  const first = /\S/.exec(data)
   if (!first || (first[0] !== '{' && first[0] !== '[')) {
     return data
   }
