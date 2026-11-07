@@ -18,9 +18,6 @@ const SENSITIVE_KEYS = [
   'x-vtex-session',
 ]
 
-const sensitiveKeys = new Set(SENSITIVE_KEYS)
-export const isSensitiveKey = (key: string) => sensitiveKeys.has(key.toLowerCase())
-
 // `"key":"value"`, also when the text was serialized twice (`\"key\":\"value\"`). Captures
 // everything up to the value, which is what is replaced. The value is a run of characters that are
 // not a quote, where a backslash only escapes the character after it. The two alternatives of the
