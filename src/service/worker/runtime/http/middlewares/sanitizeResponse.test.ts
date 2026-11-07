@@ -310,6 +310,34 @@ describe('sanitizeResponse', () => {
       ])
     })
 
+    it('withhold a body the walk could not inspect completely', async () => {
+      handler = async ctx => {
+        // Deeper than the walk allows, with the credential past the limit.
+        let nested: any = { error: await callUpstream() }
+        for (let i = 0; i < 40; i++) {
+          nested = { child: nested }
+        }
+        ctx.body = nested
+      }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.status).toBe(500)
+      expect(JSON.parse(res.text)).toEqual({
+        code: 'E_RESPONSE_WITHHELD',
+        message: 'The response could not be safely returned.',
+      })
+      expect(res.text).not.toContain(TOKEN)
+      expect(logs()).toEqual([
+        {
+          message: 'response-sanitizer: limit_reached',
+          reason: 'limit_reached',
+          routeId: 'orders',
+        },
+      ])
+    })
+
     it('keep an error status chosen by the app', async () => {
       handler = async ctx => {
         ctx.status = 404

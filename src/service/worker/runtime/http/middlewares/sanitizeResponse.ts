@@ -70,9 +70,10 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
     const { value, replaced, truncated } = sanitizeErrors(body, { linked: LINKED })
 
     if (truncated) {
-      // The part beyond the limit was not inspected. Withholding it would break the large legitimate
-      // responses, so it is reported to be measured.
+      // The part beyond the limit was not inspected, so an error there would be sent as it is.
+      withholdBody(ctx)
       warn(ctx, SanitizerReason.LimitReached)
+      return
     }
 
     if (value === body) {
@@ -104,8 +105,8 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
  * and to change it before it is serialized.
  *
  * The body is also sanitized when the downstream handlers throw after having set it, as the error
- * middleware keeps an existing body. If the sanitizer itself fails the body is withheld, on any path.
- * It never throws.
+ * middleware keeps an existing body. If the sanitizer itself fails, or it cannot inspect the whole
+ * body, the body is withheld, on any path. It never throws.
  *
  * It is a backstop for apps that return errors by mistake. It is not a boundary against an app that
  * wants to disclose its own credentials, which has them.
