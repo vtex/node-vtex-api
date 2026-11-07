@@ -96,7 +96,6 @@ const logAndRemoveSensitiveData = <
 const buildResponseBody = (thrown: any, ctx: ServiceContext) => {
   try {
     const sanitized = sanitizeErrors(thrown, { linked: LINKED })
-    if (sanitized.truncated) { return WITHHELD_BODY }
     const { authToken, adminUserAuthToken, storeUserAuthToken } = ctx.vtex ?? {}
     return sanitizeCredentials(cleanError(sanitized.value), [authToken, adminUserAuthToken, storeUserAuthToken]).value
   } catch (sanitizeError) {

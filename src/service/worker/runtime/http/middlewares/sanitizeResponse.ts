@@ -96,14 +96,12 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
       : sanitizeErrors(body, { linked: LINKED })
     const { replaced, truncated } = sanitized
 
-    if (truncated) {
-      warn(ctx, SanitizerReason.LimitReached)
-      withholdBody(ctx)
-      return
-    }
-
     const { authToken, adminUserAuthToken, storeUserAuthToken } = ctx.vtex ?? {}
-    const { value, redacted } = sanitizeCredentials(sanitized.value, [authToken, adminUserAuthToken, storeUserAuthToken])
+    const { value, redacted, truncated: credentialsTruncated } = sanitizeCredentials(sanitized.value, [authToken, adminUserAuthToken, storeUserAuthToken])
+
+    if (truncated || credentialsTruncated) {
+      warn(ctx, SanitizerReason.LimitReached)
+    }
 
     if (value === body) {
       return
@@ -139,7 +137,7 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
  *
  * The body is also sanitized when the downstream handlers throw after having set it, as the error
  * middleware keeps an existing body. If the sanitizer itself fails the body is withheld. If it
- * cannot inspect the whole JSON body, the response is withheld. It never throws.
+ * reaches an inspection limit, unvisited values are sent unchanged and the limit is reported. It never throws.
  *
  * It is a backstop for apps that return errors by mistake. It is not a boundary against an app that
  * wants to disclose its own credentials, which has them.

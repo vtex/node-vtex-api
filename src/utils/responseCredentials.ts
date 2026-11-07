@@ -1,30 +1,34 @@
 import { isSensitiveKey, REDACTED, redactSecrets } from './stringRedactor'
 
-// Bound work before serializing a response. Unlike error-only inspection, reaching these limits
-// must withhold the response: the unvisited portion may contain a serialized credential.
+// Bound work before serializing a response. Preserve the existing limit behavior: leave
+// unvisited values untouched and report truncation instead of withholding the response.
 const MAX_DEPTH = 32
 const MAX_VALUES = 5000000
 const MAX_TEXT_LENGTH = 16 * 1024 * 1024
 
 /**
  * Copy-on-write redaction for JSON response values, including already serialized Axios errors
- * and GraphQL messages. Does not mutate cached/frozen values. Throws if inspection cannot finish.
+ * and GraphQL messages. Does not mutate cached/frozen values. Limits preserve unvisited values;
+ * unexpected inspection failures still throw.
  * Buffers and streams are handled separately by the HTTP middleware and are outside this contract.
  */
 export const sanitizeCredentials = <T>(body: T, secrets: Array<string | undefined> = []) => {
   let values = 0
   let textLength = 0
   let redacted = 0
+  let truncated = false
   const ancestors = new Set<object>()
 
   const visit = (value: any, depth: number): any => {
     if (++values > MAX_VALUES || depth > MAX_DEPTH) {
-      throw new Error('Response credential inspection limit reached')
+      truncated = true
+      return value
     }
     if (typeof value === 'string') {
       textLength += value.length
       if (textLength > MAX_TEXT_LENGTH) {
-        throw new Error('Response credential text limit reached')
+        truncated = true
+        return value
       }
       const redaction = redactSecrets(value, secrets)
       redacted += redaction.redacted
@@ -50,7 +54,8 @@ export const sanitizeCredentials = <T>(body: T, secrets: Array<string | undefine
     }
     const keys = Object.keys(value)
     if (values + keys.length > MAX_VALUES) {
-      throw new Error('Response credential inspection limit reached')
+      truncated = true
+      return value
     }
     ancestors.add(value)
     let result = value
@@ -73,5 +78,5 @@ export const sanitizeCredentials = <T>(body: T, secrets: Array<string | undefine
   }
 
   const sanitized = visit(body, 0) as T
-  return { redacted, value: sanitized }
+  return { redacted, truncated, value: sanitized }
 }

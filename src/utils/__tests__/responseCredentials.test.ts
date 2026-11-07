@@ -45,9 +45,28 @@ describe('response credentials', () => {
     expect(sanitizeCredentials(body).value).toBe(body)
   })
 
-  it('rejects a body beyond the inspection depth', () => {
+  it('preserves a body beyond the inspection depth and reports truncation', () => {
     let body: any = { config: { headers } }
     for (let i = 0; i < 40; i++) { body = { child: body } }
-    expect(() => sanitizeCredentials(body)).toThrow()
+    const result = sanitizeCredentials(body)
+    expect(result.value).toBe(body)
+    expect(result.truncated).toBe(true)
+  })
+
+  it('keeps completed redactions when a later value exceeds the text budget', () => {
+    const text = 'x'.repeat(16 * 1024 * 1024 + 1)
+    const body = { headers, text }
+    const result = sanitizeCredentials(body)
+    expect(result.value.headers['Proxy-Authorization']).toBe('[Redacted]')
+    expect(result.value.text).toBe(text)
+    expect(result.truncated).toBe(true)
+    expect(body.headers['Proxy-Authorization']).toBe(secret)
+  })
+
+  it('preserves a container beyond the value budget', () => {
+    const body = new Array(5000001).fill(1)
+    const result = sanitizeCredentials(body)
+    expect(result.value).toBe(body)
+    expect(result.truncated).toBe(true)
   })
 })
