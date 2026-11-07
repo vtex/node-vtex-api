@@ -23,7 +23,7 @@ const SENSITIVE_KEYS = [
 // not a quote, where a backslash only escapes the character after it. The two alternatives of the
 // run exclude each other, so the match is linear.
 const KEYED_VALUE = new RegExp(
-  `(\\\\{0,2}"(?:${SENSITIVE_KEYS.join('|')})\\\\{0,2}"\\s*:\\s*\\\\{0,2}")(?:[^"\\\\]|\\\\[^"])+`,
+  String.raw`(\\{0,2}"(?:${SENSITIVE_KEYS.join('|')})\\{0,2}"\s*:\s*\\{0,2}")(?:[^"\\]|\\[^"])+`,
   'gi'
 )
 
@@ -31,16 +31,16 @@ const KEYED_VALUE = new RegExp(
 // serialized request object (`_header`) holds it. Short values are not credentials, and `Cookie`
 // and `X-Vtex-Session` are left to the cookie pair below because those words open ordinary text.
 const HEADER_LINE = new RegExp(
-  '\\b((?:authorization|proxy-authorization|vtexidclientautcookie|x-vtex-api-appkey|x-vtex-api-apptoken|x-vtex-credential)' +
-    '\\s*:[ \\t]*)[^\\s"\\\\][^\\r\\n"\\\\]{7,}',
+  String.raw`\b((?:authorization|proxy-authorization|vtexidclientautcookie|x-vtex-api-appkey|x-vtex-api-apptoken|x-vtex-credential)` +
+    String.raw`\s*:[ \t]*)[^\s"\\][^\r\n"\\]{7,}`,
   'gi'
 )
 
 // The VTEX ID cookie, in a `Cookie` header or a `Set-Cookie` line.
-const VTEX_ID_COOKIE = /\b(VtexIdclientAutCookie(?:_[A-Za-z0-9-]+)?=)[^;\s"\\]+/gi
+const VTEX_ID_COOKIE = /\b(VtexIdclientAutCookie(?:_[a-z0-9-]+)?=)[^;\s"\\]+/gi
 
 // An `Authorization` value that is not under a key, as in a message or a copied header line.
-const BEARER_TOKEN = /\b(Bearer\s+)[A-Za-z0-9._~+/=-]{16,}/gi
+const BEARER_TOKEN = /\b(Bearer\s+)[a-z0-9._~+/=-]{16,}/gi
 
 export interface RedactResult {
   value: string
