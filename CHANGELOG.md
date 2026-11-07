@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Security
+
+- Redact credential headers and serialized credentials inside JSON responses, including REST
+  Axios objects and GraphQL error messages. Covers `proxy-authorization`, `x-vtex-api-appkey`
+  and `x-vtex-api-apptoken`, case-insensitively, using the same patterns as string bodies.
+- Withhold JSON bodies that exceed inspection limits or use uninspectable custom serialization.
+  This may reject previously accepted large/custom responses. Buffers and streams remain outside
+  the JSON sanitizer; apps must not put credentials in them. Apps must adopt the updated library
+  with `VTEX_IO_RESPONSE_SANITIZER` enabled to receive this protection.
+
+
 ## [6.52.5]
 
 ### Security
