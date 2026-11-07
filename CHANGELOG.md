@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   `cookie` namespace of a session) were replaced by `[Redacted]`.
 - String response bodies only have the tokens of the request replaced, so text that merely looks
   like a credential (`Bearer …`, `Cookie: …`) is no longer changed.
+- A scan that could not finish no longer logs `error_object_removed` when the walk replaced no
+  error object.
 
 ## [7.6.3]
 
