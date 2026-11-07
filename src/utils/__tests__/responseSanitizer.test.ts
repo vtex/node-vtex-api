@@ -6,6 +6,7 @@ import { Agent, createServer, Server } from 'http'
 import { Readable } from 'stream'
 
 import { inspect } from 'util'
+import { runInNewContext } from 'vm'
 
 import { sanitizeErrors, toLoggableError } from '../responseSanitizer'
 
@@ -133,6 +134,21 @@ describe('sanitizeErrors', () => {
       expect(replaced).toBe(1)
       expect(value).toMatchObject({ message: 'broken', name: 'TypeError' })
       expect(value).not.toHaveProperty('stack')
+    })
+
+    it('replaces an error created in another realm, which is not an instance of Error', () => {
+      const foreign = runInNewContext(`
+        const error = new Error('foreign')
+        error.config = { headers: { authorization: '${TOKEN}' } }
+        error
+      `)
+      expect(foreign instanceof Error).toBe(false)
+
+      const { value, replaced } = sanitizeErrors({ error: foreign }, options)
+
+      expect(replaced).toBe(1)
+      expect(value.error).toMatchObject({ message: 'foreign', name: 'Error' })
+      expect(JSON.stringify(value)).not.toContain(TOKEN)
     })
 
     it('keeps custom enumerable properties and drops private ones', () => {

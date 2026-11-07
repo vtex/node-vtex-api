@@ -21,21 +21,25 @@ export enum SanitizerReason {
   Failed = 'sanitizer_failed',
 }
 
+// Only the class of the error is reported: its message may carry what is being kept out.
+const errorName = (err: unknown) => (err as Error | undefined)?.name
+
 const warn = (ctx: ServiceContext, reason: SanitizerReason, fields: Record<string, any> = {}) => {
+  const payload = {
+    message: `response-sanitizer: ${reason}`,
+    reason,
+    routeId: ctx.vtex?.route?.id,
+    ...fields,
+  }
   try {
-    const payload = {
-      message: `response-sanitizer: ${reason}`,
-      reason,
-      routeId: ctx.vtex?.route?.id,
-      ...fields,
-    }
     if (ctx.vtex?.logger) {
       ctx.vtex.logger.warn(payload)
     } else {
       console.warn(JSON.stringify(payload))
     }
-  } catch (_) {
-    // Logging must never break the response.
+  } catch (err) {
+    // Logging must never break the response: the event goes to the process output instead.
+    console.warn(JSON.stringify({ ...payload, loggerErrorName: errorName(err) }))
   }
 }
 
@@ -45,9 +49,10 @@ const withholdBody = (ctx: ServiceContext) => {
       ctx.status = 500
     }
     ctx.body = WITHHELD_BODY
-  } catch (_) {
+  } catch (err) {
     // There is nothing else that can be done safely: as a last resort the response is emptied.
     ctx.body = null
+    warn(ctx, SanitizerReason.Failed, { withholdErrorName: errorName(err) })
   }
 }
 
@@ -86,7 +91,7 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
   } catch (err) {
     // Fails closed: whatever made it fail may also be hiding a credential.
     withholdBody(ctx)
-    warn(ctx, SanitizerReason.Failed, { errorName: err && (err as Error).name })
+    warn(ctx, SanitizerReason.Failed, { errorName: errorName(err) })
   }
 }
 

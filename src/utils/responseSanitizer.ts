@@ -1,16 +1,17 @@
-import { types } from 'util'
 import { cleanError } from './error'
 
 /**
  * Properties of an error that hold HTTP-client internals: the request config (headers carry
  * credentials), the Node request object, and the connection agents. They are never serialized.
+ * `response` is rebuilt separately, so that its headers and request are left out too.
  */
-const INTERNAL_ERROR_KEYS = ['config', 'request', 'httpAgent', 'httpsAgent']
+const INTERNAL_ERROR_KEYS = new Set(['config', 'request', 'httpAgent', 'httpsAgent', 'response'])
 
 const DEFAULT_MAX_DEPTH = 32
 const DEFAULT_MAX_NODES = 200000
 
 const TRUNCATED = '[Truncated]'
+const CIRCULAR = '[Circular]'
 
 export interface SanitizeErrorsOptions {
   /**
@@ -37,8 +38,10 @@ export interface SanitizeErrorsResult<T> {
   truncated: boolean
 }
 
+// `instanceof` is not enough for errors that come from another realm (a `vm` context), which
+// `Object.prototype.toString` still identifies.
 const isError = (node: object): node is Error =>
-  types.isNativeError(node) || node instanceof Error
+  node instanceof Error || Object.prototype.toString.call(node) === '[object Error]'
 
 // Buffers and typed arrays, which have one entry per byte when walked as objects.
 const isBinary = (node: object) => Buffer.isBuffer(node) || ArrayBuffer.isView(node) || node instanceof ArrayBuffer
@@ -71,10 +74,10 @@ class ErrorSanitizer {
   private insideError = 0
   // The containers being walked, from the root. At most `maxDepth` + 1 of them, so searching it is
   // cheaper than maintaining a set.
-  private ancestors: object[] = []
-  private maxDepth: number
-  private maxNodes: number
-  private linked: boolean
+  private readonly ancestors: object[] = []
+  private readonly maxDepth: number
+  private readonly maxNodes: number
+  private readonly linked: boolean
 
   constructor({ linked, maxDepth, maxNodes }: SanitizeErrorsOptions) {
     this.linked = linked
@@ -93,7 +96,7 @@ class ErrorSanitizer {
     if (this.ancestors.includes(node)) {
       // A cycle. Inside an error it must not lead back to the received error, which has the config
       // and the request. In a body, serializing it fails regardless of this walk.
-      return this.insideError > 0 ? '[Circular]' : node
+      return this.insideError > 0 ? CIRCULAR : node
     }
     if (depth > this.maxDepth || this.nodes >= this.maxNodes) {
       this.truncated = true
@@ -103,37 +106,59 @@ class ErrorSanitizer {
 
     // Arrays and plain objects are by far the most common, and cannot be errors, binary data or
     // streams: they are checked first.
-    const isArray = Array.isArray(node)
-    if (!isArray && !isPlainObject(node)) {
-      if (isError(node)) {
-        this.replaced++
-        return this.toSafeError(node, depth)
-      }
-      return this.insideError > 0 ? describeOpaque(node) : node
+    if (Array.isArray(node)) {
+      return this.walkArray(node, depth)
     }
+    if (isPlainObject(node)) {
+      return this.walkObject(node, depth)
+    }
+    return this.walkOther(node, depth)
+  }
 
+  private walkArray(node: any[], depth: number) {
     this.ancestors.push(node)
     let result = node
-    const keys = isArray ? undefined : Object.keys(node)
-    const length = isArray ? node.length : keys!.length
-    for (let i = 0; i < length; i++) {
-      const key = isArray ? i : keys![i]
-      const value = node[key]
-      // Most values are primitives: skipping them here avoids a call per value.
-      if (value === null || typeof value !== 'object') {
-        continue
-      }
-      const safe = this.walk(value, depth + 1)
+    for (let i = 0; i < node.length; i++) {
+      const value = node[i]
+      const safe = this.walkValue(value, depth)
       if (safe !== value) {
-        if (result === node) {
-          result = isArray ? node.slice() : { ...node }
-        }
+        result = result === node ? node.slice() : result
+        result[i] = safe
+      }
+    }
+    this.ancestors.pop()
+
+    return result
+  }
+
+  private walkObject(node: Record<string, any>, depth: number) {
+    this.ancestors.push(node)
+    let result = node
+    for (const key of Object.keys(node)) {
+      const value = node[key]
+      const safe = this.walkValue(value, depth)
+      if (safe !== value) {
+        result = result === node ? { ...node } : result
         result[key] = safe
       }
     }
     this.ancestors.pop()
 
     return result
+  }
+
+  // Most values are primitives: skipping them here avoids a call per value.
+  private walkValue(value: any, depth: number) {
+    return value === null || typeof value !== 'object' ? value : this.walk(value, depth + 1)
+  }
+
+  // Errors, and what is neither a plain object nor an array: buffers, streams, class instances.
+  private walkOther(node: object, depth: number) {
+    if (isError(node)) {
+      this.replaced++
+      return this.toSafeError(node, depth)
+    }
+    return this.insideError > 0 ? describeOpaque(node) : node
   }
 
   /**
@@ -150,33 +175,10 @@ class ErrorSanitizer {
     this.insideError++
 
     const source = error as any
-    const copy: Record<string, any> = {}
-
-    for (const key of Object.keys(source)) {
-      if (INTERNAL_ERROR_KEYS.includes(key) || key === 'response') {
-        continue
-      }
-      copy[key] = this.walk(source[key], depth + 1)
-    }
-
-    for (const property of ['name', 'message', 'code']) {
-      if (typeof source[property] === 'string') {
-        copy[property] = source[property]
-      }
-    }
-
-    if (this.linked && typeof source.stack === 'string') {
-      copy.stack = source.stack
-    }
-
-    // Only what the upstream answered. Its headers (cookies, tokens) and the request that originated
-    // it are not exposed.
+    const copy = this.copyErrorProperties(source, depth)
     const { response } = source
     if (response !== null && typeof response === 'object') {
-      copy.response = {
-        data: this.walk(response.data, depth + 1),
-        status: response.status,
-      }
+      copy.response = this.copyResponse(response, depth)
     }
 
     const safe = cleanError(copy)
@@ -190,6 +192,37 @@ class ErrorSanitizer {
     this.ancestors.pop()
 
     return safe
+  }
+
+  private copyErrorProperties(source: any, depth: number) {
+    const copy: Record<string, any> = {}
+
+    for (const key of Object.keys(source)) {
+      if (!INTERNAL_ERROR_KEYS.has(key)) {
+        copy[key] = this.walk(source[key], depth + 1)
+      }
+    }
+
+    for (const property of ['name', 'message', 'code']) {
+      if (typeof source[property] === 'string') {
+        copy[property] = source[property]
+      }
+    }
+
+    if (this.linked && typeof source.stack === 'string') {
+      copy.stack = source.stack
+    }
+
+    return copy
+  }
+
+  // Only what the upstream answered. Its headers (cookies, tokens) and the request that originated
+  // it are not exposed.
+  private copyResponse(response: any, depth: number) {
+    return {
+      data: this.walk(response.data, depth + 1),
+      status: response.status,
+    }
   }
 }
 
@@ -226,7 +259,7 @@ export const toLoggableError = (value: unknown): unknown => {
       return Object.assign(Object.create(Object.getPrototypeOf(value)), safe)
     }
     return safe
-  } catch (_) {
-    return '[error omitted: it could not be sanitized]'
+  } catch (err) {
+    return `[error omitted: it could not be sanitized (${(err as Error)?.name})]`
   }
 }

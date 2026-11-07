@@ -26,7 +26,7 @@ export const addProcessListeners = () => {
     process.exit(420)
   })
 
-  process.on('unhandledRejection', (reason: Error | any)  => {
+  process.on('unhandledRejection', (reason: any) => {
     if (reason instanceof RequestCancelledError) {
       return
     }
