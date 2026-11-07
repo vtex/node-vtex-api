@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [6.52.6]
 
 ### Security
 
@@ -41,7 +41,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - GraphQL error responses no longer include the stack outside link mode.
 
 ## [6.52.4]
+
 ### Fixed
+
 - `yarn test` no longer fails to even load `src/service/logger` and its transitive
   dependents under `jest@25`: that resolver predates the package `exports` field, so
   it couldn't resolve `@vtex/diagnostics-nodejs@0.1.0-beta.10`'s OpenTelemetry OTLP
@@ -59,7 +61,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   literal `127.0.0.1` instead.
 
 ## [6.52.2]
+
 ### Fixed
+
 - TSLint violations across `src/axios.d.ts`, `src/caches/MultilayeredCache.ts`,
   `src/HttpClient/middlewares/cache.ts`, `src/HttpClient/middlewares/request/index.ts`,
   `src/HttpClient/middlewares/request/setupAxios/interceptors/tracing/spanSetup.ts`,
@@ -72,89 +76,123 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   on unrelated PRs against the 6.x line.
 
 ## [6.51.0] - 2026-06-23
+
 ### Added
+
 - Base `IOClients` getter `janusCatalogSystem` (Janus Catalog) and
   `licenseManager.listBindings`, plus binding-mapping helpers
   (getCanonicalAndAlternateAddresses, inferTargetProduct) used by the
   Tenant API migration. Backport of #617 to the 6.x line.
 
 ## [6.50.1] - 2025-09-10
+
 ### Fixed
+
 - Axios vuln GHSA-jr5f-v2jv-69x6 by using axios@^0.30.1
 
 ## [6.50.0] - 2025-09-02
+
 ### Fixed
+
 - Add new scope argument into auth directive
 
 ## [6.49.7] - 2025-08-13
+
 ### Fixed
+
 - Version of Axios that is incompatible with Asset Builder
 
 ## [6.49.6] - 2025-07-25
+
 ### Changed
+
 - Bump `@vtex/diagnostics-nodejs` version
 - Remove `resolutions` field from `package.json`
 
 ## [6.49.5] - 2025-07-21
+
 ### Changed
+
 - Defining a list of headers to be added as trace span information
 
 ## [6.49.4] - 2025-07-02
+
 ### Fixed
+
 - Userland logs that wouldn't be collected
 
 ## [6.49.2] - 2025-06-03
+
 ### Fixed
+
 - Bumped `axios` to newest version without vuln CVE-2025-27152
 
 ## [6.49.1] - 2025-04-30
+
 ### Fixed
+
 - Add yarn.lock changes from previous release
 
 ## [6.49.0] - 2025-04-29
+
 ### Changed
+
 - Update logging instrumentation
 
 ### Fixed
+
 - Bump typescript-json-schema from 0.40.0 to 0.52.0
 - Fix `yarn gen` script
 - Update node-version on publish workflows
 
 ## [6.48.0] - 2024-10-23
+
 ### Added
+
 - resolveAll to `MineWinsConflictsResolver` to handle an array of conflicts.
 
 ### Fixed
+
 - Avoid using async/await with then callbacks
 - Bump semver from 5.7.1 to 5.7.2
 
 ### Changed
+
 - @auth: Validate token's `account` scope
 - Delete Metadata client
 
 ## [6.47.0] - 2024-06-11
+
 ### Added
+
 - Add option to save asynchronous cache
 
 ### Fixed
+
 - Add handler name for runtime http handlers
 
 ## [6.46.1] - 2024-01-31
 
 ### Fixed
+
 - Return type for the saveJSON method of VBase client
 
 ### Changed
+
 - Increase timeout for messagesGraphQL client
 
 ## [6.46.0] - 2023-10-25
+
 ### Added
+
 - Add disk cache steps and retry count to tracing
 
 ### Changed
+
 - Stop updating client cache when revalidated and still expired
 
 ## [6.45.24] - 2023-10-05
+
 ### Added
 
 - Allow disabling memoization for all requests of a client
@@ -162,6 +200,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [6.45.23] - 2023-10-04
 
 ### Fixed
+
 - Fix metrics being restricted by tracing restrictions
 
 ## [6.45.22] - 2023-09-20
@@ -175,7 +214,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Error tracing spans not logging the details.
 
 ## [6.45.21] - 2023-09-19
+
 ### Changed
+
 - Fix tracingMiddleware shouldTrace decision
 - Fix HttpClient tracing based on sampling decision
 
@@ -188,26 +229,36 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [6.45.21-beta] - 2023-09-04
 
 ## [6.45.20] - 2023-08-30
+
 ### Changed
+
 - Remove sampling decision from runtime
 - Only create tracing spans when they come from router
 
 ## [6.45.20-beta] - 2023-08-30
 
 ## [6.45.19] - 2023-07-12
+
 ### Changed
+
 - Bump `graphql-upload` version
 
 ## [6.45.18] - 2023-07-07
+
 ### Fixed
+
 - Metrics to prometheus
 
 ## [6.45.16] - 2023-07-03
+
 ### Changed
+
 - Bump `prom-client` version
 
 ## [6.45.15] - 2023-02-01
+
 ### Changed
+
 - Removed unnecessary worker signal logs
 
 ## [6.45.14] - 2023-02-01
@@ -222,7 +273,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Do not return empty content if no conflict is found.
 
 ## [6.45.13] - 2022-12-12
+
 ### Changed
+
 - Deterministic cache for getWithBody
 - Remove socket metrics per origin
 
@@ -1955,12 +2008,10 @@ instead
 
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
 
-
 [6.49.7]: https://github.com/vtex/node-vtex-api/compare/v6.48.6...v6.49.7
 [6.45.15]: https://github.com/vtex/node-vtex-api/compare/v6.45.14...v6.45.15
 [6.45.14]: https://github.com/vtex/node-vtex-api/compare/v6.45.13...v6.45.14
 [6.45.13]: https://github.com/vtex/node-vtex-api/compare/v6.45.12...v6.45.13
-
 [6.45.22]: https://github.com/vtex/node-vtex-api/compare/v6.45.21...v6.45.22
 [6.45.21]: https://github.com/vtex/node-vtex-api/compare/v6.45.21-beta.2...v6.45.21
 [6.45.21-beta.2]: https://github.com/vtex/node-vtex-api/compare/v6.45.21-beta.1...v6.45.21-beta.2
@@ -1969,8 +2020,6 @@ instead
 [6.45.21-beta]: https://github.com/vtex/node-vtex-api/compare/v6.45.20...v6.45.21-beta
 [6.45.20]: https://github.com/vtex/node-vtex-api/compare/v6.45.20-beta...v6.45.20
 [6.45.20-beta]: https://github.com/vtex/node-vtex-api/compare/v6.45.19...v6.45.20-beta
-
-
 [Unreleased]: https://github.com/vtex/node-vtex-api/compare/v6.50.1...HEAD
 [6.50.1]: https://github.com/vtex/node-vtex-api/compare/v6.50.1-beta...v6.50.1
 [6.50.1-beta]: https://github.com/vtex/node-vtex-api/compare/v6.50.0...v6.50.1-beta
