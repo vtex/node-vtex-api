@@ -1,0 +1,44 @@
+import { cleanError } from '../error'
+
+// Fake credentials only.
+const TOKEN = 'app-token-eyJhbGciOiJSUzI1NiJ9.payload.signature'
+
+const axiosLikeError = (headers: Record<string, string>) => {
+  const err: any = new Error('Request failed with status code 400')
+  err.config = { headers, method: 'get', url: '/orders' }
+  err.response = { data: { reason: 'bad input' }, headers: { 'set-cookie': `vtex_session=${TOKEN}`, 'content-type': 'application/json' }, status: 400 }
+  return err
+}
+
+describe('cleanError', () => {
+  it('drops every credential header from what is logged, keeping the others', () => {
+    const cleaned = cleanError(axiosLikeError({
+      'Authorization': `Bearer ${TOKEN}`,
+      'Proxy-Authorization': TOKEN,
+      'VtexIdclientAutCookie': TOKEN,
+      'VtexIdclientAutCookie_acme': TOKEN,
+      'X-Vtex-Api-AppKey': TOKEN,
+      'X-Vtex-Api-AppToken': TOKEN,
+      'X-Vtex-Credential': TOKEN,
+      'accept': 'application/json',
+      'cookie': `vtex_session=${TOKEN}`,
+      'x-vtex-use-https': 'true',
+    }))
+
+    expect(JSON.stringify(cleaned)).not.toContain(TOKEN)
+    expect(cleaned.config.headers).toEqual({ 'accept': 'application/json', 'x-vtex-use-https': 'true' })
+    expect(cleaned.response.headers).toEqual({ 'content-type': 'application/json' })
+  })
+
+  it('keeps what is needed to debug', () => {
+    const cleaned = cleanError(axiosLikeError({ accept: 'application/json' }))
+
+    expect(cleaned).toMatchObject({
+      code: 'E_HTTP_400',
+      config: { method: 'get', url: '/orders' },
+      message: 'Request failed with status code 400',
+      response: { data: { reason: 'bad input' }, status: 400 },
+    })
+    expect(cleaned.stack).toContain('Request failed with status code 400')
+  })
+})

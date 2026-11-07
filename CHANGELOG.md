@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Security
+
+- `HttpClient` failures reach app code with their credentials masked. On the final rejection,
+  after the retries, the error keeps its instance, `message`, `code`, `stack`, `response.status`
+  and `response.data`, while `config` (and `response.config`) becomes a copy with credential
+  headers (`proxy-authorization`, `cookie`, `x-vtex-*`, `VtexIdclientAutCookie[_<account>]` and
+  credential-looking names), `auth`, and credential-named `params` and URL query values replaced by
+  `[Redacted]`. `set-cookie` of the upstream response is masked too. `request`,
+  `response.request` and the connection agents stay readable but are no longer enumerable, so
+  `JSON.stringify`, `toJSON()`, `util.inspect` and the logger no longer carry them.
+- The logger (`cleanError`) drops the same credential headers, not only `authorization`,
+  `proxy-authorization` and `VtexIdclientAutCookie`.
+- The tokens of the request are replaced in GraphQL `errors[]` and in the body built from a
+  thrown value. Successful bodies are not walked for credentials.
+
+### Fixed
+
+- Revert the nested credential redaction of 7.6.3 (#810). It ran on every JSON response, so
+  successful responses holding class instances, `Map`s or values with their own `toJSON` were
+  replaced by a 500 (`E_RESPONSE_WITHHELD`), and payload keys named like credentials (such as the
+  `cookie` namespace of a session) were replaced by `[Redacted]`.
+- String response bodies only have the tokens of the request replaced, so text that merely looks
+  like a credential (`Bearer …`, `Cookie: …`) is no longer changed.
+
 ## [7.6.3]
 
 ### Security

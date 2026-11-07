@@ -2,6 +2,7 @@ import { formatApolloErrors } from 'apollo-server-errors'
 import { uniqBy } from 'ramda'
 
 import { LINKED } from '../../../../../constants'
+import { redactKnownSecretsDeep } from '../../../../../utils/stringRedactor'
 import {
   cancelledErrorCode,
   cancelledRequestStatus,
@@ -116,9 +117,14 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
         ctx.graphql.cacheControl.noStore = true
       }
 
+      // The tokens of the request are replaced wherever they appear in the errors sent back, such
+      // as a resolver message that embeds a serialized upstream error. `data` is not touched.
+      const { authToken, adminUserAuthToken, storeUserAuthToken } = ctx.vtex
+      const { value: safeErrors } = redactKnownSecretsDeep(uniqueErrors, [authToken, adminUserAuthToken, storeUserAuthToken])
+
       ctx.graphql.graphqlResponse = {
         ...ctx.graphql.graphqlResponse,
-        errors: uniqueErrors,
+        errors: safeErrors,
       }
 
     }

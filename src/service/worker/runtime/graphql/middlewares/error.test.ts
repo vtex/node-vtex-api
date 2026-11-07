@@ -109,4 +109,50 @@ describe('graphqlError', () => {
 
     expect(ctx.graphql.graphqlResponse.errors[0].stack).toEqual(expect.stringContaining('resolver failed'))
   })
+
+  describe('the tokens of the request', () => {
+    // Fake credential only.
+    const TOKEN = 'app-token-eyJhbGciOiJSUzI1NiJ9.payload.signature'
+
+    it('are replaced in the message and the extensions of a thrown error', async () => {
+      const ctx = buildCtx()
+      ;(ctx.vtex as any).authToken = TOKEN
+      const failure: any = new Error(`upstream failed: {"headers":{"proxy-authorization":"${TOKEN}"}}`)
+      failure.path = ['orders']
+      failure.details = { echoed: TOKEN }
+
+      await loadGraphqlError()(ctx as any, async () => { throw failure })
+
+      const response = JSON.stringify(ctx.graphql.graphqlResponse)
+      expect(response).not.toContain(TOKEN)
+      expect(ctx.graphql.graphqlResponse.errors[0].message).toBe('upstream failed: {"headers":{"proxy-authorization":"[Redacted]"}}')
+    })
+
+    it('are replaced in errors reported by the engine, and data is not touched', async () => {
+      const ctx = buildCtx()
+      ;(ctx.vtex as any).storeUserAuthToken = TOKEN
+      const { GraphQLError } = require('graphql')
+      const engineError = new GraphQLError(`engine failed with ${TOKEN}`, undefined, undefined, undefined, ['orders'], new Error('resolver failed'))
+      const data = { session: { namespaces: { cookie: { value: TOKEN } } } }
+
+      await loadGraphqlError()(ctx as any, async () => {
+        ctx.graphql.graphqlResponse = { data, errors: [engineError] }
+      })
+
+      expect(ctx.graphql.graphqlResponse.errors[0].message).toBe('engine failed with [Redacted]')
+      expect(ctx.graphql.graphqlResponse.data).toBe(data)
+    })
+
+    it('are still logged as they were, for debugging', async () => {
+      const ctx = buildCtx()
+      ;(ctx.vtex as any).authToken = TOKEN
+      const failure: any = new Error('plain failure without secrets')
+      failure.path = ['orders']
+
+      await loadGraphqlError()(ctx as any, async () => { throw failure })
+
+      expect(ctx.graphql.graphqlResponse.errors[0].message).toBe('plain failure without secrets')
+      expect(ctx.vtex.logger.log).toHaveBeenCalled()
+    })
+  })
 })

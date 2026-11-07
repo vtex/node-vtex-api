@@ -1,4 +1,4 @@
-import { REDACTED, redactSecrets } from '../stringRedactor'
+import { REDACTED, redactKnownSecrets, redactKnownSecretsDeep, redactSecrets } from '../stringRedactor'
 
 const TOKEN = 'eyJhY2NvdW50IjoiY29yZWJpeiJ9.payload-part-123.signature-part-456'
 
@@ -228,5 +228,56 @@ describe('redactSecrets', () => {
     redactSecrets(text)
 
     expect(Date.now() - startedAt).toBeLessThan(2000)
+  })
+})
+
+describe('redactKnownSecrets', () => {
+  it('replaces only the given secrets', () => {
+    expect(redactKnownSecrets(`a ${TOKEN} b ${TOKEN}`, [TOKEN])).toEqual({ redacted: 2, value: `a ${REDACTED} b ${REDACTED}` })
+  })
+
+  it('keeps text that only looks like a credential', () => {
+    const text = 'Authorization: Bearer abcdefghijklmnopqrstuvwxyz0123\nCookie: consent=accepted-all-the-way'
+
+    expect(redactKnownSecrets(text, [TOKEN])).toEqual({ redacted: 0, value: text })
+  })
+
+  it('ignores secrets that are missing or too short to be credentials', () => {
+    expect(redactKnownSecrets('id 12345', [undefined, '12345'])).toEqual({ redacted: 0, value: 'id 12345' })
+  })
+})
+
+describe('redactKnownSecretsDeep', () => {
+  it('replaces the secrets in every string, copying only what changes', () => {
+    const untouched = { id: 1 }
+    const value = { errors: [{ extensions: { exception: { message: `failed ${TOKEN}` } }, message: TOKEN }], untouched }
+
+    const result = redactKnownSecretsDeep(value, [TOKEN])
+
+    expect(result.redacted).toBe(2)
+    expect(result.value).toEqual({ errors: [{ extensions: { exception: { message: `failed ${REDACTED}` } }, message: REDACTED }], untouched })
+    expect(result.value.untouched).toBe(untouched)
+    expect(value.errors[0].message).toBe(TOKEN)
+  })
+
+  it('returns the same value when there is nothing to replace', () => {
+    const value = { message: 'no secret here' }
+
+    expect(redactKnownSecretsDeep(value, [TOKEN]).value).toBe(value)
+    expect(redactKnownSecretsDeep(value, []).value).toBe(value)
+  })
+
+  it('leaves class instances, buffers and cycles alone, and never throws', () => {
+    class Holder { constructor(public readonly secret: string) {} }
+    const cyclic: any = { message: TOKEN }
+    cyclic.self = cyclic
+    const holder = new Holder(TOKEN)
+    const buffer = Buffer.from(TOKEN)
+
+    const result = redactKnownSecretsDeep({ buffer, cyclic, holder }, [TOKEN])
+
+    expect(result.value.holder).toBe(holder)
+    expect(result.value.buffer).toBe(buffer)
+    expect(result.value.cyclic.message).toBe(REDACTED)
   })
 })

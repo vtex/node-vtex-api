@@ -1,15 +1,12 @@
 // Inspired by https://github.com/sindresorhus/serialize-error
-import { find, keys, pick } from 'ramda'
+import { keys, pick } from 'ramda'
+
+import { isSensitiveHeaderName } from './sensitiveHeaders'
 
 export const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url', 'metric', 'inflightKey', 'forceMaxAge', 'params', 'responseType']
 export const SENSITIVE_EXCEPTION_FIELDS = ['config', 'request', 'stack']
 
 const MAX_ERROR_STRING_LENGTH = process.env.MAX_ERROR_STRING_LENGTH ? parseInt(process.env.MAX_ERROR_STRING_LENGTH, 10) : 8 * 1024
-
-const findCaseInsensitive = (target: string, set: string[]) => find(
-  t => t.toLocaleLowerCase() === target,
-  set
-)
 
 const destroyCircular = (from: any, seen: any[]) => {
   const to: {[key: string]: any} = Array.isArray(from) ? [] : {}
@@ -68,19 +65,13 @@ const destroyCircular = (from: any, seen: any[]) => {
     if (to[property] != null && typeof to[property] === 'object') {
       to[property] = pick(PICKED_AXIOS_PROPS, to[property])
       const headers = to[property] && to[property].headers
-      if (headers) {
-        const headerNames = keys(headers)
-        const authorization = findCaseInsensitive('authorization', headerNames as string[])
-        if (!!authorization) {
-          delete headers[authorization]
-        }
-        const proxyAuth = findCaseInsensitive('proxy-authorization', headerNames as string[])
-        if (!!proxyAuth) {
-          delete headers[proxyAuth]
-        }
-        const vtexIdClientAutCookie = findCaseInsensitive('vtexidclientautcookie', headerNames as string[])
-        if (!!vtexIdClientAutCookie) {
-          delete headers[vtexIdClientAutCookie]
+      if (headers && typeof headers === 'object') {
+        // Same list as the HttpClient error sanitizer: the account-suffixed store cookie, `cookie`,
+        // `x-vtex-api-*`, `x-vtex-credential` and credential-looking names, not only three names.
+        for (const headerName of keys(headers) as string[]) {
+          if (isSensitiveHeaderName(headerName)) {
+            delete headers[headerName]
+          }
         }
       }
     }

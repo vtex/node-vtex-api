@@ -18,9 +18,6 @@ const SENSITIVE_KEYS = [
   'x-vtex-session',
 ]
 
-const sensitiveKeys = new Set(SENSITIVE_KEYS)
-export const isSensitiveKey = (key: string) => sensitiveKeys.has(key.toLowerCase())
-
 // `"key":"value"`, also when the text was serialized twice (`\"key\":\"value\"`). Captures
 // everything up to the value, which is what is replaced. The value is a run of characters that are
 // not a quote, where a backslash only escapes the character after it. The two alternatives of the
@@ -119,4 +116,74 @@ export const redactSecrets = (text: string, secrets: Array<string | undefined> =
   }
 
   return { redacted, value: redacted > 0 ? value : text }
+}
+
+/**
+ * Replaces only the given secrets (the tokens of the request), wherever they appear. No pattern is
+ * applied, so a text that merely looks like a credential (`Bearer …`, `Cookie: …`) is kept.
+ *
+ * Use it where the text may be an ordinary payload, such as a successful string body.
+ */
+export const redactKnownSecrets = (text: string, secrets: Array<string | undefined> = []): RedactResult => {
+  const known = redactKnown(text, secrets)
+  return { redacted: known.redacted, value: known.redacted > 0 ? known.value : text }
+}
+
+const MAX_DEEP_DEPTH = 32
+
+const isPlainContainer = (value: unknown): value is Record<string, unknown> | unknown[] => {
+  if (value === null || typeof value !== 'object') {
+    return false
+  }
+  if (Array.isArray(value)) {
+    return true
+  }
+  const proto = Object.getPrototypeOf(value)
+  return proto === Object.prototype || proto === null
+}
+
+/**
+ * Replaces the given secrets in every string of a JSON-like value (plain objects, arrays), with
+ * copy-on-write: what has no secret keeps its reference, and the received value is not changed.
+ * Other objects (class instances, buffers, dates…) are left as they are, never traversed, so this
+ * cannot fail on a value it does not understand.
+ *
+ * It is for error output (GraphQL `errors[]`, the body built from a thrown value), not for
+ * successful responses.
+ */
+export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | undefined> = []): { value: T, redacted: number } => {
+  const usable = secrets.filter((secret): secret is string => !!secret && secret.length >= MIN_SECRET_LENGTH)
+  if (usable.length === 0) {
+    return { redacted: 0, value }
+  }
+  let redacted = 0
+  const seen = new Set<object>()
+
+  const visit = (node: any, depth: number): any => {
+    if (typeof node === 'string') {
+      const result = redactKnown(node, usable)
+      redacted += result.redacted
+      return result.redacted > 0 ? result.value : node
+    }
+    if (!isPlainContainer(node) || depth > MAX_DEEP_DEPTH || seen.has(node)) {
+      return node
+    }
+    seen.add(node)
+    let copy: any = node
+    for (const key of Object.keys(node)) {
+      const child = (node as any)[key]
+      const safe = visit(child, depth + 1)
+      if (safe !== child) {
+        if (copy === node) {
+          copy = Array.isArray(node) ? node.slice() : { ...node }
+        }
+        copy[key] = safe
+      }
+    }
+    seen.delete(node)
+    return copy
+  }
+
+  const sanitized = visit(value, 0)
+  return { redacted, value: sanitized }
 }
