@@ -109,4 +109,112 @@ describe('graphqlError', () => {
 
     expect(ctx.graphql.graphqlResponse.errors[0].stack).toEqual(expect.stringContaining('resolver failed'))
   })
+
+  describe('the tokens of the request', () => {
+    // Fake credential only.
+    const TOKEN = 'app-token-eyJhbGciOiJSUzI1NiJ9.payload.signature'
+
+    it('are replaced in the message and the extensions of a thrown error', async () => {
+      const ctx = buildCtx()
+      ;(ctx.vtex as any).authToken = TOKEN
+      const failure: any = new Error(`upstream failed: {"headers":{"proxy-authorization":"${TOKEN}"}}`)
+      failure.path = ['orders']
+      failure.details = { echoed: TOKEN }
+
+      await loadGraphqlError()(ctx as any, async () => { throw failure })
+
+      const response = JSON.stringify(ctx.graphql.graphqlResponse)
+      expect(response).not.toContain(TOKEN)
+      expect(ctx.graphql.graphqlResponse.errors[0].message).toBe('upstream failed: {"headers":{"proxy-authorization":"[Redacted]"}}')
+    })
+
+    it('are replaced in errors reported by the engine, and data is not touched', async () => {
+      const ctx = buildCtx()
+      ;(ctx.vtex as any).storeUserAuthToken = TOKEN
+      const { GraphQLError } = require('graphql')
+      const engineError = new GraphQLError(`engine failed with ${TOKEN}`, undefined, undefined, undefined, ['orders'], new Error('resolver failed'))
+      const data = { session: { namespaces: { cookie: { value: TOKEN } } } }
+
+      await loadGraphqlError()(ctx as any, async () => {
+        ctx.graphql.graphqlResponse = { data, errors: [engineError] }
+      })
+
+      expect(ctx.graphql.graphqlResponse.errors[0].message).toBe('engine failed with [Redacted]')
+      expect(ctx.graphql.graphqlResponse.data).toBe(data)
+    })
+
+    it('are replaced in what an extension with its own toJSON serializes to', async () => {
+      const ctx = buildCtx()
+      ;(ctx.vtex as any).authToken = TOKEN
+      const { GraphQLError } = require('graphql')
+      const engineError = new GraphQLError('engine failed', undefined, undefined, undefined, ['orders'], undefined, {
+        leak: { toJSON: () => ({ exposed: TOKEN }) },
+      })
+
+      await loadGraphqlError()(ctx as any, async () => {
+        ctx.graphql.graphqlResponse = { errors: [engineError] }
+      })
+
+      expect(JSON.stringify(ctx.graphql.graphqlResponse)).not.toContain(TOKEN)
+    })
+
+    it('are still logged as they were, for debugging', async () => {
+      const ctx = buildCtx()
+      ;(ctx.vtex as any).authToken = TOKEN
+      const failure: any = new Error('plain failure without secrets')
+      failure.path = ['orders']
+
+      await loadGraphqlError()(ctx as any, async () => { throw failure })
+
+      expect(ctx.graphql.graphqlResponse.errors[0].message).toBe('plain failure without secrets')
+      expect(ctx.vtex.logger.log).toHaveBeenCalled()
+    })
+  })
+
+  describe('when the errors cannot be redacted', () => {
+    // Fake credential only.
+    const TOKEN = 'app-token-eyJhbGciOiJSUzI1NiJ9.payload.signature'
+
+    afterEach(() => jest.dontMock('../../utils/redactErrorBody'))
+
+    it('still answers with each error message, path and code, without the tokens', async () => {
+      jest.doMock('../../utils/redactErrorBody', () => ({ redactErrorBody: () => { throw new TypeError('hostile') } }))
+      const graphqlError = loadGraphqlError()
+      const ctx = buildCtx()
+      ;(ctx.vtex as any).authToken = TOKEN
+      const failure: any = new Error(`upstream failed: ${TOKEN}`)
+      failure.path = ['orders', 0, TOKEN]
+      failure.extensions = { code: `E_${TOKEN}` }
+      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+
+      await graphqlError(ctx as any, async () => { throw failure })
+
+      const [error] = ctx.graphql.graphqlResponse.errors
+      expect(error.message).toBe('upstream failed: [Redacted]')
+      expect(error.path).toEqual(['orders', 0, '[Redacted]'])
+      expect(JSON.stringify(ctx.graphql.graphqlResponse)).not.toContain(TOKEN)
+      consoleError.mockRestore()
+    })
+
+    it('still answers with valid errors when their extensions cannot be serialized', async () => {
+      const ctx = buildCtx()
+      const { GraphQLError } = require('graphql')
+      const engineError = new GraphQLError('engine failed', undefined, undefined, undefined, ['orders'], undefined, {
+        code: 'E_ORDERS',
+        toJSON: () => { throw new Error('boom') },
+      })
+      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+
+      await loadGraphqlError()(ctx as any, async () => {
+        ctx.graphql.graphqlResponse = { errors: [engineError] }
+      })
+
+      const [error] = ctx.graphql.graphqlResponse.errors
+      expect(error.message).toBe('engine failed')
+      expect(error.path).toEqual(['orders'])
+      expect(error.extensions === undefined || (typeof error.extensions === 'object' && !Array.isArray(error.extensions))).toBe(true)
+      expect(consoleError).toHaveBeenCalled()
+      consoleError.mockRestore()
+    })
+  })
 })

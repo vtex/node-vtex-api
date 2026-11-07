@@ -1,4 +1,4 @@
-import { REDACTED, redactSecrets } from '../stringRedactor'
+import { REDACTED, redactKnownSecrets, redactKnownSecretsDeep, redactSecrets } from '../stringRedactor'
 
 const TOKEN = 'eyJhY2NvdW50IjoiY29yZWJpeiJ9.payload-part-123.signature-part-456'
 
@@ -228,5 +228,189 @@ describe('redactSecrets', () => {
     redactSecrets(text)
 
     expect(Date.now() - startedAt).toBeLessThan(2000)
+  })
+})
+
+describe('redactKnownSecrets', () => {
+  it('replaces only the given secrets', () => {
+    expect(redactKnownSecrets(`a ${TOKEN} b ${TOKEN}`, [TOKEN])).toEqual({ redacted: 2, value: `a ${REDACTED} b ${REDACTED}` })
+  })
+
+  it('keeps text that only looks like a credential', () => {
+    const text = 'Authorization: Bearer abcdefghijklmnopqrstuvwxyz0123\nCookie: consent=accepted-all-the-way'
+
+    expect(redactKnownSecrets(text, [TOKEN])).toEqual({ redacted: 0, value: text })
+  })
+
+  it('ignores secrets that are missing or too short to be credentials', () => {
+    expect(redactKnownSecrets('id 12345', [undefined, '12345'])).toEqual({ redacted: 0, value: 'id 12345' })
+  })
+})
+
+describe('redactKnownSecretsDeep', () => {
+  it('replaces the secrets in every string, copying only what changes', () => {
+    const untouched = { id: 1 }
+    const value = { errors: [{ extensions: { exception: { message: `failed ${TOKEN}` } }, message: TOKEN }], untouched }
+
+    const result = redactKnownSecretsDeep(value, [TOKEN])
+
+    expect(result.redacted).toBe(2)
+    expect(result.value).toEqual({ errors: [{ extensions: { exception: { message: `failed ${REDACTED}` } }, message: REDACTED }], untouched })
+    expect(result.value.untouched).toBe(untouched)
+    expect(value.errors[0].message).toBe(TOKEN)
+  })
+
+  it('returns the same value when there is nothing to replace', () => {
+    const value = { message: 'no secret here' }
+
+    expect(redactKnownSecretsDeep(value, [TOKEN]).value).toBe(value)
+    expect(redactKnownSecretsDeep(value, []).value).toBe(value)
+  })
+
+  it('truncates what is nested deeper than it inspects, instead of sending it uninspected', () => {
+    let node: any = { message: TOKEN }
+    for (let i = 0; i < 40; i++) { node = { child: node } }
+
+    const result = redactKnownSecretsDeep({ errors: [node] }, [TOKEN])
+
+    expect(JSON.stringify(result.value)).not.toContain(TOKEN)
+    expect(JSON.stringify(result.value)).toContain('[Truncated]')
+    expect(result.truncated).toBe(1)
+  })
+
+  it('does not truncate a shallow value', () => {
+    const value = { errors: [{ message: TOKEN, path: ['a', 'b'] }] }
+
+    expect(redactKnownSecretsDeep(value, [TOKEN]).truncated).toBe(0)
+  })
+
+  it('inspects what a value with its own toJSON serializes to, which would otherwise run unchecked', () => {
+    const value = { extensions: { leak: { toJSON: () => ({ exposed: TOKEN }) } } }
+
+    const result = redactKnownSecretsDeep(value, [TOKEN])
+
+    expect(JSON.stringify(result.value)).not.toContain(TOKEN)
+    expect(result.value.extensions.leak).toEqual({ exposed: REDACTED })
+  })
+
+  it('gives toJSON the key it has in its parent, as JSON.stringify does', () => {
+    const make = () => ({
+      extensions: {
+        custom: { toJSON: (key: string) => ({ serializedFor: key }) },
+        gone: { toJSON: () => undefined },
+        list: [{ toJSON: (key: string) => `index:${key}` }],
+      },
+    })
+
+    const sanitized = redactKnownSecretsDeep(make(), [TOKEN]).value
+
+    expect(JSON.stringify(sanitized)).toBe(JSON.stringify(make()))
+    expect(sanitized.extensions.custom).toEqual({ serializedFor: 'custom' })
+    expect(sanitized.extensions.list).toEqual(['index:0'])
+    expect(sanitized.extensions).not.toHaveProperty('gone')
+  })
+
+  it('gives toJSON an empty key at the root', () => {
+    const root = { toJSON: (key: string) => ({ received: key, secret: TOKEN }) }
+
+    expect(redactKnownSecretsDeep(root, [TOKEN]).value).toEqual({ received: '', secret: REDACTED })
+  })
+
+  it('replaces the value of a known credential header inside headers, even when it is not a known token', () => {
+    const thirdParty = 'tp-live-key-0123456789abcdef'
+    const value = {
+      config: { headers: { Authorization: thirdParty, 'content-type': 'application/json', 'x-vtex-api-apptoken': thirdParty } },
+      headers: { cookie: thirdParty },
+      message: 'upstream rejected the key',
+    }
+
+    const result = redactKnownSecretsDeep(value, [TOKEN])
+
+    expect(result.value.config.headers).toEqual({ Authorization: REDACTED, 'content-type': 'application/json', 'x-vtex-api-apptoken': REDACTED })
+    expect(result.value.headers).toEqual({ cookie: REDACTED })
+    expect(result.value.message).toBe('upstream rejected the key')
+    expect(value.config.headers.Authorization).toBe(thirdParty)
+  })
+
+  it('keeps fields named like credential headers outside headers, such as a session namespace', () => {
+    const value = {
+      authorization: { status: 'denied' },
+      session: { namespaces: { cookie: { VtexIdclientAutCookie_acme: { value: 'kept-as-it-is' } } } },
+    }
+
+    expect(redactKnownSecretsDeep(value, [TOKEN]).value).toBe(value)
+  })
+
+  it('keeps business fields whose names merely look like credentials', () => {
+    const value = {
+      author: 'catalog-team',
+      error: { key: 'SKU_UNAVAILABLE', message: 'x' },
+      idempotencyKey: 'order-123',
+      keys: ['a', 'b'],
+      messageKey: 'store/cart.unavailable',
+      session: { namespaces: { public: { country: 'BRA' } } },
+      sessionStatus: 'expired',
+    }
+
+    expect(redactKnownSecretsDeep(value, [TOKEN]).value).toBe(value)
+  })
+
+  it('masks credential headers and cycles even without a usable secret', () => {
+    const thirdParty = 'tp-live-key-0123456789abcdef'
+    const extensions: any = { headers: { authorization: thirdParty }, message: `failed ${thirdParty}` }
+    extensions.self = extensions
+
+    const result = redactKnownSecretsDeep([{ extensions }], [undefined, 'short'])
+
+    expect(result.value[0].extensions).toEqual({ headers: { authorization: REDACTED }, message: `failed ${thirdParty}`, self: '[Circular]' })
+    expect(() => JSON.stringify(result.value)).not.toThrow()
+  })
+
+  it('returns the same value without a usable secret when there is nothing structural to replace', () => {
+    const value = { message: 'tp-live-key-0123456789abcdef' }
+
+    expect(redactKnownSecretsDeep(value, []).value).toBe(value)
+  })
+
+  it('replaces a reference back to a containing object, so the result serializes without the original', () => {
+    const extensions: any = { code: 'X', detail: TOKEN }
+    extensions.self = extensions
+
+    const result = redactKnownSecretsDeep([{ extensions, message: 'm' }], [TOKEN])
+
+    expect(result.value[0].extensions).toEqual({ code: 'X', detail: REDACTED, self: '[Circular]' })
+    expect(JSON.stringify(result.value)).not.toContain(TOKEN)
+  })
+
+  it('inspects class instances as JSON.stringify sends them', () => {
+    class Holder { constructor(public readonly secret: string, public readonly id: number) {} }
+
+    const result = redactKnownSecretsDeep({ holder: new Holder(TOKEN, 1), when: new Date(0) }, [TOKEN])
+
+    expect(result.value.holder).toEqual({ id: 1, secret: REDACTED })
+    expect(result.value.when).toBe('1970-01-01T00:00:00.000Z')
+  })
+
+  it('replaces what cannot be serialized, instead of sending it unchecked', () => {
+    // Not a plain object (it has its own prototype), so it is serialized, and the cycle fails.
+    const cyclic = Object.create({ kind: 'instance' })
+    cyclic.self = cyclic
+    cyclic.secret = TOKEN
+    const throwing = { toJSON: () => { throw new Error(TOKEN) } }
+
+    const result = redactKnownSecretsDeep({ cyclic, throwing }, [TOKEN])
+
+    expect(result.value.cyclic).toBe('[Unserializable]')
+    expect(result.value.throwing).toBe('[Unserializable]')
+    expect(result.unserializable).toBe(2)
+  })
+
+  it('does not throw on a cycle of plain objects', () => {
+    const cyclic: any = { message: TOKEN }
+    cyclic.self = cyclic
+
+    const result = redactKnownSecretsDeep({ cyclic }, [TOKEN])
+
+    expect(result.value.cyclic.message).toBe(REDACTED)
   })
 })

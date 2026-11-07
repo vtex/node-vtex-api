@@ -2,7 +2,6 @@
  * @jest-environment node
  */
 import axios, { AxiosError } from 'axios'
-import { buildSchema, graphql } from 'graphql'
 import { Agent, createServer, Server } from 'http'
 import Koa from 'koa'
 import compress from 'koa-compress'
@@ -55,7 +54,8 @@ describe('sanitizeResponse', () => {
     const app = new Koa()
     app.use(async (ctx, next) => {
       // Stands for the `error` middleware, the outermost one, and for the context of the service.
-      ctx.vtex = { logger: { warn: (log: any) => rawLogs.push(JSON.stringify(log)) }, route: { id: 'orders' } }
+      // The app token is the one the upstream call sends as `Proxy-Authorization`, as in the runtime.
+      ctx.vtex = { authToken: TOKEN, logger: { warn: (log: any) => rawLogs.push(JSON.stringify(log)) }, route: { id: 'orders' } }
       try {
         await next()
       } catch (e) {
@@ -355,6 +355,19 @@ describe('sanitizeResponse', () => {
       expect(logs()).toEqual([])
     })
 
+    it('is not changed when it only looks like a credential', async () => {
+      // A successful text body may hold header lines or a bearer value that are not the request's.
+      const text = 'Authorization: Bearer abcdefghijklmnopqrstuvwxyz0123\nCookie: consent=accepted-all-the-way\n{"cookie":"theme=dark-mode-enabled"}'
+      handler = ctx => { ctx.body = text }
+      await startApp()
+
+      const res = await get()
+
+      expect(captured.body).toBe(text)
+      expect(res.text).toBe(text)
+      expect(logs()).toEqual([])
+    })
+
     it('is not changed when the sanitizer is switched off', async () => {
       process.env[RESPONSE_SANITIZER_SWITCH] = 'off'
       handler = async ctx => { ctx.body = await stringifiedFailure() }
@@ -363,37 +376,6 @@ describe('sanitizeResponse', () => {
       const res = await get()
 
       expect(res.text).toContain(TOKEN)
-    })
-  })
-
-  describe('serialized credentials in REST and GraphQL', () => {
-    it.each(['rest', 'graphql', 'wrapped-error', 'graphql-engine'])('redacts the %s response over HTTP', async kind => {
-      handler = async ctx => {
-        const failure = await callUpstream()
-        // Public Axios responses can duplicate the IO JWT under both credential headers.
-        failure.config.headers = { ...failure.config.headers,
-          VtexIdclientAutCookie: TOKEN,
-          'X-Vtex-Api-AppKey': 'fake-appkey-0123456789',
-          'X-Vtex-Api-AppToken': 'fake-apptoken-0123456789',
-        }
-        const serialized = JSON.stringify(failure.toJSON())
-        if (kind === 'graphql-engine') {
-          ctx.body = await graphql(buildSchema('type Query { review: String }'), '{ review }', {
-            review: () => { throw new Error(serialized) },
-          })
-          return
-        }
-        ctx.body = kind === 'rest' ? JSON.parse(serialized)
-          : kind === 'wrapped-error' ? new Error(serialized)
-          : { data: null, errors: [{ message: serialized, extensions: { exception: { message: serialized } } }] }
-      }
-      await startApp()
-      const res = await get()
-      expect(res.status).toBe(200)
-      expect(res.text).not.toContain(TOKEN)
-      expect(res.text).not.toContain('fake-appkey-0123456789')
-      expect(res.text).not.toContain('fake-apptoken-0123456789')
-      expect(res.text).toContain('[Redacted]')
     })
   })
 
@@ -420,6 +402,26 @@ describe('sanitizeResponse', () => {
       expect(walked).toBe(false)
       expect(captured.body).toBe(body)
       expect(JSON.parse(res.text)).toEqual(body)
+      expect(logs()).toEqual([])
+    })
+
+    it('keeps payload keys named like credentials, and class instances, as they are', async () => {
+      // What #809/#810 broke: a session namespace called `cookie` became a string, and a class
+      // instance or a value with its own `toJSON` made the whole response a 500.
+      class Price { constructor(public readonly amount: number) {} }
+      const body = {
+        data: { session: { namespaces: { cookie: { VtexIdclientAutCookie_acme: { value: 'store-user-token-value' } } } } },
+        price: new Price(10),
+        when: { toJSON: () => '2026-11-07' },
+      }
+      handler = ctx => { ctx.body = body }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.status).toBe(200)
+      expect(captured.body).toBe(body)
+      expect(JSON.parse(res.text)).toEqual(JSON.parse(JSON.stringify(body)))
       expect(logs()).toEqual([])
     })
 
@@ -487,27 +489,11 @@ describe('sanitizeResponse', () => {
       expect(logs()).toEqual([
         {
           errorName: 'Error',
-          inspectionReason: 'unexpected_failure',
           message: 'response-sanitizer: sanitizer_failed',
           reason: 'sanitizer_failed',
           routeId: 'orders',
         },
       ])
-    })
-
-    it('logs a fixed category for unsupported objects without their contents', async () => {
-      handler = async ctx => { ctx.body = { result: new Map([['token', TOKEN]]) } }
-      await startApp()
-
-      const res = await get()
-
-      expect(res.status).toBe(500)
-      expect(res.text).not.toContain(TOKEN)
-      expect(logs()).toEqual([expect.objectContaining({
-        inspectionReason: 'unsupported_object',
-        reason: 'sanitizer_failed',
-      })])
-      expect(JSON.stringify(logs())).not.toContain(TOKEN)
     })
 
     it('sends a body the walk could not inspect completely, and reports the limit', async () => {
@@ -524,7 +510,6 @@ describe('sanitizeResponse', () => {
       const res = await get()
 
       expect(res.status).toBe(200)
-      expect(res.text).toContain(TOKEN)
       expect(res.text).not.toContain('E_RESPONSE_WITHHELD')
       expect(logs()).toEqual([
         {
@@ -544,7 +529,33 @@ describe('sanitizeResponse', () => {
 
       expect(res.status).toBe(200)
       expect(captured.body).toBe(body)
-      expect(res.text).not.toContain('E_RESPONSE_WITHHELD')
+      expect(logs()).toEqual([
+        {
+          message: 'response-sanitizer: limit_reached',
+          reason: 'limit_reached',
+          routeId: 'orders',
+        },
+      ])
+    })
+
+    it('does not claim an error was removed when a truncated scan replaced none', async () => {
+      const body = { items: [{ id: 1 }] }
+      const copied = { items: [{ id: 1 }] }
+      jest.resetModules()
+      let middleware: (ctx: any, next: () => Promise<void>) => Promise<void>
+      jest.isolateModules(() => {
+        const sanitizer = require('../../../../../utils/responseSanitizer')
+        jest.spyOn(sanitizer, 'scanForErrors').mockReturnValue('truncated')
+        jest.spyOn(sanitizer, 'sanitizeErrors').mockReturnValue({ replaced: 0, truncated: true, value: copied })
+        middleware = require('./sanitizeResponse').sanitizeResponse
+      })
+      handler = ctx => { ctx.body = body }
+      await startApp(true, middleware!)
+
+      const res = await get()
+
+      expect(captured.body).toBe(copied)
+      expect(JSON.parse(res.text)).toEqual(copied)
       expect(logs()).toEqual([
         {
           message: 'response-sanitizer: limit_reached',
