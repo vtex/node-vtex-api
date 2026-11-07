@@ -22,8 +22,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   masking throws, `config`, `request`, and the response's `config` and `headers` are removed
   instead of being returned with the credentials still in place.
 - The logger (`cleanError`) drops the same credential headers, not only `authorization`,
-  `proxy-authorization` and `VtexIdclientAutCookie`. A JSON request body has its credential-named
-  keys masked before the 8 KB truncation, so a large body no longer reaches the log unmasked.
+  `proxy-authorization` and `VtexIdclientAutCookie`. It masks credential-named `params`, also for
+  errors that did not go through the HttpClient. A JSON or form request body has its
+  credential-named keys masked before the 8 KB truncation, so a large body no longer reaches the
+  log unmasked.
 - The tokens of the request are replaced in GraphQL `errors[]` and in the body built from a
   thrown value. Inside a `headers` object, those error bodies also replace the value of a known
   credential header (`authorization`, `cookie`, `x-vtex-api-apptoken`…), even when it is not one

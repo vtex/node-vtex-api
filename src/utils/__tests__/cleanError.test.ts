@@ -84,6 +84,16 @@ describe('cleanError', () => {
     expect(cleaned.stack).toContain('Request failed with status code 400')
   })
 
+  it('masks credential-named params of an error that did not go through the HttpClient', () => {
+    const err = axiosLikeError({ accept: 'application/json' })
+    err.config.params = { filter: { apiKey: TOKEN, status: 'open' }, page: 2 }
+
+    const cleaned = cleanError(err)
+
+    expect(cleaned.config.params).toEqual({ filter: { apiKey: '[Redacted]', status: 'open' }, page: 2 })
+    expect(err.config.params.filter.apiKey).toBe(TOKEN)
+  })
+
   it('scrubs a JSON request body larger than 8 KB before truncating it', () => {
     const err = axiosLikeError({ accept: 'application/json' })
     err.config.data = JSON.stringify({ appToken: TOKEN, items: 'x'.repeat(10 * 1024) })

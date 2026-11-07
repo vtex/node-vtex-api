@@ -233,6 +233,34 @@ describe('sanitizeHttpClientError', () => {
       expect(JSON.stringify(cleanError(err))).not.toContain('s3cr3t-value')
     })
 
+    it('from user info in the URL', async () => {
+      const err = await failure(`${baseURL.replace('://', '://appkey:s3cr3t-password@')}/fail`)
+
+      expect(err.config.url).toBe(`${baseURL.replace('://', `://${REDACTED}@`)}/fail`)
+      expect(JSON.stringify(err)).not.toContain('s3cr3t-password')
+    })
+
+    it('from a failed stream response, whose data holds the raw request', async () => {
+      const err = await failure('/fail', { responseType: 'stream' })
+
+      expect(typeof err.response.data.pipe).toBe('function')
+      expect(Object.keys(err.response)).not.toContain('data')
+      expect(JSON.stringify(err)).not.toContain(TOKEN)
+      expect(inspect(err, { depth: 6 })).not.toContain(TOKEN)
+      err.response.data.destroy()
+    })
+
+    it('from the tracing of a sampled request, which records the full URL', () => {
+      const err: any = new Error('failed')
+      err.config = { tracing: { tags: { 'http.url': `/fail?appToken=${TOKEN}` } }, url: `/fail?appToken=${TOKEN}` }
+
+      const result = sanitizeHttpClientError(err)
+
+      expect(result.config.tracing.tags['http.url']).toContain(TOKEN)
+      expect(Object.keys(result.config)).not.toContain('tracing')
+      expect(JSON.stringify(result)).not.toContain(TOKEN)
+    })
+
     it('from basic auth', async () => {
       const err = await failure('/fail', { auth: { password: TOKEN, username: 'appkey-0123456789abcdef' } })
 
@@ -273,6 +301,17 @@ describe('sanitizeHttpClientError', () => {
   })
 
   describe('with values that are not HTTP errors', () => {
+    it('logs, without throwing, when even clearing the credentials fails', () => {
+      const hostile: any = new Error('failed')
+      // Reading `response` throws, both while masking and while clearing.
+      Object.defineProperty(hostile, 'response', { enumerable: true, get: () => { throw new TypeError('hostile') } })
+      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+
+      expect(() => sanitizeHttpClientError(hostile)).not.toThrow()
+      expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('could not be cleared'), 'TypeError')
+      consoleError.mockRestore()
+    })
+
     it('returns them as they are, and never throws', () => {
       const frozen = Object.freeze({ config: Object.freeze({ headers: { authorization: TOKEN } }) })
 

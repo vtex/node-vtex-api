@@ -144,8 +144,10 @@ export const sanitizeHttpClientError = <T>(err: T): T => {
     console.error('[node-vtex-api error] an HTTP client error could not be sanitized', (sanitizeError as Error)?.name)
     try {
       withholdCredentials(error)
-    } catch {
-      // Clearing a hostile error must not surface the failure.
+    } catch (withholdError) {
+      // Clearing a hostile error must not surface the failure, but it has to be visible: the error
+      // may still carry its credentials. Only the class of the error is logged.
+      console.error('[node-vtex-api error] the credentials of an HTTP client error could not be cleared', (withholdError as Error)?.name)
     }
   }
   return err

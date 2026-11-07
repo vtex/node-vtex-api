@@ -1,7 +1,7 @@
 // Inspired by https://github.com/sindresorhus/serialize-error
 import { keys, pick } from 'ramda'
 
-import { isKnownCredentialHeaderName, isSensitiveHeaderName, redactRequestData, redactUrlQuery } from './sensitiveHeaders'
+import { isKnownCredentialHeaderName, isSensitiveHeaderName, redactCredentialFields, redactRequestData, redactUrlQuery } from './sensitiveHeaders'
 
 export const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url', 'metric', 'inflightKey', 'forceMaxAge', 'params', 'responseType']
 export const SENSITIVE_EXCEPTION_FIELDS = ['config', 'request', 'stack']
@@ -83,6 +83,11 @@ const cleanAxiosProperty = (property: string, value: object, original: any) => {
     if (typeof picked[location] === 'string') {
       picked[location] = redactUrlQuery(picked[location])
     }
+  }
+  // Credential-named params (`appToken`…), at any depth. An error that did not go through the
+  // HttpClient sanitizer (a raw axios call) still carries them as the app sent them.
+  if ('params' in picked) {
+    picked.params = redactCredentialFields(picked.params)
   }
   // The request body. The upstream response body (`response.data`) is what the service answered
   // and stays as it is.
