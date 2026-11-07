@@ -71,4 +71,11 @@ describe('cleanError', () => {
     })
     expect(cleaned.stack).toContain('Request failed with status code 400')
   })
+
+  it('truncates very large strings to 8 KB', () => {
+    const err: any = new Error('failed')
+    err.details = 'x'.repeat(8 * 1024 + 10)
+
+    expect(cleanError(err).details).toBe(`${'x'.repeat(8 * 1024)}[...TRUNCATED]`)
+  })
 })
