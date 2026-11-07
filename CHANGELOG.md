@@ -13,14 +13,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   after the retries, the error keeps its instance, `message`, `code`, `stack`, `response.status`
   and `response.data`, while `config` (and `response.config`) becomes a copy with credential
   headers (`proxy-authorization`, `cookie`, `x-vtex-*`, `VtexIdclientAutCookie[_<account>]` and
-  credential-looking names), `auth`, credential-named `params` and URL query values, and
-  credential-named keys in the request body (`config.data`, JSON or form-encoded) replaced by
-  `[Redacted]`. `set-cookie`
-  of the upstream response is masked too. `request`,
+  credential-looking names), `auth`, user info in the `url`/`baseURL` (in every form the URL
+  parser accepts), credential-named `params` (also those with their own `toJSON`) and URL query
+  values, and credential-named keys in the request body (`config.data`, JSON or form-encoded)
+  replaced by `[Redacted]`. `set-cookie` of the upstream response is masked too. `request`,
   `response.request` and the connection agents stay readable but are no longer enumerable, so
   `JSON.stringify`, `toJSON()`, `util.inspect` and the logger no longer carry them. If that
-  masking throws, `config`, `request`, and the response's `config` and `headers` are removed
-  instead of being returned with the credentials still in place.
+  masking throws, `config`, `request`, and the response's `config` and `headers` are removed (and a
+  streamed response body is left out of serialization) instead of being returned with the
+  credentials still in place.
 - The logger (`cleanError`) drops the same credential headers, not only `authorization`,
   `proxy-authorization` and `VtexIdclientAutCookie`. It masks credential-named `params`, also for
   errors that did not go through the HttpClient. A JSON or form request body has its
@@ -30,8 +31,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   thrown value. Inside a `headers` object, those error bodies also replace the value of a known
   credential header (`authorization`, `cookie`, `x-vtex-api-apptoken`…), even when it is not one
   of the request tokens; other fields (`key`, `session`, a session namespace called `cookie`…)
-  are kept. A reference back to a containing object becomes `[Circular]`, so the errors still
-  serialize. A redaction that takes over 50 ms is logged as a warning (`error-redaction: slow`)
+  are kept, also when the request has no token. A reference back to a containing object becomes
+  `[Circular]`, so the errors still serialize. A redaction that takes over 50 ms is logged as a warning (`error-redaction: slow`)
   instead of cutting the body. If the GraphQL errors cannot be redacted, each error is sent with
   only its message, path and code, with the tokens replaced in each, instead of failing the
   response. Successful

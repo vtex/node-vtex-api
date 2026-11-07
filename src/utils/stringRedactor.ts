@@ -1,7 +1,7 @@
 import { CIRCULAR, REDACTED, TRUNCATED, UNSERIALIZABLE } from './redactionMarkers'
 import { isKnownCredentialHeaderName } from './sensitiveHeaders'
 
-export { CIRCULAR, REDACTED, TRUNCATED, UNSERIALIZABLE }
+export { CIRCULAR, REDACTED, TRUNCATED, UNSERIALIZABLE } from './redactionMarkers'
 
 // Shorter values are not credentials, and replacing them everywhere would damage ordinary text.
 const MIN_SECRET_LENGTH = 16
@@ -193,16 +193,14 @@ const assignChild = (copy: any, key: string, value: unknown) => {
  * inspected, so business fields such as `key`, `session` or a session namespace called `cookie`
  * are kept.
  *
- * Without a usable secret the value is returned as it is.
+ * Credential headers and cycles are handled even without a usable secret; only the replacement of
+ * secrets inside strings needs one.
  *
  * It is for error output (GraphQL `errors[]`, the body built from a thrown value), not for
  * successful responses, where dropping or reshaping data would not be acceptable.
  */
 export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | undefined> = []): { value: T, redacted: number, truncated: number, unserializable: number } => {
   const usable = secrets.filter((secret): secret is string => !!secret && secret.length >= MIN_SECRET_LENGTH)
-  if (usable.length === 0) {
-    return { redacted: 0, truncated: 0, unserializable: 0, value }
-  }
   let redacted = 0
   let truncated = 0
   let unserializable = 0

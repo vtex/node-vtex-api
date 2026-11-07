@@ -4,6 +4,7 @@
 import axios from 'axios'
 import { createServer, IncomingMessage, Server } from 'http'
 import { AddressInfo } from 'net'
+import { Readable } from 'stream'
 import { inspect } from 'util'
 
 import { cleanError } from '../../../utils/error'
@@ -301,6 +302,31 @@ describe('sanitizeHttpClientError', () => {
   })
 
   describe('with values that are not HTTP errors', () => {
+    it('keeps a streamed body out of serialization when masking fails', () => {
+      const data = Readable.from([])
+      ;(data as any).req = { _header: `GET / HTTP/1.1\r\nProxy-Authorization: ${TOKEN}` }
+      const err: any = new Error('failed')
+      err.config = { headers: { authorization: TOKEN }, responseType: 'stream' }
+      err.response = { data, status: 500 }
+      // Reading the response headers throws, so masking fails and the fallback runs.
+      Object.defineProperty(err.response, 'headers', { configurable: true, enumerable: true, get: () => { throw new TypeError('hostile') } })
+      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+
+      sanitizeHttpClientError(err)
+
+      expect(err.response.data).toBe(data)
+      // Out of what JSON.stringify, util.inspect and spread read.
+      expect(Object.keys(err.response)).not.toContain('data')
+      consoleError.mockRestore()
+    })
+
+    it('masks params with their own toJSON as they serialize', () => {
+      const err: any = new Error('failed')
+      err.config = { params: { filter: { apiKey: TOKEN, toJSON: () => ({ apiKey: TOKEN }) } } }
+
+      expect(JSON.stringify(sanitizeHttpClientError(err).config)).not.toContain(TOKEN)
+    })
+
     it('logs, without throwing, when even clearing the credentials fails', () => {
       const hostile: any = new Error('failed')
       // Reading `response` throws, both while masking and while clearing.

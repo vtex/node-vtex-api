@@ -48,8 +48,21 @@ describe('sensitiveHeaders', () => {
       expect(redactUrlQuery(undefined)).toBeUndefined()
     })
 
-    it('does not treat an @ in the path as user info', () => {
+    it('masks user info in the other forms the URL parser accepts', () => {
+      expect(redactUrlQuery('http:/user:pw@host/p')).toBe(`http:/${REDACTED}@host/p`)
+      expect(redactUrlQuery('http:\\\\user:pw@host/p')).toBe(`http:\\\\${REDACTED}@host/p`)
+      expect(redactUrlQuery('  https://user:pw@host/p')).toBe(`  https://${REDACTED}@host/p`)
+      expect(redactUrlQuery('http:user:pw@host/p')).toBe(`http:${REDACTED}@host/p`)
+    })
+
+    it('replaces the whole URL when the parser still finds user info the pattern missed', () => {
+      expect(redactUrlQuery('ht\ttp://user:pw@host/p')).toBe(REDACTED)
+    })
+
+    it('does not treat an @ in the path, or in a scheme without authority, as user info', () => {
       expect(redactUrlQuery('/users/someone@example.com')).toBe('/users/someone@example.com')
+      expect(redactUrlQuery('https://host/p@x')).toBe('https://host/p@x')
+      expect(redactUrlQuery('mailto:someone@example.com')).toBe('mailto:someone@example.com')
     })
   })
 
@@ -63,6 +76,15 @@ describe('sensitiveHeaders', () => {
       expect(result).toEqual({ filter: { apiKey: REDACTED }, list: [{ secret: REDACTED }], untouched })
       expect(result.untouched).toBe(untouched)
       expect(value.filter.apiKey).toBe(TOKEN)
+    })
+
+    it('inspects what a value with its own toJSON serializes to', () => {
+      const value = { filter: { apiKey: TOKEN, toJSON: () => ({ apiKey: TOKEN, status: 'open' }) }, when: new Date(0) }
+
+      const result: any = redactCredentialFields(value)
+
+      expect(result).toEqual({ filter: { apiKey: REDACTED, status: 'open' }, when: '1970-01-01T00:00:00.000Z' })
+      expect(JSON.stringify(result)).not.toContain(TOKEN)
     })
 
     it('returns buffers and streams as they are', () => {

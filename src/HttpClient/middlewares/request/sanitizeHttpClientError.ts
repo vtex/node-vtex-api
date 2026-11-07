@@ -52,8 +52,11 @@ const assign = (target: Record<string, any>, key: string, value: unknown) => {
   }
 }
 
+const isStream = (value: unknown) => isObject(value) && typeof value.pipe === 'function'
+
 // Last resort when masking throws partway. The fields that carry credentials are replaced, rather
-// than returned as they were. `response.status` and `response.data` stay.
+// than returned as they were. `response.status` and `response.data` stay; a streamed `data` keeps
+// its originating request, so it stays readable but is left out of serialization.
 const withholdCredentials = (error: Record<string, any>) => {
   assign(error, 'config', {})
   assign(error, 'request', undefined)
@@ -64,6 +67,9 @@ const withholdCredentials = (error: Record<string, any>) => {
   assign(response, 'config', {})
   assign(response, 'headers', {})
   assign(response, 'request', undefined)
+  if (isStream(response.data)) {
+    hide(response, 'data')
+  }
 }
 
 type Redactor = [string, (value: unknown) => unknown]

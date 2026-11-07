@@ -355,10 +355,21 @@ describe('redactKnownSecretsDeep', () => {
     expect(redactKnownSecretsDeep(value, [TOKEN]).value).toBe(value)
   })
 
-  it('returns the value as it is without a usable secret', () => {
-    const value = { headers: { authorization: 'tp-live-key-0123456789abcdef' } }
+  it('masks credential headers and cycles even without a usable secret', () => {
+    const thirdParty = 'tp-live-key-0123456789abcdef'
+    const extensions: any = { headers: { authorization: thirdParty }, message: `failed ${thirdParty}` }
+    extensions.self = extensions
 
-    expect(redactKnownSecretsDeep(value, [undefined, 'short']).value).toBe(value)
+    const result = redactKnownSecretsDeep([{ extensions }], [undefined, 'short'])
+
+    expect(result.value[0].extensions).toEqual({ headers: { authorization: REDACTED }, message: `failed ${thirdParty}`, self: '[Circular]' })
+    expect(() => JSON.stringify(result.value)).not.toThrow()
+  })
+
+  it('returns the same value without a usable secret when there is nothing structural to replace', () => {
+    const value = { message: 'tp-live-key-0123456789abcdef' }
+
+    expect(redactKnownSecretsDeep(value, []).value).toBe(value)
   })
 
   it('replaces a reference back to a containing object, so the result serializes without the original', () => {

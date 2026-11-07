@@ -1,4 +1,6 @@
-import { REDACTED, TRUNCATED } from './redactionMarkers'
+import { URL } from 'url'
+
+import { REDACTED, TRUNCATED, UNSERIALIZABLE } from './redactionMarkers'
 
 /**
  * Names under which credentials travel in HTTP headers, lower-case. Shared by the `HttpClient`
@@ -63,11 +65,22 @@ const redactField = (container: Record<string, any>, name: string, value: unknow
     ? REDACTED
     : redactCredentialFields(value, depth + 1)
 
+// What JSON.stringify sends for a value with its own serialization (`toJSON`, own or inherited), as
+// plain JSON. A copy would keep the `toJSON`, which would serialize the original values again.
+const materialize = (value: object): unknown => {
+  try {
+    return JSON.parse(JSON.stringify(value) ?? 'null')
+  } catch {
+    return UNSERIALIZABLE
+  }
+}
+
 /**
  * A copy of an object or array with the value of every credential-named key replaced, at any
  * depth (`filter.appToken`, `list[].apiKey`). Copy-on-write: what has nothing to replace keeps
- * its reference. Beyond 32 levels a nested container becomes `[Truncated]` instead of being sent
- * uninspected. A string, buffer or stream is returned as it is.
+ * its reference. A value with a `toJSON` is replaced by what it serializes to, then inspected.
+ * Beyond 32 levels a nested container becomes `[Truncated]` instead of being sent uninspected. A
+ * string, buffer or stream is returned as it is.
  */
 export const redactCredentialFields = (value: unknown, depth = 0): unknown => {
   if (value === null || typeof value !== 'object' || Buffer.isBuffer(value) || isStream(value)) {
@@ -75,6 +88,9 @@ export const redactCredentialFields = (value: unknown, depth = 0): unknown => {
   }
   if (depth > MAX_CREDENTIAL_DEPTH) {
     return TRUNCATED
+  }
+  if (typeof (value as { toJSON?: unknown }).toJSON === 'function') {
+    return redactCredentialFields(materialize(value), depth)
   }
   let copy: any = value
   for (const name of Object.keys(value)) {
@@ -117,6 +133,21 @@ export const redactRequestData = (data: unknown): unknown => {
 // Form-encoded text: `name=value` pairs joined by `&`, with no whitespace (the encoding has none).
 const isFormBody = (text: string) => text.includes('=') && !/\s/.test(text)
 
+// User info (`user:password@`) in the forms the URL parser accepts: leading whitespace, `/` or `\\`
+// separators, and an HTTP, WebSocket or FTP scheme with fewer separators (`http:/user@host`,
+// `http:user@host`). Other schemes need `//` (`mailto:someone@host` has no user info).
+const USER_INFO = /^(\s*(?:(?:https?|wss?|ftp):[\\/]*|[a-z][a-z\d+.-]*:[\\/]{2}|[\\/]{2}))[^\\/?#]*@/i
+
+// Whether the URL parser still finds user info other than the redaction marker.
+const keepsUserInfo = (url: string) => {
+  try {
+    const { password, username } = new URL(url)
+    return !!password || (!!username && safeDecode(username) !== REDACTED)
+  } catch {
+    return false
+  }
+}
+
 const safeDecode = (text: string) => {
   try {
     return decodeURIComponent(text.replace(/\+/g, ' '))
@@ -149,7 +180,11 @@ export const redactUrlQuery = (url: unknown) => {
   if (typeof url !== 'string') {
     return url
   }
-  const safeUrl = url.replace(/^((?:[a-z][a-z\d+.-]*:)?\/\/)[^/?#]*@/i, `$1${REDACTED}@`)
+  const safeUrl = url.replace(USER_INFO, `$1${REDACTED}@`)
+  if (keepsUserInfo(safeUrl)) {
+    // A form the pattern does not know still carries credentials: nothing of it is kept.
+    return REDACTED
+  }
   const queryStart = safeUrl.indexOf('?')
   if (queryStart === -1) {
     return safeUrl
