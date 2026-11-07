@@ -9,6 +9,8 @@ import { inspect } from 'util'
 import { error } from './error'
 
 const TOKEN = 'app-token-eyJhbGciOiJSUzI1NiJ9.payload.signature'
+// A credential in a header that `cleanError` does not know about.
+const CREDENTIAL = 'credential-value-0123456789'
 
 describe('error middleware', () => {
   const agent = new Agent({ keepAlive: false })
@@ -25,7 +27,7 @@ describe('error middleware', () => {
   const failingUpstreamCall = async (): Promise<AxiosError> => {
     try {
       await axios.get(`${upstreamURL}/orders`, {
-        headers: { 'Proxy-Authorization': TOKEN },
+        headers: { 'Proxy-Authorization': TOKEN, 'X-Vtex-Credential': CREDENTIAL },
         httpAgent: agent,
       })
     } catch (e) {
@@ -86,6 +88,71 @@ describe('error middleware', () => {
     expect(res.data).not.toHaveProperty('request')
     expect(printed).not.toContain(TOKEN)
     expect(printed).not.toContain('httpAgent')
+  })
+
+  describe('the body it builds from a thrown value', () => {
+    beforeEach(() => {
+      jest.spyOn(console, 'error').mockImplementation(() => undefined)
+    })
+
+    it('keeps what a client needs from a thrown axios error', async () => {
+      const res = await serve(async () => { throw await failingUpstreamCall() })
+
+      expect(res.status).toBe(400)
+      expect(res.data).toMatchObject({
+        code: 'ERR_BAD_REQUEST',
+        message: 'Request failed with status code 400',
+        name: 'AxiosError',
+        response: { data: 'bad request', status: 400 },
+        status: 400,
+      })
+      // What the upstream answered is kept; its headers are not.
+      expect(res.data.response).not.toHaveProperty('headers')
+    })
+
+    it('does not expose an error that is a property of the thrown one', async () => {
+      const res = await serve(async () => {
+        throw Object.assign(new Error('wrapped'), { originalError: await failingUpstreamCall() })
+      })
+
+      const body = JSON.stringify(res.data)
+      expect(body).not.toContain(TOKEN)
+      expect(body).not.toContain(CREDENTIAL)
+      expect(res.data.originalError).toMatchObject({ code: 'ERR_BAD_REQUEST', name: 'AxiosError', status: 400 })
+      expect(res.data.originalError).not.toHaveProperty('config')
+      expect(res.data.originalError).not.toHaveProperty('request')
+      expect(res.data.originalError).not.toHaveProperty('stack')
+    })
+
+    it('does not expose an error inside a thrown plain object', async () => {
+      const res = await serve(async () => {
+        // tslint:disable-next-line:no-string-throw
+        throw { error: await failingUpstreamCall(), status: 502 }
+      })
+
+      const body = JSON.stringify(res.data)
+      expect(res.status).toBe(502)
+      expect(body).not.toContain(TOKEN)
+      expect(body).not.toContain(CREDENTIAL)
+      expect(res.data.error).toMatchObject({ name: 'AxiosError' })
+      expect(res.data.error).not.toHaveProperty('config')
+    })
+
+    it('withholds the body when the error cannot be sanitized', async () => {
+      const responseSanitizer = require('../../../../../utils/responseSanitizer')
+      jest.spyOn(responseSanitizer, 'sanitizeErrors').mockImplementation(() => {
+        throw new TypeError('sanitizer broke')
+      })
+
+      const res = await serve(async () => { throw await failingUpstreamCall() })
+
+      expect(res.status).toBe(400)
+      expect(res.data).toEqual({
+        code: 'E_RESPONSE_WITHHELD',
+        message: 'The response could not be safely returned.',
+      })
+      expect(JSON.stringify(res.data)).not.toContain(TOKEN)
+    })
   })
 
   it('still writes what is needed to debug: the error, its stack and its properties', async () => {

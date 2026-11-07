@@ -17,6 +17,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   expose its credentials: the request's tokens, the value of credential headers (`authorization`,
   `proxy-authorization`, `VtexIdclientAutCookie`, `x-vtex-api-*`), the VTEX ID cookie and `Bearer`
   tokens are replaced with `[Redacted]`.
+- The body the runtime builds from a thrown value goes through the same sanitizer. An error that is
+  a property of the thrown one (`originalError`), or sits in a thrown object, no longer exposes its
+  request configuration, request or stack, and the upstream response headers are no longer
+  included. Linked apps keep the stack but no longer get the configuration in the body.
 - Errors printed by the runtime no longer include the request configuration.
 - GraphQL error responses no longer include the stack outside link mode.
 
