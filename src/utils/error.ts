@@ -28,7 +28,7 @@ const pickPrimitives = (names: string[], source: any) => {
 
 const truncateString = (value: unknown) =>
   typeof value === 'string' && value.length > MAX_ERROR_STRING_LENGTH
-    ? value.substr(0, MAX_ERROR_STRING_LENGTH) + '[...TRUNCATED]'
+    ? value.substring(0, MAX_ERROR_STRING_LENGTH) + '[...TRUNCATED]'
     : value
 
 // Marks an entry `destroyCircular` leaves out.
