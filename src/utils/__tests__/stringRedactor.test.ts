@@ -1,4 +1,4 @@
-import { REDACTED, redactKnownSecrets, redactKnownSecretsDeep, redactSecrets } from '../stringRedactor'
+import { REDACTED, redactKnownSecrets, redactKnownSecretsDeep, redactSecrets, TRUNCATED } from '../stringRedactor'
 
 const TOKEN = 'eyJhY2NvdW50IjoiY29yZWJpeiJ9.payload-part-123.signature-part-456'
 
@@ -275,6 +275,22 @@ describe('redactKnownSecretsDeep', () => {
 
     expect(JSON.stringify(result.value)).not.toContain(TOKEN)
     expect(JSON.stringify(result.value)).toContain('[Truncated]')
+    expect(result.truncated).toBe(1)
+  })
+
+  it('stops a wide value once the value budget is spent, instead of walking the rest', () => {
+    const result = redactKnownSecretsDeep({ items: [TOKEN, 'still unread'] }, [TOKEN], { maxValues: 2 })
+
+    expect(result.value).toEqual({ items: TRUNCATED })
+    expect(JSON.stringify(result.value)).not.toContain(TOKEN)
+    expect(result.truncated).toBe(1)
+  })
+
+  it('does not scan a string past the text budget', () => {
+    const result = redactKnownSecretsDeep({ message: `failed ${TOKEN} ${'x'.repeat(50)}` }, [TOKEN], { maxTextLength: 8 })
+
+    expect(result.value).toEqual({ message: TRUNCATED })
+    expect(JSON.stringify(result.value)).not.toContain(TOKEN)
     expect(result.truncated).toBe(1)
   })
 
