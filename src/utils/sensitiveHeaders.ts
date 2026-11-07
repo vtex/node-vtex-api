@@ -1,5 +1,3 @@
-import { URL } from 'url'
-
 import { REDACTED, TRUNCATED, UNSERIALIZABLE } from './redactionMarkers'
 
 /**
@@ -133,15 +131,53 @@ export const redactRequestData = (data: unknown): unknown => {
 // Form-encoded text: `name=value` pairs joined by `&`, with no whitespace (the encoding has none).
 const isFormBody = (text: string) => text.includes('=') && !/\s/.test(text)
 
-// User info (`user:password@`) in the forms the URL parser accepts: leading whitespace, `/` or `\\`
-// separators, and an HTTP, WebSocket or FTP scheme with fewer separators (`http:/user@host`,
-// `http:user@host`). Other schemes need `//` (`mailto:someone@host` has no user info).
-const USER_INFO = /^(\s*(?:(?:https?|wss?|ftp):[\\/]*|[a-z][a-z\d+.-]*:[\\/]{2}|[\\/]{2}))[^\\/?#]*@/i
+const SCHEME = /^[a-z][a-z\d+.-]*:/i
+// Schemes whose authority the URL parser finds with fewer than two separators (`http:/user@host`,
+// `http:user@host`). Other schemes need `//`: `mailto:someone@host` has no user info.
+const SPECIAL_SCHEMES = new Set(['ftp:', 'http:', 'https:', 'ws:', 'wss:'])
+const AUTHORITY_END = /[\\/?#]/
+
+const isSeparator = (char: string | undefined) => char === '/' || char === '\\'
+
+// Where the authority (`user:password@host`) of a URL starts, in the forms the URL parser accepts:
+// leading whitespace, `/` or `\\` separators, and a special scheme with fewer separators. -1 when
+// the URL has no authority (a path, a relative reference, `mailto:`).
+const authorityStart = (url: string) => {
+  const start = url.length - url.replace(/^\s+/, '').length
+  const scheme = SCHEME.exec(url.slice(start))?.[0] ?? ''
+  let index = start + scheme.length
+  const separatorsStart = index
+  while (isSeparator(url[index])) {
+    index++
+  }
+  const hasAuthority = SPECIAL_SCHEMES.has(scheme.toLowerCase()) || index - separatorsStart >= 2
+  return hasAuthority ? index : -1
+}
+
+// The URL with its user info replaced, keeping the scheme, host and the rest as written.
+const maskUserInfo = (url: string) => {
+  const start = authorityStart(url)
+  if (start === -1) {
+    return url
+  }
+  const rest = url.slice(start)
+  const end = AUTHORITY_END.exec(rest)
+  const at = (end ? rest.slice(0, end.index) : rest).lastIndexOf('@')
+  return at === -1 ? url : `${url.slice(0, start)}${REDACTED}${url.slice(start + at)}`
+}
+
+// The WHATWG URL parser, a global since Node 10. Read from `global` so no module import is needed;
+// without it the safety net below is skipped.
+type UrlParser = new (input: string) => { password: string, username: string }
+const UrlParserClass: UrlParser | undefined = (global as any).URL
 
 // Whether the URL parser still finds user info other than the redaction marker.
 const keepsUserInfo = (url: string) => {
+  if (!UrlParserClass) {
+    return false
+  }
   try {
-    const { password, username } = new URL(url)
+    const { password, username } = new UrlParserClass(url)
     return !!password || (!!username && safeDecode(username) !== REDACTED)
   } catch {
     return false
@@ -180,7 +216,7 @@ export const redactUrlQuery = (url: unknown) => {
   if (typeof url !== 'string') {
     return url
   }
-  const safeUrl = url.replace(USER_INFO, `$1${REDACTED}@`)
+  const safeUrl = maskUserInfo(url)
   if (keepsUserInfo(safeUrl)) {
     // A form the pattern does not know still carries credentials: nothing of it is kept.
     return REDACTED
