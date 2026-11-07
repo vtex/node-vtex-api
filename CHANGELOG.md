@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   configuration, credentials, connection agents or, outside link mode, the
   stack. If the response cannot be sanitized, or the walk cannot inspect
   all of it, it is withheld.
+- String response bodies built from an error (`` `failed: ${JSON.stringify(error)}` ``) no longer
+  expose its credentials: the request's tokens, the value of credential headers (`authorization`,
+  `proxy-authorization`, `VtexIdclientAutCookie`, `x-vtex-api-*`), the VTEX ID cookie and `Bearer`
+  tokens are replaced with `[Redacted]`.
 - Errors printed by the runtime no longer include the request configuration.
 - GraphQL error responses no longer include the stack outside link mode.
 

@@ -9,6 +9,7 @@ import { gunzipSync } from 'zlib'
 
 const TOKEN = 'app-token-eyJhbGciOiJSUzI1NiJ9.payload.signature'
 const RESPONSE_SANITIZER_SWITCH = 'VTEX_IO_RESPONSE_SANITIZER'
+const REDACTED = '[Redacted]'
 
 // The middleware reads whether the app is linked when it is loaded, so each use gets a fresh copy.
 const loadSanitizeResponse = () => {
@@ -235,6 +236,132 @@ describe('sanitizeResponse', () => {
         },
       ])
       expect(rawLogs.join()).not.toContain(TOKEN)
+    })
+  })
+
+  describe('an error turned into a string body', () => {
+    // What the finding showed: the error is stringified, so no error object is left in the body.
+    const stringifiedFailure = async () => `Error saving size charts: ${JSON.stringify(await callUpstream())}`
+
+    it('is sent without the credential, and compressed', async () => {
+      handler = async ctx => {
+        ctx.status = 500
+        ctx.body = await stringifiedFailure()
+      }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.status).toBe(500)
+      expect(res.encoding).toBe('gzip')
+      expect(res.text).not.toContain(TOKEN)
+      expect(res.text).toContain('Error saving size charts: ')
+      expect(res.text).toContain('Request failed with status code 400')
+    })
+
+    it('leaks the credential when the sanitizer is not registered', async () => {
+      handler = async ctx => { ctx.body = await stringifiedFailure() }
+      await startApp(false)
+
+      const res = await get()
+
+      expect(res.text).toContain(TOKEN)
+    })
+
+    it('keeps the content type and the status chosen by the app', async () => {
+      handler = async ctx => {
+        ctx.status = 502
+        ctx.body = await stringifiedFailure()
+        ctx.type = 'text/plain; charset=utf-8'
+      }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.status).toBe(502)
+      expect(res.headers['content-type']).toBe('text/plain; charset=utf-8')
+    })
+
+    it('has a content length that matches what is sent', async () => {
+      // Short enough for compress() to leave it alone, so the length is the one set by the body.
+      handler = ctx => {
+        ctx.vtex.authToken = TOKEN
+        ctx.body = `failed with ${TOKEN}`
+      }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.encoding).toBeUndefined()
+      expect(res.text).toBe(`failed with ${REDACTED}`)
+      expect(Number(res.headers['content-length'])).toBe(Buffer.byteLength(res.text))
+    })
+
+    it('has the tokens of the request replaced wherever they are', async () => {
+      handler = ctx => {
+        ctx.vtex.authToken = 'app-token-0123456789abcdef'
+        ctx.vtex.adminUserAuthToken = 'admin-token-0123456789abcdef'
+        ctx.vtex.storeUserAuthToken = 'store-token-0123456789abcdef'
+        ctx.body = 'a=app-token-0123456789abcdef b=admin-token-0123456789abcdef c=store-token-0123456789abcdef'
+      }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.text).toBe('a=[Redacted] b=[Redacted] c=[Redacted]')
+    })
+
+    it('has the token replaced when the handler throws after setting the body', async () => {
+      handler = async ctx => {
+        ctx.body = await stringifiedFailure()
+        throw new Error('failed after setting the body')
+      }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.status).toBe(500)
+      expect(res.text).not.toContain(TOKEN)
+    })
+
+    it('logs how many credentials were replaced, without any of them', async () => {
+      handler = async ctx => { ctx.body = await stringifiedFailure() }
+      await startApp()
+
+      await get()
+
+      expect(logs()).toEqual([
+        {
+          message: 'response-sanitizer: secret_removed',
+          reason: 'secret_removed',
+          // The credential is in the headers of the config and in the text of the request.
+          redactions: expect.any(Number),
+          routeId: 'orders',
+        },
+      ])
+      expect(rawLogs.join()).not.toContain(TOKEN)
+    })
+
+    it('is not changed, nor logged, when it has no credential', async () => {
+      const text = 'Error saving size charts: Request failed with status code 429'
+      handler = ctx => { ctx.body = text }
+      await startApp()
+
+      const res = await get()
+
+      expect(captured.body).toBe(text)
+      expect(res.text).toBe(text)
+      expect(logs()).toEqual([])
+    })
+
+    it('is not changed when the sanitizer is switched off', async () => {
+      process.env[RESPONSE_SANITIZER_SWITCH] = 'off'
+      handler = async ctx => { ctx.body = await stringifiedFailure() }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.text).toContain(TOKEN)
     })
   })
 

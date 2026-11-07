@@ -1,5 +1,6 @@
 import { LINKED } from '../../../../../constants'
 import { sanitizeErrors, scanForErrors } from '../../../../../utils/responseSanitizer'
+import { redactSecrets } from '../../../../../utils/stringRedactor'
 import { ServiceContext } from '../../typings'
 
 /**
@@ -17,6 +18,7 @@ export const WITHHELD_BODY = {
 
 export enum SanitizerReason {
   ErrorRemoved = 'error_object_removed',
+  SecretRemoved = 'secret_removed',
   LimitReached = 'limit_reached',
   Failed = 'sanitizer_failed',
 }
@@ -56,6 +58,20 @@ const withholdBody = (ctx: ServiceContext) => {
   }
 }
 
+// A string body can hold an error that was turned into text (`JSON.stringify(error)`), which has
+// no error object left to find. What can be told apart is the credential itself.
+const redactStringBody = (ctx: ServiceContext, body: string) => {
+  const { authToken, adminUserAuthToken, storeUserAuthToken } = ctx.vtex ?? {}
+  const { value, redacted } = redactSecrets(body, [authToken, adminUserAuthToken, storeUserAuthToken])
+  if (redacted === 0) {
+    return
+  }
+
+  // Koa keeps the type already set when the body is a string, and updates the length.
+  ctx.body = value
+  warn(ctx, SanitizerReason.SecretRemoved, { redactions: redacted })
+}
+
 const sanitizeCtxBody = (ctx: ServiceContext) => {
   try {
     if (process.env[RESPONSE_SANITIZER_SWITCH] === 'off') {
@@ -63,6 +79,10 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
     }
 
     const body = ctx.body
+    if (typeof body === 'string') {
+      redactStringBody(ctx, body)
+      return
+    }
     if (body === null || typeof body !== 'object' || Buffer.isBuffer(body) || typeof body.pipe === 'function') {
       return
     }
@@ -112,6 +132,9 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
  * Removes error objects (`Error`, `AxiosError`) from the response body, so apps that write a caught
  * error to `ctx.body` do not expose the request configuration (credentials), the stack and the
  * connection internals to the caller.
+ *
+ * String bodies are also covered, for errors that were turned into text: the credentials in them
+ * (the ones of the request, the credential headers, `Bearer` tokens) are replaced.
  *
  * It must be registered after `compress()`, which serializes the body: it needs to see the object,
  * and to change it before it is serialized.
