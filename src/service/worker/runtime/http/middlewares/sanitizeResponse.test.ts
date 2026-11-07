@@ -2,6 +2,7 @@
  * @jest-environment node
  */
 import axios, { AxiosError } from 'axios'
+import { buildSchema, graphql } from 'graphql'
 import { Agent, createServer, Server } from 'http'
 import Koa from 'koa'
 import compress from 'koa-compress'
@@ -380,6 +381,37 @@ describe('sanitizeResponse', () => {
     })
   })
 
+  describe('serialized credentials in REST and GraphQL', () => {
+    it.each(['rest', 'graphql', 'wrapped-error', 'graphql-engine'])('redacts the %s response over HTTP', async kind => {
+      handler = async ctx => {
+        const failure = await callUpstream()
+        // Public Axios responses can duplicate the IO JWT under both credential headers.
+        failure.config.headers = { ...failure.config.headers,
+          VtexIdclientAutCookie: TOKEN,
+          'X-Vtex-Api-AppKey': 'fake-appkey-0123456789',
+          'X-Vtex-Api-AppToken': 'fake-apptoken-0123456789',
+        }
+        const serialized = stringifyCircular(failure.toJSON())
+        if (kind === 'graphql-engine') {
+          ctx.body = await graphql(buildSchema('type Query { review: String }'), '{ review }', {
+            review: () => { throw new Error(serialized) },
+          })
+          return
+        }
+        ctx.body = kind === 'rest' ? JSON.parse(serialized)
+          : kind === 'wrapped-error' ? new Error(serialized)
+          : { data: null, errors: [{ message: serialized, extensions: { exception: { message: serialized } } }] }
+      }
+      await startApp()
+      const res = await get()
+      expect(res.status).toBe(200)
+      expect(res.text).not.toContain(TOKEN)
+      expect(res.text).not.toContain('fake-appkey-0123456789')
+      expect(res.text).not.toContain('fake-apptoken-0123456789')
+      expect(res.text).toContain('[Redacted]')
+    })
+  })
+
   describe('a body without errors', () => {
     it('does not run the copying walk over a list of plain records', async () => {
       const body = { items: Array.from({ length: 500 }, (_, id) => ({ id, name: 'row' })) }
@@ -470,11 +502,27 @@ describe('sanitizeResponse', () => {
       expect(logs()).toEqual([
         {
           errorName: 'Error',
+          inspectionReason: 'unexpected_failure',
           message: 'response-sanitizer: sanitizer_failed',
           reason: 'sanitizer_failed',
           routeId: 'orders',
         },
       ])
+    })
+
+    it('logs a fixed category for unsupported objects without their contents', async () => {
+      handler = async ctx => { ctx.body = { result: new Map([['token', TOKEN]]) } }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.status).toBe(500)
+      expect(res.text).not.toContain(TOKEN)
+      expect(logs()).toEqual([expect.objectContaining({
+        inspectionReason: 'unsupported_object',
+        reason: 'sanitizer_failed',
+      })])
+      expect(JSON.stringify(logs())).not.toContain(TOKEN)
     })
 
     it('sends a body the walk could not inspect completely, and reports the limit', async () => {
@@ -514,6 +562,7 @@ describe('sanitizeResponse', () => {
 
       expect(res.status).toBe(200)
       expect(captured.body).toBe(body)
+      expect(res.text).not.toContain('E_RESPONSE_WITHHELD')
       expect(logs()).toEqual([
         {
           message: 'response-sanitizer: limit_reached',
