@@ -9,12 +9,14 @@ import {
   tooManyRequestsStatus,
 } from '../../../../../errors/TooManyRequestsError'
 import { cleanError, SENSITIVE_EXCEPTION_FIELDS } from '../../../../../utils/error'
+import { sanitizeErrors, toLoggableError } from '../../../../../utils/responseSanitizer'
 import { LogLevel } from '../../../../logger'
 import {
   ParamsContext,
   RecorderState,
   ServiceContext,
 } from '../../typings'
+import { WITHHELD_BODY } from './sanitizeResponse'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
 const META_HEADER = 'x-vtex-meta'
@@ -86,6 +88,19 @@ const logAndRemoveSensitiveData = <
   }
 }
 
+// What is sent to the client for a thrown value. It is built with the sanitizer that covers the
+// bodies the app sets, so both paths expose the same: `cleanError` alone removes credentials only
+// at the top level, and by a short list of header names, so an error that is a property of the
+// thrown value (`originalError`) kept its config, request and stack.
+const buildResponseBody = (thrown: any) => {
+  try {
+    return cleanError(sanitizeErrors(thrown, { linked: LINKED }).value)
+  } catch (sanitizeError) {
+    console.error('[node-vtex-api error] the thrown value could not be sanitized', (sanitizeError as Error)?.name)
+    return WITHHELD_BODY
+  }
+}
+
 export async function error (ctx: ServiceContext, next: () => Promise<void>) {
   try {
     await next()
@@ -98,7 +113,8 @@ export async function error (ctx: ServiceContext, next: () => Promise<void>) {
       ctx.status = tooManyRequestsStatus
       return
     }
-    console.error('[node-vtex-api error]', e)
+    // The raw error carries the request config, whose headers include credentials.
+    console.error('[node-vtex-api error]', toLoggableError(e))
     const err = cleanError(e)
 
     // Add response
@@ -120,7 +136,9 @@ export async function error (ctx: ServiceContext, next: () => Promise<void>) {
       ctx.set(CACHE_CONTROL_HEADER, `no-cache, no-store`)
     }
 
+    // `err` is what is logged, which keeps the config and the request to debug with. It is not the
+    // body: the sanitized value is.
     logAndRemoveSensitiveData(ctx, err)
-    ctx.body = ctx.body || err
+    ctx.body = ctx.body || buildResponseBody(e)
   }
 }
