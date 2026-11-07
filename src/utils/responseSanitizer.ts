@@ -308,19 +308,20 @@ const shallowValue = (value: object, budget: NodeBudget, depth: number): ErrorSc
   if (isError(value)) {
     return 'has-error'
   }
-  if (Array.isArray(value)) {
-    return shallowList(value, budget, depth)
-  }
-  if (!isPlainObject(value)) {
+  if (!Array.isArray(value) && !isPlainObject(value)) {
     return enter(budget) ? 'clean' : 'truncated'
   }
-  if (isFlatData(value)) {
+  if (!Array.isArray(value) && isFlatData(value)) {
     return enter(budget) ? 'clean' : 'truncated'
   }
+  // The same cutoff for arrays and objects: this pass recurses, so its depth must be bounded
+  // whatever the container is. Deeper bodies are left to the budgeted scan, which has the limit.
   if (depth >= SHALLOW_DEPTH) {
     return undefined
   }
-  return shallowRecord(value as Record<string, unknown>, budget, depth)
+  return Array.isArray(value)
+    ? shallowList(value, budget, depth)
+    : shallowRecord(value as Record<string, unknown>, budget, depth)
 }
 
 const shallowList = (rows: unknown[], budget: NodeBudget, depth: number): ErrorScan | undefined => {

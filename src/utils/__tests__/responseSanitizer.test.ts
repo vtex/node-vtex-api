@@ -402,6 +402,26 @@ describe('sanitizeErrors', () => {
       expect(scanForErrors(Array.from({ length: 10 }, (_, id) => ({ id })), { maxNodes: 4 })).toBe('truncated')
     })
 
+    it('does not recurse past the depth limit through arrays', () => {
+      let deep: any = ['leaf']
+      for (let i = 0; i < 50000; i++) {
+        deep = [deep]
+      }
+
+      expect(() => scanForErrors(deep)).not.toThrow()
+      expect(scanForErrors(deep)).toBe('truncated')
+    })
+
+    it('does not recurse past the depth limit through arrays of objects', () => {
+      let deep: any = [{ leaf: true }]
+      for (let i = 0; i < 50000; i++) {
+        deep = [{ child: deep }]
+      }
+
+      expect(() => scanForErrors(deep)).not.toThrow()
+      expect(scanForErrors(deep)).toBe('truncated')
+    })
+
     it('does not loop when the body references itself', () => {
       const body: any = { a: {} }
       body.a.back = body
