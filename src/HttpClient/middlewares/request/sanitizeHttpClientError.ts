@@ -94,6 +94,7 @@ const redactConfig = (config: Record<string, any>) => {
     ['headers', redactHeaders],
     ['params', redactParams],
     ['url', redactUrlQuery],
+    ['baseURL', redactUrlQuery],
   ]
   for (const [key, redact] of redactors) {
     if (key in config) {
