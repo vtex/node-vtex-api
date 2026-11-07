@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [6.52.5]
+
 ### Security
 
 - Error objects assigned to the response body no longer expose the request
