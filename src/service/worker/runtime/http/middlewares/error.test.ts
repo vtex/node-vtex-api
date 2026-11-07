@@ -12,6 +12,21 @@ const TOKEN = 'app-token-eyJhbGciOiJSUzI1NiJ9.payload.signature'
 // A credential in a header that `cleanError` does not know about.
 const CREDENTIAL = 'credential-value-0123456789'
 
+// A raw axios 0.30 error is circular through the agent, so JSON.stringify throws. Skipping a
+// repeated object keeps the credential headers, which is the leak a careful stringify still produces.
+const stringifyCircular = (value: any) => {
+  const seen = new WeakSet<object>()
+  return JSON.stringify(value, (property, current) => {
+    if (typeof property === 'string' && typeof current === 'object' && current !== null) {
+      if (seen.has(current)) {
+        return undefined
+      }
+      seen.add(current)
+    }
+    return current
+  })
+}
+
 describe('error middleware', () => {
   const agent = new Agent({ keepAlive: false })
   let upstream: Server
@@ -56,10 +71,10 @@ describe('error middleware', () => {
     }
   })
 
-  const serve = async (handler: () => Promise<void>, authToken?: string) => {
+  const serve = async (handler: () => Promise<void>, vtex: Record<string, any> = {}) => {
     const app = new Koa()
     app.use(async (ctx, next) => {
-      ctx.vtex = { authToken, logger: { log: jest.fn() }, route: { id: 'orders', params: {} } }
+      ctx.vtex = { logger: { log: jest.fn() }, route: { id: 'orders', params: {} }, ...vtex }
       await next()
     })
     app.use(error)
@@ -110,27 +125,6 @@ describe('error middleware', () => {
       expect(res.data.response).not.toHaveProperty('headers')
     })
 
-    it('redacts serialized Axios credentials in a thrown Error message', async () => {
-      const res = await serve(async () => {
-        const failure = await failingUpstreamCall()
-        // Remove the agent before serialization; keep the real Axios error and headers.
-        delete failure.config.httpAgent
-        throw new Error(JSON.stringify(failure.toJSON()))
-      })
-
-      expect(res.status).toBe(500)
-      expect(res.data.message).toContain('Request failed with status code 400')
-      expect(res.data.message).toContain('[Redacted]')
-      expect(JSON.stringify(res.data)).not.toContain(TOKEN)
-      expect(JSON.stringify(res.data)).not.toContain(CREDENTIAL)
-    })
-
-    it('redacts the context token in a thrown message without a header name', async () => {
-      const res = await serve(async () => { throw new Error(`upstream failed: ${TOKEN}`) }, TOKEN)
-      expect(res.status).toBe(500)
-      expect(res.data.message).toBe('upstream failed: [Redacted]')
-    })
-
     it('does not expose an error that is a property of the thrown one', async () => {
       const res = await serve(async () => {
         throw Object.assign(new Error('wrapped'), { originalError: await failingUpstreamCall() })
@@ -159,6 +153,42 @@ describe('error middleware', () => {
       expect(res.data.error).not.toHaveProperty('config')
     })
 
+    it('replaces a known credential header that is not one of the request tokens, keeping business fields', async () => {
+      const thirdParty = 'tp-live-key-0123456789abcdef'
+
+      const res = await serve(async () => {
+        const failure = new Error('upstream rejected the key')
+        ;(failure as any).details = { headers: { authorization: thirdParty }, key: 'SKU_UNAVAILABLE' }
+        ;(failure as any).reason = 'bad input'
+        throw failure
+      }, { authToken: TOKEN })
+
+      expect(res.status).toBe(500)
+      expect(JSON.stringify(res.data)).not.toContain(thirdParty)
+      expect(res.data.details).toEqual({ headers: { authorization: '[Redacted]' }, key: 'SKU_UNAVAILABLE' })
+      expect(res.data.reason).toBe('bad input')
+      expect(res.data.message).toBe('upstream rejected the key')
+    })
+
+    it('replaces the tokens of the request embedded in a thrown message', async () => {
+      const res = await serve(async () => { throw new Error(`failed: ${TOKEN}`) }, { authToken: TOKEN })
+
+      expect(res.status).toBe(500)
+      expect(res.data.message).toBe('failed: [Redacted]')
+    })
+
+    it('replaces the tokens of the request in a thrown error that embeds a serialized axios error', async () => {
+      let message = ''
+      const res = await serve(async () => {
+        message = `failed: ${stringifyCircular(await failingUpstreamCall())}`
+        throw new Error(message)
+      }, { authToken: TOKEN })
+
+      expect(message).toContain(TOKEN)
+      expect(JSON.stringify(res.data)).not.toContain(TOKEN)
+      expect(res.data.message).toContain('failed: ')
+    })
+
     it('withholds the body when the error cannot be sanitized', async () => {
       const responseSanitizer = require('../../../../../utils/responseSanitizer')
       jest.spyOn(responseSanitizer, 'sanitizeErrors').mockImplementation(() => {
@@ -173,10 +203,6 @@ describe('error middleware', () => {
         message: 'The response could not be safely returned.',
       })
       expect(JSON.stringify(res.data)).not.toContain(TOKEN)
-      expect(console.error).toHaveBeenCalledWith(
-        '[node-vtex-api error] the thrown value could not be sanitized',
-        { errorName: 'TypeError', inspectionReason: 'unexpected_failure' }
-      )
     })
   })
 

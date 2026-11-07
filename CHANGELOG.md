@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [6.52.7]
+
+### Security
+
+- `HttpClient` failures reach app code with their credentials masked. On the final rejection,
+  after the retries, the error keeps its instance, `message`, `code`, `stack`, `response.status`
+  and `response.data`, while `config` (and `response.config`) becomes a copy with credential
+  headers (`proxy-authorization`, `cookie`, `x-vtex-*`, `VtexIdclientAutCookie[_<account>]` and
+  credential-looking names), `auth`, user info in the `url`/`baseURL` (in every form the URL
+  parser accepts), credential-named `params` (also those with their own `toJSON`) and URL query
+  values, and credential-named keys in the request body (`config.data`, JSON or form-encoded)
+  replaced by `[Redacted]`. The headers of the upstream response are kept, `set-cookie` included,
+  since a redirect rejects (`maxRedirects: 0`) and apps forward its cookie; the logger and error
+  bodies still leave it out. `request`,
+  `response.request` and the connection agents stay readable but are no longer enumerable, so
+  `JSON.stringify`, `toJSON()`, `util.inspect` and the logger no longer carry them. If that
+  masking throws, `config`, `request`, and the response's `config` and `headers` are removed (and a
+  streamed response body is left out of serialization) instead of being returned with the
+  credentials still in place.
+- The logger (`cleanError`) drops the same credential headers, not only `authorization`,
+  `proxy-authorization` and `VtexIdclientAutCookie`. It masks credential-named `params`, also for
+  errors that did not go through the HttpClient. A JSON or form request body has its
+  credential-named keys masked before the 8 KB truncation, so a large body no longer reaches the
+  log unmasked.
+- The tokens of the request are replaced in GraphQL `errors[]` and in the body built from a
+  thrown value. Inside a `headers` object, those error bodies also replace the value of a known
+  credential header (`authorization`, `cookie`, `x-vtex-api-apptoken`…), even when it is not one
+  of the request tokens; other fields (`key`, `session`, a session namespace called `cookie`…)
+  are kept, also when the request has no token. A reference back to a containing object becomes
+  `[Circular]`, so the errors still serialize. A redaction that takes over 50 ms is logged as a warning (`error-redaction: slow`)
+  instead of cutting the body. If the GraphQL errors cannot be redacted, or a field that fails to
+  serialize leaves them in an invalid shape (`extensions` that is not a map), each error is sent
+  with only its message, path and code, with the tokens replaced in each, instead of failing the
+  response. Successful
+  bodies are not walked for credentials.
+
+### Fixed
+
+- Revert the nested credential redaction of 6.52.6 (#809). It ran on every JSON response, so
+  successful responses holding class instances, `Map`s or values with their own `toJSON` were
+  replaced by a 500 (`E_RESPONSE_WITHHELD`), and payload keys named like credentials (such as the
+  `cookie` namespace of a session) were replaced by `[Redacted]`.
+- String response bodies only have the tokens of the request replaced, so text that merely looks
+  like a credential (`Bearer …`, `Cookie: …`) is no longer changed.
+- A scan that could not finish no longer logs `error_object_removed` when the walk replaced no
+  error object.
+
 ## [6.52.6]
 
 ### Security
