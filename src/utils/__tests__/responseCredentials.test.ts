@@ -1,4 +1,4 @@
-import { sanitizeCredentials } from '../responseCredentials'
+import { inspectionFailureReason, sanitizeCredentials } from '../responseCredentials'
 
 const secret = 'FAKE_SECRET_01234567890123456789'
 const headers = {
@@ -87,5 +87,41 @@ describe('response credentials', () => {
     const result = sanitizeCredentials(body)
     expect(result.value).toBe(body)
     expect(result.truncated).toBe(true)
+  })
+})
+
+
+describe('inspection diagnostics', () => {
+  const cycle: any = {}
+  cycle.self = cycle
+  const date = new Date()
+  date.toJSON = () => secret
+  const accessor = Object.defineProperty({}, 'value', { enumerable: true, get: () => secret })
+
+  it.each([
+    ['cycle', cycle],
+    ['custom_serialization', { toJSON: () => secret }],
+    ['custom_date_serialization', date],
+    ['unsupported_object', new Map()],
+    ['accessor', accessor],
+  ])('reports a fixed reason for %s', (reason, body) => {
+    expect.assertions(2)
+    try {
+      sanitizeCredentials(body)
+    } catch (error) {
+      expect(inspectionFailureReason(error)).toBe(reason)
+      expect(String(error)).not.toContain(secret)
+    }
+  })
+
+  it('does not expose unexpected exception messages', () => {
+    expect(inspectionFailureReason(new Error(secret))).toBe('unexpected_failure')
+  })
+
+  it('ignores empty and short context tokens without copying a clean body', () => {
+    const body = { message: 'abc upstream failed' }
+    const result = sanitizeCredentials(body, ['', undefined, 'abc'])
+    expect(result.value).toBe(body)
+    expect(result.redacted).toBe(0)
   })
 })

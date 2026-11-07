@@ -16,8 +16,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   `limit_reached`, retaining redactions already completed. Uninspectable custom serialization
   still withholds the response. Buffers and streams remain outside
   the JSON sanitizer; apps must not put credentials in them. Apps must adopt the updated library
-  with `VTEX_IO_RESPONSE_SANITIZER` enabled to receive this protection.
-
+  with `VTEX_IO_RESPONSE_SANITIZER` enabled to receive this protection. Unknown credentials
+  represented as name/value header pairs are outside this protection.
+- Report fixed inspection failure categories when a response is withheld, without logging its content.
 
 ## [6.52.5]
 

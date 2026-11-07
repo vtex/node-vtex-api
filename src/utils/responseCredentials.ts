@@ -6,10 +6,23 @@ const MAX_DEPTH = 32
 const MAX_VALUES = 5000000
 const MAX_TEXT_LENGTH = 16 * 1024 * 1024
 
+type InspectionReason = 'cycle' | 'custom_serialization' | 'custom_date_serialization' | 'unsupported_object' | 'accessor'
+
+export class ResponseInspectionError extends Error {
+  constructor(public readonly reason: InspectionReason) {
+    super('Response inspection failed')
+  }
+}
+
+// Fixed categories only: never include response values or arbitrary exception messages in diagnostics.
+export const inspectionFailureReason = (error: unknown): string =>
+  error instanceof ResponseInspectionError ? error.reason : 'unexpected_failure'
+
 /**
  * Copy-on-write redaction for JSON response values, including already serialized Axios errors
  * and GraphQL messages. Does not mutate cached/frozen values. Limits preserve unvisited values;
  * unexpected inspection failures still throw.
+ * Unknown secrets in name/value header pairs are not recognized as credential fields.
  * Buffers and streams are handled separately by the HTTP middleware and are outside this contract.
  */
 export const sanitizeCredentials = <T>(body: T, secrets: Array<string | undefined> = []) => {
@@ -41,16 +54,19 @@ export const sanitizeCredentials = <T>(body: T, secrets: Array<string | undefine
     // inspected reliably without executing it; withhold it instead of sending unchecked output.
     if (value instanceof Date) {
       if (value.toJSON !== Date.prototype.toJSON) {
-        throw new Error('Custom date serialization in response')
+        throw new ResponseInspectionError('custom_date_serialization')
       }
       return value
     }
-    if (ancestors.has(value) || typeof value.toJSON === 'function') {
-      throw new Error('Uninspectable response serialization')
+    if (ancestors.has(value)) {
+      throw new ResponseInspectionError('cycle')
+    }
+    if (typeof value.toJSON === 'function') {
+      throw new ResponseInspectionError('custom_serialization')
     }
     const proto = Object.getPrototypeOf(value)
     if (!Array.isArray(value) && proto !== Object.prototype && proto !== null) {
-      throw new Error('Uninspectable response object')
+      throw new ResponseInspectionError('unsupported_object')
     }
     const keys = Object.keys(value)
     if (values + keys.length > MAX_VALUES) {
@@ -62,7 +78,7 @@ export const sanitizeCredentials = <T>(body: T, secrets: Array<string | undefine
     for (const key of keys) {
       const descriptor = Object.getOwnPropertyDescriptor(value, key)!
       if (!('value' in descriptor)) {
-        throw new Error('Response accessor cannot be safely inspected')
+        throw new ResponseInspectionError('accessor')
       }
       const child = descriptor.value
       const sensitive = isSensitiveKey(key) && child != null && child !== REDACTED

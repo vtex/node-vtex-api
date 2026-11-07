@@ -9,7 +9,7 @@ import {
   tooManyRequestsStatus,
 } from '../../../../../errors/TooManyRequestsError'
 import { cleanError, SENSITIVE_EXCEPTION_FIELDS } from '../../../../../utils/error'
-import { sanitizeCredentials } from '../../../../../utils/responseCredentials'
+import { inspectionFailureReason, sanitizeCredentials } from '../../../../../utils/responseCredentials'
 import { sanitizeErrors, toLoggableError } from '../../../../../utils/responseSanitizer'
 import { LogLevel } from '../../../../logger'
 import {
@@ -99,7 +99,10 @@ const buildResponseBody = (thrown: any, ctx: ServiceContext) => {
     const { authToken, adminUserAuthToken, storeUserAuthToken } = ctx.vtex ?? {}
     return sanitizeCredentials(cleanError(sanitized.value), [authToken, adminUserAuthToken, storeUserAuthToken]).value
   } catch (sanitizeError) {
-    console.error('[node-vtex-api error] the thrown value could not be sanitized', (sanitizeError as Error)?.name)
+    console.error('[node-vtex-api error] the thrown value could not be sanitized', {
+      errorName: (sanitizeError as Error)?.name,
+      inspectionReason: inspectionFailureReason(sanitizeError),
+    })
     return WITHHELD_BODY
   }
 }

@@ -1,5 +1,5 @@
 import { LINKED } from '../../../../../constants'
-import { sanitizeCredentials } from '../../../../../utils/responseCredentials'
+import { inspectionFailureReason, sanitizeCredentials } from '../../../../../utils/responseCredentials'
 import { sanitizeErrors, scanForErrors } from '../../../../../utils/responseSanitizer'
 import { redactSecrets } from '../../../../../utils/stringRedactor'
 import { ServiceContext } from '../../typings'
@@ -118,9 +118,9 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
     if (replaced > 0) { warn(ctx, SanitizerReason.ErrorRemoved, { errors: replaced }) }
     if (redacted > 0) { warn(ctx, SanitizerReason.SecretRemoved, { redactions: redacted }) }
   } catch (err) {
-    // Fails closed: whatever made it fail may also be hiding a credential.
+    // Withhold on inspection failures; reaching a traversal budget above still preserves the response.
     withholdBody(ctx)
-    warn(ctx, SanitizerReason.Failed, { errorName: errorName(err) })
+    warn(ctx, SanitizerReason.Failed, { errorName: errorName(err), inspectionReason: inspectionFailureReason(err) })
   }
 }
 

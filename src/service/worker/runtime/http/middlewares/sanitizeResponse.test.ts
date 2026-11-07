@@ -502,11 +502,27 @@ describe('sanitizeResponse', () => {
       expect(logs()).toEqual([
         {
           errorName: 'Error',
+          inspectionReason: 'unexpected_failure',
           message: 'response-sanitizer: sanitizer_failed',
           reason: 'sanitizer_failed',
           routeId: 'orders',
         },
       ])
+    })
+
+    it('logs a fixed category for unsupported objects without their contents', async () => {
+      handler = async ctx => { ctx.body = { result: new Map([['token', TOKEN]]) } }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.status).toBe(500)
+      expect(res.text).not.toContain(TOKEN)
+      expect(logs()).toEqual([expect.objectContaining({
+        inspectionReason: 'unsupported_object',
+        reason: 'sanitizer_failed',
+      })])
+      expect(JSON.stringify(logs())).not.toContain(TOKEN)
     })
 
     it('sends a body the walk could not inspect completely, and reports the limit', async () => {
