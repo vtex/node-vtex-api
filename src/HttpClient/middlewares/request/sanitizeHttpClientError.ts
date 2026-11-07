@@ -90,6 +90,7 @@ const redactConfig = (config: Record<string, any>) => {
   const copy: Record<string, any> = { ...config }
   const redactors: Array<Redactor> = [
     ['auth', redactAuth],
+    ['proxy', proxy => isObject(proxy) && proxy.auth != null ? { ...proxy, auth: isObject(proxy.auth) ? redactAuth(proxy.auth) : REDACTED } : proxy],
     ['headers', redactHeaders],
     ['params', redactParams],
     ['url', redactUrlQuery],
