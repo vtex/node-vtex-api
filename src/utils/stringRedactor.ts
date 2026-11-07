@@ -159,6 +159,28 @@ export const UNSERIALIZABLE = '[Unserializable]'
 const hasOwnSerialization = (node: object) =>
   !isPlainContainer(node) || typeof (node as any).toJSON === 'function'
 
+// How `JSON.stringify` serializes a value: by its own enumerable properties (`plain`), by itself
+// (`own`, see `hasOwnSerialization`), or not at all because inspecting it throws (`failed`).
+const serializationOf = (node: object): 'plain' | 'own' | 'failed' => {
+  try {
+    return hasOwnSerialization(node) ? 'own' : 'plain'
+  } catch {
+    return 'failed'
+  }
+}
+
+const shallowCopy = (node: Record<string, unknown> | unknown[]) => Array.isArray(node) ? node.slice() : { ...node }
+
+// Sets a redacted child on a copy. A `toJSON` that returned undefined leaves an object key out, as
+// JSON.stringify does; in an array it stays undefined, which JSON.stringify sends as null.
+const assignChild = (copy: any, key: string, value: unknown) => {
+  if (value === undefined && !Array.isArray(copy)) {
+    delete copy[key]
+  } else {
+    copy[key] = value
+  }
+}
+
 /**
  * Replaces the given secrets in every string of a value as `JSON.stringify` will send it, with
  * copy-on-write: plain objects and arrays without a secret keep their reference, and the received
@@ -182,24 +204,46 @@ export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | unde
   let unserializable = 0
   const seen = new Set<object>()
 
-  // The plain JSON value `JSON.stringify` would send for a value that serializes itself.
-  const materialize = (node: object, depth: number): any => {
+  // The plain JSON value `JSON.stringify` would send for a value that serializes itself. It is
+  // serialized under the key it has in its parent, because `toJSON(key)` receives that key (an
+  // object key, an array index as a string, or "" at the root). A `toJSON` that returns undefined
+  // leaves the key out, as `JSON.stringify` does in the parent.
+  const materialize = (node: object, depth: number, key: string): any => {
     let json: unknown
     try {
-      const text = JSON.stringify(node)
-      json = text === undefined ? undefined : JSON.parse(text)
+      json = (JSON.parse(JSON.stringify({ [key]: node })) as Record<string, unknown>)[key]
     } catch {
       unserializable++
       return UNSERIALIZABLE
     }
-    return visit(json, depth)
+    return visit(json, depth, key)
   }
 
-  const visit = (node: any, depth: number): any => {
+  const visitString = (text: string) => {
+    const result = redactKnown(text, usable)
+    redacted += result.redacted
+    return result.redacted > 0 ? result.value : text
+  }
+
+  // Copy-on-write walk of a plain object or array.
+  const walk = (node: Record<string, unknown> | unknown[], depth: number) => {
+    seen.add(node)
+    let copy: any = node
+    for (const childKey of Object.keys(node)) {
+      const child = (node as Record<string, unknown>)[childKey]
+      const safe = visit(child, depth + 1, childKey)
+      if (safe !== child) {
+        copy = copy === node ? shallowCopy(node) : copy
+        assignChild(copy, childKey, safe)
+      }
+    }
+    seen.delete(node)
+    return copy
+  }
+
+  const visit = (node: any, depth: number, key: string): any => {
     if (typeof node === 'string') {
-      const result = redactKnown(node, usable)
-      redacted += result.redacted
-      return result.redacted > 0 ? result.value : node
+      return visitString(node)
     }
     if (node === null || typeof node !== 'object' || seen.has(node)) {
       return node
@@ -208,33 +252,15 @@ export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | unde
       truncated++
       return TRUNCATED
     }
-    let ownSerialization: boolean
-    try {
-      ownSerialization = hasOwnSerialization(node)
-    } catch {
+    const serialization = serializationOf(node)
+    if (serialization === 'failed') {
       // A `toJSON` getter that throws: JSON.stringify would throw too.
       unserializable++
       return UNSERIALIZABLE
     }
-    if (ownSerialization) {
-      return materialize(node, depth)
-    }
-    seen.add(node)
-    let copy: any = node
-    for (const key of Object.keys(node)) {
-      const child = (node as any)[key]
-      const safe = visit(child, depth + 1)
-      if (safe !== child) {
-        if (copy === node) {
-          copy = Array.isArray(node) ? node.slice() : { ...node }
-        }
-        copy[key] = safe
-      }
-    }
-    seen.delete(node)
-    return copy
+    return serialization === 'own' ? materialize(node, depth, key) : walk(node, depth)
   }
 
-  const sanitized = visit(value, 0)
+  const sanitized = visit(value, 0, '')
   return { redacted, truncated, unserializable, value: sanitized }
 }

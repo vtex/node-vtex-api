@@ -1,20 +1,21 @@
-import { isSensitiveHeaderName, isSensitiveParamName } from '../../../utils/sensitiveHeaders'
+import { isKnownCredentialHeaderName, isSensitiveHeaderName, isSensitiveParamName, redactUrlQuery } from '../../../utils/sensitiveHeaders'
 import { REDACTED, TRUNCATED } from '../../../utils/stringRedactor'
 
 const isObject = (value: unknown): value is Record<string, any> =>
   value !== null && typeof value === 'object'
 
 /**
- * A copy of the headers with the value of every credential header replaced. Keys are kept. Returns
- * the same object when there is nothing to replace. Works on plain objects (axios 0.x) and on
- * `AxiosHeaders` (axios 1.x), whose type is kept so code that calls `headers.get()` still works.
+ * A copy of the headers with the value of every header `isSensitive` selects replaced. Keys are
+ * kept. Returns the same object when there is nothing to replace. Works on plain objects (axios
+ * 0.x) and on `AxiosHeaders` (axios 1.x), whose type is kept so code that calls `headers.get()`
+ * still works.
  */
-const redactHeaders = (headers: unknown) => {
+const redactHeaders = (headers: unknown, isSensitive: (name: string) => boolean = isSensitiveHeaderName) => {
   if (!isObject(headers)) {
     return headers
   }
   const values: Record<string, unknown> = typeof headers.toJSON === 'function' ? headers.toJSON() : headers
-  const sensitive = Object.keys(values).filter(name => isSensitiveHeaderName(name) && values[name] != null)
+  const sensitive = Object.keys(values).filter(name => isSensitive(name) && values[name] != null)
   if (sensitive.length === 0) {
     return headers
   }
@@ -48,49 +49,23 @@ const redactParams = (params: unknown, depth = 0): unknown => {
   let copy: any = params
   for (const name of Object.keys(params)) {
     const value = params[name]
-    const safe = !Array.isArray(params) && isSensitiveParamName(name) && value != null
-      ? REDACTED
-      : redactParams(value, depth + 1)
+    const safe = redactParam(params, name, value, depth)
     if (safe !== value) {
-      if (copy === params) {
-        copy = Array.isArray(params) ? params.slice() : { ...params }
-      }
+      copy = copy === params ? shallowCopy(params) : copy
       copy[name] = safe
     }
   }
   return copy
 }
 
-const safeDecode = (text: string) => {
-  try {
-    return decodeURIComponent(text)
-  } catch {
-    return text
-  }
-}
+// The value of one param: replaced when an object key names a credential, inspected otherwise.
+// Array indexes are not names, so array items are always inspected.
+const redactParam = (params: Record<string, any>, name: string, value: unknown, depth: number): unknown =>
+  !Array.isArray(params) && isSensitiveParamName(name) && value != null
+    ? REDACTED
+    : redactParams(value, depth + 1)
 
-// Replaces the value of credential-named keys in the query of a URL, keeping the rest as written.
-const redactUrl = (url: unknown) => {
-  if (typeof url !== 'string') {
-    return url
-  }
-  const queryStart = url.indexOf('?')
-  if (queryStart === -1) {
-    return url
-  }
-  const hashStart = url.indexOf('#', queryStart)
-  const queryEnd = hashStart === -1 ? url.length : hashStart
-  const query = url.slice(queryStart + 1, queryEnd)
-  const redactedQuery = query
-    .split('&')
-    .map(pair => {
-      const separator = pair.indexOf('=')
-      const name = separator === -1 ? pair : pair.slice(0, separator)
-      return separator !== -1 && isSensitiveParamName(safeDecode(name)) ? `${name}=${REDACTED}` : pair
-    })
-    .join('&')
-  return redactedQuery === query ? url : `${url.slice(0, queryStart + 1)}${redactedQuery}${url.slice(queryEnd)}`
-}
+const shallowCopy = (value: Record<string, any>) => Array.isArray(value) ? value.slice() : { ...value }
 
 const redactAuth = (auth: unknown) => isObject(auth) ? { username: REDACTED, password: REDACTED } : auth
 
@@ -117,7 +92,7 @@ const redactConfig = (config: Record<string, any>) => {
     ['auth', redactAuth],
     ['headers', redactHeaders],
     ['params', redactParams],
-    ['url', redactUrl],
+    ['url', redactUrlQuery],
   ]
   for (const [key, redact] of redactors) {
     if (key in config) {
@@ -139,7 +114,8 @@ const redactConfig = (config: Record<string, any>) => {
  * `isAxiosError`), `message`, `name`, `code`, `stack`, `response.status` and `response.data`.
  * - `config` (and `response.config`) becomes a copy with credential headers, `auth`, and
  *   credential-named `params` and URL query values replaced by `[Redacted]`.
- * - Credential headers of the upstream response (`set-cookie`) are replaced the same way.
+ * - Known credential headers of the upstream response (`set-cookie`) are replaced the same way;
+ *   other response headers (`www-authenticate`…) are kept.
  * - `request` and `response.request` stay readable but are no longer enumerable: they hold the
  *   serialized header block (`_header`), which cannot be rewritten after the request was sent.
  *
@@ -162,7 +138,9 @@ export const sanitizeHttpClientError = <T>(err: T): T => {
       if (isObject(response.config)) {
         response.config = isObject(error.config) ? error.config : redactConfig(response.config)
       }
-      response.headers = redactHeaders(response.headers)
+      // Only the known credential headers (`set-cookie`): the upstream answer has no credential of
+      // the request under other names, and apps read headers such as `www-authenticate`.
+      response.headers = redactHeaders(response.headers, isKnownCredentialHeaderName)
       hide(response, 'request')
     }
   } catch (sanitizeError) {

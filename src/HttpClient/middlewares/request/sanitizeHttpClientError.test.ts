@@ -46,6 +46,8 @@ describe('sanitizeHttpClientError', () => {
         res.statusCode = 400
         res.setHeader('content-type', 'application/json')
         res.setHeader('set-cookie', `vtex_session=${STORE_TOKEN}; Path=/`)
+        res.setHeader('www-authenticate', 'Bearer realm="vtex"')
+        res.setHeader('idempotency-key', 'order-123')
         res.end(JSON.stringify({ reason: 'bad input' }))
         return
       }
@@ -156,6 +158,23 @@ describe('sanitizeHttpClientError', () => {
       expect(JSON.stringify(err.response.config)).not.toContain(TOKEN)
       expect(err.response.headers['set-cookie']).toBe(REDACTED)
       expect(err.response.headers['content-type']).toBe('application/json')
+    })
+
+    it('keeps the other response headers, even when their names look like credentials', async () => {
+      const err = await failure()
+
+      expect(err.response.headers['www-authenticate']).toBe('Bearer realm="vtex"')
+      expect(err.response.headers['idempotency-key']).toBe('order-123')
+    })
+
+    it('still logs where the request went, without the raw request', async () => {
+      const logged = cleanError(await failure())
+
+      expect(logged.request).toMatchObject({ method: 'GET', path: '/fail' })
+      expect(JSON.stringify(logged)).not.toContain(TOKEN)
+      expect(JSON.stringify(logged)).not.toContain(STORE_TOKEN)
+      expect(logged.response.headers['www-authenticate']).toBe('Bearer realm="vtex"')
+      expect(logged.response.headers).not.toHaveProperty('set-cookie')
     })
 
     it('from credential-named params and URL query values, keeping the others', async () => {

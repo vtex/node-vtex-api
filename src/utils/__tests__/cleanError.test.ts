@@ -30,6 +30,36 @@ describe('cleanError', () => {
     expect(cleaned.response.headers).toEqual({ 'content-type': 'application/json' })
   })
 
+  it('keeps response headers that only look like credentials', () => {
+    const err = axiosLikeError({ accept: 'application/json' })
+    err.response.headers['www-authenticate'] = 'Bearer realm="vtex"'
+
+    expect(cleanError(err).response.headers).toEqual({ 'content-type': 'application/json', 'www-authenticate': 'Bearer realm="vtex"' })
+  })
+
+  it('logs the safe fields of a hidden request, never its raw header block', () => {
+    const err = axiosLikeError({ accept: 'application/json' })
+    const request = { _header: `GET /orders HTTP/1.1\r\nproxy-authorization: ${TOKEN}`, finished: true, method: 'GET', path: '/orders', socket: { secret: TOKEN } }
+    Object.defineProperty(err, 'request', { configurable: true, enumerable: false, value: request, writable: true })
+
+    const cleaned = cleanError(err)
+
+    expect(cleaned.request).toEqual({ finished: true, method: 'GET', path: '/orders' })
+    expect(JSON.stringify(cleaned)).not.toContain(TOKEN)
+  })
+
+  it('masks credential-named params in the logged request path and config url', () => {
+    const err = axiosLikeError({ accept: 'application/json' })
+    err.config.url = `/orders?an=acme&appToken=${TOKEN}`
+    const request = { method: 'GET', path: `/orders?filter%5BappToken%5D=${TOKEN}&page=2` }
+    Object.defineProperty(err, 'request', { configurable: true, enumerable: false, value: request, writable: true })
+
+    const cleaned = cleanError(err)
+
+    expect(cleaned.request.path).toBe('/orders?filter%5BappToken%5D=[Redacted]&page=2')
+    expect(cleaned.config.url).toBe('/orders?an=acme&appToken=[Redacted]')
+  })
+
   it('keeps what is needed to debug', () => {
     const cleaned = cleanError(axiosLikeError({ accept: 'application/json' }))
 

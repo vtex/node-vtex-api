@@ -293,6 +293,29 @@ describe('redactKnownSecretsDeep', () => {
     expect(result.value.extensions.leak).toEqual({ exposed: REDACTED })
   })
 
+  it('gives toJSON the key it has in its parent, as JSON.stringify does', () => {
+    const make = () => ({
+      extensions: {
+        custom: { toJSON: (key: string) => ({ serializedFor: key }) },
+        gone: { toJSON: () => undefined },
+        list: [{ toJSON: (key: string) => `index:${key}` }],
+      },
+    })
+
+    const sanitized = redactKnownSecretsDeep(make(), [TOKEN]).value
+
+    expect(JSON.stringify(sanitized)).toBe(JSON.stringify(make()))
+    expect(sanitized.extensions.custom).toEqual({ serializedFor: 'custom' })
+    expect(sanitized.extensions.list).toEqual(['index:0'])
+    expect(sanitized.extensions).not.toHaveProperty('gone')
+  })
+
+  it('gives toJSON an empty key at the root', () => {
+    const root = { toJSON: (key: string) => ({ key, secret: TOKEN }) }
+
+    expect(redactKnownSecretsDeep(root, [TOKEN]).value).toEqual({ key: '', secret: REDACTED })
+  })
+
   it('inspects class instances as JSON.stringify sends them', () => {
     class Holder { constructor(public readonly secret: string, public readonly id: number) {} }
 
