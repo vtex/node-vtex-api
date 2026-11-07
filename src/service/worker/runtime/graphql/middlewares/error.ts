@@ -50,8 +50,14 @@ const createLogErrorToSplunk = (vtex: IOContext) => (err: any) => {
     }
     logger.log(log, level)
   } finally {
-    if (!LINKED && err?.extensions?.exception?.sensitive) {
-      delete err.extensions.exception.sensitive
+    if (!LINKED) {
+      // Already logged above. The response must not carry them.
+      if (err?.extensions?.exception?.sensitive) {
+        delete err.extensions.exception.sensitive
+      }
+      if (err) {
+        delete err.stack
+      }
     }
   }
 }
