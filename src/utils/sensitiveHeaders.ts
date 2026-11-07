@@ -196,7 +196,7 @@ const safeDecode = (text: string) => {
 // Encoded and nested keys are recognized (`filter%5BappToken%5D=…`). Returns the same string when
 // there is nothing to replace.
 function redactQueryString (query: string): string {
-  const redacted = query
+  return query
     .split('&')
     .map(pair => {
       const separator = pair.indexOf('=')
@@ -204,7 +204,6 @@ function redactQueryString (query: string): string {
       return separator !== -1 && isSensitiveParamName(safeDecode(name)) ? `${name}=${REDACTED}` : pair
     })
     .join('&')
-  return redacted === query ? query : redacted
 }
 
 /**
