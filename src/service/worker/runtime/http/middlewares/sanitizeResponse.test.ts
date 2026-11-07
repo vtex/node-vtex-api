@@ -69,7 +69,8 @@ describe('sanitizeResponse', () => {
     const app = new Koa()
     app.use(async (ctx, next) => {
       // Stands for the `error` middleware, the outermost one, and for the context of the service.
-      ctx.vtex = { logger: { warn: (log: any) => rawLogs.push(JSON.stringify(log)) }, route: { id: 'orders' } }
+      // The app token is the one the upstream call sends as `Proxy-Authorization`, as in the runtime.
+      ctx.vtex = { authToken: TOKEN, logger: { warn: (log: any) => rawLogs.push(JSON.stringify(log)) }, route: { id: 'orders' } }
       try {
         await next()
       } catch (e) {
@@ -369,6 +370,19 @@ describe('sanitizeResponse', () => {
       expect(logs()).toEqual([])
     })
 
+    it('is not changed when it only looks like a credential', async () => {
+      // A successful text body may hold header lines or a bearer value that are not the request's.
+      const text = 'Authorization: Bearer abcdefghijklmnopqrstuvwxyz0123\nCookie: consent=accepted-all-the-way\n{"cookie":"theme=dark-mode-enabled"}'
+      handler = ctx => { ctx.body = text }
+      await startApp()
+
+      const res = await get()
+
+      expect(captured.body).toBe(text)
+      expect(res.text).toBe(text)
+      expect(logs()).toEqual([])
+    })
+
     it('is not changed when the sanitizer is switched off', async () => {
       process.env[RESPONSE_SANITIZER_SWITCH] = 'off'
       handler = async ctx => { ctx.body = await stringifiedFailure() }
@@ -403,6 +417,67 @@ describe('sanitizeResponse', () => {
       expect(walked).toBe(false)
       expect(captured.body).toBe(body)
       expect(JSON.parse(res.text)).toEqual(body)
+      expect(logs()).toEqual([])
+    })
+
+    it('keeps payload keys named like credentials, and class instances, as they are', async () => {
+      // What #809/#810 broke: a session namespace called `cookie` became a string, and a class
+      // instance or a value with its own `toJSON` made the whole response a 500.
+      class Price { constructor(public readonly amount: number) {} }
+      const body = {
+        data: { session: { namespaces: { cookie: { VtexIdclientAutCookie_acme: { value: 'store-user-token-value' } } } } },
+        price: new Price(10),
+        when: { toJSON: () => '2026-11-07' },
+      }
+      handler = ctx => { ctx.body = body }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.status).toBe(200)
+      expect(captured.body).toBe(body)
+      expect(JSON.parse(res.text)).toEqual(JSON.parse(JSON.stringify(body)))
+      expect(logs()).toEqual([])
+    })
+
+    it('keeps DTO instances, Maps, Sets and getters as the same object, with status 200', async () => {
+      // An instance whose prototype has a getter, as a DTO class produces.
+      const dto = Object.create({ get total() { return 10 } }, { id: { enumerable: true, value: 'order-1' } })
+      const withGetter = Object.defineProperty({}, 'computed', { enumerable: true, get: () => 'value' })
+      const body = {
+        dto,
+        map: new Map([['cookie', 'theme=dark']]),
+        session: { namespaces: { cookie: { VtexIdclientAutCookie_acme: { value: 'store-user-token-value' } } } },
+        set: new Set(['a']),
+        withGetter,
+      }
+      handler = ctx => { ctx.body = body }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.status).toBe(200)
+      expect(captured.body).toBe(body)
+      expect(JSON.parse(res.text)).toEqual(JSON.parse(JSON.stringify(body)))
+      expect(JSON.parse(res.text).session.namespaces.cookie).toEqual({ VtexIdclientAutCookie_acme: { value: 'store-user-token-value' } })
+      expect(logs()).toEqual([])
+    })
+
+    it('keeps a cyclic body as the same object, without withholding it', async () => {
+      // Koa cannot serialize a cycle, so the middleware is called directly.
+      const body: any = { name: 'tree', session: { namespaces: { cookie: { value: 'kept' } } } }
+      body.self = body
+      const ctx: any = {
+        response: { get: () => '' },
+        set: jest.fn(),
+        status: 200,
+        vtex: { authToken: TOKEN, logger: { warn: (log: any) => rawLogs.push(JSON.stringify(log)) } },
+      }
+
+      await loadSanitizeResponse()(ctx, async () => { ctx.body = body })
+
+      expect(ctx.body).toBe(body)
+      expect(ctx.status).toBe(200)
       expect(logs()).toEqual([])
     })
 
@@ -514,6 +589,33 @@ describe('sanitizeResponse', () => {
 
       expect(res.status).toBe(200)
       expect(captured.body).toBe(body)
+      expect(logs()).toEqual([
+        {
+          message: 'response-sanitizer: limit_reached',
+          reason: 'limit_reached',
+          routeId: 'orders',
+        },
+      ])
+    })
+
+    it('does not claim an error was removed when a truncated scan replaced none', async () => {
+      const body = { items: [{ id: 1 }] }
+      const copied = { items: [{ id: 1 }] }
+      jest.resetModules()
+      let middleware: (ctx: any, next: () => Promise<void>) => Promise<void>
+      jest.isolateModules(() => {
+        const sanitizer = require('../../../../../utils/responseSanitizer')
+        jest.spyOn(sanitizer, 'scanForErrors').mockReturnValue('truncated')
+        jest.spyOn(sanitizer, 'sanitizeErrors').mockReturnValue({ replaced: 0, truncated: true, value: copied })
+        middleware = require('./sanitizeResponse').sanitizeResponse
+      })
+      handler = ctx => { ctx.body = body }
+      await startApp(true, middleware!)
+
+      const res = await get()
+
+      expect(captured.body).toBe(copied)
+      expect(JSON.parse(res.text)).toEqual(copied)
       expect(logs()).toEqual([
         {
           message: 'response-sanitizer: limit_reached',

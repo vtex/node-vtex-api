@@ -1,6 +1,6 @@
 import { LINKED } from '../../../../../constants'
 import { sanitizeErrors, scanForErrors } from '../../../../../utils/responseSanitizer'
-import { redactSecrets } from '../../../../../utils/stringRedactor'
+import { redactKnownSecrets } from '../../../../../utils/stringRedactor'
 import { ServiceContext } from '../../typings'
 
 /**
@@ -59,10 +59,12 @@ const withholdBody = (ctx: ServiceContext) => {
 }
 
 // A string body can hold an error that was turned into text (`JSON.stringify(error)`), which has
-// no error object left to find. What can be told apart is the credential itself.
+// no error object left to find. What can be told apart is the credential itself. Only the tokens
+// of the request are replaced: a successful body may legitimately contain text that looks like a
+// credential (`Bearer …`, `Cookie: …`), and the HttpClient already masks its errors at the origin.
 const redactStringBody = (ctx: ServiceContext, body: string) => {
   const { authToken, adminUserAuthToken, storeUserAuthToken } = ctx.vtex ?? {}
-  const { value, redacted } = redactSecrets(body, [authToken, adminUserAuthToken, storeUserAuthToken])
+  const { value, redacted } = redactKnownSecrets(body, [authToken, adminUserAuthToken, storeUserAuthToken])
   if (redacted === 0) {
     return
   }
@@ -114,7 +116,11 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
       ctx.set('Content-Type', contentType)
     }
 
-    warn(ctx, SanitizerReason.ErrorRemoved, { errors: replaced })
+    // The scan also runs the walk when it could not finish. That walk may replace nothing, so a
+    // removal is reported only when one actually happened.
+    if (replaced > 0) {
+      warn(ctx, SanitizerReason.ErrorRemoved, { errors: replaced })
+    }
   } catch (err) {
     // Fails closed: whatever made it fail may also be hiding a credential.
     withholdBody(ctx)

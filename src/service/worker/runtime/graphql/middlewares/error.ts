@@ -6,13 +6,66 @@ import {
   cancelledErrorCode,
   cancelledRequestStatus,
 } from '../../../../../errors/RequestCancelledError'
+import { redactKnownSecrets } from '../../../../../utils/stringRedactor'
 import { LogLevel } from '../../../../logger'
 import { IOContext } from '../../typings'
+import { redactErrorBody } from '../../utils/redactErrorBody'
 import { GraphQLServiceContext } from '../typings'
 import { createFormatError } from '../utils/error'
 import { generatePathName } from '../utils/pathname'
 
 const TWO_SECONDS_S = 2
+
+const GENERIC_ERROR_MESSAGE = 'Internal server error'
+
+const isPathPart = (part: unknown) => typeof part === 'string' || typeof part === 'number'
+
+// What is sent when the errors could not be redacted: for each error only its message, path and
+// code, with the tokens of the request replaced in each, so clients still see what failed.
+const withheldErrors = (errors: any[], vtex: IOContext) => {
+  const tokens = [vtex.authToken, vtex.adminUserAuthToken, vtex.storeUserAuthToken]
+  const redact = (text: string) => redactKnownSecrets(text, tokens).value
+  const pathPart = (part: unknown) => typeof part === 'string' ? redact(part) : part
+  try {
+    return errors.map(err => ({
+      extensions: typeof err?.extensions?.code === 'string' ? { code: redact(err.extensions.code) } : undefined,
+      message: typeof err?.message === 'string' ? redact(err.message) : GENERIC_ERROR_MESSAGE,
+      path: Array.isArray(err?.path) ? err.path.filter(isPathPart).map(pathPart) : undefined,
+    }))
+  } catch {
+    return [{ message: GENERIC_ERROR_MESSAGE }]
+  }
+}
+
+const isMap = (value: unknown) => value !== null && typeof value === 'object' && !Array.isArray(value)
+
+// A value that fails to serialize during the redaction becomes `[Unserializable]` instead of
+// throwing, so a field GraphQL requires to be a map or a list may come back as a string.
+const isGraphQLError = (err: unknown) => {
+  if (!isMap(err)) {
+    return false
+  }
+  const { extensions, locations, message, path } = err as Record<string, unknown>
+  return typeof message === 'string' &&
+    (extensions == null || isMap(extensions)) &&
+    (locations == null || Array.isArray(locations)) &&
+    (path == null || Array.isArray(path))
+}
+
+// The errors sent back, with the tokens of the request and known credential headers replaced. It
+// never throws: a failure here would turn the whole GraphQL response into a 500.
+const safeGraphQLErrors = (errors: any[], vtex: IOContext) => {
+  try {
+    const redacted = redactErrorBody(errors, vtex)
+    if (Array.isArray(redacted) && redacted.every(isGraphQLError)) {
+      return redacted
+    }
+    console.error('[node-vtex-api error] the sanitized GraphQL errors are not valid GraphQL errors')
+  } catch (redactError) {
+    console.error('[node-vtex-api error] the GraphQL errors could not be sanitized', (redactError as Error)?.name)
+  }
+  return withheldErrors(errors, vtex)
+}
 
 const uniqErrorsByPath = (errors: any[]) => uniqBy(
   e => e.extensions && e.extensions.exception && e.extensions.exception.request
@@ -116,9 +169,14 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
         ctx.graphql.cacheControl.noStore = true
       }
 
+      // The tokens of the request are replaced wherever they appear in the errors sent back, such
+      // as a resolver message that embeds a serialized upstream error. So is the value of a known
+      // credential header inside a `headers` object. `data` is not touched.
+      const safeErrors = safeGraphQLErrors(uniqueErrors, ctx.vtex)
+
       ctx.graphql.graphqlResponse = {
         ...ctx.graphql.graphqlResponse,
-        errors: uniqueErrors,
+        errors: safeErrors,
       }
 
     }

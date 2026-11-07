@@ -16,6 +16,7 @@ import {
   RecorderState,
   ServiceContext,
 } from '../../typings'
+import { redactErrorBody } from '../../utils/redactErrorBody'
 import { WITHHELD_BODY } from './sanitizeResponse'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
@@ -92,9 +93,13 @@ const logAndRemoveSensitiveData = <
 // bodies the app sets, so both paths expose the same: `cleanError` alone removes credentials only
 // at the top level, and by a short list of header names, so an error that is a property of the
 // thrown value (`originalError`) kept its config, request and stack.
-const buildResponseBody = (thrown: any) => {
+// The tokens of the request are replaced wherever they appear, such as in a message that embeds
+// them (`new Error(`failed: ${token}`)`). So is the value of a known credential header inside a
+// `headers` object, even when it is not one of those tokens; other field names are kept. This is an error path: successful bodies are not walked.
+const buildResponseBody = (thrown: any, ctx: ServiceContext) => {
   try {
-    return cleanError(sanitizeErrors(thrown, { linked: LINKED }).value)
+    const body = cleanError(sanitizeErrors(thrown, { linked: LINKED }).value)
+    return redactErrorBody(body, ctx.vtex)
   } catch (sanitizeError) {
     console.error('[node-vtex-api error] the thrown value could not be sanitized', (sanitizeError as Error)?.name)
     return WITHHELD_BODY
@@ -139,6 +144,6 @@ export async function error (ctx: ServiceContext, next: () => Promise<void>) {
     // `err` is what is logged, which keeps the config and the request to debug with. It is not the
     // body: the sanitized value is.
     logAndRemoveSensitiveData(ctx, err)
-    ctx.body = ctx.body || buildResponseBody(e)
+    ctx.body = ctx.body || buildResponseBody(e, ctx)
   }
 }
