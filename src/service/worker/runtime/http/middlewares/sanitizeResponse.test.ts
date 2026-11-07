@@ -385,7 +385,9 @@ describe('sanitizeResponse', () => {
     it.each(['rest', 'graphql', 'wrapped-error', 'graphql-engine'])('redacts the %s response over HTTP', async kind => {
       handler = async ctx => {
         const failure = await callUpstream()
+        // Public Axios responses can duplicate the IO JWT under both credential headers.
         failure.config.headers = { ...failure.config.headers,
+          VtexIdclientAutCookie: TOKEN,
           'X-Vtex-Api-AppKey': 'fake-appkey-0123456789',
           'X-Vtex-Api-AppToken': 'fake-apptoken-0123456789',
         }

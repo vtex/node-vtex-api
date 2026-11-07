@@ -3,6 +3,7 @@ import { sanitizeCredentials } from '../responseCredentials'
 const secret = 'FAKE_SECRET_01234567890123456789'
 const headers = {
   'Proxy-Authorization': secret,
+  VtexIdclientAutCookie: secret,
   'X-Vtex-Api-AppKey': secret,
   'X-Vtex-Api-AppToken': secret,
 }
@@ -22,6 +23,24 @@ describe('response credentials', () => {
     expect(JSON.stringify(result.value)).not.toContain(secret)
     expect(JSON.stringify(result.value)).toContain('[Redacted]')
     expect(JSON.stringify(body)).toBe(before)
+  })
+
+  it('redacts duplicated GraphQL messages containing prefixed serialized errors', () => {
+    const message = `upstream failed: ${JSON.stringify({ config: { headers }, name: 'AxiosError' })}`
+    const body = { data: null, errors: [{ extensions: { exception: { message } }, message }] }
+    const result = sanitizeCredentials(body)
+    expect(JSON.stringify(result.value)).not.toContain(secret)
+    expect(result.redacted).toBe(8)
+    expect(result.truncated).toBe(false)
+    expect(body.errors[0].message).toBe(message)
+  })
+
+  it('preserves an ordinary upstream error message without credentials', () => {
+    const body = { message: 'Request failed with status code 400' }
+    const result = sanitizeCredentials(body)
+    expect(result.value).toBe(body)
+    expect(result.redacted).toBe(0)
+    expect(result.truncated).toBe(false)
   })
 
   it('replaces context tokens even without a header name', () => {
