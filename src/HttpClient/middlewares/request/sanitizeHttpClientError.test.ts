@@ -257,6 +257,37 @@ describe('sanitizeHttpClientError', () => {
       expect(() => sanitizeHttpClientError(frozen)).not.toThrow()
     })
 
+    it('removes the credential fields when masking throws', () => {
+      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined)
+      const err: any = new Error('failed')
+      err.config = {
+        headers: { authorization: TOKEN, toJSON: () => { throw new Error('boom') } },
+        url: `/orders?appToken=${TOKEN}`,
+      }
+      err.request = { _header: `authorization: ${TOKEN}` }
+      err.response = {
+        config: err.config,
+        data: { reason: 'no' },
+        headers: { 'set-cookie': `vtex_session=${TOKEN}`, 'www-authenticate': 'Bearer' },
+        request: err.request,
+        status: 401,
+      }
+
+      const result = sanitizeHttpClientError(err)
+
+      expect(result).toBe(err)
+      expect(result.message).toBe('failed')
+      expect(result.response.status).toBe(401)
+      expect(result.response.data).toEqual({ reason: 'no' })
+      expect(result.config).toEqual({})
+      expect(result.request).toBeUndefined()
+      expect(result.response.config).toEqual({})
+      expect(result.response.headers).toEqual({})
+      expect(result.response.request).toBeUndefined()
+      expect(JSON.stringify(result)).not.toContain(TOKEN)
+      expect(consoleError).toHaveBeenCalled()
+    })
+
     it('masks an error that is not from axios but carries a config', () => {
       const err: any = new Error('failed')
       err.config = { headers: { Authorization: `Bearer ${TOKEN}`, accept: 'json' } }

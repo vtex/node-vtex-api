@@ -16,7 +16,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   credential-looking names), `auth`, and credential-named `params` and URL query values replaced by
   `[Redacted]`. `set-cookie` of the upstream response is masked too. `request`,
   `response.request` and the connection agents stay readable but are no longer enumerable, so
-  `JSON.stringify`, `toJSON()`, `util.inspect` and the logger no longer carry them.
+  `JSON.stringify`, `toJSON()`, `util.inspect` and the logger no longer carry them. If that
+  masking throws, `config`, `request`, and the response's `config` and `headers` are removed
+  instead of being returned with the credentials still in place.
 - The logger (`cleanError`) drops the same credential headers, not only `authorization`,
   `proxy-authorization` and `VtexIdclientAutCookie`.
 - The tokens of the request are replaced in GraphQL `errors[]` and in the body built from a

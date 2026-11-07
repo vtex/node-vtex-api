@@ -80,6 +80,28 @@ const hide = (target: Record<string, any>, key: string) => {
 
 const AGENT_KEYS = ['httpAgent', 'httpsAgent']
 
+const assign = (target: Record<string, any>, key: string, value: unknown) => {
+  try {
+    target[key] = value
+  } catch {
+    // A frozen or non-writable property cannot be cleared.
+  }
+}
+
+// Last resort when masking throws partway. The fields that carry credentials are replaced, rather
+// than returned as they were. `response.status` and `response.data` stay.
+const withholdCredentials = (error: Record<string, any>) => {
+  assign(error, 'config', {})
+  assign(error, 'request', undefined)
+  const { response } = error
+  if (!isObject(response)) {
+    return
+  }
+  assign(response, 'config', {})
+  assign(response, 'headers', {})
+  assign(response, 'request', undefined)
+}
+
 type Redactor = [string, (value: unknown) => unknown]
 
 /**
@@ -123,14 +145,15 @@ const redactConfig = (config: Record<string, any>) => {
  *   serialized header block (`_header`), which cannot be rewritten after the request was sent.
  *
  * It runs on the final rejection only, after the retries, which reuse the original config.
- * It never throws: on an unexpected failure the error is returned as it is.
+ * It never throws. If masking fails, the fields that carry credentials are removed and the error
+ * is still returned.
  */
 export const sanitizeHttpClientError = <T>(err: T): T => {
   if (!isObject(err)) {
     return err
   }
+  const error = err as Record<string, any>
   try {
-    const error = err as Record<string, any>
     if (isObject(error.config)) {
       error.config = redactConfig(error.config)
     }
@@ -151,6 +174,11 @@ export const sanitizeHttpClientError = <T>(err: T): T => {
     }
   } catch (sanitizeError) {
     console.error('[node-vtex-api error] an HTTP client error could not be sanitized', (sanitizeError as Error)?.name)
+    try {
+      withholdCredentials(error)
+    } catch {
+      // Clearing a hostile error must not surface the failure.
+    }
   }
   return err
 }
