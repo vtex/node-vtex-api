@@ -1,8 +1,8 @@
 // Run after building: node scripts/benchmark-response-sanitizer.js
 // Clean JSON fast path only. Excludes allocation, serialization, HTTP and compression.
-const assert = require('assert')
-const os = require('os')
-const { performance } = require('perf_hooks')
+const assert = require('node:assert')
+const os = require('node:os')
+const { performance } = require('node:perf_hooks')
 const { scanForErrors } = require('../lib/utils/responseSanitizer')
 const { sanitizeCredentials } = require('../lib/utils/responseCredentials')
 const secrets = ['fake-context-token-01234567890123456789']

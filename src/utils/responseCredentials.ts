@@ -32,20 +32,72 @@ export const sanitizeCredentials = <T>(body: T, secrets: (string | undefined)[] 
   let truncated = false
   const ancestors = new Set<object>()
 
+  const visitString = (value: string): string => {
+    textLength += value.length
+    if (textLength > MAX_TEXT_LENGTH) {
+      truncated = true
+      return value
+    }
+    const redaction = redactSecrets(value, secrets)
+    redacted += redaction.redacted
+    return redaction.value
+  }
+
+  const assertInspectableObject = (value: any) => {
+    if (ancestors.has(value)) {
+      throw new ResponseInspectionError('cycle')
+    }
+    if (typeof value.toJSON === 'function') {
+      throw new ResponseInspectionError('custom_serialization')
+    }
+    const proto = Object.getPrototypeOf(value)
+    if (!Array.isArray(value) && proto !== Object.prototype && proto !== null) {
+      throw new ResponseInspectionError('unsupported_object')
+    }
+  }
+
+  const visitProperty = (value: any, key: string, depth: number) => {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key)!
+    if (!('value' in descriptor)) {
+      throw new ResponseInspectionError('accessor')
+    }
+    const child = descriptor.value
+    if (isSensitiveKey(key) && child != null && child !== REDACTED) {
+      redacted++
+      return { child, safe: REDACTED }
+    }
+    return { child, safe: visit(child, depth + 1) }
+  }
+
+  const visitObject = (value: any, depth: number): any => {
+    assertInspectableObject(value)
+    const keys = Object.keys(value)
+    if (values + keys.length > MAX_VALUES) {
+      truncated = true
+      return value
+    }
+    ancestors.add(value)
+    let result = value
+    for (const key of keys) {
+      const { child, safe } = visitProperty(value, key, depth)
+      if (safe !== child) {
+        if (result === value) {
+          result = Array.isArray(value) ? value.slice() : { ...value }
+        }
+        Object.defineProperty(result, key, { configurable: true, enumerable: true, value: safe, writable: true })
+      }
+    }
+    ancestors.delete(value)
+    return result
+  }
+
   const visit = (value: any, depth: number): any => {
     if (++values > MAX_VALUES || depth > MAX_DEPTH) {
       truncated = true
       return value
     }
     if (typeof value === 'string') {
-      textLength += value.length
-      if (textLength > MAX_TEXT_LENGTH) {
-        truncated = true
-        return value
-      }
-      const redaction = redactSecrets(value, secrets)
-      redacted += redaction.redacted
-      return redaction.value
+      return visitString(value)
     }
     if (value === null || typeof value !== 'object') {
       return value
@@ -58,39 +110,7 @@ export const sanitizeCredentials = <T>(body: T, secrets: (string | undefined)[] 
       }
       return value
     }
-    if (ancestors.has(value)) {
-      throw new ResponseInspectionError('cycle')
-    }
-    if (typeof value.toJSON === 'function') {
-      throw new ResponseInspectionError('custom_serialization')
-    }
-    const proto = Object.getPrototypeOf(value)
-    if (!Array.isArray(value) && proto !== Object.prototype && proto !== null) {
-      throw new ResponseInspectionError('unsupported_object')
-    }
-    const keys = Object.keys(value)
-    if (values + keys.length > MAX_VALUES) {
-      truncated = true
-      return value
-    }
-    ancestors.add(value)
-    let result = value
-    for (const key of keys) {
-      const descriptor = Object.getOwnPropertyDescriptor(value, key)!
-      if (!('value' in descriptor)) {
-        throw new ResponseInspectionError('accessor')
-      }
-      const child = descriptor.value
-      const sensitive = isSensitiveKey(key) && child != null && child !== REDACTED
-      const safe = sensitive ? REDACTED : visit(child, depth + 1)
-      if (sensitive) { redacted++ }
-      if (safe !== child) {
-        result = result === value ? (Array.isArray(value) ? value.slice() : { ...value }) : result
-        Object.defineProperty(result, key, { configurable: true, enumerable: true, value: safe, writable: true })
-      }
-    }
-    ancestors.delete(value)
-    return result
+    return visitObject(value, depth)
   }
 
   const sanitized = visit(body, 0) as T
