@@ -79,7 +79,11 @@ describe('error middleware', () => {
     const res = await serve(async () => { throw await failingUpstreamCall() })
 
     const printed = inspect(consoleError.mock.calls, { depth: null, maxArrayLength: null })
+    const body = typeof res.data === 'string' ? res.data : JSON.stringify(res.data)
     expect(res.status).toBe(400)
+    expect(body).not.toContain(TOKEN)
+    expect(res.data).not.toHaveProperty('config')
+    expect(res.data).not.toHaveProperty('request')
     expect(printed).not.toContain(TOKEN)
     expect(printed).not.toContain('httpAgent')
   })
