@@ -158,6 +158,10 @@ export const UNSERIALIZABLE = '[Unserializable]'
 // class instance (`Date`, `Buffer`, a DTO…) or an object with a `toJSON`, own or inherited.
 const hasOwnSerialization = (node: object) =>
   !isPlainContainer(node) || typeof (node as any).toJSON === 'function'
+    || Object.keys(node).some(key => {
+      const descriptor = Object.getOwnPropertyDescriptor(node, key)
+      return !!descriptor && !('value' in descriptor)
+    })
 
 // How `JSON.stringify` serializes a value: by its own enumerable properties (`plain`), by itself
 // (`own`, see `hasOwnSerialization`), or not at all because inspecting it throws (`failed`).
