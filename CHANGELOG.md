@@ -11,8 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 - Error objects assigned to the response body no longer expose the request
   configuration, credentials, connection agents or, outside link mode, the
-  stack. If the response cannot be sanitized, or the walk cannot inspect
-  all of it, it is withheld.
+  stack. If the response cannot be sanitized it is withheld. A body the walk cannot
+  inspect completely is sent as it is, and the limit is reported.
 - String response bodies built from an error (`` `failed: ${JSON.stringify(error)}` ``) no longer
   expose its credentials: the request's tokens, the value of credential headers (`authorization`,
   `proxy-authorization`, `VtexIdclientAutCookie`, `x-vtex-api-*`), the VTEX ID cookie and `Bearer`

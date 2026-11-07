@@ -462,7 +462,7 @@ describe('sanitizeResponse', () => {
       ])
     })
 
-    it('withhold a body the walk could not inspect completely', async () => {
+    it('sends a body the walk could not inspect completely, and reports the limit', async () => {
       handler = async ctx => {
         // Deeper than the walk allows, with the credential past the limit.
         let nested: any = { error: await callUpstream() }
@@ -475,12 +475,8 @@ describe('sanitizeResponse', () => {
 
       const res = await get()
 
-      expect(res.status).toBe(500)
-      expect(JSON.parse(res.text)).toEqual({
-        code: 'E_RESPONSE_WITHHELD',
-        message: 'The response could not be safely returned.',
-      })
-      expect(res.text).not.toContain(TOKEN)
+      expect(res.status).toBe(200)
+      expect(res.text).not.toContain('E_RESPONSE_WITHHELD')
       expect(logs()).toEqual([
         {
           message: 'response-sanitizer: limit_reached',
@@ -490,18 +486,15 @@ describe('sanitizeResponse', () => {
       ])
     })
 
-    it('withhold a body that holds more values than the walk accepts', async () => {
-      handler = ctx => {
-        // Six million numbers: nothing in it can be an error, but it cannot be told without a pass
-        // that is larger than the budget.
-        ctx.body = { ids: new Array(6000000).fill(1) }
-      }
+    it('sends a body that holds more values than the walk accepts, and reports the limit', async () => {
+      const body = { ids: new Array(6000000).fill(1) }
+      handler = ctx => { ctx.body = body }
       await startApp()
 
       const res = await get()
 
-      expect(res.status).toBe(500)
-      expect(JSON.parse(res.text).code).toBe('E_RESPONSE_WITHHELD')
+      expect(res.status).toBe(200)
+      expect(captured.body).toBe(body)
       expect(logs()).toEqual([
         {
           message: 'response-sanitizer: limit_reached',

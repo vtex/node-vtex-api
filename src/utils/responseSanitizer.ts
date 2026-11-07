@@ -40,8 +40,8 @@ export interface SanitizeErrorsResult<T> {
    */
   replaced: number
   /**
-   * True when a limit (depth, containers, values) stopped the walk early. The part not visited is
-   * replaced by a marker, so the original subtree is not returned.
+   * True when a limit (depth, containers, values) stopped the walk early. Outside an error the part
+   * not visited is left as it is. Inside an error it is replaced by a marker.
    */
   truncated: boolean
 }
@@ -110,9 +110,10 @@ class ErrorSanitizer {
       return this.insideError > 0 ? CIRCULAR : node
     }
     if (depth > this.maxDepth || this.nodes >= this.maxNodes) {
-      // Not inspected. The node itself may be an error, or may hold one, so it is not returned.
+      // Not inspected. Inside an error it must not be returned (it may hold the config). Outside
+      // one it is left as it is: withholding the whole body would break the large responses.
       this.truncated = true
-      return TRUNCATED
+      return this.insideError > 0 ? TRUNCATED : node
     }
     this.nodes++
 
@@ -139,7 +140,7 @@ class ErrorSanitizer {
 
   private walkArray(node: any[], depth: number) {
     if (!this.spend(node.length)) {
-      return TRUNCATED
+      return this.insideError > 0 ? TRUNCATED : node
     }
     this.ancestors.push(node)
     let result = node
@@ -159,7 +160,7 @@ class ErrorSanitizer {
   private walkObject(node: Record<string, any>, depth: number) {
     const keys = Object.keys(node)
     if (!this.spend(keys.length)) {
-      return TRUNCATED
+      return this.insideError > 0 ? TRUNCATED : node
     }
     this.ancestors.push(node)
     let result = node

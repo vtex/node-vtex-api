@@ -88,13 +88,8 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
     }
 
     // Most bodies have no error. A scan decides that without the copying walk; the walk runs only
-    // once an error has been found. A scan that stops early has not seen the rest of the body.
+    // once an error has been found, or the scan could not finish.
     const scan = scanForErrors(body)
-    if (scan === 'truncated') {
-      withholdBody(ctx)
-      warn(ctx, SanitizerReason.LimitReached)
-      return
-    }
     if (scan === 'clean') {
       return
     }
@@ -102,10 +97,9 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
     const { value, replaced, truncated } = sanitizeErrors(body, { linked: LINKED })
 
     if (truncated) {
-      // The part beyond the limit was not inspected, so an error there would be sent as it is.
-      withholdBody(ctx)
+      // What is beyond the limit is left as it is, outside an error. The response is still sent:
+      // withholding it would break the large legitimate responses. It is reported to be measured.
       warn(ctx, SanitizerReason.LimitReached)
-      return
     }
 
     if (value === body) {
@@ -140,8 +134,8 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
  * and to change it before it is serialized.
  *
  * The body is also sanitized when the downstream handlers throw after having set it, as the error
- * middleware keeps an existing body. If the sanitizer itself fails, or it cannot inspect the whole
- * body, the body is withheld, on any path. It never throws.
+ * middleware keeps an existing body. If the sanitizer itself fails the body is withheld. If it
+ * cannot inspect the whole body, the response is sent and the limit is reported. It never throws.
  *
  * It is a backstop for apps that return errors by mistake. It is not a boundary against an app that
  * wants to disclose its own credentials, which has them.

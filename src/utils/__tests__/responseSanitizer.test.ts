@@ -474,7 +474,7 @@ describe('sanitizeErrors', () => {
       expect(result.replaced).toBe(0)
     })
 
-    it('does not keep an error that sits past the limit', () => {
+    it('leaves an error that sits past the limit as it is', () => {
       const leaked: any = new Error('deep')
       leaked.config = { headers: { authorization: TOKEN } }
       let body: any = { error: leaked }
@@ -485,8 +485,8 @@ describe('sanitizeErrors', () => {
       const result = sanitizeErrors(body, { linked: false, maxDepth: 3 })
 
       expect(result.truncated).toBe(true)
-      expect(JSON.stringify(result.value)).toContain('[Truncated]')
-      expect(JSON.stringify(result.value)).not.toContain(TOKEN)
+      expect(JSON.stringify(result.value)).toContain(TOKEN)
+      expect(JSON.stringify(result.value)).not.toContain('[Truncated]')
     })
 
     it('stops at the maximum number of nodes and reports it', () => {
@@ -495,8 +495,7 @@ describe('sanitizeErrors', () => {
       const result = sanitizeErrors(body, { linked: false, maxNodes: 10 })
 
       expect(result.truncated).toBe(true)
-      expect(result.value).not.toBe(body)
-      expect(JSON.stringify(result.value)).toContain('[Truncated]')
+      expect(result.value).toBe(body)
     })
 
     it('stops at the maximum number of values and does not return what was not visited', () => {
