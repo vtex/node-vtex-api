@@ -116,7 +116,11 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
       ctx.set('Content-Type', contentType)
     }
 
-    warn(ctx, SanitizerReason.ErrorRemoved, { errors: replaced })
+    // The scan also runs the walk when it could not finish. That walk may replace nothing, so a
+    // removal is reported only when one actually happened.
+    if (replaced > 0) {
+      warn(ctx, SanitizerReason.ErrorRemoved, { errors: replaced })
+    }
   } catch (err) {
     // Fails closed: whatever made it fail may also be hiding a credential.
     withholdBody(ctx)

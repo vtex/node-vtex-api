@@ -538,6 +538,33 @@ describe('sanitizeResponse', () => {
       ])
     })
 
+    it('does not claim an error was removed when a truncated scan replaced none', async () => {
+      const body = { items: [{ id: 1 }] }
+      const copied = { items: [{ id: 1 }] }
+      jest.resetModules()
+      let middleware: (ctx: any, next: () => Promise<void>) => Promise<void>
+      jest.isolateModules(() => {
+        const sanitizer = require('../../../../../utils/responseSanitizer')
+        jest.spyOn(sanitizer, 'scanForErrors').mockReturnValue('truncated')
+        jest.spyOn(sanitizer, 'sanitizeErrors').mockReturnValue({ replaced: 0, truncated: true, value: copied })
+        middleware = require('./sanitizeResponse').sanitizeResponse
+      })
+      handler = ctx => { ctx.body = body }
+      await startApp(true, middleware!)
+
+      const res = await get()
+
+      expect(captured.body).toBe(copied)
+      expect(JSON.parse(res.text)).toEqual(copied)
+      expect(logs()).toEqual([
+        {
+          message: 'response-sanitizer: limit_reached',
+          reason: 'limit_reached',
+          routeId: 'orders',
+        },
+      ])
+    })
+
     it('keep an error status chosen by the app', async () => {
       handler = async ctx => {
         ctx.status = 404
