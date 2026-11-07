@@ -49,7 +49,7 @@ describe('sanitizeResponse', () => {
     throw new Error('the upstream call was expected to fail')
   }
 
-  const buildApp = (withSanitizer: boolean) => {
+  const buildApp = (withSanitizer: boolean, middleware?: (ctx: any, next: () => Promise<void>) => Promise<void>) => {
     const app = new Koa()
     app.use(async (ctx, next) => {
       // Stands for the `error` middleware, the outermost one, and for the context of the service.
@@ -72,14 +72,14 @@ describe('sanitizeResponse', () => {
       }
     })
     if (withSanitizer) {
-      app.use(loadSanitizeResponse() as any)
+      app.use((middleware ?? loadSanitizeResponse()) as any)
     }
     app.use(async ctx => { await handler(ctx) })
     return app
   }
 
-  const startApp = async (withSanitizer = true) => {
-    appServer = createServer(buildApp(withSanitizer).callback())
+  const startApp = async (withSanitizer = true, middleware?: (ctx: any, next: () => Promise<void>) => Promise<void>) => {
+    appServer = createServer(buildApp(withSanitizer, middleware).callback())
     appURL = await listen(appServer)
   }
 
@@ -239,6 +239,31 @@ describe('sanitizeResponse', () => {
   })
 
   describe('a body without errors', () => {
+    it('does not run the copying walk over a list of plain records', async () => {
+      const body = { items: Array.from({ length: 500 }, (_, id) => ({ id, name: 'row' })) }
+      let walked = false
+      jest.resetModules()
+      let middleware: (ctx: any, next: () => Promise<void>) => Promise<void>
+      jest.isolateModules(() => {
+        const sanitizer = require('../../../../../utils/responseSanitizer')
+        const original = sanitizer.sanitizeErrors
+        jest.spyOn(sanitizer, 'sanitizeErrors').mockImplementation((...args: any[]) => {
+          walked = true
+          return original(...args)
+        })
+        middleware = require('./sanitizeResponse').sanitizeResponse
+      })
+      handler = ctx => { ctx.body = body }
+      await startApp(true, middleware!)
+
+      const res = await get()
+
+      expect(walked).toBe(false)
+      expect(captured.body).toBe(body)
+      expect(JSON.parse(res.text)).toEqual(body)
+      expect(logs()).toEqual([])
+    })
+
     it('is the same object, with the same content type', async () => {
       const body = { items: [{ id: 1 }, { id: 2 }], token: 'abc' }
       handler = ctx => {

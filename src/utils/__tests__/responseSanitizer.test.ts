@@ -8,7 +8,7 @@ import { Readable } from 'stream'
 import { inspect } from 'util'
 import { runInNewContext } from 'vm'
 
-import { sanitizeErrors, toLoggableError } from '../responseSanitizer'
+import { sanitizeErrors, scanForErrors, toLoggableError } from '../responseSanitizer'
 
 const TOKEN = 'app-token-eyJhbGciOiJSUzI1NiJ9.payload.signature'
 const options = { linked: false }
@@ -375,6 +375,38 @@ describe('sanitizeErrors', () => {
       const hostile = { get list(): number[] { throw new Error('getter failed') } }
 
       expect(toLoggableError(hostile)).toEqual(expect.stringContaining('could not be sanitized'))
+    })
+  })
+
+  describe('scanForErrors', () => {
+    it('accepts flat data and lists of records without a copying walk', () => {
+      const items = Array.from({ length: 50 }, (_, id) => ({ id, name: 'row' }))
+
+      expect(scanForErrors({ items, token: 'abc' })).toBe('clean')
+      expect(scanForErrors(['a', 1, null])).toBe('clean')
+      expect(scanForErrors(items)).toBe('clean')
+    })
+
+    it('finds an error nested past a single record', () => {
+      expect(scanForErrors({ data: { id: 1 }, errors: [{ reason: new Error('x') }] })).toBe('has-error')
+      expect(scanForErrors(new Error('root'))).toBe('has-error')
+    })
+
+    it('stops at the configured depth and node budgets', () => {
+      let deep: any = { id: 1 }
+      for (let i = 0; i < 6; i++) {
+        deep = { child: deep }
+      }
+
+      expect(scanForErrors(deep, { maxDepth: 3 })).toBe('truncated')
+      expect(scanForErrors(Array.from({ length: 10 }, (_, id) => ({ id })), { maxNodes: 4 })).toBe('truncated')
+    })
+
+    it('does not loop when the body references itself', () => {
+      const body: any = { a: {} }
+      body.a.back = body
+
+      expect(scanForErrors(body)).toBe('clean')
     })
   })
 

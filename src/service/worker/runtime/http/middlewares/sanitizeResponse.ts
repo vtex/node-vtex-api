@@ -1,5 +1,5 @@
 import { LINKED } from '../../../../../constants'
-import { sanitizeErrors } from '../../../../../utils/responseSanitizer'
+import { sanitizeErrors, scanForErrors } from '../../../../../utils/responseSanitizer'
 import { ServiceContext } from '../../typings'
 
 /**
@@ -64,6 +64,18 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
 
     const body = ctx.body
     if (body === null || typeof body !== 'object' || Buffer.isBuffer(body) || typeof body.pipe === 'function') {
+      return
+    }
+
+    // Most bodies have no error. A scan decides that without the copying walk; the walk runs only
+    // once an error has been found. A scan that stops early has not seen the rest of the body.
+    const scan = scanForErrors(body)
+    if (scan === 'truncated') {
+      withholdBody(ctx)
+      warn(ctx, SanitizerReason.LimitReached)
+      return
+    }
+    if (scan === 'clean') {
       return
     }
 
