@@ -13,8 +13,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
   after the retries, the error keeps its instance, `message`, `code`, `stack`, `response.status`
   and `response.data`, while `config` (and `response.config`) becomes a copy with credential
   headers (`proxy-authorization`, `cookie`, `x-vtex-*`, `VtexIdclientAutCookie[_<account>]` and
-  credential-looking names), `auth`, and credential-named `params` and URL query values replaced by
-  `[Redacted]`. `set-cookie` of the upstream response is masked too. `request`,
+  credential-looking names), `auth`, credential-named `params` and URL query values, and
+  credential-named keys in the request body (`config.data`) replaced by `[Redacted]`. `set-cookie`
+  of the upstream response is masked too. `request`,
   `response.request` and the connection agents stay readable but are no longer enumerable, so
   `JSON.stringify`, `toJSON()`, `util.inspect` and the logger no longer carry them. If that
   masking throws, `config`, `request`, and the response's `config` and `headers` are removed

@@ -177,6 +177,18 @@ describe('sanitizeHttpClientError', () => {
       expect(logged.response.headers).not.toHaveProperty('set-cookie')
     })
 
+    it('from credential-named keys in the request body, keeping the others', async () => {
+      const body = { apiKey: TOKEN, clientSecret: TOKEN, name: 'catalog' }
+
+      const err = await failure('/fail', { data: body, method: 'post' })
+      const data = typeof err.config.data === 'string' ? JSON.parse(err.config.data) : err.config.data
+
+      expect(data).toEqual({ apiKey: REDACTED, clientSecret: REDACTED, name: 'catalog' })
+      expect(body).toEqual({ apiKey: TOKEN, clientSecret: TOKEN, name: 'catalog' })
+      expect(JSON.stringify(err)).not.toContain(TOKEN)
+      expect(err.response.data).toEqual({ reason: 'bad input' })
+    })
+
     it('from credential-named params and URL query values, keeping the others', async () => {
       const err = await failure(`/fail?an=acme&appToken=${TOKEN}`, { params: { apiKey: TOKEN, page: 2 } })
 

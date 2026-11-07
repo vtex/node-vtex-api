@@ -1,5 +1,5 @@
-import { isKnownCredentialHeaderName, isSensitiveHeaderName, isSensitiveParamName, redactUrlQuery } from '../../../utils/sensitiveHeaders'
-import { REDACTED, TRUNCATED } from '../../../utils/stringRedactor'
+import { isKnownCredentialHeaderName, isSensitiveHeaderName, redactCredentialFields, redactRequestData, redactUrlQuery } from '../../../utils/sensitiveHeaders'
+import { REDACTED } from '../../../utils/stringRedactor'
 
 const isObject = (value: unknown): value is Record<string, any> =>
   value !== null && typeof value === 'object'
@@ -30,42 +30,6 @@ const redactHeaders = (headers: unknown, isSensitive: (name: string) => boolean 
   sensitive.forEach(name => { plainCopy[name] = REDACTED })
   return plainCopy
 }
-
-const MAX_PARAMS_DEPTH = 32
-
-/**
- * A copy of the params with the value of every credential-named key replaced, at any depth: the
- * client serializes nested params (`filter[appToken]=…`) and arrays of objects. Copy-on-write:
- * what has nothing to replace keeps its reference. Beyond the depth limit a nested container is
- * replaced by `[Truncated]` instead of being kept uninspected.
- */
-const redactParams = (params: unknown, depth = 0): unknown => {
-  if (!isObject(params)) {
-    return params
-  }
-  if (depth > MAX_PARAMS_DEPTH) {
-    return TRUNCATED
-  }
-  let copy: any = params
-  for (const name of Object.keys(params)) {
-    const value = params[name]
-    const safe = redactParam(params, name, value, depth)
-    if (safe !== value) {
-      copy = copy === params ? shallowCopy(params) : copy
-      copy[name] = safe
-    }
-  }
-  return copy
-}
-
-// The value of one param: replaced when an object key names a credential, inspected otherwise.
-// Array indexes are not names, so array items are always inspected.
-const redactParam = (params: Record<string, any>, name: string, value: unknown, depth: number): unknown =>
-  !Array.isArray(params) && isSensitiveParamName(name) && value != null
-    ? REDACTED
-    : redactParams(value, depth + 1)
-
-const shallowCopy = (value: Record<string, any>) => Array.isArray(value) ? value.slice() : { ...value }
 
 const redactAuth = (auth: unknown) => isObject(auth) ? { username: REDACTED, password: REDACTED } : auth
 
@@ -114,7 +78,8 @@ const redactConfig = (config: Record<string, any>) => {
     ['auth', redactAuth],
     ['proxy', proxy => isObject(proxy) && proxy.auth != null ? { ...proxy, auth: isObject(proxy.auth) ? redactAuth(proxy.auth) : REDACTED } : proxy],
     ['headers', redactHeaders],
-    ['params', redactParams],
+    ['params', redactCredentialFields],
+    ['data', redactRequestData],
     ['url', redactUrlQuery],
     ['baseURL', redactUrlQuery],
   ]
@@ -137,8 +102,9 @@ const redactConfig = (config: Record<string, any>) => {
  *
  * It masks values and keeps the error as it is: the same instance and prototype (`instanceof`,
  * `isAxiosError`), `message`, `name`, `code`, `stack`, `response.status` and `response.data`.
- * - `config` (and `response.config`) becomes a copy with credential headers, `auth`, and
- *   credential-named `params` and URL query values replaced by `[Redacted]`.
+ * - `config` (and `response.config`) becomes a copy with credential headers, `auth`,
+ *   credential-named `params` and URL query values, and credential-named keys in the request body
+ *   (`data`) replaced by `[Redacted]`.
  * - Known credential headers of the upstream response (`set-cookie`) are replaced the same way;
  *   other response headers (`www-authenticate`…) are kept.
  * - `request` and `response.request` stay readable but are no longer enumerable: they hold the

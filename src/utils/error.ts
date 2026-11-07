@@ -1,7 +1,7 @@
 // Inspired by https://github.com/sindresorhus/serialize-error
 import { keys, pick } from 'ramda'
 
-import { isKnownCredentialHeaderName, isSensitiveHeaderName, redactUrlQuery } from './sensitiveHeaders'
+import { isKnownCredentialHeaderName, isSensitiveHeaderName, redactRequestData, redactUrlQuery } from './sensitiveHeaders'
 
 export const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url', 'metric', 'inflightKey', 'forceMaxAge', 'params', 'responseType']
 export const SENSITIVE_EXCEPTION_FIELDS = ['config', 'request', 'stack']
@@ -77,6 +77,11 @@ const cleanAxiosProperty = (property: string, value: object) => {
     if (typeof picked[location] === 'string') {
       picked[location] = redactUrlQuery(picked[location])
     }
+  }
+  // The request body. The upstream response body (`response.data`) is what the service answered
+  // and stays as it is.
+  if (property === 'config' && 'data' in picked) {
+    picked.data = redactRequestData(picked.data)
   }
   if (picked.headers && typeof picked.headers === 'object') {
     // Headers the app sent: the same list as the HttpClient error sanitizer, credential-looking

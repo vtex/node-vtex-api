@@ -48,6 +48,18 @@ describe('cleanError', () => {
     expect(JSON.stringify(cleaned)).not.toContain(TOKEN)
   })
 
+  it('masks credential-named keys in the logged request body, not in the response body', () => {
+    const err = axiosLikeError({ accept: 'application/json' })
+    err.config.data = { apiKey: TOKEN, name: 'catalog' }
+    err.response.data = { apiKey: TOKEN, reason: 'bad input' }
+
+    const cleaned = cleanError(err)
+
+    expect(cleaned.config.data).toEqual({ apiKey: '[Redacted]', name: 'catalog' })
+    expect(cleaned.response.data).toEqual({ apiKey: TOKEN, reason: 'bad input' })
+    expect(JSON.stringify(cleaned.config)).not.toContain(TOKEN)
+  })
+
   it('masks credential-named params in the logged request path and config url', () => {
     const err = axiosLikeError({ accept: 'application/json' })
     err.config.url = `/orders?an=acme&appToken=${TOKEN}`

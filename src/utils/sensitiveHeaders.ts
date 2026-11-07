@@ -1,4 +1,4 @@
-import { REDACTED } from './stringRedactor'
+import { REDACTED, TRUNCATED } from './stringRedactor'
 
 /**
  * Names under which credentials travel in HTTP headers, lower-case. Shared by the `HttpClient`
@@ -49,6 +49,66 @@ export const isSensitiveHeaderName = (name: string): boolean =>
  * Whether a query string or `params` key carries a credential (`appToken`, `api_key`, `sessionId`…).
  */
 export const isSensitiveParamName = (name: string): boolean => SENSITIVE_NAME_PATTERN.test(name)
+
+const MAX_CREDENTIAL_DEPTH = 32
+
+const isStream = (value: object) => typeof (value as { pipe?: unknown }).pipe === 'function'
+
+const shallowCopy = (value: Record<string, any>) => Array.isArray(value) ? value.slice() : { ...value }
+
+// The value of one field: replaced when an object key names a credential, inspected otherwise.
+// Array indexes are not names, so array items are always inspected.
+const redactField = (container: Record<string, any>, name: string, value: unknown, depth: number): unknown =>
+  !Array.isArray(container) && isSensitiveParamName(name) && value != null
+    ? REDACTED
+    : redactCredentialFields(value, depth + 1)
+
+/**
+ * A copy of an object or array with the value of every credential-named key replaced, at any
+ * depth (`filter.appToken`, `list[].apiKey`). Copy-on-write: what has nothing to replace keeps
+ * its reference. Beyond 32 levels a nested container becomes `[Truncated]` instead of being sent
+ * uninspected. A string, buffer or stream is returned as it is.
+ */
+export const redactCredentialFields = (value: unknown, depth = 0): unknown => {
+  if (value === null || typeof value !== 'object' || Buffer.isBuffer(value) || isStream(value)) {
+    return value
+  }
+  if (depth > MAX_CREDENTIAL_DEPTH) {
+    return TRUNCATED
+  }
+  let copy: any = value
+  for (const name of Object.keys(value)) {
+    const child = (value as Record<string, any>)[name]
+    const safe = redactField(value as Record<string, any>, name, child, depth)
+    if (safe !== child) {
+      copy = copy === value ? shallowCopy(value as Record<string, any>) : copy
+      copy[name] = safe
+    }
+  }
+  return copy
+}
+
+/**
+ * The request body (`config.data`). An object is scrubbed like `params`. The client also stores
+ * the body as the JSON text it sent, so that text is parsed, scrubbed and written back. Plain
+ * text, a buffer and a stream are returned as they are.
+ */
+export const redactRequestData = (data: unknown): unknown => {
+  if (typeof data !== 'string') {
+    return redactCredentialFields(data)
+  }
+  const first = data.match(/\S/)
+  if (!first || (first[0] !== '{' && first[0] !== '[')) {
+    return data
+  }
+  try {
+    const parsed = JSON.parse(data)
+    const redacted = redactCredentialFields(parsed)
+    return redacted === parsed ? data : JSON.stringify(redacted)
+  } catch {
+    return data
+  }
+}
 
 const safeDecode = (text: string) => {
   try {
