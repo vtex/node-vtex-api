@@ -143,6 +143,21 @@ describe('graphqlError', () => {
       expect(ctx.graphql.graphqlResponse.data).toBe(data)
     })
 
+    it('are replaced in what an extension with its own toJSON serializes to', async () => {
+      const ctx = buildCtx()
+      ;(ctx.vtex as any).authToken = TOKEN
+      const { GraphQLError } = require('graphql')
+      const engineError = new GraphQLError('engine failed', undefined, undefined, undefined, ['orders'], undefined, {
+        leak: { toJSON: () => ({ exposed: TOKEN }) },
+      })
+
+      await loadGraphqlError()(ctx as any, async () => {
+        ctx.graphql.graphqlResponse = { errors: [engineError] }
+      })
+
+      expect(JSON.stringify(ctx.graphql.graphqlResponse)).not.toContain(TOKEN)
+    })
+
     it('are still logged as they were, for debugging', async () => {
       const ctx = buildCtx()
       ;(ctx.vtex as any).authToken = TOKEN

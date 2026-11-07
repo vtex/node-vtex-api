@@ -131,6 +131,12 @@ export const redactKnownSecrets = (text: string, secrets: Array<string | undefin
 
 const MAX_DEEP_DEPTH = 32
 
+/**
+ * What replaces a container nested deeper than the walk inspects. It is not sent as it is: what
+ * was not inspected could hold a secret.
+ */
+export const TRUNCATED = '[Truncated]'
+
 const isPlainContainer = (value: unknown): value is Record<string, unknown> | unknown[] => {
   if (value === null || typeof value !== 'object') {
     return false
@@ -143,21 +149,51 @@ const isPlainContainer = (value: unknown): value is Record<string, unknown> | un
 }
 
 /**
- * Replaces the given secrets in every string of a JSON-like value (plain objects, arrays), with
- * copy-on-write: what has no secret keeps its reference, and the received value is not changed.
- * Other objects (class instances, buffers, dates…) are left as they are, never traversed, so this
- * cannot fail on a value it does not understand.
+ * What replaces a value whose serialization failed. Fail closed: what could not be inspected is
+ * not sent.
+ */
+export const UNSERIALIZABLE = '[Unserializable]'
+
+// Whether `JSON.stringify` would not serialize the value as its own enumerable properties: a
+// class instance (`Date`, `Buffer`, a DTO…) or an object with a `toJSON`, own or inherited.
+const hasOwnSerialization = (node: object) =>
+  !isPlainContainer(node) || typeof (node as any).toJSON === 'function'
+
+/**
+ * Replaces the given secrets in every string of a value as `JSON.stringify` will send it, with
+ * copy-on-write: plain objects and arrays without a secret keep their reference, and the received
+ * value is not changed.
+ *
+ * A value that serializes itself (a class instance, or an object with a `toJSON`) is replaced by
+ * what `JSON.stringify` makes of it, then inspected: otherwise its serialization would run after
+ * the walk, unchecked. If that serialization fails, the value is replaced by `[Unserializable]`.
+ * A container nested deeper than 32 levels is replaced by `[Truncated]`. Both are counted.
  *
  * It is for error output (GraphQL `errors[]`, the body built from a thrown value), not for
- * successful responses.
+ * successful responses, where dropping or reshaping data would not be acceptable.
  */
-export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | undefined> = []): { value: T, redacted: number } => {
+export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | undefined> = []): { value: T, redacted: number, truncated: number, unserializable: number } => {
   const usable = secrets.filter((secret): secret is string => !!secret && secret.length >= MIN_SECRET_LENGTH)
   if (usable.length === 0) {
-    return { redacted: 0, value }
+    return { redacted: 0, truncated: 0, unserializable: 0, value }
   }
   let redacted = 0
+  let truncated = 0
+  let unserializable = 0
   const seen = new Set<object>()
+
+  // The plain JSON value `JSON.stringify` would send for a value that serializes itself.
+  const materialize = (node: object, depth: number): any => {
+    let json: unknown
+    try {
+      const text = JSON.stringify(node)
+      json = text === undefined ? undefined : JSON.parse(text)
+    } catch {
+      unserializable++
+      return UNSERIALIZABLE
+    }
+    return visit(json, depth)
+  }
 
   const visit = (node: any, depth: number): any => {
     if (typeof node === 'string') {
@@ -165,8 +201,23 @@ export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | unde
       redacted += result.redacted
       return result.redacted > 0 ? result.value : node
     }
-    if (!isPlainContainer(node) || depth > MAX_DEEP_DEPTH || seen.has(node)) {
+    if (node === null || typeof node !== 'object' || seen.has(node)) {
       return node
+    }
+    if (depth > MAX_DEEP_DEPTH) {
+      truncated++
+      return TRUNCATED
+    }
+    let ownSerialization: boolean
+    try {
+      ownSerialization = hasOwnSerialization(node)
+    } catch {
+      // A `toJSON` getter that throws: JSON.stringify would throw too.
+      unserializable++
+      return UNSERIALIZABLE
+    }
+    if (ownSerialization) {
+      return materialize(node, depth)
     }
     seen.add(node)
     let copy: any = node
@@ -185,5 +236,5 @@ export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | unde
   }
 
   const sanitized = visit(value, 0)
-  return { redacted, value: sanitized }
+  return { redacted, truncated, unserializable, value: sanitized }
 }

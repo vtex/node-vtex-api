@@ -166,6 +166,30 @@ describe('sanitizeHttpClientError', () => {
       expect(JSON.stringify(err)).not.toContain(TOKEN)
     })
 
+    it('from nested params and arrays of objects, which the client serializes too', async () => {
+      const err = await failure('/fail', { params: { filter: { appToken: TOKEN, status: 'open' }, list: [{ apiKey: TOKEN }], page: 2 } })
+
+      expect(err.config.params).toEqual({ filter: { appToken: REDACTED, status: 'open' }, list: [{ apiKey: REDACTED }], page: 2 })
+      expect(JSON.stringify(err)).not.toContain(TOKEN)
+      expect(JSON.stringify(cleanError(err))).not.toContain(TOKEN)
+    })
+
+    it('from nested keys in the URL query', async () => {
+      const err = await failure(`/fail?filter[appToken]=${TOKEN}&filter[status]=open`)
+
+      expect(err.config.url).toBe(`/fail?filter[appToken]=${REDACTED}&filter[status]=open`)
+    })
+
+    it('from params nested deeper than it inspects, which are truncated, not kept', () => {
+      let params: any = { appToken: TOKEN }
+      for (let i = 0; i < 40; i++) { params = { child: params } }
+      const err: any = new Error('failed')
+      err.config = { params }
+
+      expect(JSON.stringify(sanitizeHttpClientError(err).config)).not.toContain(TOKEN)
+      expect(JSON.stringify(sanitizeHttpClientError(err).config)).toContain('[Truncated]')
+    })
+
     it('from basic auth', async () => {
       const err = await failure('/fail', { auth: { password: TOKEN, username: 'appkey-0123456789abcdef' } })
 

@@ -267,17 +267,61 @@ describe('redactKnownSecretsDeep', () => {
     expect(redactKnownSecretsDeep(value, []).value).toBe(value)
   })
 
-  it('leaves class instances, buffers and cycles alone, and never throws', () => {
-    class Holder { constructor(public readonly secret: string) {} }
+  it('truncates what is nested deeper than it inspects, instead of sending it uninspected', () => {
+    let node: any = { message: TOKEN }
+    for (let i = 0; i < 40; i++) { node = { child: node } }
+
+    const result = redactKnownSecretsDeep({ errors: [node] }, [TOKEN])
+
+    expect(JSON.stringify(result.value)).not.toContain(TOKEN)
+    expect(JSON.stringify(result.value)).toContain('[Truncated]')
+    expect(result.truncated).toBe(1)
+  })
+
+  it('does not truncate a shallow value', () => {
+    const value = { errors: [{ message: TOKEN, path: ['a', 'b'] }] }
+
+    expect(redactKnownSecretsDeep(value, [TOKEN]).truncated).toBe(0)
+  })
+
+  it('inspects what a value with its own toJSON serializes to, which would otherwise run unchecked', () => {
+    const value = { extensions: { leak: { toJSON: () => ({ exposed: TOKEN }) } } }
+
+    const result = redactKnownSecretsDeep(value, [TOKEN])
+
+    expect(JSON.stringify(result.value)).not.toContain(TOKEN)
+    expect(result.value.extensions.leak).toEqual({ exposed: REDACTED })
+  })
+
+  it('inspects class instances as JSON.stringify sends them', () => {
+    class Holder { constructor(public readonly secret: string, public readonly id: number) {} }
+
+    const result = redactKnownSecretsDeep({ holder: new Holder(TOKEN, 1), when: new Date(0) }, [TOKEN])
+
+    expect(result.value.holder).toEqual({ id: 1, secret: REDACTED })
+    expect(result.value.when).toBe('1970-01-01T00:00:00.000Z')
+  })
+
+  it('replaces what cannot be serialized, instead of sending it unchecked', () => {
+    // Not a plain object (it has its own prototype), so it is serialized, and the cycle fails.
+    const cyclic = Object.create({ kind: 'instance' })
+    cyclic.self = cyclic
+    cyclic.secret = TOKEN
+    const throwing = { toJSON: () => { throw new Error(TOKEN) } }
+
+    const result = redactKnownSecretsDeep({ cyclic, throwing }, [TOKEN])
+
+    expect(result.value.cyclic).toBe('[Unserializable]')
+    expect(result.value.throwing).toBe('[Unserializable]')
+    expect(result.unserializable).toBe(2)
+  })
+
+  it('does not throw on a cycle of plain objects', () => {
     const cyclic: any = { message: TOKEN }
     cyclic.self = cyclic
-    const holder = new Holder(TOKEN)
-    const buffer = Buffer.from(TOKEN)
 
-    const result = redactKnownSecretsDeep({ buffer, cyclic, holder }, [TOKEN])
+    const result = redactKnownSecretsDeep({ cyclic }, [TOKEN])
 
-    expect(result.value.holder).toBe(holder)
-    expect(result.value.buffer).toBe(buffer)
     expect(result.value.cyclic.message).toBe(REDACTED)
   })
 })

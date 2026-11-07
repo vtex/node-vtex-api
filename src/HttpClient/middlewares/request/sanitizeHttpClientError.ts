@@ -1,5 +1,5 @@
 import { isSensitiveHeaderName, isSensitiveParamName } from '../../../utils/sensitiveHeaders'
-import { REDACTED } from '../../../utils/stringRedactor'
+import { REDACTED, TRUNCATED } from '../../../utils/stringRedactor'
 
 const isObject = (value: unknown): value is Record<string, any> =>
   value !== null && typeof value === 'object'
@@ -30,16 +30,34 @@ const redactHeaders = (headers: unknown) => {
   return plainCopy
 }
 
-const redactParams = (params: unknown) => {
-  if (!isObject(params) || Array.isArray(params)) {
+const MAX_PARAMS_DEPTH = 32
+
+/**
+ * A copy of the params with the value of every credential-named key replaced, at any depth: the
+ * client serializes nested params (`filter[appToken]=…`) and arrays of objects. Copy-on-write:
+ * what has nothing to replace keeps its reference. Beyond the depth limit a nested container is
+ * replaced by `[Truncated]` instead of being kept uninspected.
+ */
+const redactParams = (params: unknown, depth = 0): unknown => {
+  if (!isObject(params)) {
     return params
   }
-  const sensitive = Object.keys(params).filter(name => isSensitiveParamName(name) && params[name] != null)
-  if (sensitive.length === 0) {
-    return params
+  if (depth > MAX_PARAMS_DEPTH) {
+    return TRUNCATED
   }
-  const copy: Record<string, unknown> = { ...params }
-  sensitive.forEach(name => { copy[name] = REDACTED })
+  let copy: any = params
+  for (const name of Object.keys(params)) {
+    const value = params[name]
+    const safe = !Array.isArray(params) && isSensitiveParamName(name) && value != null
+      ? REDACTED
+      : redactParams(value, depth + 1)
+    if (safe !== value) {
+      if (copy === params) {
+        copy = Array.isArray(params) ? params.slice() : { ...params }
+      }
+      copy[name] = safe
+    }
+  }
   return copy
 }
 
