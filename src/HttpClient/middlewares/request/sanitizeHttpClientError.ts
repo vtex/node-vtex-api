@@ -145,6 +145,9 @@ export const sanitizeHttpClientError = <T>(err: T): T => {
       // the request under other names, and apps read headers such as `www-authenticate`.
       response.headers = redactHeaders(response.headers, isKnownCredentialHeaderName)
       hide(response, 'request')
+      if (error.config?.responseType === 'stream') {
+        hide(response, 'data')
+      }
     }
   } catch (sanitizeError) {
     console.error('[node-vtex-api error] an HTTP client error could not be sanitized', (sanitizeError as Error)?.name)
