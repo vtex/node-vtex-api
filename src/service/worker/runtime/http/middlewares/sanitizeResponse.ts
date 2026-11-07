@@ -1,4 +1,5 @@
 import { LINKED } from '../../../../../constants'
+import { inspectionFailureReason, sanitizeCredentials } from '../../../../../utils/responseCredentials'
 import { sanitizeErrors, scanForErrors } from '../../../../../utils/responseSanitizer'
 import { redactSecrets } from '../../../../../utils/stringRedactor'
 import { ServiceContext } from '../../typings'
@@ -90,15 +91,15 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
     // Most bodies have no error. A scan decides that without the copying walk; the walk runs only
     // once an error has been found, or the scan could not finish.
     const scan = scanForErrors(body)
-    if (scan === 'clean') {
-      return
-    }
+    const sanitized = scan === 'clean'
+      ? { value: body, replaced: 0, truncated: false }
+      : sanitizeErrors(body, { linked: LINKED })
+    const { replaced, truncated } = sanitized
 
-    const { value, replaced, truncated } = sanitizeErrors(body, { linked: LINKED })
+    const { authToken, adminUserAuthToken, storeUserAuthToken } = ctx.vtex ?? {}
+    const { value, redacted, truncated: credentialsTruncated } = sanitizeCredentials(sanitized.value, [authToken, adminUserAuthToken, storeUserAuthToken])
 
-    if (truncated) {
-      // What is beyond the limit is left as it is, outside an error. The response is still sent:
-      // withholding it would break the large legitimate responses. It is reported to be measured.
+    if (truncated || credentialsTruncated) {
       warn(ctx, SanitizerReason.LimitReached)
     }
 
@@ -114,11 +115,12 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
       ctx.set('Content-Type', contentType)
     }
 
-    warn(ctx, SanitizerReason.ErrorRemoved, { errors: replaced })
+    if (replaced > 0) { warn(ctx, SanitizerReason.ErrorRemoved, { errors: replaced }) }
+    if (redacted > 0) { warn(ctx, SanitizerReason.SecretRemoved, { redactions: redacted }) }
   } catch (err) {
-    // Fails closed: whatever made it fail may also be hiding a credential.
+    // Withhold on inspection failures; reaching a traversal budget above still preserves the response.
     withholdBody(ctx)
-    warn(ctx, SanitizerReason.Failed, { errorName: errorName(err) })
+    warn(ctx, SanitizerReason.Failed, { errorName: errorName(err), inspectionReason: inspectionFailureReason(err) })
   }
 }
 
@@ -135,7 +137,7 @@ const sanitizeCtxBody = (ctx: ServiceContext) => {
  *
  * The body is also sanitized when the downstream handlers throw after having set it, as the error
  * middleware keeps an existing body. If the sanitizer itself fails the body is withheld. If it
- * cannot inspect the whole body, the response is sent and the limit is reported. It never throws.
+ * reaches an inspection limit, unvisited values are sent unchanged and the limit is reported. It never throws.
  *
  * It is a backstop for apps that return errors by mistake. It is not a boundary against an app that
  * wants to disclose its own credentials, which has them.
