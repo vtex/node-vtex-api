@@ -28,11 +28,30 @@ const KEYED_VALUE = new RegExp(
 )
 
 // A header written as a line of the request (`Proxy-Authorization: value`), which is how a
-// serialized request object (`_header`) holds it. Short values are not credentials, and `Cookie`
-// and `X-Vtex-Session` are left to the cookie pair below because those words open ordinary text.
+// serialized request object (`_header`) holds it. Short values are not credentials. `Cookie` is
+// not in this list: the word opens ordinary sentences, so its lines are matched separately.
+const HEADER_LINE_NAMES = [
+  'authorization',
+  'proxy-authorization',
+  'vtexidclientautcookie',
+  'x-vtex-api-appkey',
+  'x-vtex-api-apptoken',
+  'x-vtex-credential',
+  'x-vtex-session',
+]
+// The name starts a line. In a serialized request the line break is the two characters `\n`, so a
+// word boundary never fires there: the `n` and the name are both word characters.
+const AT_LINE_START = String.raw`(?<=^|\\n|\\r|\n|\r)`
+
 const HEADER_LINE = new RegExp(
-  String.raw`\b((?:authorization|proxy-authorization|vtexidclientautcookie|x-vtex-api-appkey|x-vtex-api-apptoken|x-vtex-credential)` +
-    String.raw`\s*:[ \t]*)[^\s"\\][^\r\n"\\]{7,}`,
+  String.raw`${AT_LINE_START}((?:${HEADER_LINE_NAMES.join('|')})[ \t]*:[ \t]*)[^\s"\\][^\r\n"\\]{7,}`,
+  'gi'
+)
+
+// A `Cookie` or `Set-Cookie` line. The value has to be cookie pairs (`name=value`), so a sentence
+// that happens to start with "Cookie:" is left as it is.
+const COOKIE_LINE = new RegExp(
+  String.raw`${AT_LINE_START}((?:set-)?cookie[ \t]*:[ \t]*)[^\s=;"\\]+=[^\r\n"\\]{6,}`,
   'gi'
 )
 
@@ -78,7 +97,8 @@ const redactPattern = (text: string, pattern: RegExp): RedactResult => {
 
 /**
  * Replaces credentials in a text: the given secrets wherever they appear, the value of the
- * credential headers in JSON text and in header lines, the VTEX ID cookie, and `Bearer` tokens.
+ * credential headers in JSON text and in header lines, `Cookie` and `Set-Cookie` lines, the VTEX
+ * ID cookie, and `Bearer` tokens.
  * The rest of the text is kept.
  *
  * It is for text that was built from an error, where the error object is no longer there to
@@ -89,7 +109,7 @@ export const redactSecrets = (text: string, secrets: Array<string | undefined> =
   const known = redactKnown(text, secrets)
   let value = known.value
   let redacted = known.redacted
-  for (const pattern of [KEYED_VALUE, HEADER_LINE, VTEX_ID_COOKIE, BEARER_TOKEN]) {
+  for (const pattern of [KEYED_VALUE, HEADER_LINE, COOKIE_LINE, VTEX_ID_COOKIE, BEARER_TOKEN]) {
     const result = redactPattern(value, pattern)
     value = result.value
     redacted += result.redacted

@@ -106,6 +106,28 @@ describe('redactSecrets', () => {
       expect(value).toBe('Authorization: [Redacted]\r\nHost: api.test')
     })
 
+    it('replaces a session line and a cookie line, which the keyed form already covers', () => {
+      const request = [
+        'GET /orders HTTP/1.1',
+        `Cookie: vtex_session=${TOKEN}; theme=dark`,
+        `X-Vtex-Session: ${TOKEN}`,
+        `Set-Cookie: checkout=${TOKEN}; Path=/; HttpOnly`,
+        'Host: api.test',
+        '',
+        '',
+      ].join('\r\n')
+
+      const { value, redacted } = redactSecrets(JSON.stringify({ request: { _header: request } }))
+      const header = JSON.parse(value).request._header as string
+
+      expect(redacted).toBe(3)
+      expect(header).not.toContain(TOKEN)
+      expect(header).toContain('Cookie: [Redacted]\r\n')
+      expect(header).toContain('X-Vtex-Session: [Redacted]\r\n')
+      expect(header).toContain('Set-Cookie: [Redacted]\r\n')
+      expect(header).toContain('Host: api.test')
+    })
+
     it('does not touch a short value, which is not a credential', () => {
       const text = 'Authorization: missing'
 
