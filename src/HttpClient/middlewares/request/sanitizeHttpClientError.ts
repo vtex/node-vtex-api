@@ -104,6 +104,7 @@ const redactConfig = (config: Record<string, any>) => {
   // The agents hold their sockets, and a socket still connecting keeps the raw request, credential
   // headers included (`_pendingData`, `_httpMessage._header`). `toJSON()` would serialize them.
   AGENT_KEYS.forEach(key => hide(copy, key))
+  hide(copy, 'tracing')
   return copy
 }
 
