@@ -402,6 +402,37 @@ describe('sanitizeErrors', () => {
       expect(scanForErrors(Array.from({ length: 10 }, (_, id) => ({ id })), { maxNodes: 4 })).toBe('truncated')
     })
 
+    it('charges the values a container holds to the budget, not only the containers', () => {
+      const ids = Array.from({ length: 1000 }, (_, id) => id)
+      const record = Object.fromEntries(ids.map(id => [`k${id}`, id]))
+
+      expect(scanForErrors(ids, { maxValues: 100 })).toBe('truncated')
+      expect(scanForErrors(record, { maxValues: 100 })).toBe('truncated')
+      expect(scanForErrors({ nested: { ids } }, { maxValues: 100 })).toBe('truncated')
+      expect(scanForErrors(ids, { maxValues: 1000 })).toBe('clean')
+    })
+
+    it('adds up the values of every container', () => {
+      const rows = Array.from({ length: 100 }, (_, id) => ({ a: id, b: id, c: id }))
+
+      expect(scanForErrors(rows, { maxValues: 399 })).toBe('truncated')
+      expect(scanForErrors(rows, { maxValues: 400 })).toBe('clean')
+    })
+
+    it('rejects a long array by its length, without going through it', () => {
+      const startedAt = Date.now()
+
+      // Two hundred million entries: a loop over them would take seconds.
+      const result = scanForErrors(new Array(200000000))
+
+      expect(result).toBe('truncated')
+      expect(Date.now() - startedAt).toBeLessThan(500)
+    })
+
+    it('finds an error that is within the budget', () => {
+      expect(scanForErrors([1, 2, 3, new Error('x')], { maxValues: 100 })).toBe('has-error')
+    })
+
     it('does not recurse past the depth limit through arrays', () => {
       let deep: any = ['leaf']
       for (let i = 0; i < 50000; i++) {
@@ -466,6 +497,18 @@ describe('sanitizeErrors', () => {
       expect(result.truncated).toBe(true)
       expect(result.value).not.toBe(body)
       expect(JSON.stringify(result.value)).toContain('[Truncated]')
+    })
+
+    it('stops at the maximum number of values and does not return what was not visited', () => {
+      const leaked: any = new Error('past the limit')
+      leaked.config = { headers: { authorization: TOKEN } }
+      const body = { ids: Array.from({ length: 1000 }, (_, id) => id), error: leaked }
+
+      const result = sanitizeErrors(body, { linked: false, maxValues: 100 })
+
+      expect(result.truncated).toBe(true)
+      expect(result.value).not.toBe(body)
+      expect(JSON.stringify(result.value)).not.toContain(TOKEN)
     })
 
     it('does not report truncation within the limits', () => {

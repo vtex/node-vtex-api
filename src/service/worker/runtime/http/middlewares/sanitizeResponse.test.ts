@@ -490,6 +490,27 @@ describe('sanitizeResponse', () => {
       ])
     })
 
+    it('withhold a body that holds more values than the walk accepts', async () => {
+      handler = ctx => {
+        // Six million numbers: nothing in it can be an error, but it cannot be told without a pass
+        // that is larger than the budget.
+        ctx.body = { ids: new Array(6000000).fill(1) }
+      }
+      await startApp()
+
+      const res = await get()
+
+      expect(res.status).toBe(500)
+      expect(JSON.parse(res.text).code).toBe('E_RESPONSE_WITHHELD')
+      expect(logs()).toEqual([
+        {
+          message: 'response-sanitizer: limit_reached',
+          reason: 'limit_reached',
+          routeId: 'orders',
+        },
+      ])
+    })
+
     it('keep an error status chosen by the app', async () => {
       handler = async ctx => {
         ctx.status = 404

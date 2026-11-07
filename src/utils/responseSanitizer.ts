@@ -9,6 +9,9 @@ const INTERNAL_ERROR_KEYS = new Set(['config', 'request', 'httpAgent', 'httpsAge
 
 const DEFAULT_MAX_DEPTH = 32
 const DEFAULT_MAX_NODES = 200000
+// What the containers hold, counted by their length. About 35 ms to go through on a laptop, which
+// is far past a legitimate response.
+const DEFAULT_MAX_VALUES = 5000000
 
 const TRUNCATED = '[Truncated]'
 const CIRCULAR = '[Circular]'
@@ -20,6 +23,11 @@ export interface SanitizeErrorsOptions {
   linked: boolean
   maxDepth?: number
   maxNodes?: number
+  /**
+   * Total length of the arrays and objects visited, so that the cost of a long flat array is
+   * bounded the same as the number of containers.
+   */
+  maxValues?: number
 }
 
 export interface SanitizeErrorsResult<T> {
@@ -32,7 +40,7 @@ export interface SanitizeErrorsResult<T> {
    */
   replaced: number
   /**
-   * True when a depth or node limit stopped the walk early. The part that was not visited is
+   * True when a limit (depth, containers, values) stopped the walk early. The part not visited is
    * replaced by a marker, so the original subtree is not returned.
    */
   truncated: boolean
@@ -71,18 +79,21 @@ class ErrorSanitizer {
   public truncated = false
 
   private nodes = 0
+  private values = 0
   private insideError = 0
   // The containers being walked, from the root. At most `maxDepth` + 1 of them, so searching it is
   // cheaper than maintaining a set.
   private readonly ancestors: object[] = []
   private readonly maxDepth: number
   private readonly maxNodes: number
+  private readonly maxValues: number
   private readonly linked: boolean
 
-  constructor({ linked, maxDepth, maxNodes }: SanitizeErrorsOptions) {
+  constructor({ linked, maxDepth, maxNodes, maxValues }: SanitizeErrorsOptions) {
     this.linked = linked
     this.maxDepth = maxDepth ?? DEFAULT_MAX_DEPTH
     this.maxNodes = maxNodes ?? DEFAULT_MAX_NODES
+    this.maxValues = maxValues ?? DEFAULT_MAX_VALUES
   }
 
   /**
@@ -116,7 +127,20 @@ class ErrorSanitizer {
     return this.walkOther(node, depth)
   }
 
+  // Charged per container, when it is entered, so the loops that visit the values have no counter.
+  private spend(values: number): boolean {
+    this.values += values
+    if (this.values > this.maxValues) {
+      this.truncated = true
+      return false
+    }
+    return true
+  }
+
   private walkArray(node: any[], depth: number) {
+    if (!this.spend(node.length)) {
+      return TRUNCATED
+    }
     this.ancestors.push(node)
     let result = node
     for (let i = 0; i < node.length; i++) {
@@ -133,9 +157,13 @@ class ErrorSanitizer {
   }
 
   private walkObject(node: Record<string, any>, depth: number) {
+    const keys = Object.keys(node)
+    if (!this.spend(keys.length)) {
+      return TRUNCATED
+    }
     this.ancestors.push(node)
     let result = node
-    for (const key of Object.keys(node)) {
+    for (const key of keys) {
       const value = node[key]
       const safe = this.walkValue(value, depth)
       if (safe !== value) {
@@ -246,93 +274,70 @@ export const sanitizeErrors = <T>(value: T, options: SanitizeErrorsOptions): San
   }
 }
 
-/**
- * The same as `sanitizeErrors` for what is written to the process output, where the stack is
- * useful and kept. A thrown `Error` stays an error, so it is printed as one (stack, then its
- * properties), without the request config, the request and the agents.
- *
- * It never throws.
- */
 export type ErrorScan = 'clean' | 'has-error' | 'truncated'
 
-interface NodeBudget {
-  n: number
-  max: number
+// The limits are spent as the scan goes. `values` counts what each container holds, which is
+// charged when the container is entered: that bounds the cost of a long flat array without a
+// counter in the loop that visits its values.
+interface ScanBudget {
+  nodes: number
+  values: number
+  readonly maxNodes: number
+  readonly maxValues: number
 }
 
-interface ScanState {
+interface ScanState extends ScanBudget {
   found: boolean
-  nodes: number
   truncated: boolean
+  readonly maxDepth: number
+  readonly ancestors: object[]
 }
 
 const isPrimitiveValue = (value: unknown) => value === null || typeof value !== 'object'
 
-// A container whose own values cannot be an Error. Nested containers are not flat.
-const isFlatData = (node: object): boolean => {
-  if (Array.isArray(node)) {
-    for (const item of node) {
-      if (!isPrimitiveValue(item)) {
-        return false
-      }
-    }
-    return true
-  }
-  if (!isPlainObject(node)) {
+const enter = (budget: ScanBudget, values: number): boolean => {
+  if (budget.nodes >= budget.maxNodes) {
     return false
   }
-  const record = node as Record<string, unknown>
-  for (const key of Object.keys(record)) {
-    if (!isPrimitiveValue(record[key])) {
-      return false
-    }
-  }
-  return true
+  budget.nodes++
+  budget.values += values
+  return budget.values <= budget.maxValues
 }
 
-const enter = (budget: NodeBudget): boolean => {
-  if (budget.n >= budget.max) {
-    return false
-  }
-  budget.n++
-  return true
-}
-
-// How far a plain object may nest and still be decided by the linear pass. Deeper bodies fall
-// through to the budgeted scan, which also enforces the depth limit.
+// How far the linear pass may nest, in arrays and in objects alike. Deeper bodies fall through to
+// the scan below, which also enforces the depth limit.
 const SHALLOW_DEPTH = 4
 
 // Lists of plain records, and an object wrapping them, are the common large payload. One pass
 // proves they hold no Error, which is cheaper than the copying walk and stops at the same budget.
-const shallowValue = (value: object, budget: NodeBudget, depth: number): ErrorScan | undefined => {
+const shallowValue = (value: object, budget: ScanBudget, depth: number): ErrorScan | undefined => {
+  // Arrays and plain objects first: they are the common case and cannot be errors.
+  if (Array.isArray(value)) {
+    return shallowArray(value, budget, depth)
+  }
+  if (isPlainObject(value)) {
+    return shallowRecord(value as Record<string, unknown>, budget, depth)
+  }
   if (isError(value)) {
     return 'has-error'
   }
-  if (!Array.isArray(value) && !isPlainObject(value)) {
-    return enter(budget) ? 'clean' : 'truncated'
-  }
-  if (!Array.isArray(value) && isFlatData(value)) {
-    return enter(budget) ? 'clean' : 'truncated'
-  }
-  // The same cutoff for arrays and objects: this pass recurses, so its depth must be bounded
-  // whatever the container is. Deeper bodies are left to the budgeted scan, which has the limit.
-  if (depth >= SHALLOW_DEPTH) {
-    return undefined
-  }
-  return Array.isArray(value)
-    ? shallowList(value, budget, depth)
-    : shallowRecord(value as Record<string, unknown>, budget, depth)
+  return enter(budget, 0) ? 'clean' : 'truncated'
 }
 
-const shallowList = (rows: unknown[], budget: NodeBudget, depth: number): ErrorScan | undefined => {
-  if (!enter(budget)) {
+// What is below a container that is not a primitive. Recursion stops at the cutoff, whatever the
+// container is, so its depth is bounded.
+const shallowChild = (child: unknown, budget: ScanBudget, depth: number): ErrorScan | undefined =>
+  depth >= SHALLOW_DEPTH ? undefined : shallowValue(child as object, budget, depth + 1)
+
+const shallowArray = (items: unknown[], budget: ScanBudget, depth: number): ErrorScan | undefined => {
+  if (!enter(budget, items.length)) {
     return 'truncated'
   }
-  for (const row of rows) {
-    if (isPrimitiveValue(row)) {
+  for (const item of items) {
+    if (isPrimitiveValue(item)) {
       continue
     }
-    const found = shallowValue(row as object, budget, depth + 1)
+    const found = shallowChild(item, budget, depth)
     if (found !== 'clean') {
       return found
     }
@@ -340,16 +345,17 @@ const shallowList = (rows: unknown[], budget: NodeBudget, depth: number): ErrorS
   return 'clean'
 }
 
-const shallowRecord = (record: Record<string, unknown>, budget: NodeBudget, depth: number): ErrorScan | undefined => {
-  if (!enter(budget)) {
+const shallowRecord = (record: Record<string, unknown>, budget: ScanBudget, depth: number): ErrorScan | undefined => {
+  const keys = Object.keys(record)
+  if (!enter(budget, keys.length)) {
     return 'truncated'
   }
-  for (const key of Object.keys(record)) {
+  for (const key of keys) {
     const value = record[key]
     if (isPrimitiveValue(value)) {
       continue
     }
-    const found = shallowValue(value as object, budget, depth + 1)
+    const found = shallowChild(value, budget, depth)
     if (found !== 'clean') {
       return found
     }
@@ -357,69 +363,47 @@ const shallowRecord = (record: Record<string, unknown>, budget: NodeBudget, dept
   return 'clean'
 }
 
-const shallowScan = (value: object, maxNodes: number): ErrorScan | undefined => {
-  if (isError(value)) {
-    return 'has-error'
-  }
-  if (isFlatData(value)) {
-    return maxNodes < 1 ? 'truncated' : 'clean'
-  }
-  if (!Array.isArray(value) && !isPlainObject(value)) {
-    return 'clean'
-  }
-  return shallowValue(value, { max: maxNodes, n: 0 }, 0)
-}
+const scanChildren = (node: object, depth: number, state: ScanState) => {
+  const isArray = Array.isArray(node)
+  const record = node as Record<string, unknown>
+  const keys = isArray ? undefined : Object.keys(record)
+  const length = keys ? keys.length : (node as unknown[]).length
 
-const scanChildren = (
-  node: object,
-  depth: number,
-  maxDepth: number,
-  maxNodes: number,
-  ancestors: object[],
-  state: ScanState
-) => {
-  if (!Array.isArray(node) && !isPlainObject(node)) {
+  state.values += length
+  if (state.values > state.maxValues) {
+    state.truncated = true
     return
   }
-  ancestors.push(node)
-  const values = Array.isArray(node) ? node : Object.keys(node).map(key => (node as Record<string, unknown>)[key])
-  for (const child of values) {
+
+  state.ancestors.push(node)
+  for (let i = 0; i < length && !state.found && !state.truncated; i++) {
+    const child = keys ? record[keys[i]] : (node as unknown[])[i]
     if (child !== null && typeof child === 'object') {
-      scanNode(child as object, depth + 1, maxDepth, maxNodes, ancestors, state)
-    }
-    if (state.found || state.truncated) {
-      break
+      scanNode(child as object, depth + 1, state)
     }
   }
-  ancestors.pop()
+  state.ancestors.pop()
 }
 
-const scanNode = (
-  node: object,
-  depth: number,
-  maxDepth: number,
-  maxNodes: number,
-  ancestors: object[],
-  state: ScanState
-) => {
-  if (state.found || state.truncated || ancestors.includes(node)) {
+const scanNode = (node: object, depth: number, state: ScanState) => {
+  if (state.found || state.truncated || state.ancestors.includes(node)) {
     return
   }
-  if (depth > maxDepth || state.nodes >= maxNodes) {
+  if (depth > state.maxDepth || state.nodes >= state.maxNodes) {
     state.truncated = true
     return
   }
   state.nodes++
-  if (isError(node)) {
+  if (Array.isArray(node) || isPlainObject(node)) {
+    scanChildren(node, depth, state)
+  } else if (isError(node)) {
     state.found = true
-    return
   }
-  scanChildren(node, depth, maxDepth, maxNodes, ancestors, state)
 }
 
-const deepScan = (value: object, maxDepth: number, maxNodes: number): ErrorScan => {
-  const state: ScanState = { found: false, nodes: 0, truncated: false }
-  scanNode(value, 0, maxDepth, maxNodes, [], state)
+const deepScan = (value: object, maxDepth: number, maxNodes: number, maxValues: number): ErrorScan => {
+  const state: ScanState = { ancestors: [], found: false, maxDepth, maxNodes, maxValues, nodes: 0, truncated: false, values: 0 }
+  scanNode(value, 0, state)
   if (state.truncated) {
     return 'truncated'
   }
@@ -428,18 +412,30 @@ const deepScan = (value: object, maxDepth: number, maxNodes: number): ErrorScan 
 
 /**
  * Says whether `value` contains an `Error`, without copying it. The copying walk is only needed
- * when this returns `has-error`. `truncated` means the budget was spent before the value was fully
- * inspected, so whatever was not visited must not be sent.
+ * when this returns `has-error`. `truncated` means a budget (depth, containers, or the values they
+ * hold) was spent before the value was fully inspected, so whatever was not visited must not be sent.
  */
-export const scanForErrors = (value: object, options: Pick<SanitizeErrorsOptions, 'maxDepth' | 'maxNodes'> = {}): ErrorScan => {
+export const scanForErrors = (
+  value: object,
+  options: Pick<SanitizeErrorsOptions, 'maxDepth' | 'maxNodes' | 'maxValues'> = {}
+): ErrorScan => {
   const maxNodes = options.maxNodes ?? DEFAULT_MAX_NODES
-  const shallow = shallowScan(value, maxNodes)
+  const maxValues = options.maxValues ?? DEFAULT_MAX_VALUES
+
+  const shallow = shallowValue(value, { maxNodes, maxValues, nodes: 0, values: 0 }, 0)
   if (shallow !== undefined) {
     return shallow
   }
-  return deepScan(value, options.maxDepth ?? DEFAULT_MAX_DEPTH, maxNodes)
+  return deepScan(value, options.maxDepth ?? DEFAULT_MAX_DEPTH, maxNodes, maxValues)
 }
 
+/**
+ * The same as `sanitizeErrors` for what is written to the process output, where the stack is
+ * useful and kept. A thrown `Error` stays an error, so it is printed as one (stack, then its
+ * properties), without the request config, the request and the agents.
+ *
+ * It never throws.
+ */
 export const toLoggableError = (value: unknown): unknown => {
   try {
     const { value: safe } = sanitizeErrors(value, { linked: true })
