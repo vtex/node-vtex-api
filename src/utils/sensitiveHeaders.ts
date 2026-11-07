@@ -67,13 +67,14 @@ export const redactUrlQuery = (url: unknown) => {
   if (typeof url !== 'string') {
     return url
   }
-  const queryStart = url.indexOf('?')
+  const safeUrl = url.replace(/^((?:[a-z][a-z\d+.-]*:)?\/\/)[^/?#]*@/i, `$1${REDACTED}@`)
+  const queryStart = safeUrl.indexOf('?')
   if (queryStart === -1) {
-    return url
+    return safeUrl
   }
-  const hashStart = url.indexOf('#', queryStart)
-  const queryEnd = hashStart === -1 ? url.length : hashStart
-  const query = url.slice(queryStart + 1, queryEnd)
+  const hashStart = safeUrl.indexOf('#', queryStart)
+  const queryEnd = hashStart === -1 ? safeUrl.length : hashStart
+  const query = safeUrl.slice(queryStart + 1, queryEnd)
   const redactedQuery = query
     .split('&')
     .map(pair => {
@@ -82,5 +83,5 @@ export const redactUrlQuery = (url: unknown) => {
       return separator !== -1 && isSensitiveParamName(safeDecode(name)) ? `${name}=${REDACTED}` : pair
     })
     .join('&')
-  return redactedQuery === query ? url : `${url.slice(0, queryStart + 1)}${redactedQuery}${url.slice(queryEnd)}`
+  return redactedQuery === query ? safeUrl : `${safeUrl.slice(0, queryStart + 1)}${redactedQuery}${safeUrl.slice(queryEnd)}`
 }
