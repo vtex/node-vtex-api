@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "sonarqube": {
+      "type": "http",
+      "url": "http://sonarqube.vtex.systems/mcp"
+    }
+  }
+}
