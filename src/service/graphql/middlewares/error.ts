@@ -3,6 +3,7 @@ import { any, chain, compose, filter, forEach, has, map, prop, uniqBy } from 'ra
 import { LogLevel } from '../../../clients/Logger'
 import { LINKED } from '../../../constants'
 import { cancelledErrorCode, cancelledRequestStatus } from '../../../errors/RequestCancelledError'
+import { redactKnownSecretsDeep } from '../../../utils/stringRedactor'
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
 import { generatePathName } from '../utils/pathname'
@@ -84,7 +85,11 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
           e.query.variables = stringifiedVariables.length <= 1024 ? stringifiedVariables : '[variables too long]'
         }
       }, uniqueErrors)
-      console.error(`[node-vtex-api graphql errors] total=${graphQLErrors.length} unique=${uniqueErrors.length}`, uniqueErrors)
+      const authToken = ctx.vtex && ctx.vtex.authToken
+      const adminUserAuthToken = ctx.vtex && ctx.vtex.adminUserAuthToken
+      const storeUserAuthToken = ctx.vtex && ctx.vtex.storeUserAuthToken
+      const safeErrors = redactKnownSecretsDeep(uniqueErrors, [authToken, adminUserAuthToken, storeUserAuthToken]).value
+      console.error(`[node-vtex-api graphql errors] total=${graphQLErrors.length} unique=${safeErrors.length}`, safeErrors)
       ctx.graphql.status = 'error'
 
       // Do not generate etag for errors
@@ -120,13 +125,20 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
           ctx.vtex.logger.log(log, level)
         }
 
-        if (!LINKED && err.extensions.exception && err.extensions.exception.sensitive) {
-          delete err.extensions.exception.sensitive
+        if (!LINKED) {
+          delete err.stack
+          if (err.extensions && err.extensions.exception && err.extensions.exception.sensitive) {
+            delete err.extensions.exception.sensitive
+          }
         }
-      }, uniqueErrors)
+      }, safeErrors)
+
+      if (ctx.body && (ctx.body as any).errors) {
+        (ctx.body as any).errors = safeErrors
+      }
 
       // Expose graphQLErrors with pathNames to timings middleware
-      ctx.graphql.graphQLErrors = uniqueErrors
+      ctx.graphql.graphQLErrors = safeErrors
     } else {
       ctx.graphql.status = 'success'
     }

@@ -8,6 +8,7 @@ import { mapObjIndexed, path, sum, toLower, values } from 'ramda'
 import { renameBy } from '../../utils/renameBy'
 import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../utils/retry'
 import { MiddlewareContext } from '../typings'
+import { sanitizeHttpClientError } from './sanitizeHttpClientError'
 
 const httpAgent = new Agent({
   freeSocketTimeout: 30 * 1000,
@@ -87,7 +88,10 @@ export const routerCacheMiddleware = async (ctx: MiddlewareContext, next: () => 
 }
 
 export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-  const makeRequest = () => http.request(ctx.config)
+  // axios-retry rejects this promise only after the last attempt, so the sanitizer runs once.
+  const makeRequest = () => http.request(ctx.config).catch((requestError: any) => {
+    throw sanitizeHttpClientError(requestError)
+  })
 
   ctx.response = await (limit ? limit(makeRequest) : makeRequest())
 }
