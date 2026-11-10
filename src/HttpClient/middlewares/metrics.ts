@@ -125,6 +125,7 @@ export const metricsMiddleware = ({metrics, serverTiming, name}: MetricsOpts) =>
             client_metric: ctx.config.metric,
             status_code: rawStatusCode,
             status,
+            method: ctx.config.method || 'get',
           }
 
           // Record latency histogram with all context

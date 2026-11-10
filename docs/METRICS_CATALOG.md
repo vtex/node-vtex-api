@@ -212,10 +212,10 @@ These are operation-specific metrics recorded in middleware components.
 
 | Metric Name | Type | Attributes |
 |-------------|------|------------|
-| Latency histogram | Histogram | `component`, `client_metric`, `status_code`, `status`, `cache_state` |
-| `http_client_requests_total` | Counter | `component`, `client_metric`, `status_code`, `status` |
-| `http_client_cache_total` | Counter | `component`, `client_metric`, `status_code`, `status`, `cache_state` |
-| `http_client_requests_retried_total` | Counter | `component`, `client_metric`, `status_code`, `status`, `retry_count` |
+| Latency histogram | Histogram | `component`, `client_metric`, `status_code`, `status`, `method`, `cache_state` |
+| `http_client_requests_total` | Counter | `component`, `client_metric`, `status_code`, `status`, `method` |
+| `http_client_cache_total` | Counter | `component`, `client_metric`, `status_code`, `status`, `method`, `cache_state` |
+| `http_client_requests_retried_total` | Counter | `component`, `client_metric`, `status_code`, `status`, `method`, `retry_count` |
 
 #### HTTP Handler Metrics
 
