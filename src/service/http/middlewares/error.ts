@@ -83,7 +83,16 @@ const buildResponseBody = <T extends IOClients, U, V> (thrown: any, ctx: Service
     const authToken = ctx.vtex && ctx.vtex.authToken
     const adminUserAuthToken = ctx.vtex && ctx.vtex.adminUserAuthToken
     const storeUserAuthToken = ctx.vtex && ctx.vtex.storeUserAuthToken
-    return redactKnownSecretsDeep(body, [authToken, adminUserAuthToken, storeUserAuthToken]).value
+    const redacted = redactKnownSecretsDeep(body, [authToken, adminUserAuthToken, storeUserAuthToken]).value
+    // sanitizeErrors only walks Error instances. A thrown plain object still
+    // carries stack and config unless they are removed here, which is what
+    // logAndRemoveSensitiveData used to do on the value assigned to the body.
+    if (!LINKED && redacted && typeof redacted === 'object') {
+      SENSITIVE_EXCEPTION_FIELDS.forEach(field => {
+        delete redacted[field]
+      })
+    }
+    return redacted
   } catch (sanitizeError) {
     const failure = sanitizeError as Error
     console.error('[node-vtex-api error] the thrown value could not be sanitized', failure && failure.name)
