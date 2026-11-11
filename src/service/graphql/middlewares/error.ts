@@ -30,6 +30,24 @@ const parseErrorResponse = (response: any) => {
   return null
 }
 
+// `redactKnownSecretsDeep` copies an error when it changes something inside it. Deleting
+// `sensitive` on that copy does not touch the objects still referenced by `ctx.body`.
+const redactErrorList = (errors: any[], tokens: Array<string | undefined>) => {
+  const safe = redactKnownSecretsDeep(errors, tokens).value
+  if (!LINKED) {
+    safe.forEach((err: any) => {
+      if (!err) {
+        return
+      }
+      delete err.stack
+      if (err.extensions && err.extensions.exception && err.extensions.exception.sensitive) {
+        delete err.extensions.exception.sensitive
+      }
+    })
+  }
+  return safe
+}
+
 export async function graphqlError (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {
     vtex: {
@@ -133,7 +151,16 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
         }
       }, safeErrors)
 
-      if (ctx.body && (ctx.body as any).errors) {
+      // A batched GraphQL response is an array of results. Each result keeps its own
+      // errors; writing `safeErrors` back would not reach them.
+      if (Array.isArray(ctx.body)) {
+        const tokens = [authToken, adminUserAuthToken, storeUserAuthToken]
+        ctx.body.forEach((entry: any) => {
+          if (entry && Array.isArray(entry.errors)) {
+            entry.errors = redactErrorList(entry.errors, tokens)
+          }
+        })
+      } else if (ctx.body && (ctx.body as any).errors) {
         (ctx.body as any).errors = safeErrors
       }
 
