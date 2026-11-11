@@ -18,7 +18,7 @@ export const singleFlightMiddleware = async (ctx: MiddlewareContext, next: () =>
   ctx.config.cancelToken = undefined
 
   if (!metricsAdded) {
-    metrics.addOnFlushMetric(() => ({
+    global.metrics.addOnFlushMetric(() => ({
       name: 'node-vtex-api-inflight-map-size',
       size: inflight.entries.length,
     }))
