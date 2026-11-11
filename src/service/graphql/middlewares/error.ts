@@ -160,8 +160,12 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
             entry.errors = redactErrorList(entry.errors, tokens)
           }
         })
-      } else if (ctx.body && (ctx.body as any).errors) {
-        (ctx.body as any).errors = safeErrors
+      } else if (ctx.body && Array.isArray((ctx.body as any).errors)) {
+        // `safeErrors` is deduplicated for the log. The response keeps every
+        // GraphQL error, including two failures that share an upstream path.
+        const tokens = [authToken, adminUserAuthToken, storeUserAuthToken]
+        const body = ctx.body as any
+        body.errors = redactErrorList(graphQLErrors, tokens)
       }
 
       // Expose graphQLErrors with pathNames to timings middleware

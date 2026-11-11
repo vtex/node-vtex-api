@@ -42,4 +42,17 @@ describe('graphqlError', () => {
     expect((ctx.body as any)[0].errors[0].extensions.exception.sensitive).toBeUndefined()
     expect(JSON.stringify(ctx.body)).not.toContain(token)
   })
+
+  it('keeps every GraphQL error when two failures share an upstream path', async () => {
+    const first = graphqlErrorWithSensitive(['products', 0, 'price'])
+    const second = graphqlErrorWithSensitive(['products', 1, 'price'])
+    const ctx = ctxWith({errors: [first, second]}, [first, second])
+
+    await graphqlError(ctx as any, () => Promise.resolve())
+
+    const errors = (ctx.body as any).errors
+    expect(errors).toHaveLength(2)
+    expect(errors[0].path).toEqual(['products', 0, 'price'])
+    expect(errors[1].path).toEqual(['products', 1, 'price'])
+  })
 })
