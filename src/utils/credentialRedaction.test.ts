@@ -1,6 +1,6 @@
 import { sanitizeHttpClientError } from '../HttpClient/middlewares/sanitizeHttpClientError'
 import { cleanError } from './error'
-import { REDACTED } from './stringRedactor'
+import { REDACTED, redactKnownSecretsDeep } from './stringRedactor'
 
 describe('cleanError', () => {
   it('drops credential headers, the request body and the query string', () => {
@@ -22,6 +22,26 @@ describe('cleanError', () => {
     expect(cleaned.config.headers['content-type']).toBe('application/json')
     expect(cleaned.config.data).toBe(JSON.stringify({password: REDACTED}))
     expect(cleaned.config.url).toBe(`https://${REDACTED}@host/path?token=${REDACTED}&q=1`)
+  })
+})
+
+describe('redactKnownSecretsDeep', () => {
+  it('keeps ordinary fields whose names only look like credentials', () => {
+    const {value} = redactKnownSecretsDeep({
+      author: 'Jane',
+      keywords: ['shoe'],
+      password: 'super-secret-value',
+      sessionCount: 3,
+      sortKey: 'price',
+    })
+
+    expect(value).toEqual({
+      author: 'Jane',
+      keywords: ['shoe'],
+      password: REDACTED,
+      sessionCount: 3,
+      sortKey: 'price',
+    })
   })
 })
 

@@ -1,4 +1,4 @@
-import { isSensitiveParamName } from './sensitiveHeaders'
+import { isCredentialPayloadFieldName } from './sensitiveHeaders'
 
 export const REDACTED = '[Redacted]'
 
@@ -197,7 +197,7 @@ const assignChild = (copy: any, key: string, value: unknown) => {
  * the walk, unchecked. If that serialization fails, the value is replaced by `[Unserializable]`.
  * A container nested deeper than 32 levels is replaced by `[Truncated]`. Both are counted.
  *
- * The value of a credential-named field (`apiKey`, `authorization`, `cookie`…) is replaced whole,
+ * The value of a credential-named field (`password`, `authorization`, `appToken`…) is replaced whole,
  * even when it is not one of the given secrets. Array indexes are not names.
  *
  * It is for error output (GraphQL `errors[]`, the body built from a thrown value), not for
@@ -234,7 +234,7 @@ export const redactKnownSecretsDeep = <T>(value: T, secrets: Array<string | unde
   // The whole value of a credential-named field. Undefined means the field is not one, so the
   // caller inspects the value. Null and a value already replaced are left as they are.
   const redactCredentialField = (key: string, child: unknown): string | undefined => {
-    if (child == null || child === REDACTED || !isSensitiveParamName(key)) {
+    if (child == null || child === REDACTED || !isCredentialPayloadFieldName(key)) {
       return undefined
     }
     redacted++
