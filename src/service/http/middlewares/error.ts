@@ -4,7 +4,10 @@ import { LINKED } from '../../../constants'
 import { cancelledRequestStatus, RequestCancelledError } from '../../../errors/RequestCancelledError'
 import { TooManyRequestsError, tooManyRequestsStatus } from '../../../errors/TooManyRequestsError'
 import { cleanError, SENSITIVE_EXCEPTION_FIELDS } from '../../../utils/error'
+import { sanitizeErrors, toLoggableError } from '../../../utils/responseSanitizer'
+import { redactKnownSecretsDeep } from '../../../utils/stringRedactor'
 import { ServiceContext } from '../../typings'
+import { WITHHELD_BODY } from './sanitizeResponse'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
 const META_HEADER = 'x-vtex-meta'
@@ -72,6 +75,31 @@ const logAndRemoveSensitiveData = <T extends IOClients, U, V> (
   }
 }
 
+// What is sent to the client for a thrown value. `cleanError` alone keeps an error nested under
+// another property (`originalError`), and the tokens of this request can sit in a message.
+const buildResponseBody = <T extends IOClients, U, V> (thrown: any, ctx: ServiceContext<T, U, V>) => {
+  try {
+    const body = cleanError(sanitizeErrors(thrown, { linked: LINKED }).value)
+    const authToken = ctx.vtex && ctx.vtex.authToken
+    const adminUserAuthToken = ctx.vtex && ctx.vtex.adminUserAuthToken
+    const storeUserAuthToken = ctx.vtex && ctx.vtex.storeUserAuthToken
+    const redacted = redactKnownSecretsDeep(body, [authToken, adminUserAuthToken, storeUserAuthToken]).value
+    // sanitizeErrors only walks Error instances. A thrown plain object still
+    // carries stack and config unless they are removed here, which is what
+    // logAndRemoveSensitiveData used to do on the value assigned to the body.
+    if (!LINKED && redacted && typeof redacted === 'object') {
+      SENSITIVE_EXCEPTION_FIELDS.forEach(field => {
+        delete redacted[field]
+      })
+    }
+    return redacted
+  } catch (sanitizeError) {
+    const failure = sanitizeError as Error
+    console.error('[node-vtex-api error] the thrown value could not be sanitized', failure && failure.name)
+    return WITHHELD_BODY
+  }
+}
+
 export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
   try {
     await next()
@@ -84,8 +112,18 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
       ctx.status = tooManyRequestsStatus
       return
     }
-    console.error('[node-vtex-api error]', e)
-    const err = cleanError(e)
+    // The raw error carries the request config. Log the sanitized value.
+    console.error('[node-vtex-api error]', toLoggableError(e))
+    let err: any
+    try {
+      err = cleanError(e)
+    } catch (cleanFailure) {
+      const failure = cleanFailure as Error
+      console.error('[node-vtex-api error] the thrown value could not be sanitized', failure && failure.name)
+      ctx.status = 500
+      ctx.body = ctx.body || WITHHELD_BODY
+      return
+    }
 
     // Add response
     ctx.status = e && e.status >= 400 && e.status <= 599
@@ -106,6 +144,6 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
     }
 
     logAndRemoveSensitiveData(ctx, err)
-    ctx.body = ctx.body || err
+    ctx.body = ctx.body || buildResponseBody(e, ctx)
   }
 }

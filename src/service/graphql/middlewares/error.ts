@@ -3,6 +3,7 @@ import { any, chain, compose, filter, forEach, has, map, prop, uniqBy } from 'ra
 import { LogLevel } from '../../../clients/Logger'
 import { LINKED } from '../../../constants'
 import { cancelledErrorCode, cancelledRequestStatus } from '../../../errors/RequestCancelledError'
+import { redactKnownSecretsDeep } from '../../../utils/stringRedactor'
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
 import { generatePathName } from '../utils/pathname'
@@ -27,6 +28,24 @@ const parseErrorResponse = (response: any) => {
     return parseError(response)
   }
   return null
+}
+
+// `redactKnownSecretsDeep` copies an error when it changes something inside it. Deleting
+// `sensitive` on that copy does not touch the objects still referenced by `ctx.body`.
+const redactErrorList = (errors: any[], tokens: Array<string | undefined>) => {
+  const safe = redactKnownSecretsDeep(errors, tokens).value
+  if (!LINKED) {
+    safe.forEach((err: any) => {
+      if (!err) {
+        return
+      }
+      delete err.stack
+      if (err.extensions && err.extensions.exception && err.extensions.exception.sensitive) {
+        delete err.extensions.exception.sensitive
+      }
+    })
+  }
+  return safe
 }
 
 export async function graphqlError (ctx: GraphQLServiceContext, next: () => Promise<void>) {
@@ -84,7 +103,11 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
           e.query.variables = stringifiedVariables.length <= 1024 ? stringifiedVariables : '[variables too long]'
         }
       }, uniqueErrors)
-      console.error(`[node-vtex-api graphql errors] total=${graphQLErrors.length} unique=${uniqueErrors.length}`, uniqueErrors)
+      const authToken = ctx.vtex && ctx.vtex.authToken
+      const adminUserAuthToken = ctx.vtex && ctx.vtex.adminUserAuthToken
+      const storeUserAuthToken = ctx.vtex && ctx.vtex.storeUserAuthToken
+      const safeErrors = redactKnownSecretsDeep(uniqueErrors, [authToken, adminUserAuthToken, storeUserAuthToken]).value
+      console.error(`[node-vtex-api graphql errors] total=${graphQLErrors.length} unique=${safeErrors.length}`, safeErrors)
       ctx.graphql.status = 'error'
 
       // Do not generate etag for errors
@@ -120,13 +143,33 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
           ctx.vtex.logger.log(log, level)
         }
 
-        if (!LINKED && err.extensions.exception && err.extensions.exception.sensitive) {
-          delete err.extensions.exception.sensitive
+        if (!LINKED) {
+          delete err.stack
+          if (err.extensions && err.extensions.exception && err.extensions.exception.sensitive) {
+            delete err.extensions.exception.sensitive
+          }
         }
-      }, uniqueErrors)
+      }, safeErrors)
+
+      // A batched GraphQL response is an array of results. Each result keeps its own
+      // errors; writing `safeErrors` back would not reach them.
+      if (Array.isArray(ctx.body)) {
+        const tokens = [authToken, adminUserAuthToken, storeUserAuthToken]
+        ctx.body.forEach((entry: any) => {
+          if (entry && Array.isArray(entry.errors)) {
+            entry.errors = redactErrorList(entry.errors, tokens)
+          }
+        })
+      } else if (ctx.body && Array.isArray((ctx.body as any).errors)) {
+        // `safeErrors` is deduplicated for the log. The response keeps every
+        // GraphQL error, including two failures that share an upstream path.
+        const tokens = [authToken, adminUserAuthToken, storeUserAuthToken]
+        const body = ctx.body as any
+        body.errors = redactErrorList(graphQLErrors, tokens)
+      }
 
       // Expose graphQLErrors with pathNames to timings middleware
-      ctx.graphql.graphQLErrors = uniqueErrors
+      ctx.graphql.graphQLErrors = safeErrors
     } else {
       ctx.graphql.status = 'success'
     }
