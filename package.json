@@ -78,7 +78,7 @@
     "opentracing": "^0.14.4",
     "p-limit": "^2.2.0",
     "prom-client": "^14.2.0",
-    "qs": "^6.15.2",
+    "qs": "^6.16.1",
     "querystring": "^0.2.0",
     "ramda": "^0.26.0",
     "rwlock": "^5.0.0",
