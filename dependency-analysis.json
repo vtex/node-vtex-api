@@ -1,0 +1,507 @@
+{
+  "metadata": {
+    "analysisDate": "2025-11-25",
+    "projectName": "@vtex/api",
+    "projectVersion": "7.2.6",
+    "nodeTargetVersion": "16",
+    "nodeMinVersion": "8",
+    "totalDependencies": 45,
+    "totalDevDependencies": 31,
+    "totalOutdated": 57
+  },
+  "phases": [
+    {
+      "phase": 1,
+      "name": "Quick Wins",
+      "risk": "LOW",
+      "priority": "HIGH",
+      "estimatedDays": 3,
+      "expectedBenefits": {
+        "performanceImprovement": "10-15%",
+        "securityFixes": true,
+        "memoryReduction": "5-10%"
+      },
+      "dependencies": [
+        {
+          "name": "axios",
+          "type": "production",
+          "currentVersion": "1.8.4",
+          "targetVersion": "1.13.2",
+          "updateType": "patch",
+          "performanceImpact": 5,
+          "riskLevel": 1,
+          "node16Compatible": true,
+          "benefits": [
+            "Security fixes",
+            "Memory management improvements",
+            "Better stream handling"
+          ]
+        },
+        {
+          "name": "agentkeepalive",
+          "type": "production",
+          "currentVersion": "4.1.0",
+          "targetVersion": "4.6.0",
+          "updateType": "minor",
+          "performanceImpact": 5,
+          "riskLevel": 1,
+          "node16Compatible": true,
+          "benefits": [
+            "Better HTTP connection reuse",
+            "Reduced connection overhead",
+            "Better socket management"
+          ]
+        },
+        {
+          "name": "xss",
+          "type": "production",
+          "currentVersion": "1.0.6",
+          "targetVersion": "1.0.15",
+          "updateType": "patch",
+          "performanceImpact": 1,
+          "riskLevel": 1,
+          "node16Compatible": true,
+          "benefits": [
+            "Critical security fixes"
+          ]
+        },
+        {
+          "name": "jaeger-client",
+          "type": "production",
+          "currentVersion": "3.18.0",
+          "targetVersion": "3.19.0",
+          "updateType": "minor",
+          "performanceImpact": 2,
+          "riskLevel": 1,
+          "node16Compatible": true,
+          "benefits": [
+            "Bug fixes",
+            "Minor performance improvements"
+          ]
+        },
+        {
+          "name": "opentracing",
+          "type": "production",
+          "currentVersion": "0.14.4",
+          "targetVersion": "0.14.7",
+          "updateType": "patch",
+          "performanceImpact": 1,
+          "riskLevel": 1,
+          "node16Compatible": true,
+          "benefits": [
+            "Bug fixes"
+          ]
+        },
+        {
+          "name": "co-body",
+          "type": "production",
+          "currentVersion": "6.0.0",
+          "targetVersion": "6.2.0",
+          "updateType": "minor",
+          "performanceImpact": 2,
+          "riskLevel": 1,
+          "node16Compatible": true,
+          "benefits": [
+            "Better body parsing"
+          ]
+        },
+        {
+          "name": "qs",
+          "type": "production",
+          "currentVersion": "6.9.1",
+          "targetVersion": "6.14.0",
+          "updateType": "minor",
+          "performanceImpact": 2,
+          "riskLevel": 1,
+          "node16Compatible": true,
+          "benefits": [
+            "Security fixes",
+            "Better parsing performance"
+          ]
+        },
+        {
+          "name": "ramda",
+          "type": "production",
+          "currentVersion": "0.26.1",
+          "targetVersion": "0.32.0",
+          "updateType": "minor",
+          "performanceImpact": 3,
+          "riskLevel": 1,
+          "node16Compatible": true,
+          "benefits": [
+            "Performance optimizations",
+            "Better tree-shaking"
+          ]
+        },
+        {
+          "name": "mime-types",
+          "type": "production",
+          "currentVersion": "2.1.26",
+          "targetVersion": "2.1.35",
+          "updateType": "patch",
+          "performanceImpact": 1,
+          "riskLevel": 1,
+          "node16Compatible": true,
+          "benefits": [
+            "Updated MIME database"
+          ]
+        },
+        {
+          "name": "querystring",
+          "type": "production",
+          "currentVersion": "0.2.0",
+          "targetVersion": "0.2.1",
+          "updateType": "patch",
+          "performanceImpact": 1,
+          "riskLevel": 1,
+          "node16Compatible": true,
+          "benefits": [
+            "Bug fixes"
+          ],
+          "notes": "Deprecated, consider removing"
+        }
+      ]
+    },
+    {
+      "phase": 2,
+      "name": "Performance Boost",
+      "risk": "MEDIUM",
+      "priority": "HIGH",
+      "estimatedDays": 7,
+      "expectedBenefits": {
+        "performanceImprovement": "20-30%",
+        "securityFixes": true,
+        "memoryReduction": "30-40%"
+      },
+      "dependencies": [
+        {
+          "name": "lru-cache",
+          "type": "production",
+          "currentVersion": "5.1.1",
+          "targetVersion": "7.18.3",
+          "updateType": "major",
+          "performanceImpact": 5,
+          "riskLevel": 3,
+          "node16Compatible": true,
+          "benefits": [
+            "30-40% memory reduction",
+            "Complete rewrite with better performance",
+            "Better eviction algorithm"
+          ],
+          "warnings": [
+            "Breaking changes in API",
+            "Review all usages carefully"
+          ]
+        },
+        {
+          "name": "prom-client",
+          "type": "production",
+          "currentVersion": "14.2.0",
+          "targetVersion": "15.1.3",
+          "updateType": "major",
+          "performanceImpact": 4,
+          "riskLevel": 2,
+          "node16Compatible": true,
+          "benefits": [
+            "Better metrics collection",
+            "Reduced overhead",
+            "New metric types"
+          ]
+        },
+        {
+          "name": "axios-retry",
+          "type": "production",
+          "currentVersion": "3.1.2",
+          "targetVersion": "4.5.0",
+          "updateType": "major",
+          "performanceImpact": 3,
+          "riskLevel": 2,
+          "node16Compatible": true,
+          "benefits": [
+            "Better retry logic",
+            "More granular configuration"
+          ],
+          "notes": "Update after axios"
+        },
+        {
+          "name": "p-limit",
+          "type": "production",
+          "currentVersion": "2.2.2",
+          "targetVersion": "3.1.0",
+          "updateType": "major",
+          "performanceImpact": 4,
+          "riskLevel": 2,
+          "node16Compatible": true,
+          "benefits": [
+            "Better concurrency management",
+            "Lower memory footprint"
+          ],
+          "notes": "v3 is last CommonJS, v4+ is ESM-only"
+        },
+        {
+          "name": "semver",
+          "type": "production",
+          "currentVersion": "5.7.2",
+          "targetVersion": "7.7.3",
+          "updateType": "major",
+          "performanceImpact": 2,
+          "riskLevel": 2,
+          "node16Compatible": true,
+          "benefits": [
+            "Better parsing",
+            "More features"
+          ]
+        },
+        {
+          "name": "dataloader",
+          "type": "production",
+          "currentVersion": "1.4.0",
+          "targetVersion": "2.2.3",
+          "updateType": "major",
+          "performanceImpact": 3,
+          "riskLevel": 2,
+          "node16Compatible": true,
+          "benefits": [
+            "Better batching",
+            "TypeScript improvements"
+          ]
+        },
+        {
+          "name": "archiver",
+          "type": "production",
+          "currentVersion": "3.1.1",
+          "targetVersion": "7.0.1",
+          "updateType": "major",
+          "performanceImpact": 3,
+          "riskLevel": 2,
+          "node16Compatible": true,
+          "benefits": [
+            "Better compression",
+            "Modern API"
+          ]
+        },
+        {
+          "name": "fs-extra",
+          "type": "production",
+          "currentVersion": "7.0.1",
+          "targetVersion": "11.3.2",
+          "updateType": "major",
+          "performanceImpact": 2,
+          "riskLevel": 2,
+          "node16Compatible": true,
+          "benefits": [
+            "Better async handling",
+            "Modern API"
+          ]
+        },
+        {
+          "name": "tar-fs",
+          "type": "production",
+          "currentVersion": "2.0.0",
+          "targetVersion": "3.1.1",
+          "updateType": "major",
+          "performanceImpact": 2,
+          "riskLevel": 2,
+          "node16Compatible": true,
+          "benefits": [
+            "Better tar handling",
+            "Performance improvements"
+          ]
+        },
+        {
+          "name": "bluebird",
+          "type": "production",
+          "currentVersion": "3.5.4",
+          "targetVersion": "3.7.2",
+          "updateType": "minor",
+          "performanceImpact": 2,
+          "riskLevel": 1,
+          "node16Compatible": true,
+          "benefits": [
+            "Bug fixes",
+            "Performance improvements"
+          ]
+        }
+      ]
+    },
+    {
+      "phase": 3,
+      "name": "Ecosystem Updates",
+      "risk": "HIGH",
+      "priority": "MEDIUM",
+      "estimatedDays": 15,
+      "expectedBenefits": {
+        "performanceImprovement": "5-10%",
+        "securityFixes": true,
+        "modernization": true,
+        "developerExperience": true
+      },
+      "dependencies": [
+        {
+          "name": "graphql",
+          "type": "production",
+          "currentVersion": "14.5.8",
+          "targetVersion": "16.12.0",
+          "updateType": "major",
+          "performanceImpact": 3,
+          "riskLevel": 4,
+          "node16Compatible": true,
+          "benefits": [
+            "Better parsing performance",
+            "Better tree-shaking",
+            "New features"
+          ],
+          "warnings": [
+            "Coordinate with graphql-tools and graphql-upload"
+          ]
+        },
+        {
+          "name": "graphql-tools",
+          "type": "production",
+          "currentVersion": "4.0.6",
+          "targetVersion": "9.0.24",
+          "updateType": "major",
+          "performanceImpact": 3,
+          "riskLevel": 4,
+          "node16Compatible": true,
+          "benefits": [
+            "Modern API",
+            "Better performance"
+          ],
+          "notes": "Update after graphql"
+        },
+        {
+          "name": "graphql-upload",
+          "type": "production",
+          "currentVersion": "13.0.0",
+          "targetVersion": "17.0.0",
+          "updateType": "major",
+          "performanceImpact": 2,
+          "riskLevel": 4,
+          "node16Compatible": true,
+          "benefits": [
+            "Support for graphql 16"
+          ],
+          "notes": "Update after graphql"
+        },
+        {
+          "name": "@opentelemetry/instrumentation",
+          "type": "production",
+          "currentVersion": "0.57.2",
+          "targetVersion": "0.208.0",
+          "updateType": "major",
+          "performanceImpact": 3,
+          "riskLevel": 4,
+          "node16Compatible": true,
+          "benefits": [
+            "Better instrumentation",
+            "Lower overhead"
+          ],
+          "warnings": [
+            "Currently causing test failures",
+            "Update all OTel deps together"
+          ]
+        },
+        {
+          "name": "typescript",
+          "type": "development",
+          "currentVersion": "4.9.5",
+          "targetVersion": "5.9.3",
+          "updateType": "major",
+          "performanceImpact": 3,
+          "riskLevel": 3,
+          "node16Compatible": true,
+          "benefits": [
+            "Better type checking",
+            "Faster builds",
+            "New features"
+          ]
+        },
+        {
+          "name": "jest",
+          "type": "development",
+          "currentVersion": "25.1.0",
+          "targetVersion": "29.7.0",
+          "updateType": "major",
+          "performanceImpact": 3,
+          "riskLevel": 4,
+          "node16Compatible": true,
+          "benefits": [
+            "Faster test execution",
+            "Better ESM support"
+          ],
+          "notes": "v30 requires Node 18+"
+        },
+        {
+          "name": "ts-jest",
+          "type": "development",
+          "currentVersion": "25.2.1",
+          "targetVersion": "29.2.5",
+          "updateType": "major",
+          "performanceImpact": 3,
+          "riskLevel": 3,
+          "node16Compatible": true,
+          "benefits": [
+            "Aligned with Jest 29"
+          ],
+          "notes": "Update with Jest"
+        }
+      ]
+    }
+  ],
+  "blockers": [
+    {
+      "issue": "OpenTelemetry test failures",
+      "description": "Tests failing due to @opentelemetry/otlp-exporter-base module resolution",
+      "priority": "HIGH",
+      "action": "Fix imports or update OpenTelemetry suite"
+    },
+    {
+      "issue": "Axios ESM import in Jest",
+      "description": "Jest cannot parse ESM modules from axios",
+      "priority": "MEDIUM",
+      "action": "Configure Jest to handle ESM or use transformIgnorePatterns"
+    }
+  ],
+  "longTermRecommendations": [
+    {
+      "recommendation": "Migrate from Node 16 to Node 18/20 LTS",
+      "reason": "Node 16 is EOL since September 2023",
+      "priority": "HIGH",
+      "estimatedEffort": "MEDIUM"
+    },
+    {
+      "recommendation": "Migrate from tslint to ESLint",
+      "reason": "tslint is deprecated",
+      "priority": "MEDIUM",
+      "estimatedEffort": "MEDIUM"
+    },
+    {
+      "recommendation": "Consider Koa 3.x migration",
+      "reason": "Better async/await support, cleaner API",
+      "priority": "LOW",
+      "estimatedEffort": "HIGH"
+    },
+    {
+      "recommendation": "Plan ESM migration",
+      "reason": "Many modern packages are ESM-only",
+      "priority": "LOW",
+      "estimatedEffort": "HIGH"
+    }
+  ],
+  "metrics": {
+    "expectedImprovements": {
+      "memoryReduction": "20-30%",
+      "httpThroughputImprovement": "15-25%",
+      "metricsOverheadReduction": "10-15%",
+      "concurrencyImprovement": "5-10%"
+    },
+    "estimatedTotalEffort": {
+      "phase1Days": 3,
+      "phase2Days": 7,
+      "phase3Days": 15,
+      "totalDays": 25,
+      "totalWeeks": "4-6"
+    }
+  }
+}
