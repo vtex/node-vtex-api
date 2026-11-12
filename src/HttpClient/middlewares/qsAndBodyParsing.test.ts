@@ -190,6 +190,22 @@ describe('event and GraphQL body parsing', () => {
     expect(next).toHaveBeenCalledTimes(1)
   })
 
+  it('documents that bracket arrays longer than arrayLimit (20) become indexed objects', async () => {
+    const body = Array.from({ length: 25 }, (_, i) => `a[]=v${i}`).join('&')
+    const ctx: any = {
+      req: requestFrom(body, 'application/x-www-form-urlencoded'),
+      state: {},
+    }
+    const next = jest.fn().mockResolvedValue(undefined)
+
+    await parseBodyMiddleware(ctx, next)
+
+    expect(Array.isArray(ctx.state.body.a)).toBe(false)
+    expect(ctx.state.body.a['0']).toBe('v0')
+    expect(ctx.state.body.a['24']).toBe('v24')
+    expect(next).toHaveBeenCalledTimes(1)
+  })
+
   it('parses a GraphQL POST JSON body via co-body json()', async () => {
     const schema = buildSchema('type Query { hello: String }')
     const middleware = extractQuery({ schema } as any)
