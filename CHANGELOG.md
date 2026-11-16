@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Security
 
-- `qs` is now declared as `^6.16.1` (previously `^6.5.1`). The dependency is reached through `co-body` in the request body parsing used by event and GraphQL handlers, and the resolved copies were below versions with published advisories (CVE-2025-15284, CVE-2026-2391, CVE-2026-8723 and others). Apps that update `@vtex/api` get a deduplicated `qs` for both the SDK and `co-body`.
+- `qs` is now declared as `^6.16.1` (previously `^6.5.1`) to address published security advisories. This repository's lockfile resolves `qs` 6.17.1 for both the SDK and `co-body`. Downstream apps and runtimes with existing lockfiles must also update and verify the `qs` copy used by `co-body` to ensure it is at least 6.16.1; updating `@vtex/api` alone does not guarantee that resolution.
 
 ## [6.52.7]
 
