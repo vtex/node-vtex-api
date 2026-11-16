@@ -43,7 +43,7 @@ const requestFrom = (raw: string, contentType: string) => {
 
 describe('qs floor and query serialization', () => {
   it('resolves qs at or above the CVE floor', () => {
-    expect(gte(qsVersion, '6.15.2')).toBe(true)
+    expect(gte(qsVersion, '6.16.1')).toBe(true)
   })
 
   it('keeps axios on the 0.30 line', () => {
@@ -56,7 +56,7 @@ describe('qs floor and query serialization', () => {
     const coBodyDir = path.dirname(require.resolve('co-body/package.json'))
     // tslint:disable-next-line:no-var-requires
     const coBodyQs = require(require.resolve('qs/package.json', { paths: [coBodyDir] })).version as string
-    expect(gte(coBodyQs, '6.15.2')).toBe(true)
+    expect(gte(coBodyQs, '6.16.1')).toBe(true)
   })
 
   it('stringifies arrays, nested objects, and empty params with arrayFormat repeat', () => {
