@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Security
+
+- `qs` is now declared as `^6.16.1` (previously `^6.5.1`) to address published security advisories. This repository's lockfile resolves `qs` 6.17.1 for both the SDK and `co-body`. Downstream apps and runtimes with existing lockfiles must also update and verify the `qs` copy used by `co-body` to ensure it is at least 6.16.1; updating `@vtex/api` alone does not guarantee that resolution.
+
 ## [6.52.7]
 
 ### Security
