@@ -32,16 +32,36 @@ describe('redactKnownSecretsDeep', () => {
       author: 'Jane',
       keywords: ['shoe'],
       password: 'super-secret-value',
+      passwordPolicy: 'strong',
       sessionCount: 3,
       sortKey: 'price',
+      tokenCount: 2,
     })
 
     expect(value).toEqual({
       author: 'Jane',
       keywords: ['shoe'],
       password: REDACTED,
+      passwordPolicy: 'strong',
       sessionCount: 3,
       sortKey: 'price',
+      tokenCount: 2,
+    })
+  })
+
+  it('redacts credential-suffixed payload fields', () => {
+    const {value} = redactKnownSecretsDeep({
+      accessToken: 'abcdefghijklmnop',
+      apiKey: 'abcdefghijklmnop',
+      clientSecret: 'abcdefghijklmnop',
+      privateKey: 'abcdefghijklmnop',
+    })
+
+    expect(value).toEqual({
+      accessToken: REDACTED,
+      apiKey: REDACTED,
+      clientSecret: REDACTED,
+      privateKey: REDACTED,
     })
   })
 })
