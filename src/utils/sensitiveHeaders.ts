@@ -1,4 +1,4 @@
-import { REDACTED, TRUNCATED } from './stringRedactor'
+import { REDACTED, TRUNCATED } from './redaction'
 
 /**
  * Names under which credentials travel in HTTP headers, lower-case. Shared by the `HttpClient`

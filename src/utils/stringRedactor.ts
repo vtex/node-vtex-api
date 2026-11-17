@@ -1,6 +1,5 @@
+import { REDACTED, TRUNCATED } from './redaction'
 import { isCredentialPayloadFieldName } from './sensitiveHeaders'
-
-export const REDACTED = '[Redacted]'
 
 // Shorter values are not credentials, and replacing them everywhere would damage ordinary text.
 const MIN_SECRET_LENGTH = 16
@@ -39,12 +38,6 @@ export const redactKnownSecrets = (text: string, secrets: Array<string | undefin
 }
 
 const MAX_DEEP_DEPTH = 32
-
-/**
- * What replaces a container nested deeper than the walk inspects. It is not sent as it is: what
- * was not inspected could hold a secret.
- */
-export const TRUNCATED = '[Truncated]'
 
 const isPlainContainer = (value: unknown): value is Record<string, unknown> | unknown[] => {
   if (value === null || typeof value !== 'object') {

@@ -1,6 +1,7 @@
 import { sanitizeHttpClientError } from '../HttpClient/middlewares/sanitizeHttpClientError'
 import { cleanError } from './error'
-import { REDACTED, redactKnownSecretsDeep } from './stringRedactor'
+import { REDACTED } from './redaction'
+import { redactKnownSecretsDeep } from './stringRedactor'
 
 describe('cleanError', () => {
   it('drops credential headers, the request body and the query string', () => {

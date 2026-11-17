@@ -1,5 +1,5 @@
+import { REDACTED } from '../../utils/redaction'
 import { isKnownCredentialHeaderName, isSensitiveHeaderName, redactCredentialFields, redactRequestData, redactUrlQuery } from '../../utils/sensitiveHeaders'
-import { REDACTED } from '../../utils/stringRedactor'
 
 const isObject = (value: unknown): value is Record<string, any> =>
   value !== null && typeof value === 'object'
