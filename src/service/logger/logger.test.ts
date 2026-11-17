@@ -22,7 +22,7 @@ function loadLogger(env: { vendor?: string; name?: string }) {
   } else {
     process.env.VTEX_APP_VENDOR = env.vendor
   }
-  process.env.VTEX_APP_NAME = env.name ?? 'zenvia-whatsapp'
+  process.env.VTEX_APP_NAME = env.name ?? 'orders-feed'
   process.env.VTEX_APP_ID = `${env.vendor ?? 'app'}.${process.env.VTEX_APP_NAME}@2.4.0`
   process.env.VTEX_APP_VERSION = '2.4.0'
 
@@ -67,45 +67,45 @@ describe('Logger Skidder topics', () => {
   })
 
   test('third-party log uses the runtime account, not the vendor', () => {
-    const loggerCtor = loadLogger({ vendor: 'zenvia', name: 'zenvia-whatsapp' })
-    const logger = new loggerCtor(context('lojax'))
+    const loggerCtor = loadLogger({ vendor: 'acme', name: 'orders-feed' })
+    const logger = new loggerCtor(context('storea'))
 
     logger.log('hello', 'info')
 
     const line = loggedLine(consoleLog)
-    expect(line.account).toBe('lojax')
+    expect(line.account).toBe('storea')
     expect(line.workspace).toBe('master')
-    expect(line.__SKIDDER_TOPIC_1).toBe('skidder.vendor.lojax')
-    expect(line.__SKIDDER_TOPIC_2).toBe('skidder.app.lojax.zenvia-whatsapp')
-    expect(line.__SKIDDER_TOPIC_1).not.toContain('zenvia')
+    expect(line.__SKIDDER_TOPIC_1).toBe('skidder.vendor.storea')
+    expect(line.__SKIDDER_TOPIC_2).toBe('skidder.app.storea.orders-feed')
+    expect(line.__SKIDDER_TOPIC_1).not.toContain('acme')
   })
 
   test('third-party log in the vendor account uses that account', () => {
-    const loggerCtor = loadLogger({ vendor: 'zenvia', name: 'zenvia-whatsapp' })
-    const logger = new loggerCtor(context('zenvia'))
+    const loggerCtor = loadLogger({ vendor: 'acme', name: 'orders-feed' })
+    const logger = new loggerCtor(context('acme'))
 
     logger.log('hello', 'info')
 
     const line = loggedLine(consoleLog)
-    expect(line.__SKIDDER_TOPIC_1).toBe('skidder.vendor.zenvia')
-    expect(line.__SKIDDER_TOPIC_2).toBe('skidder.app.zenvia.zenvia-whatsapp')
+    expect(line.__SKIDDER_TOPIC_1).toBe('skidder.vendor.acme')
+    expect(line.__SKIDDER_TOPIC_2).toBe('skidder.app.acme.orders-feed')
   })
 
   test.each(['vtex', 'gocommerce'])('vendor %s does not stamp Skidder topics', vendor => {
-    const loggerCtor = loadLogger({ vendor, name: 'checkout' })
-    const logger = new loggerCtor(context('lojax'))
+    const loggerCtor = loadLogger({ vendor, name: 'sample-app' })
+    const logger = new loggerCtor(context('storea'))
 
     logger.log('hello', 'info')
 
     const line = loggedLine(consoleLog)
-    expect(line.account).toBe('lojax')
+    expect(line.account).toBe('storea')
     expect(line.workspace).toBe('master')
     expect(line.__SKIDDER_TOPIC_1).toBeUndefined()
     expect(line.__SKIDDER_TOPIC_2).toBeUndefined()
   })
 
   test.each(['', undefined])('missing account %p does not stamp Skidder topics or throw', account => {
-    const loggerCtor = loadLogger({ vendor: 'zenvia', name: 'zenvia-whatsapp' })
+    const loggerCtor = loadLogger({ vendor: 'acme', name: 'orders-feed' })
     const logger = new loggerCtor(context(account))
 
     expect(() => logger.log('hello', 'info')).not.toThrow()
