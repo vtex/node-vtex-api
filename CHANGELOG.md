@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [7.6.5]
+
+### Fixed
+
+- Third-party logs name their Skidder topics with the account that produced the line, not the app
+  vendor. `__SKIDDER_TOPIC_1` is `skidder.vendor.{account}` and `__SKIDDER_TOPIC_2` is
+  `skidder.app.{account}.{app name}`, so a store's installation no longer lands in the vendor
+  account's topic. Vendors `vtex` and `gocommerce` still get no Skidder topic fields, and a log with
+  an empty account gets none. Apps pick this up on their next release. Lines already written to
+  `skidder.vendor.{vendor}` are not moved.
+
 ## [7.6.4]
 
 ### Security
