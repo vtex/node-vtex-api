@@ -139,8 +139,8 @@ const sanitizeCtxBody = (ctx: ServiceContext<any, any, any>) => {
  * error to `ctx.body` do not expose the request configuration (credentials), the stack and the
  * connection internals to the caller.
  *
- * String bodies are also covered, for errors that were turned into text: the credentials in them
- * (the ones of the request, the credential headers, `Bearer` tokens) are replaced.
+ * String bodies are also covered, for errors that were turned into text: only the tokens of this
+ * request (`authToken`, `adminUserAuthToken`, `storeUserAuthToken`) are replaced in them.
  *
  * It must be registered after `compress()`, which serializes the body: it needs to see the object,
  * and to change it before it is serialized.
