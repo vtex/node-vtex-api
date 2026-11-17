@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Security
+Backport of the credential sanitization of 6.52.7 and 7.x, with the same behavior.
+
+- `HttpClient` failures reach app code with their credentials masked. On the final rejection,
+  after the retries, the error keeps its instance, `message`, `code`, `stack`, `response.status`
+  and `response.data`, while `config` (and `response.config`) becomes a copy with credential
+  headers (`proxy-authorization`, `cookie`, `x-vtex-*`, `VtexIdclientAutCookie[_<account>]` and
+  credential-looking names), `auth`, user info in the `url`/`baseURL`, credential-named `params`
+  and URL query values, and credential-named keys in the request body (`config.data`, JSON or
+  form-encoded) replaced by `[Redacted]`. The headers of the upstream response are kept,
+  `set-cookie` included, since a redirect rejects (`maxRedirects: 0`) and apps forward its cookie.
+  As axios 0.18 errors have no `toJSON()`, the known credential response headers stay readable but
+  are not enumerable, so serializing the error leaves them out, as `toJSON()` does in 6.x and 7.x.
+  `request`, `response.request` and the connection agents stay readable but are no longer
+  enumerable, so `JSON.stringify`, `util.inspect` and the logger no longer carry them. If that
+  masking throws, `config`, `request`, and the response's `config` and `headers` are removed
+  instead of being returned with the credentials still in place.
+- The logger (`cleanError`) drops the same credential headers, not only `authorization`,
+  `proxy-authorization` and `VtexIdclientAutCookie`. It masks credential-named `params`, also for
+  errors that did not go through the HttpClient. A JSON or form request body has its
+  credential-named keys masked before the 8 KB truncation.
+- Uncaught exceptions and unhandled rejections are printed without the credentials of an error's
+  `config`, and the rejected promise is no longer printed.
+- The tokens of the request are replaced in GraphQL `errors[]` and in the body built from a
+  thrown value. Inside a `headers` object, those error bodies also replace the value of a known
+  credential header, even when it is not one of the request tokens. A reference back to a
+  containing object becomes `[Circular]`. A redaction that takes over 50 ms is logged as a warning
+  (`error-redaction: slow`). If the GraphQL errors cannot be redacted, or are left in an invalid
+  shape, each error is sent with only its message, path and code, with the tokens replaced in
+  each, instead of failing the response. Stack traces are left out of error responses outside
+  link mode.
+- An error object placed on `ctx.body` is replaced by a copy without its config, request, agents
+  or stack, and string bodies have the tokens of the request replaced. A body that cannot be
+  sanitized is withheld (`E_RESPONSE_WITHHELD`). Successful bodies are not walked for
+  credentials. `VTEX_IO_RESPONSE_SANITIZER=off` disables this.
 
 ## [3.77.8] - 2022-12-15
 ### Changed

@@ -8,6 +8,7 @@ import { mapObjIndexed, path, sum, toLower, values } from 'ramda'
 import { renameBy } from '../../utils/renameBy'
 import { isAbortedOrNetworkErrorOrRouterTimeout } from '../../utils/retry'
 import { MiddlewareContext } from '../typings'
+import { sanitizeHttpClientError } from './sanitizeHttpClientError'
 
 const httpAgent = new Agent({
   freeSocketTimeout: 30 * 1000,
@@ -89,7 +90,13 @@ export const routerCacheMiddleware = async (ctx: MiddlewareContext, next: () => 
 export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
   const makeRequest = () => http.request(ctx.config)
 
-  ctx.response = await (limit ? limit(makeRequest) : makeRequest())
+  try {
+    ctx.response = await (limit ? limit(makeRequest) : makeRequest())
+  } catch (err) {
+    // The final rejection, after the retries in the axios interceptors. Its config carries the
+    // credentials of the request, which app code would otherwise serialize, log or return.
+    throw sanitizeHttpClientError(err)
+  }
 }
 
 function count (obj: { [key: string]: any[] }) {
