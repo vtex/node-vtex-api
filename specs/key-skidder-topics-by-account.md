@@ -11,7 +11,7 @@
 
 Third-party VTEX IO apps log to stdout through `@vtex/api`. For those apps the logger stamps two Kafka topic names on the JSON line: `skidder.vendor.{vendor}` and `skidder.app.{vendor}.{app}`. `{vendor}` is `APP.VENDOR`, the account that owns the app, not the account where the app is running. Fluent Bit publishes the line to those names unchanged.
 
-Skidder then serves `GET /{account}/{workspace}/logs/stream` from `skidder.vendor.{account}`. A stream opened on the vendor account therefore contains every installation of that app. [VSC-1258826](https://vtex-dev.atlassian.net/browse/VSC-1258826) shows this on `zenvia/master`: lines of `zenvia.zenvia-whatsapp` produced in other stores. The same stamp exists on `master` and on `6.x`.
+Skidder then serves `GET /{account}/{workspace}/logs/stream` from `skidder.vendor.{account}`. A stream opened on the vendor account therefore contains every installation of that app. [VSC-1258826](https://vtex-dev.atlassian.net/browse/VSC-1258826) reports that behavior: an app such as `acme.orders-feed`, running in another store, is written into `skidder.vendor.acme`. The same stamp exists on `master` and on `6.x`.
 
 The JSON already carries the runtime account and workspace (`account`, `workspace`). Only the topic name is wrong.
 
@@ -29,8 +29,8 @@ The JSON already carries the runtime account and workspace (`account`, `workspac
 
 - **Story**: As a store developer, I want logs from an app running in my account to be written to my account's Skidder topic, so that a vendor stream is not the bucket for every store that installed the app.
 - **Acceptance Criteria**:
-  - **Given** a third-party app whose vendor is `zenvia` and whose name is `zenvia-whatsapp`, running with `ctx.account` `lojax`, **when** the app logs, **then** the stdout JSON has `__SKIDDER_TOPIC_1` equal to `skidder.vendor.lojax` and `__SKIDDER_TOPIC_2` equal to `skidder.app.lojax.zenvia-whatsapp`.
-  - **Given** the same app running with `ctx.account` `zenvia`, **when** the app logs, **then** both topic names use `zenvia`, not another account.
+  - **Given** a third-party app whose vendor is `acme` and whose name is `orders-feed`, running with `ctx.account` `storea`, **when** the app logs, **then** the stdout JSON has `__SKIDDER_TOPIC_1` equal to `skidder.vendor.storea` and `__SKIDDER_TOPIC_2` equal to `skidder.app.storea.orders-feed`.
+  - **Given** the same app running with `ctx.account` `acme`, **when** the app logs, **then** both topic names use `acme`, not another account.
   - **Given** a log line produced by this version, **when** Fluent Bit reads `__SKIDDER_TOPIC_1` and `__SKIDDER_TOPIC_2`, **then** it publishes to those names without rewriting them.
 
 #### US-2: Keep first-party logs off Skidder topics
@@ -51,8 +51,8 @@ The JSON already carries the runtime account and workspace (`account`, `workspac
 
 | Scenario | Pre-conditions | Steps | Expected Result |
 |---|---|---|---|
-| Store installation | Vendor `zenvia`, app name `zenvia-whatsapp`, `ctx.account` `lojax`, `ctx.workspace` `master`. | Call `Logger.log`. | `__SKIDDER_TOPIC_1` is `skidder.vendor.lojax`. `__SKIDDER_TOPIC_2` is `skidder.app.lojax.zenvia-whatsapp`. `account` is `lojax`. `workspace` is `master`. |
-| App running in the vendor account | Same app, `ctx.account` `zenvia`. | Call `Logger.log`. | Both topic names use `zenvia`. |
+| Store installation | Vendor `acme`, app name `orders-feed`, `ctx.account` `storea`, `ctx.workspace` `master`. | Call `Logger.log`. | `__SKIDDER_TOPIC_1` is `skidder.vendor.storea`. `__SKIDDER_TOPIC_2` is `skidder.app.storea.orders-feed`. `account` is `storea`. `workspace` is `master`. |
+| App running in the vendor account | Same app, `ctx.account` `acme`. | Call `Logger.log`. | Both topic names use `acme`. |
 | First-party app | `APP.VENDOR` is `vtex`. | Call `Logger.log`. | No `__SKIDDER_TOPIC_*` fields. `account` and `workspace` are still present. |
 | Missing account | Third-party app, `ctx.account` is `""`. | Call `Logger.log`. | No `__SKIDDER_TOPIC_*` fields. The call returns. |
 | Old process still running | An app container built with the previous `@vtex/api`. | The app logs after this library is published. | The line still uses `skidder.vendor.{vendor}` until that app is rebuilt with this version. |
@@ -161,7 +161,7 @@ Today the middle arrow uses `APP.VENDOR`. After this change it uses `ctx.account
 
 ### Implementation Plan
 
-1. Add a unit test that a third-party logger with account `lojax` emits `skidder.vendor.lojax` and `skidder.app.lojax.{APP.NAME}`, that `vtex` emits neither topic field, and that an empty account emits neither topic field.
+1. Add a unit test that a third-party logger with account `storea` emits `skidder.vendor.storea` and `skidder.app.storea.{APP.NAME}`, that `vtex` emits neither topic field, and that an empty account emits neither topic field.
 2. Change `Logger.log` on `master` so the topic strings use the context account. Keep the `IS_THIRD_PARTY` guard.
 3. Open the same change against `6.x`.
 4. Publish the two lines. Call out in the release note that installed apps pick this up on their next release, and that lines already in Kafka are unchanged.
@@ -191,14 +191,14 @@ Today the middle arrow uses `APP.VENDOR`. After this change it uses `ctx.account
 
 No HTTP route, event contract, or exported type changes.
 
-A third-party line with account `lojax` and app name `zenvia-whatsapp` includes:
+A third-party line with account `storea` and app name `orders-feed` includes:
 
 ```json
 {
-  "account": "lojax",
+  "account": "storea",
   "workspace": "master",
-  "__SKIDDER_TOPIC_1": "skidder.vendor.lojax",
-  "__SKIDDER_TOPIC_2": "skidder.app.lojax.zenvia-whatsapp"
+  "__SKIDDER_TOPIC_1": "skidder.vendor.storea",
+  "__SKIDDER_TOPIC_2": "skidder.app.storea.orders-feed"
 }
 ```
 
