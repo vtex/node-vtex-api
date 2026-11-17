@@ -5,17 +5,17 @@ const isObject = (value: unknown): value is Record<string, any> =>
   value !== null && typeof value === 'object'
 
 /**
- * A copy of the headers with the value of every header `isSensitive` selects replaced. Keys are
- * kept. Returns the same object when there is nothing to replace. Works on plain objects (axios
- * 0.x) and on `AxiosHeaders` (axios 1.x), whose type is kept so code that calls `headers.get()`
- * still works.
+ * A copy of the headers with the value of every credential header replaced. Keys are kept.
+ * Returns the same object when there is nothing to replace. Works on plain objects (axios 0.x)
+ * and on `AxiosHeaders` (axios 1.x), whose type is kept so code that calls `headers.get()` still
+ * works.
  */
-const redactHeaders = (headers: unknown, isSensitive: (name: string) => boolean = isSensitiveHeaderName) => {
+const redactHeaders = (headers: unknown) => {
   if (!isObject(headers)) {
     return headers
   }
   const values: Record<string, unknown> = typeof headers.toJSON === 'function' ? headers.toJSON() : headers
-  const sensitive = Object.keys(values).filter(name => isSensitive(name) && values[name] != null)
+  const sensitive = Object.keys(values).filter(name => isSensitiveHeaderName(name) && values[name] != null)
   if (sensitive.length === 0) {
     return headers
   }
@@ -42,6 +42,24 @@ const hide = (target: Record<string, any>, key: string) => {
   }
 }
 
+// axios 0.x errors have no `toJSON()`, so `JSON.stringify(err)` serializes the response and the
+// `set-cookie` in its headers. The headers become a copy where the known credential headers stay
+// readable (`headers['set-cookie']`) but are left out of serialization, as axios 1.x leaves the
+// response out of `toJSON()`.
+const hideCredentialResponseHeaders = (response: Record<string, any>) => {
+  const { headers } = response
+  if (!isObject(headers) || typeof headers.toJSON === 'function') {
+    return
+  }
+  const names = Object.keys(headers).filter(isKnownCredentialHeaderName)
+  if (names.length === 0) {
+    return
+  }
+  const copy: Record<string, any> = { ...headers }
+  names.forEach(name => hide(copy, name))
+  response.headers = copy
+}
+
 const AGENT_KEYS = ['httpAgent', 'httpsAgent']
 
 const assign = (target: Record<string, any>, key: string, value: unknown) => {
@@ -52,8 +70,11 @@ const assign = (target: Record<string, any>, key: string, value: unknown) => {
   }
 }
 
+const isStream = (value: unknown) => isObject(value) && typeof value.pipe === 'function'
+
 // Last resort when masking throws partway. The fields that carry credentials are replaced, rather
-// than returned as they were. `response.status` and `response.data` stay.
+// than returned as they were. `response.status` and `response.data` stay; a streamed `data` keeps
+// its originating request, so it stays readable but is left out of serialization.
 const withholdCredentials = (error: Record<string, any>) => {
   assign(error, 'config', {})
   assign(error, 'request', undefined)
@@ -64,6 +85,9 @@ const withholdCredentials = (error: Record<string, any>) => {
   assign(response, 'config', {})
   assign(response, 'headers', {})
   assign(response, 'request', undefined)
+  if (isStream(response.data)) {
+    hide(response, 'data')
+  }
 }
 
 type Redactor = [string, (value: unknown) => unknown]
@@ -105,14 +129,18 @@ const redactConfig = (config: Record<string, any>) => {
  * - `config` (and `response.config`) becomes a copy with credential headers, `auth`,
  *   credential-named `params` and URL query values, and credential-named keys in the request body
  *   (`data`) replaced by `[Redacted]`.
- * - Known credential headers of the upstream response (`set-cookie`) are replaced the same way;
- *   other response headers (`www-authenticate`…) are kept.
+ * - The headers of the upstream response are kept, `set-cookie` included: with `maxRedirects: 0`
+ *   a redirect rejects, and apps forward its cookie. `cleanError` leaves it out of logs and error
+ *   bodies, and the known credential headers are not enumerable, so serializing the error skips
+ *   them.
  * - `request` and `response.request` stay readable but are no longer enumerable: they hold the
  *   serialized header block (`_header`), which cannot be rewritten after the request was sent.
  *
  * It runs on the final rejection only, after the retries, which reuse the original config.
- * It never throws. If masking fails, the fields that carry credentials are removed and the error
- * is still returned.
+ * It never throws. If masking fails, the fields that carry credentials are cleared where the error
+ * allows it, and the error is still returned. A frozen error cannot be changed, so it is returned
+ * as it is: the client always creates its errors mutable, and replacing the instance would break
+ * `instanceof` and identity checks.
  */
 export const sanitizeHttpClientError = <T>(err: T): T => {
   if (!isObject(err)) {
@@ -130,10 +158,8 @@ export const sanitizeHttpClientError = <T>(err: T): T => {
       if (isObject(response.config)) {
         response.config = isObject(error.config) ? error.config : redactConfig(response.config)
       }
-      // Only the known credential headers (`set-cookie`): the upstream answer has no credential of
-      // the request under other names, and apps read headers such as `www-authenticate`.
-      response.headers = redactHeaders(response.headers, isKnownCredentialHeaderName)
       hide(response, 'request')
+      hideCredentialResponseHeaders(response)
       if (error.config && error.config.responseType === 'stream') {
         hide(response, 'data')
       }
@@ -143,8 +169,11 @@ export const sanitizeHttpClientError = <T>(err: T): T => {
     console.error('[node-vtex-api error] an HTTP client error could not be sanitized', failure && failure.name)
     try {
       withholdCredentials(error)
-    } catch {
-      // Clearing a hostile error must not surface the failure.
+    } catch (withholdError) {
+      // Clearing a hostile error must not surface the failure, but it has to be visible: the error
+      // may still carry its credentials. Only the class of the error is logged.
+      const withholdFailure = withholdError as Error
+      console.error('[node-vtex-api error] the credentials of an HTTP client error could not be cleared', withholdFailure && withholdFailure.name)
     }
   }
   return err

@@ -88,12 +88,15 @@ export const routerCacheMiddleware = async (ctx: MiddlewareContext, next: () => 
 }
 
 export const requestMiddleware = (limit?: Limit) => async (ctx: MiddlewareContext, next: () => Promise<void>) => {
-  // axios-retry rejects this promise only after the last attempt, so the sanitizer runs once.
-  const makeRequest = () => http.request(ctx.config).catch((requestError: any) => {
-    throw sanitizeHttpClientError(requestError)
-  })
+  const makeRequest = () => http.request(ctx.config)
 
-  ctx.response = await (limit ? limit(makeRequest) : makeRequest())
+  try {
+    ctx.response = await (limit ? limit(makeRequest) : makeRequest())
+  } catch (err) {
+    // The final rejection, after the retries in the axios interceptors. Its config carries the
+    // credentials of the request, which app code would otherwise serialize, log or return.
+    throw sanitizeHttpClientError(err)
+  }
 }
 
 function count (obj: { [key: string]: any[] }) {

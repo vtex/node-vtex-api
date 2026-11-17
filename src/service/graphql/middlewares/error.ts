@@ -3,7 +3,9 @@ import { any, chain, compose, filter, forEach, has, map, prop, uniqBy } from 'ra
 import { LogLevel } from '../../../clients/Logger'
 import { LINKED } from '../../../constants'
 import { cancelledErrorCode, cancelledRequestStatus } from '../../../errors/RequestCancelledError'
-import { redactKnownSecretsDeep } from '../../../utils/stringRedactor'
+import { redactKnownSecrets } from '../../../utils/stringRedactor'
+import { IOContext } from '../../typings'
+import { redactErrorBody } from '../../utils/redactErrorBody'
 import { GraphQLServiceContext } from '../typings'
 import { toArray } from '../utils/array'
 import { generatePathName } from '../utils/pathname'
@@ -12,6 +14,8 @@ const CACHE_CONTROL_HEADER = 'cache-control'
 const META_HEADER = 'x-vtex-meta'
 const ETAG_HEADER = 'etag'
 const TWO_SECONDS_S = 2
+
+const GENERIC_ERROR_MESSAGE = 'Internal server error'
 
 const arrayHasError = any(has('errors'))
 
@@ -30,13 +34,101 @@ const parseErrorResponse = (response: any) => {
   return null
 }
 
+const isPathPart = (part: unknown) => typeof part === 'string' || typeof part === 'number'
+
+// What is sent when the errors could not be redacted: for each error only its message, path and
+// code, with the tokens of the request replaced in each, so clients still see what failed.
+const withheldErrors = (errors: any[], vtex: IOContext) => {
+  const tokens = [vtex.authToken, vtex.adminUserAuthToken, vtex.storeUserAuthToken]
+  const redact = (text: string) => redactKnownSecrets(text, tokens).value
+  const pathPart = (part: unknown) => typeof part === 'string' ? redact(part) : part
+  try {
+    return errors.map(err => ({
+      extensions: err && err.extensions && typeof err.extensions.code === 'string' ? { code: redact(err.extensions.code) } : undefined,
+      message: err && typeof err.message === 'string' ? redact(err.message) : GENERIC_ERROR_MESSAGE,
+      path: err && Array.isArray(err.path) ? err.path.filter(isPathPart).map(pathPart) : undefined,
+    }))
+  } catch {
+    return [{ message: GENERIC_ERROR_MESSAGE }]
+  }
+}
+
+const isMap = (value: unknown) => value !== null && typeof value === 'object' && !Array.isArray(value)
+
+// A value that fails to serialize during the redaction becomes `[Unserializable]` instead of
+// throwing, so a field GraphQL requires to be a map or a list may come back as a string.
+const isGraphQLError = (err: unknown) => {
+  if (!isMap(err)) {
+    return false
+  }
+  const { extensions, locations, message, path } = err as Record<string, unknown>
+  return typeof message === 'string' &&
+    (extensions == null || isMap(extensions)) &&
+    (locations == null || Array.isArray(locations)) &&
+    (path == null || Array.isArray(path))
+}
+
+// The errors sent back, with the tokens of the request and known credential headers replaced. It
+// never throws: a failure here would turn the whole GraphQL response into a 500.
+const safeGraphQLErrors = (errors: any[], vtex: IOContext) => {
+  try {
+    const redacted = redactErrorBody(errors, vtex)
+    if (Array.isArray(redacted) && redacted.every(isGraphQLError)) {
+      return redacted
+    }
+    console.error('[node-vtex-api error] the sanitized GraphQL errors are not valid GraphQL errors')
+  } catch (redactError) {
+    const failure = redactError as Error
+    console.error('[node-vtex-api error] the GraphQL errors could not be sanitized', failure && failure.name)
+  }
+  return withheldErrors(errors, vtex)
+}
+
+const createLogErrorToSplunk = (vtex: IOContext) => (err: any) => {
+  const {
+    route: { id },
+    logger,
+  } = vtex
+
+  try {
+    // Prevent logging cancellation error (it's not an error)
+    if (err && err.extensions && err.extensions.exception && err.extensions.exception.code === cancelledErrorCode) {
+      return
+    }
+
+    // Add pathName to each error
+    if (err.path) {
+      err.pathName = generatePathName(err.path)
+    }
+
+    const log = {
+      ...err,
+      routeId: id,
+    }
+
+    // Grab level from originalError, default to "error" level.
+    let level = err.extensions && err.extensions.exception && err.extensions.exception.level as LogLevel
+    if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
+      level = LogLevel.Error
+    }
+    logger.log(log, level)
+  } finally {
+    if (!LINKED) {
+      // Already logged above. The response must not carry them.
+      if (err && err.extensions && err.extensions.exception && err.extensions.exception.sensitive) {
+        delete err.extensions.exception.sensitive
+      }
+      if (err) {
+        delete err.stack
+      }
+    }
+  }
+}
+
 export async function graphqlError (ctx: GraphQLServiceContext, next: () => Promise<void>) {
   const {
     vtex: {
       production,
-      route: {
-        id,
-      },
     },
   } = ctx
 
@@ -85,11 +177,13 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
           e.query.variables = stringifiedVariables.length <= 1024 ? stringifiedVariables : '[variables too long]'
         }
       }, uniqueErrors)
-      const authToken = ctx.vtex && ctx.vtex.authToken
-      const adminUserAuthToken = ctx.vtex && ctx.vtex.adminUserAuthToken
-      const storeUserAuthToken = ctx.vtex && ctx.vtex.storeUserAuthToken
-      const safeErrors = redactKnownSecretsDeep(uniqueErrors, [authToken, adminUserAuthToken, storeUserAuthToken]).value
-      console.error(`[node-vtex-api graphql errors] total=${graphQLErrors.length} unique=${safeErrors.length}`, safeErrors)
+      let printable: unknown
+      try {
+        printable = redactErrorBody(uniqueErrors, ctx.vtex)
+      } catch {
+        printable = withheldErrors(uniqueErrors, ctx.vtex)
+      }
+      console.error(`[node-vtex-api graphql errors] total=${graphQLErrors.length} unique=${uniqueErrors.length}`, printable)
       ctx.graphql.status = 'error'
 
       // Do not generate etag for errors
@@ -104,37 +198,16 @@ export async function graphqlError (ctx: GraphQLServiceContext, next: () => Prom
       }
 
       // Log each error to splunk individually
-      forEach((err: any) => {
-        // Prevent logging cancellation error (it's not an error)
-        if (!err.extensions.exception || err.extensions.exception.code !== cancelledErrorCode) {
-          // Add pathName to each error
-          if (err.path) {
-            err.pathName = generatePathName(err.path)
-          }
+      forEach(createLogErrorToSplunk(ctx.vtex), uniqueErrors)
 
-          const log = {
-            ...err,
-            routeId: id,
-          }
-
-          // Grab level from originalError, default to "error" level.
-          let level = err.extensions.exception && err.extensions.exception.level as LogLevel
-          if (!level || !(level === LogLevel.Error || level === LogLevel.Warn)) {
-            level = LogLevel.Error
-          }
-          ctx.vtex.logger.log(log, level)
-        }
-
-        if (!LINKED) {
-          delete err.stack
-          if (err.extensions && err.extensions.exception && err.extensions.exception.sensitive) {
-            delete err.extensions.exception.sensitive
-          }
-        }
-      }, safeErrors)
+      // The tokens of the request are replaced wherever they appear in the errors sent back, such
+      // as a resolver message that embeds a serialized upstream error. So is the value of a known
+      // credential header inside a `headers` object. `data` is not touched.
+      const safeErrors = safeGraphQLErrors(uniqueErrors, ctx.vtex)
 
       if (ctx.body && (ctx.body as any).errors) {
-        (ctx.body as any).errors = safeErrors
+        const body = ctx.body as any
+        body.errors = safeErrors
       }
 
       // Expose graphQLErrors with pathNames to timings middleware

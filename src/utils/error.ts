@@ -1,7 +1,7 @@
 // Inspired by https://github.com/sindresorhus/serialize-error
 import { keys, pick } from 'ramda'
 
-import { isKnownCredentialHeaderName, isSensitiveHeaderName, redactRequestData, redactUrlQuery } from './sensitiveHeaders'
+import { isKnownCredentialHeaderName, isSensitiveHeaderName, redactCredentialFields, redactRequestData, redactUrlQuery } from './sensitiveHeaders'
 
 export const PICKED_AXIOS_PROPS = ['baseURL', 'cacheable', 'data', 'finished', 'headers', 'method', 'timeout', 'status', 'path', 'url', 'metric', 'inflightKey', 'forceMaxAge', 'params', 'responseType']
 export const SENSITIVE_EXCEPTION_FIELDS = ['config', 'request', 'stack']
@@ -69,8 +69,14 @@ const removeHeaders = (headers: Record<string, unknown>, isSensitive: (name: str
   }
 }
 
+// The request body as logged. A body sent as JSON text is scrubbed from the original text, before
+// the 8 KB truncation: a truncated JSON text no longer parses, so its credentials would be logged.
+const cleanRequestData = (copied: unknown, original: unknown) =>
+  typeof original === 'string' ? truncateString(redactRequestData(original)) : redactRequestData(copied)
+
 // The picked properties of an axios `config`, `request` or `response`, without credentials.
-const cleanAxiosProperty = (property: string, value: object) => {
+// `original` is the property before `destroyCircular` copied and truncated it.
+const cleanAxiosProperty = (property: string, value: object, original: any) => {
   const picked: Record<string, any> = pick(PICKED_AXIOS_PROPS, value)
   // A request path carries the serialized query, credential-named params included.
   for (const location of URL_LOCATIONS) {
@@ -78,10 +84,15 @@ const cleanAxiosProperty = (property: string, value: object) => {
       picked[location] = redactUrlQuery(picked[location])
     }
   }
+  // Credential-named params (`appToken`…), at any depth. An error that did not go through the
+  // HttpClient sanitizer (a raw axios call) still carries them as the app sent them.
+  if ('params' in picked) {
+    picked.params = redactCredentialFields(picked.params)
+  }
   // The request body. The upstream response body (`response.data`) is what the service answered
   // and stays as it is.
   if (property === 'config' && 'data' in picked) {
-    picked.data = redactRequestData(picked.data)
+    picked.data = cleanRequestData(picked.data, original && original.data)
   }
   if (picked.headers && typeof picked.headers === 'object') {
     // Headers the app sent: the same list as the HttpClient error sanitizer, credential-looking
@@ -101,7 +112,7 @@ const cleanAxiosProperties = (from: any, to: Record<string, any>) => {
   }
   for (const property of AXIOS_PROPERTIES) {
     if (to[property] != null && typeof to[property] === 'object') {
-      to[property] = cleanAxiosProperty(property, to[property])
+      to[property] = cleanAxiosProperty(property, to[property], from[property])
     }
   }
 }

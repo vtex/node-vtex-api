@@ -1,4 +1,4 @@
-import { REDACTED, TRUNCATED } from './stringRedactor'
+import { REDACTED, TRUNCATED, UNSERIALIZABLE } from './redactionMarkers'
 
 /**
  * Names under which credentials travel in HTTP headers, lower-case. Shared by the `HttpClient`
@@ -52,7 +52,7 @@ export const isSensitiveParamName = (name: string): boolean => SENSITIVE_NAME_PA
 
 const MAX_CREDENTIAL_DEPTH = 32
 
-const isStream = (value: any) => value != null && typeof value.pipe === 'function'
+const isStream = (value: object) => typeof (value as { pipe?: unknown }).pipe === 'function'
 
 const shallowCopy = (value: Record<string, any>) => Array.isArray(value) ? value.slice() : { ...value }
 
@@ -63,21 +63,36 @@ const redactField = (container: Record<string, any>, name: string, value: unknow
     ? REDACTED
     : redactCredentialFields(value, depth + 1)
 
+// What JSON.stringify sends for a value with its own serialization (`toJSON`, own or inherited), as
+// plain JSON. A copy would keep the `toJSON`, which would serialize the original values again.
+const materialize = (value: object): unknown => {
+  try {
+    const json = JSON.stringify(value)
+    return JSON.parse(json != null ? json : 'null')
+  } catch {
+    return UNSERIALIZABLE
+  }
+}
+
 /**
  * A copy of an object or array with the value of every credential-named key replaced, at any
  * depth (`filter.appToken`, `list[].apiKey`). Copy-on-write: what has nothing to replace keeps
- * its reference. Beyond 32 levels a nested container becomes `[Truncated]` instead of being sent
- * uninspected. A string, buffer or stream is returned as it is.
+ * its reference. A value with a `toJSON` is replaced by what it serializes to, then inspected.
+ * Beyond 32 levels a nested container becomes `[Truncated]` instead of being sent uninspected. A
+ * string, buffer or stream is returned as it is.
  */
 export const redactCredentialFields = (value: unknown, depth = 0): unknown => {
-  if (value === null || typeof value !== 'object' || Buffer.isBuffer(value) || isStream(value)) {
+  if (value === null || typeof value !== 'object' || Buffer.isBuffer(value) || isStream(value as object)) {
     return value
   }
   if (depth > MAX_CREDENTIAL_DEPTH) {
     return TRUNCATED
   }
+  if (typeof (value as { toJSON?: unknown }).toJSON === 'function') {
+    return redactCredentialFields(materialize(value as object), depth)
+  }
   let copy: any = value
-  for (const name of Object.keys(value as Record<string, any>)) {
+  for (const name of Object.keys(value as object)) {
     const child = (value as Record<string, any>)[name]
     const safe = redactField(value as Record<string, any>, name, child, depth)
     if (safe !== child) {
@@ -90,16 +105,20 @@ export const redactCredentialFields = (value: unknown, depth = 0): unknown => {
 
 /**
  * The request body (`config.data`). An object is scrubbed like `params`. The client also stores
- * the body as the JSON text it sent, so that text is parsed, scrubbed and written back. Plain
- * text, a buffer and a stream are returned as they are.
+ * the body as the text it sent: JSON text is parsed, scrubbed and written back, and a form body
+ * (`application/x-www-form-urlencoded`, `appToken=…&name=…`) has its credential-named values
+ * replaced like a URL query. Other text, a buffer and a stream are returned as they are.
  */
 export const redactRequestData = (data: unknown): unknown => {
   if (typeof data !== 'string') {
     return redactCredentialFields(data)
   }
   const first = /\S/.exec(data)
-  if (!first || (first[0] !== '{' && first[0] !== '[')) {
+  if (!first) {
     return data
+  }
+  if (first[0] !== '{' && first[0] !== '[') {
+    return isFormBody(data) ? redactQueryString(data) : data
   }
   try {
     const parsed = JSON.parse(data)
@@ -110,12 +129,83 @@ export const redactRequestData = (data: unknown): unknown => {
   }
 }
 
+// Form-encoded text: `name=value` pairs joined by `&`, with no whitespace (the encoding has none).
+const isFormBody = (text: string) => text.includes('=') && !/\s/.test(text)
+
+const SCHEME = /^[a-z][a-z\d+.-]*:/i
+// Schemes whose authority the URL parser finds with fewer than two separators (`http:/user@host`,
+// `http:user@host`). Other schemes need `//`: `mailto:someone@host` has no user info.
+const SPECIAL_SCHEMES = new Set(['ftp:', 'http:', 'https:', 'ws:', 'wss:'])
+const AUTHORITY_END = /[\\/?#]/
+
+const isSeparator = (char: string | undefined) => char === '/' || char === '\\'
+
+// Where the authority (`user:password@host`) of a URL starts, in the forms the URL parser accepts:
+// leading whitespace, `/` or `\\` separators, and a special scheme with fewer separators. -1 when
+// the URL has no authority (a path, a relative reference, `mailto:`).
+const authorityStart = (url: string) => {
+  const start = url.length - url.replace(/^\s+/, '').length
+  const schemeMatch = SCHEME.exec(url.slice(start))
+  const scheme = schemeMatch ? schemeMatch[0] : ''
+  let index = start + scheme.length
+  const separatorsStart = index
+  while (isSeparator(url[index])) {
+    index++
+  }
+  const hasAuthority = SPECIAL_SCHEMES.has(scheme.toLowerCase()) || index - separatorsStart >= 2
+  return hasAuthority ? index : -1
+}
+
+// The URL with its user info replaced, keeping the scheme, host and the rest as written.
+const maskUserInfo = (url: string) => {
+  const start = authorityStart(url)
+  if (start === -1) {
+    return url
+  }
+  const rest = url.slice(start)
+  const end = AUTHORITY_END.exec(rest)
+  const at = (end ? rest.slice(0, end.index) : rest).lastIndexOf('@')
+  return at === -1 ? url : `${url.slice(0, start)}${REDACTED}${url.slice(start + at)}`
+}
+
+// The WHATWG URL parser, a global since Node 10. Read from `global` so no module import is needed;
+// without it the safety net below is skipped.
+type UrlParser = new (input: string) => { password: string, username: string }
+const UrlParserClass: UrlParser | undefined = (global as any).URL
+
+// Whether the URL parser still finds user info other than the redaction marker.
+const keepsUserInfo = (url: string) => {
+  if (!UrlParserClass) {
+    return false
+  }
+  try {
+    const { password, username } = new UrlParserClass(url)
+    return !!password || (!!username && safeDecode(username) !== REDACTED)
+  } catch {
+    return false
+  }
+}
+
 const safeDecode = (text: string) => {
   try {
-    return decodeURIComponent(text)
+    return decodeURIComponent(text.replace(/\+/g, ' '))
   } catch {
     return text
   }
+}
+
+// A query string or form body (`a=1&appToken=…`) with the value of credential-named keys replaced.
+// Encoded and nested keys are recognized (`filter%5BappToken%5D=…`). Returns the same string when
+// there is nothing to replace.
+function redactQueryString (query: string): string {
+  return query
+    .split('&')
+    .map(pair => {
+      const separator = pair.indexOf('=')
+      const name = separator === -1 ? pair : pair.slice(0, separator)
+      return separator !== -1 && isSensitiveParamName(safeDecode(name)) ? `${name}=${REDACTED}` : pair
+    })
+    .join('&')
 }
 
 /**
@@ -127,7 +217,11 @@ export const redactUrlQuery = (url: unknown) => {
   if (typeof url !== 'string') {
     return url
   }
-  const safeUrl = url.replace(/^((?:[a-z][a-z\d+.-]*:)?\/\/)[^/?#]*@/i, `$1${REDACTED}@`)
+  const safeUrl = maskUserInfo(url)
+  if (keepsUserInfo(safeUrl)) {
+    // A form the pattern does not know still carries credentials: nothing of it is kept.
+    return REDACTED
+  }
   const queryStart = safeUrl.indexOf('?')
   if (queryStart === -1) {
     return safeUrl
@@ -135,13 +229,6 @@ export const redactUrlQuery = (url: unknown) => {
   const hashStart = safeUrl.indexOf('#', queryStart)
   const queryEnd = hashStart === -1 ? safeUrl.length : hashStart
   const query = safeUrl.slice(queryStart + 1, queryEnd)
-  const redactedQuery = query
-    .split('&')
-    .map(pair => {
-      const separator = pair.indexOf('=')
-      const name = separator === -1 ? pair : pair.slice(0, separator)
-      return separator !== -1 && isSensitiveParamName(safeDecode(name)) ? `${name}=${REDACTED}` : pair
-    })
-    .join('&')
+  const redactedQuery = redactQueryString(query)
   return redactedQuery === query ? safeUrl : `${safeUrl.slice(0, queryStart + 1)}${redactedQuery}${safeUrl.slice(queryEnd)}`
 }
