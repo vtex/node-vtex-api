@@ -1,4 +1,4 @@
-import { REDACTED, TRUNCATED } from './redaction'
+import { REDACTED, TRUNCATED } from './stringRedactor'
 
 /**
  * Names under which credentials travel in HTTP headers, lower-case. Shared by the `HttpClient`
@@ -49,29 +49,6 @@ export const isSensitiveHeaderName = (name: string): boolean =>
  * Whether a query string or `params` key carries a credential (`appToken`, `api_key`, `sessionId`…).
  */
 export const isSensitiveParamName = (name: string): boolean => SENSITIVE_NAME_PATTERN.test(name)
-
-// Extra names that show up as object keys rather than as HTTP headers.
-const PAYLOAD_FIELD_NAMES = ['appkey', 'apptoken', 'password', 'secret', 'token']
-
-// Suffixes of normalized payload keys that name a credential (`accessToken`, `client_secret`…).
-const PAYLOAD_FIELD_SUFFIXES = ['token', 'secret', 'password', 'apikey', 'appkey', 'privatekey', 'secretkey']
-
-const normalizeFieldName = (name: string) => name.toLowerCase().replace(/[^a-z0-9]/g, '')
-
-const payloadFieldNames = new Set(SENSITIVE_HEADER_KEYS.map(normalizeFieldName).concat(PAYLOAD_FIELD_NAMES))
-
-/**
- * Whether an object key in an error payload names a credential. The comparison is an exact match
- * after ignoring case and separators, or a suffix of the normalized name, so `author`, `sortKey`
- * and `sessionCount` are kept while `accessToken` and `clientSecret` are redacted.
- * Request headers and query params still use `isSensitiveHeaderName` / `isSensitiveParamName`.
- */
-export const isCredentialPayloadFieldName = (name: string): boolean => {
-  const normalized = normalizeFieldName(name)
-  return payloadFieldNames.has(normalized)
-    || PAYLOAD_FIELD_SUFFIXES.some(suffix => normalized.endsWith(suffix))
-    || SENSITIVE_HEADER_PREFIXES.some(prefix => normalized.startsWith(prefix))
-}
 
 const MAX_CREDENTIAL_DEPTH = 32
 

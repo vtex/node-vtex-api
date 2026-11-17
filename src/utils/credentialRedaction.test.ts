@@ -1,7 +1,6 @@
 import { sanitizeHttpClientError } from '../HttpClient/middlewares/sanitizeHttpClientError'
 import { cleanError } from './error'
-import { REDACTED } from './redaction'
-import { redactKnownSecretsDeep } from './stringRedactor'
+import { REDACTED } from './stringRedactor'
 
 describe('cleanError', () => {
   it('drops credential headers, the request body and the query string', () => {
@@ -23,46 +22,6 @@ describe('cleanError', () => {
     expect(cleaned.config.headers['content-type']).toBe('application/json')
     expect(cleaned.config.data).toBe(JSON.stringify({password: REDACTED}))
     expect(cleaned.config.url).toBe(`https://${REDACTED}@host/path?token=${REDACTED}&q=1`)
-  })
-})
-
-describe('redactKnownSecretsDeep', () => {
-  it('keeps ordinary fields whose names only look like credentials', () => {
-    const {value} = redactKnownSecretsDeep({
-      author: 'Jane',
-      keywords: ['shoe'],
-      password: 'super-secret-value',
-      passwordPolicy: 'strong',
-      sessionCount: 3,
-      sortKey: 'price',
-      tokenCount: 2,
-    })
-
-    expect(value).toEqual({
-      author: 'Jane',
-      keywords: ['shoe'],
-      password: REDACTED,
-      passwordPolicy: 'strong',
-      sessionCount: 3,
-      sortKey: 'price',
-      tokenCount: 2,
-    })
-  })
-
-  it('redacts credential-suffixed payload fields', () => {
-    const {value} = redactKnownSecretsDeep({
-      accessToken: 'abcdefghijklmnop',
-      apiKey: 'abcdefghijklmnop',
-      clientSecret: 'abcdefghijklmnop',
-      privateKey: 'abcdefghijklmnop',
-    })
-
-    expect(value).toEqual({
-      accessToken: REDACTED,
-      apiKey: REDACTED,
-      clientSecret: REDACTED,
-      privateKey: REDACTED,
-    })
   })
 })
 
