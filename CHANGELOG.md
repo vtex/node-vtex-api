@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 - Strip credentials from HTTP client errors, from error logs and from HTTP and GraphQL error responses. Request headers, query credentials and credential-named fields are redacted. Stack traces are omitted outside link mode. An error object placed on `ctx.body` is replaced, and a body that cannot be sanitized is withheld.
 
+### Changed
+- An `HttpClient` error is masked before app code sees it. `err.response.headers['set-cookie']` becomes `[Redacted]`, so a login or auth flow that reads cookies from a 4xx no longer receives them. `err.config` is a copy: credential headers, `auth`, credential-named `params` and URL query values are `[Redacted]`, so re-sending that config sends `Authorization: [Redacted]`. `err.request`, and `response.data` when `responseType` is `stream`, stay readable but are not enumerable, so they disappear from object spread, `JSON.stringify` and `util.inspect`.
+- The HTTP error response for a thrown client error no longer includes `response.headers`. `response` keeps `data`, `status` and `statusText`.
+- `VTEX_IO_RESPONSE_SANITIZER=off` disables only `sanitizeResponse`. The HttpClient sanitizer and the error middleware have no runtime switch, so rolling them back takes a new release.
+
 ## [3.77.8] - 2022-12-15
 ### Changed
 - Remove socket metrics per origin
