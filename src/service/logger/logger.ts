@@ -7,6 +7,20 @@ import { getLogClient } from './client'
 
 const app = APP.ID
 const EMPTY_MESSAGE = 'Logger.log was called with null or undefined message'
+const UNHANDLED_ACCOUNT = 'unhandled'
+const SKIDDER_ACCOUNT = /^[a-z0-9-]+$/
+
+/**
+ * Account segment safe to put in a Skidder topic name.
+ * `unhandled` is the process-wide sentinel and is not an account.
+ * Anything outside the slug is rejected by Kafka or splits one account into two topics.
+ */
+function routableSkidderAccount(account: string | undefined): string | undefined {
+  if (!account || account === UNHANDLED_ACCOUNT || !SKIDDER_ACCOUNT.test(account)) {
+    return undefined
+  }
+  return account
+}
 
 export class Logger {
   private account: string
@@ -97,11 +111,11 @@ export class Logger {
     }
 
     // Third-party logs are routed to the account that produced them.
-    // An empty account must not create a shared or malformed topic.
-    if (APP.IS_THIRD_PARTY() && this.account) {
+    const skidderAccount = routableSkidderAccount(this.account)
+    if (APP.IS_THIRD_PARTY() && skidderAccount) {
       Object.assign(inflatedLog, {
-        '__SKIDDER_TOPIC_1': `skidder.vendor.${this.account}`,
-        '__SKIDDER_TOPIC_2': `skidder.app.${this.account}.${APP.NAME}`,
+        '__SKIDDER_TOPIC_1': `skidder.vendor.${skidderAccount}`,
+        '__SKIDDER_TOPIC_2': `skidder.app.${skidderAccount}.${APP.NAME}`,
       });
     }
 

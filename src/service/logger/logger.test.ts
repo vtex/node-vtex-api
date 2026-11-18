@@ -7,8 +7,10 @@ const savedEnv = ENV_KEYS.reduce<Record<string, string | undefined>>((acc, key) 
   return acc
 }, {})
 
-const context = (account: string | undefined): LoggerContext => ({
-  account: account as string,
+type LogContext = Omit<LoggerContext, 'account'> & { account?: string }
+
+const context = (account?: string): LogContext => ({
+  account,
   operationId: 'op-1',
   production: true,
   requestId: 'req-1',
@@ -26,7 +28,7 @@ function loadLogger(env: { vendor?: string; name?: string }) {
   process.env.VTEX_APP_ID = `${env.vendor ?? 'app'}.${process.env.VTEX_APP_NAME}@2.4.0`
   process.env.VTEX_APP_VERSION = '2.4.0'
 
-  let loggerCtor: new (ctx: LoggerContext) => { log: (message: any, level: string) => void }
+  let loggerCtor: new (ctx: LogContext) => { log: (message: any, level: string) => void }
   jest.doMock('./client', () => ({
     getLogClient: () => Promise.resolve(undefined),
   }))
@@ -104,14 +106,29 @@ describe('Logger Skidder topics', () => {
     expect(line.__SKIDDER_TOPIC_2).toBeUndefined()
   })
 
-  test.each(['', undefined])('missing account %p does not stamp Skidder topics or throw', account => {
+  test('sentinel account unhandled does not stamp Skidder topics', () => {
     const loggerCtor = loadLogger({ vendor: 'acme', name: 'orders-feed' })
-    const logger = new loggerCtor(context(account))
+    const logger = new loggerCtor(context('unhandled'))
 
-    expect(() => logger.log('hello', 'info')).not.toThrow()
+    logger.log('hello', 'info')
 
     const line = loggedLine(consoleLog)
+    expect(line.account).toBe('unhandled')
     expect(line.__SKIDDER_TOPIC_1).toBeUndefined()
     expect(line.__SKIDDER_TOPIC_2).toBeUndefined()
   })
+
+  test.each(['', undefined, ' ', 'a.b', 'StoreA'])(
+    'account %p does not stamp Skidder topics or throw',
+    account => {
+      const loggerCtor = loadLogger({ vendor: 'acme', name: 'orders-feed' })
+      const logger = new loggerCtor(context(account))
+
+      expect(() => logger.log('hello', 'info')).not.toThrow()
+
+      const line = loggedLine(consoleLog)
+      expect(line.__SKIDDER_TOPIC_1).toBeUndefined()
+      expect(line.__SKIDDER_TOPIC_2).toBeUndefined()
+    }
+  )
 })
