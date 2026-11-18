@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [7.7.0]
+
+### Changed
+
+- Third-party logs name their Skidder topics with the account that produced the line, not the app
+  vendor. `__SKIDDER_TOPIC_1` is `skidder.vendor.{account}` and `__SKIDDER_TOPIC_2` is
+  `skidder.app.{account}.{app name}`. A vendor no longer sees, on its own account stream, logs of
+  its app running in other accounts. An account sees the third-party logs of every vendor installed
+  there. The topic has no workspace segment, so workspaces of the same account share one stream.
+  Vendors `vtex` and `gocommerce` still get no Skidder topic fields. Apps pick this up on their next
+  release. Lines already written are not moved.
+- While older writers remain, including `6.x` and previous `7.x`, `skidder.vendor.<name>` means the
+  vendor for an old writer and the account for this version. When an account and a vendor share a
+  name, that topic holds both until the old writers are gone.
+
+### Fixed
+
+- The process logger account `unhandled`, and an account that is empty or contains a character
+  outside `a-z`, `0-9` and `-`, do not get Skidder topic fields. The log line is still written.
+
 ## [7.6.4]
 
 ### Security
