@@ -38,7 +38,8 @@ describe('HttpClient transport', () => {
   let flakyHits: number
 
   beforeAll(done => {
-    ;(global as any).metrics = new MetricsAccumulator()
+    const runtime = global as any
+    runtime.metrics = new MetricsAccumulator()
     server = http.createServer((req, res) => {
       if (req.url === '/redirect') {
         res.writeHead(302, { Location: '/ok' })

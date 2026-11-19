@@ -3,8 +3,8 @@ import { buildSchema } from 'graphql'
 import http from 'http'
 import path from 'path'
 import { stringify } from 'qs'
-import { Readable } from 'stream'
 import { gte } from 'semver'
+import { Readable } from 'stream'
 
 import { MetricsAccumulator } from '../../metrics/MetricsAccumulator'
 import { parseBodyMiddleware } from '../../service/worker/runtime/events/middlewares/body'
@@ -97,7 +97,8 @@ describe('HttpClient query string and single-flight', () => {
 
   beforeAll(done => {
     hits = 0
-    ;(global as any).metrics = new MetricsAccumulator()
+    const runtime = global as any
+    runtime.metrics = new MetricsAccumulator()
     server = http.createServer((req, res) => {
       hits += 1
       setTimeout(() => {
