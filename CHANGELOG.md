@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- A failure of a request made by the context logger is no longer reported to that same logger.
+  On a sampled trace, `HttpClient` writes the error of a failed request to `ctx.vtex.logger`. When an
+  app had replaced that logger with one that makes requests of its own (to store its logs) and those
+  requests failed, each failure was reported through the logger again, which made another request,
+  without end. Such a failure now stays on the span and still rejects to whoever made the request,
+  and failures the logger did not start are reported as before.
+
 ## [7.6.4]
 
 ### Security

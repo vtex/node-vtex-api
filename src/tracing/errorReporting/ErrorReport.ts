@@ -10,6 +10,7 @@ import { TracingTags } from '..'
 import { IOContext } from '../../service/worker/runtime/typings'
 import { ErrorReportLogFields } from '../LogFields'
 import { getTraceInfo } from '../utils'
+import { isReportingError, whileReportingError } from './reportingScope'
 
 export class ErrorReport extends ErrorReportBase {
   /**
@@ -41,7 +42,9 @@ export class ErrorReport extends ErrorReportBase {
   /**
    * Inject information about the error wrapped by this ErrorReport
    * instance on the provided Span. If a logger is provided and the
-   * span is part of a **sampled** trace, then the error will be logged.
+   * span is part of a **sampled** trace, then the error will be logged,
+   * unless it is the failure of an operation that the logger started
+   * while writing another error report.
    */
   public injectOnSpan(span?: Span, logger?: IOContext['logger']) {
     span?.setTag(TracingTags.ERROR, 'true')
@@ -71,8 +74,13 @@ export class ErrorReport extends ErrorReportBase {
       [ErrorReportLogFields.ERROR_CODE]: serializableError.code,
     })
 
-    if (logger && this.shouldLogToSplunk(span)) {
-      logger.error(serializableError)
+    // The logger comes from the request context, and an app may have replaced it with one that makes
+    // requests of its own (to store its logs, for instance). When such a request fails on a sampled
+    // trace, reporting that failure through the same logger makes another request, which fails and
+    // is reported again, without end. So a failure of something the logger started is not written to
+    // the logger: it stays on the span, and still rejects to whoever made the request.
+    if (logger && this.shouldLogToSplunk(span) && !isReportingError()) {
+      whileReportingError(() => logger.error(serializableError))
       this.markErrorAsReported()
     }
 
