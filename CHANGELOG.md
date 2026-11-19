@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Security
 
 - `qs` is now declared as `^6.16.1` (previously `^6.5.1`). `6.15.2` still matches GHSA-x5fp-wj9c-mxmx, GHSA-4mjr-xmp4-gh2g and GHSA-6pq8-jhm2-2vcw; `6.16.1` is the first release clear of them. `co-body`'s `qs@^6.5.2` dedupes onto this floor. Form-urlencoded bracket arrays longer than 20 items are parsed as indexed objects.
+- `axios` is now declared as `^1.16.1` (previously `^1.8.4`) so the `NO_PROXY` bypass is no longer an allowed resolution. `maxRedirects` stays `0`, and `timeout` continues to cover connect and response headers.
 
 ## [7.6.4]
 
