@@ -48,12 +48,15 @@ describe('sanitizeResponse', () => {
       // credential. The `toJSON()` of axios 1.x makes it serializable, config headers included.
       const error = e as AxiosError
       const { httpAgent, httpsAgent, ...config } = error.config
+      // The upstream answer is included, so the serialized error is long enough for koa-compress to
+      // compress it on any Node version: the stack alone is shorter on Node 12 than on Node 22.
       Object.defineProperty(error, 'toJSON', {
         value: () => ({
           code: error.code,
           config,
           message: error.message,
           name: error.name,
+          response: error.response && { data: error.response.data, status: error.response.status },
           stack: error.stack,
           status: error.response && error.response.status,
         }),
