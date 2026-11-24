@@ -4,7 +4,10 @@ import { LINKED } from '../../../constants'
 import { cancelledRequestStatus, RequestCancelledError } from '../../../errors/RequestCancelledError'
 import { TooManyRequestsError, tooManyRequestsStatus } from '../../../errors/TooManyRequestsError'
 import { cleanError, SENSITIVE_EXCEPTION_FIELDS } from '../../../utils/error'
+import { sanitizeErrors, toLoggableError } from '../../../utils/responseSanitizer'
 import { ServiceContext } from '../../typings'
+import { redactErrorBody } from '../../utils/redactErrorBody'
+import { WITHHELD_BODY } from './sanitizeResponse'
 
 const CACHE_CONTROL_HEADER = 'cache-control'
 const META_HEADER = 'x-vtex-meta'
@@ -72,6 +75,24 @@ const logAndRemoveSensitiveData = <T extends IOClients, U, V> (
   }
 }
 
+// What is sent to the client for a thrown value. It is built with the sanitizer that covers the
+// bodies the app sets, so both paths expose the same: `cleanError` alone removes credentials only
+// at the top level, and by a short list of header names, so an error that is a property of the
+// thrown value (`originalError`) kept its config, request and stack.
+// The tokens of the request are replaced wherever they appear, such as in a message that embeds
+// them (`new Error(`failed: ${token}`)`). So is the value of a known credential header inside a
+// `headers` object, even when it is not one of those tokens; other field names are kept. This is an error path: successful bodies are not walked.
+const buildResponseBody = <T extends IOClients, U, V> (thrown: any, ctx: ServiceContext<T, U, V>) => {
+  try {
+    const body = cleanError(sanitizeErrors(thrown, { linked: LINKED }).value)
+    return redactErrorBody(body, ctx.vtex)
+  } catch (sanitizeError) {
+    const failure = sanitizeError as Error
+    console.error('[node-vtex-api error] the thrown value could not be sanitized', failure && failure.name)
+    return WITHHELD_BODY
+  }
+}
+
 export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U, V>, next: () => Promise<any>) {
   try {
     await next()
@@ -84,7 +105,8 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
       ctx.status = tooManyRequestsStatus
       return
     }
-    console.error('[node-vtex-api error]', e)
+    // The raw error carries the request config, whose headers include credentials.
+    console.error('[node-vtex-api error]', toLoggableError(e))
     const err = cleanError(e)
 
     // Add response
@@ -105,7 +127,9 @@ export async function error<T extends IOClients, U, V> (ctx: ServiceContext<T, U
       ctx.set(CACHE_CONTROL_HEADER, `no-cache, no-store`)
     }
 
+    // `err` is what is logged, which keeps the config and the request to debug with. It is not the
+    // body: the sanitized value is.
     logAndRemoveSensitiveData(ctx, err)
-    ctx.body = ctx.body || err
+    ctx.body = ctx.body || buildResponseBody(e, ctx)
   }
 }
