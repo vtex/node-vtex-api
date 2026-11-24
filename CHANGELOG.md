@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [3.77.9] - 2026-11-24
 ### Security
 Backport of the credential sanitization of 6.52.7 and 7.x, with the same behavior.
 
@@ -1054,5 +1056,6 @@ instead
 - `HttpClient` now adds `'Accept-Encoding': 'gzip'` header by default.
 
 
-[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v3.77.8...HEAD
+[Unreleased]: https://github.com/vtex/node-vtex-api/compare/v3.77.9...HEAD
+[3.77.9]: https://github.com/vtex/node-vtex-api/compare/v3.77.8...v3.77.9
 [3.77.8]: https://github.com/vtex/node-vtex-api/compare/v3.77.7...v3.77.8
