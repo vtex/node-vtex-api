@@ -191,6 +191,11 @@ export class HttpClient {
     return this.request(patchConfig).then(response => response.data as T)
   }
 
+  public patchRaw = <T = void>(url: string, data?: any, config: RequestConfig = {}): Promise<IOResponse<T>> => {
+    const patchConfig: RequestConfig = { ...config, url, data, method: 'patch' }
+    return this.request(patchConfig).then(response => response.data as Promise<IOResponse<T>>)
+  }
+
   public head = (url: string, config: RequestConfig = {}): Promise<IOResponse<void>> => {
     const headConfig: RequestConfig = { ...config, url, method: 'head' }
     return this.request(headConfig)
