@@ -4,6 +4,8 @@ import { RequestCancelledError } from '../../errors/RequestCancelledError'
 import { toLoggableError } from '../../utils/responseSanitizer'
 import { Logger } from '../logger'
 
+const UNCAUGHT_EXCEPTION_EXIT_CODE = 124
+
 export const logger = new Logger({account: 'unhandled', workspace: 'unhandled', requestId: 'unhandled', operationId: 'unhandled', production: process.env.VTEX_PRODUCTION === 'true'})
 let watched: NodeJS.Process
 
@@ -23,7 +25,8 @@ export const addProcessListeners = () => {
       err.type = 'uncaughtException'
       logger.error(err)
     }
-    process.exit(420)
+
+    process.exit(UNCAUGHT_EXCEPTION_EXIT_CODE)
   })
 
   process.on('unhandledRejection', (reason: any) => {
