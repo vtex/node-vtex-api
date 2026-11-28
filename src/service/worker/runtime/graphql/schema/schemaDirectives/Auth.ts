@@ -16,8 +16,13 @@ interface VtexIdParsedToken {
   account: string
 }
 
+function encodePathSegment (value: string): string {
+  const encoded = encodeURIComponent(value).replace(/%40/g, '@')
+  return encoded.replace(/^\.$|\.{2,}/g, dots => dots.replace(/\./g, '%2E'))
+}
+
 async function parseIdToken(authToken: string, vtexIdToken: string): Promise<VtexIdParsedToken | void> {
-  const url = `vtexid.vtex.com.br/api/vtexid/pub/authenticated/user?authToken=${vtexIdToken}`
+  const url = `vtexid.vtex.com.br/api/vtexid/pub/authenticated/user?authToken=${encodeURIComponent(vtexIdToken)}`
   const req = await axios.request({
     headers: {
       'Accept': 'application/json',
@@ -34,7 +39,7 @@ async function parseIdToken(authToken: string, vtexIdToken: string): Promise<Vte
 }
 
 async function getUserCanAccessResource (authToken: string, account: string, userEmail: string, productCode: string, resourceCode: string): Promise<boolean> {
-  const url = `http://${account}.vtexcommercestable.com.br/api/license-manager/pvt/accounts/${account}/products/${productCode}/logins/${userEmail}/resources/${resourceCode}/granted`
+  const url = `http://${encodePathSegment(account)}.vtexcommercestable.com.br/api/license-manager/pvt/accounts/${encodePathSegment(account)}/products/${encodePathSegment(productCode)}/logins/${encodePathSegment(userEmail)}/resources/${encodePathSegment(resourceCode)}/granted`
   const req = await axios.request({
     headers: {
       'Authorization': authToken,
@@ -52,7 +57,13 @@ async function auth (ctx: ServiceContext, authArgs: AuthDirectiveArgs): Promise<
   }
 
   const parsedToken = await parseIdToken(ctx.vtex.authToken, vtexIdToken)
-  if (!parsedToken || parsedToken.account !== ctx.vtex.account) {
+  if (
+    !parsedToken ||
+    typeof parsedToken.user !== 'string' ||
+    !parsedToken.user ||
+    typeof parsedToken.account !== 'string' ||
+    parsedToken.account !== ctx.vtex.account
+  ) {
     throw new AuthenticationError('Could not find user specified by VtexIdclientAutCookie.')
   }
 
@@ -63,7 +74,7 @@ async function auth (ctx: ServiceContext, authArgs: AuthDirectiveArgs): Promise<
     authArgs.productCode,
     authArgs.resourceCode
   )
-  if (!userCanAccessResource) {
+  if (userCanAccessResource !== true) {
     throw new ForbiddenError('User indicated by VtexIdclientAutCookie is not authorized to access the indicated resource.')
   }
 }
